@@ -1,0 +1,93 @@
+Products list: compact columns and inline SKU inspection — 1 November 2026
+
+Changed implementation files
+src/StockFlow.Web/wwwroot/js/product.js
+src/StockFlow.Web/wwwroot/css/purchase-receiving.css
+src/StockFlow.Infrastructure/Repositories/ProductRepository.cs
+
+Changed verification files
+tests/StockFlow.UiChecks/product-list-skus-offline.cjs
+tests/StockFlow.MasterDataChecks/ProductSkuPreviewChecks.cs
+
+Result
+Authorized product-management lists show Product Name, Product Code, SKU,
+Category, Brand, Variants, Status and Actions. Existing role rules still omit
+unauthorized write actions. Model, HSN, sold-as, GST, tracking and warranty fields
+remain in saved records, APIs and registration/edit forms. Only list columns
+were simplified; Product Code, SKU generation and financial behavior are unchanged.
+
+A simple product shows its actual saved default SKU, or Not assigned. Configured
+products initially show one saved SKU, with +N more SKUs only when N > 0. The
+initial repository query now limits SKU previews to one, preserving existing
+counts and deterministic variant-ID ordering. During a SKU search, a matching
+saved SKU takes priority; clearing search restores the established order.
+
+The pink text disclosure is a real keyboard-accessible button with a product
+name, aria-expanded and aria-controls. Expansion stays inside the same cell and
+parent row; additional entries use their saved SKU and variant name. Show less
+collapses the entries. There are no nested tables, extra rows, drawers or modals.
+The existing compact action component is unchanged.
+
+Data loading and state
+The existing GET /api/products/{id}/skus endpoint is reused without API changes.
+It pages up to 100 entries and already restricts results by authenticated tenant,
+visible shop profile and product ID. No detail requests occur during list load.
+Duplicate pending requests are blocked, returned entries are deduplicated against
+the preview, and large collections expose Load more SKUs. Loading/error messages
+stay in the cell with a Try again control. Entered search/filter state and other
+rows are retained on failure. Read-only access can inspect SKUs without gaining
+edit permission.
+
+Caches are keyed by product ID within the current list generation/scope and
+cleared on list refresh. Removed rows and stale search/shop responses cannot
+append data. Current-shop metadata changes abort requests and clear SKU cells.
+Existing shop switching reloads the page. Back/forward restoration refreshes
+the list using the existing search/filter controls instead of stale SKU caches.
+
+Responsive styling
+The list minimum width is reduced from 76rem to 48rem; horizontal scrolling
+remains available on narrow screens. Identifiers stay intact. Disclosure buttons
+have transparent backgrounds, pink text and a visible focus outline; coarse
+primary pointers receive 44px disclosure targets. Row heights grow naturally
+only when their content requires it.
+
+Verification actually executed
+Debug test-project build and Release web build: 0 warnings, 0 errors.
+product-list-skus-offline.cjs passed:
+  exact eight-column order; one preview; accurate more-count and saved labels;
+  same-name product independence; same-cell expansion and no nested rows/tables;
+  inactive saved SKUs; cache reuse; 205-SKU collection paged at offsets 0/100/200;
+  retry after API failure; duplicate pending-click protection;
+  hidden-SKU, Product Code, default SKU, HSN and model search;
+  search/filter cache invalidation; stale search/shop response rejection;
+  keyboard/focus, transparent pink links, status confirmation/cancel and Edit;
+  read-only permissions, touchscreen disclosure targets and back/forward refresh;
+  widths 1920, 1366, 1280, 1024, 768, 390 and 375, including 1280x650.
+Actual Windows/HP hardware scaling was not operated; effective CSS viewports
+were tested in headless Edge, with touch emulation for coarse-pointer checks.
+
+--product-sku-preview-checks passed against product_sku_previews_test only:
+  single bounded preview, deterministic ordering, accurate configured counts,
+  inactive variants, ambiguous legacy configuration, hidden-SKU search,
+  tenant/shop isolation and unchanged product/variant fingerprints during reads.
+--product-list-sku-checks passed against product_list_skus_test only:
+  real repository/service search, active filter and saved-default distinctions;
+  existing detail endpoint paging, permissions, negative offset rejection,
+  cross-tenant/shop exclusions and unchanged variant fingerprints during reads.
+Both databases reside in the disposable tests/bin/barcode-workflow-cluster on
+127.0.0.1:55439. That test cluster was started and stopped for verification.
+No shop database or production server was used.
+
+--product-review-checks passed existing product-validation checks.
+master-screens-offline.cjs passed master Add/Edit/View navigation and forms.
+product-wizard-validation-offline.cjs passed registration validations, duplicate
+submission protection, API failure handling, state/photos and responsive forms.
+
+Screenshots
+tests/bin/product-sku-previews/inline-skus-1280x650.png
+tests/bin/product-sku-previews/inline-skus-expanded-1280x650.png
+tests/bin/product-sku-previews/inline-skus-390x844.png
+
+No database migration is required. The only application SQL adjustment is the
+repository preview limit from two to one. No schema, generated identifiers,
+transaction posting or historical records were changed. No deployment performed.

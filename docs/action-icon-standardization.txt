@@ -1,0 +1,141 @@
+StockFlow action icon standardization — 1 November 2026
+
+Follow-up: closely grouped table actions
+Icon-only table cells now receive an inline-flex group in the shared adapter.
+Existing nodes/handlers stay intact; table-cell semantics remain intact. Groups
+use flex-start, vertical centering, intrinsic width and exactly 4px gaps. Mixed
+text/action cells retain their original structure. Dynamically appended icons
+join the existing group without creating nested wrappers.
+The Products Actions column requests 96px and grows when touch targets need it.
+Touch enlargement now follows the primary coarse pointer rather than any coarse
+pointer, so a secondary touchscreen does not force blank spacing in mouse-driven
+hybrid laptop layouts. Touch-primary devices still reserve 44px targets, with
+26px visible faces and no overlap. Product SKU separators and the more-SKUs label
+use .2rem spacing instead of .35rem. Bootstrap tooltips belonging to enhanced
+actions no longer intercept clicks on neighboring controls.
+
+Follow-up validation executed: Release build passed with 0 warnings/errors;
+action-icons.cjs passed its 120 viewport/module layouts plus dynamic insertion
+and product touch containment; product-list-skus-offline.cjs passed 8 viewport
+layouts with computed 26x26 buttons, 13px SVGs, exact 4px gaps, 96px column width,
+vertical centering and reachable horizontal scrolling, plus SKU/search/filter/
+Edit/deactivation regressions. Other passing browser suites: admin-action-icons,
+category-two-level-offline, master-screens-offline,
+product-wizard-validation-offline, product-image-actions-offline,
+receive-goods-offline, sales-list-offline, inventory-control-offline and the full
+billing-offline suite. APIs were mocked or served by the write-blocking loopback
+adapter. Actual HP hardware/Windows scaling was not operated; effective CSS
+viewports were tested. No SQL or backend/business logic changed.
+Follow-up screenshots:
+tests/bin/product-sku-previews/grouped-actions-1280x650.png
+tests/bin/product-sku-previews/grouped-actions-390x844.png
+
+Implementation
+Shared files: src/StockFlow.Web/wwwroot/css/action-icons.css and js/action-icons.js.
+Both application and authentication layouts load these assets. Existing elements
+are enhanced in place: icons, click handlers, hrefs, types, permission rendering,
+disabled/loading state, confirmation flows and API calls are retained.
+
+One source of size values lives in action-icons.css:
+  compact: 26px visible face / 13px icon
+  standard: 32px / 16px (including modal close controls)
+  touch: 44px / 18px
+  action gap: 4px; radius: 4px; background transition: 180ms
+Existing charcoal/pink theme tokens are reused; icons remain white. Visible
+keyboard focus and reduced-motion preferences are supported. Hidden attributes,
+Bootstrap d-none and inline display:none remain effective.
+
+Coarse-pointer devices reserve a separate 44px layout target around the compact
+face. Neighboring targets do not overlap. Tables retain horizontal scrolling.
+Only the component's icons receive these dimensions; navigation, dashboard,
+payment tiles, warning symbols, StockBot and primary text buttons are excluded.
+
+Usage for new controls:
+  StockFlowActionIcons.enhance(existingButton, {size:'compact', label:'Edit Product'})
+  StockFlowActionIcons.enhance(existingCloseButton, {size:'standard'})
+  StockFlowActionIcons.enhance(existingButton, {size:'touch'})
+An existing accessible name can supply the label. The native element retains its
+own type, icon markup, handler and disabled/loading logic. Size can also be set
+using data-action-size. Existing categories/Bootstrap tooltips are preserved;
+other actions receive a hover/focus tooltip bounded to the viewport. Dynamic
+rows and changed action labels are observed automatically.
+
+Coverage
+The adapter covers existing named icon-only table controls throughout the app,
+including master lists, staff/roles, sales history, purchase/receipt, inventory
+and report tables. It also covers product variant edit/status, attribute and
+value removal, optional specification removal, image view/replace/remove,
+Receive Stock item edit/remove, New Sale item removal and modal close controls.
+Text actions remain text actions, including current barcode Preview/Print/
+Reprint controls, purchase links, supplier mapping Remove buttons and report
+exports with labels. Existing three-dot actions retain their meaning; none added.
+
+Validation actually executed
+Release web build: passed, 0 warnings, 0 errors.
+Isolated test-project build: passed, 0 warnings, 0 errors.
+
+action-icons.cjs: passed 120 module/viewport layouts, exact component dimensions,
+gaps, radius, white icons, charcoal/pink hover, focus, bounded tooltips, Enter/
+Space, retained DOM/handler/href, disabled and busy state, hidden/d-none/inline
+visibility, standard/touch variants, confirmation Escape and non-overlapping
+44px mobile touch targets.
+Tested 1920x1080, 1366x768, 1280x720, 1280x650, 1024x768, 768x1024,
+390x844, 375x667, 1536x864 and 1280x600 CSS viewports. The 1536x864 and
+1280x720 viewports exercise the available CSS space of a 1920x1080 screen at
+125% and 150% respectively. Native browser zoom/Windows display scaling was
+not changed or physically tested.
+
+Read-only route audit: 109 URLs visited at 1280x650. No document overflow,
+page-script errors or unmatched empty SVG table controls were reported.
+106 returned HTTP 200. /Account/AccessDenied, /Notifications/Index and /Privacy
+returned HTTP 403 with the existing test identity. Empty/missing-record pages
+do not certify every populated state; see workflow checks below.
+
+Browser suites passed (current assets and regenerated fixtures where applicable):
+  action-icons.cjs
+  admin-action-icons.cjs (synthetic staff: unique Edit, dimensions, Edit/Reset
+    Password handlers and status confirmation/Escape; all writes blocked)
+  category-two-level-offline.cjs
+  category-compact-offline.cjs
+  master-screens-offline.cjs
+  product-wizard-validation-offline.cjs
+  product-image-actions-offline.cjs
+  receiving-offline.cjs
+  receive-goods-offline.cjs
+  billing-offline.cjs
+  barcode-management-offline.cjs
+  sales-list-offline.cjs
+  inventory-control-offline.cjs
+These cover representative navigation, permissions, confirmations, failures,
+duplicate-submit/retry protection, cart/payment state, stock recheck, receipt
+calculations, image operations, printing/reprinting and responsive layouts.
+Sales-list assertions were updated to observe current visible error toasts,
+instead of expecting the old hidden source alert to be visible. Category/image
+style assertions now inspect the shared visible face and 26px/13px dimensions.
+
+Application HTTP checks passed:
+  --master-screen-checks, --billing-checks, --receiving-checks,
+  --receive-stock-ui-checks, --barcode-management-checks,
+  --sales-list-checks, --inventory-control-checks.
+
+Known test limitation
+--admin-action-checks stops before its action tests at StoreAssignmentChecks.cs:32:
+  FAIL: cashier sees assigned store without selector
+That existing markup assertion is unrelated to these component styles. It was
+not bypassed or changed. The focused staff browser checks above passed, but the
+full admin HTTP/security suite is not claimed as passed.
+
+Artifacts
+tests/bin/action-icons/layout-results.json and route-audit.json
+tests/bin/action-icons/category-1280x650.png
+tests/bin/action-icons/category-390x844.png
+tests/bin/action-icons/touch-390.png
+tests/bin/action-icons/component-variants.png
+tests/bin/action-icons/staff-actions.png
+Additional workflow screenshots remain in each suite's existing output folder.
+
+Safety/scope
+Testing used headless Edge, synthetic records and mocked APIs or the loopback-only
+TestServer adapter. The adapter blocks HTTP writes and cannot connect to a shop
+database. No migrations/SQL, business logic, API, permission, shop isolation,
+inventory posting or billing calculations were changed. No deployment performed.

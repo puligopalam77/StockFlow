@@ -1,0 +1,178 @@
+P0 reliability delivery increment - 2026-11-02
+
+Status: code/test increment delivered. P0 production release gates remain OPEN.
+This extends the existing 62-workflow audit and phased roadmap. It does not repeat
+the broad audit, start a new accounting project or mark P1/P2/P3 complete.
+
+1. Inventory and operational financial reconciliation
+Audit IDs: I05/I06/I07, P02/P05, S01/S04/S05/S07, F02/F03, A02/A16.
+Existing services already post these workflows; the gap was an end-to-end set of
+independent expected balances covering them together, with source references.
+
+Added --p0-reconciliation-checks in StockFlow.MasterDataChecks. The suite clones
+only the disposable product_edit_069_test fixture at loopback:55443 and applies
+current migrations through 084 to that clone. No appsettings database is used.
+It registers an exact SKU through ProductService, then checks:
+- Registration 0; opening +10; purchase order remains 10.
+- Concurrent receipt retries: accepted +4, damaged 1 not saleable, balance 14.
+- Explicit +2/-2 reasoned adjustments and exact retries: 16 then 14.
+- Concurrent HTTP checkout: one invoice/payment set, -2 once, balance 12.
+- Invoice retrieval and quote/saved total/collection agreement. Changed payload
+  on the same request ID is rejected before additional posting.
+- Original-line restock/refund: +1, balance 13; invoice - return - payments +
+  refunds equals zero due. Collections are not counted as new invoice revenue.
+- Supplier payment retry: 70 once; supplier return -1/50, stock 12 and operational
+  outstanding 250-70-50=130. This is the existing order-basis operational payable,
+  NOT proof of independent supplier-invoice matching/AP completeness.
+- Stock count 11: -1 once, with the count source ID retained.
+- Transfer: dispatch 3 leaves source 8/destination 0; partial receipt gives
+  destination 2 and actual transit ledger 1; final receipt gives destination 3,
+  source 8. Total remains 11; retries do not duplicate movements.
+- Restricted HTTP action, actual same-profile destination shop, foreign tenant
+  and other-profile source-read denials. Reads/denials create no movements.
+
+HTTP uses the real controllers and PostgreSQL repositories for sale, invoice,
+variant search, receipt replay, supplier payment/return, customer return/refund,
+count and transfer request/approval/dispatch. Authentication/session/branch
+context in this fixture uses the existing test infrastructure; it does not claim
+production cookie/MFA or independent master ownership certification. Receipt
+creation/concurrency and transfer receipt are also exercised directly through the
+production repositories. Failure messages identify the synthetic SKU/source ID
+and expected/actual balance. No balancing transaction is inserted to hide a gap.
+
+2. Product profit correctness
+Audit ID: F06. Existing verified corrections were retained, not rebuilt.
+Reran --workflow-reporting-checks against disposable PostgreSQL through 084.
+PASS unknown costs remain nullable; saved tax-exclusive revenue; legacy allowance
+once; future/later-recorded backdated receipts cannot reprice prior sales;
+return-only and manual rows; original-sale evidence; collection/refund cutoff;
+same-profile shop, foreign tenant and other-profile denials; no report posting.
+No new costing policy, FIFO/weighted-average ledger, valuation or net-profit claim.
+Implementation remains OperationsRepository.ProductSalesAsync. F05 is separate.
+
+3. Concurrency and draft contracts
+Audit IDs: S01/S02/I04, A02/A16.
+Extended NewSaleIntegrationChecks with two distinct checkout request identities
+racing for the same physical serial. Exactly one can finalize; retrying the winner
+returns its invoice. Existing last-unit quantity race/retry/changed payload and
+verification-only lost-response recovery are retained and passed.
+DraftLifecycleChecks now runs its 079 preservation/rerun assertions, then applies
+080 onward before HTTP recovery/lifecycle tests. This avoids testing only an old
+schema. Passed uncertain-save retry, changed identity payload, exclusive resume,
+lease expiry, atomic switch rollback, source isolation, failed checkout recovery
+and successful transactional completion. No offline finalization introduced.
+
+4. Backup verification and fresh-cluster recovery
+Audit ID: A09 (and A16 release evidence).
+Verified defect: Test-StockFlowRestore.ps1 wrote success only at the end, but did
+not invalidate earlier successful evidence when a later attempt failed checksum,
+preflight or restore. A collector could continue treating the old success as the
+latest test. Every attempt now first writes passed=false. Failures record a
+sanitized Failed state; success records database-only scope, required server role
+prerequisites, elapsed restore seconds, archive age, and explicit false flags for
+application startup/assets. Existing no-arbitrary-target database safety remains.
+No raw errors, credentials or restored business rows are added to evidence JSON.
+
+Added tests/P0CleanRestoreChecks.ps1:
+- Fixed synthetic template only, separate source clone and frozen fixture.
+- Actual existing Backup-StockFlow.ps1 custom archive and SHA256 manifest.
+- Fresh initdb cluster on reserved loopback:55444; refuses an occupied port.
+- Role prerequisites transferred without role passwords. Loopback trust is ONLY
+  for this synthetic test cluster; never use this harness with business archives.
+- Actual Test-StockFlowRestore.ps1 into a generated disposable database.
+- All 135 public tables match frozen-source row counts and sorted row digests.
+- Tampered archive fails checksum and cannot retain an earlier success record.
+- Normal application startup/production DI, public liveness and restricted-role
+  product/invoice reads succeed against the restored database. Background workers
+  are disabled and test Data Protection is ephemeral: no external delivery and no
+  claim that deployed authentication secrets/keys were recovered.
+- Own target cluster is stopped and source clone dropped; synthetic artifacts
+  retained under tests/bin/p0-clean-restore for inspection. No installed schedule,
+  live application database or deployment configuration changed.
+
+First completed clean drill evidence:
+tests/bin/p0-clean-restore/3abbe10426c141d5a7a6a8bfd6744ff7/result.json
+43.485 seconds for fixture preparation, backup, clean initialization, restore,
+table comparison, negative checksum test and app smoke. Archive age at database
+verification: 14.237 seconds. These are synthetic drill measurements, NOT a
+production RTO or achieved production RPO. Latest rerun artifacts are separate.
+Final rerun after failure-state handling refinement also PASSED:
+tests/bin/p0-clean-restore/7fad73c13ec84a3ca00bfa1904b8bfca/result.json
+39.073 seconds total; archive age 14.534 seconds; 135 matching public tables.
+Both test clusters started by this work were stopped; source clones removed.
+
+5. Actual executed verification
+PASS dotnet build tests/StockFlow.MasterDataChecks --artifacts-path
+     E:/StockFlow/.artifacts/p0-reliability -v quiet (0 warnings, 0 errors).
+PASS StockFlow.MasterDataChecks.dll --p0-reconciliation-checks
+PASS StockFlow.MasterDataChecks.dll --workflow-reporting-checks
+PASS StockFlow.MasterDataChecks.dll --new-sale-integration-checks
+PASS StockFlow.MasterDataChecks.dll --fast-billing-checks
+     Includes real PostgreSQL discount approvals, reviewed GST snapshots,
+     quote/invoice/register agreement, refunds, permissions and rollback guards.
+PASS StockFlow.MasterDataChecks.dll --draft-lifecycle-checks (current migrations)
+PASS StockFlow.MasterDataChecks.dll --operational-readiness-checks
+     Public endpoint privacy; anonymous/staff denial; database failure 503;
+     redacted diagnostics; tenant evidence separation; stale/invalid evidence;
+     onboarding rendering for all four supported profiles.
+PASS powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/BackupTaskChecks.ps1
+     Mock scheduler contract/syntax checks; no real task installed.
+PASS powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/P0CleanRestoreChecks.ps1
+     Real dump/restore/fresh cluster and app read smoke; synthetic data only.
+All database migrations applied only to disposable fixtures. No new migration.
+
+6. Remaining production gates and precise acceptance
+P0 remains open. No Expenses implementation or larger feature expansion in this
+increment. Retain Quotations and existing commercial workflow work as already
+delivered, subject to their existing release gates.
+
+Local observations: no StockFlow-named scheduled task or StockFlow-named Windows
+service was returned by read-only enumeration. A cloudflared process was present.
+This does not prove the production host, tunnel target, TLS, service manager or
+uptime. No production outage/restart, external alert or provider send was induced.
+Laptop/tunnel hosting, if used, depends on device power/sleep, internet, tunnel and
+application/database startup. Cloud availability is not established by this test.
+
+Before onboarding additional paying shops, the deployment owner must:
+1. Record the actual machine/service, database and persistent asset locations,
+   HTTPS endpoint/certificate, process restart policy and secret recovery owner.
+   Demonstrate reboot/restart recovery, database failure alert and redacted logs
+   without exposing private readiness endpoints to ordinary users.
+2. Agree an RPO target (maximum tolerable age of recovered committed data) and RTO
+   target (elapsed time from recovery start to usable, validated shop operations).
+   Values remain NOT AGREED here; synthetic elapsed time cannot select business
+   recovery objectives. Set schedule/retention/offsite cadence to the agreed RPO.
+3. Execute the actual scheduled backup under its service identity. Retain last-run
+   timestamp/result, manifest/hash and a supervised failure alert. Verify encrypted,
+   access-controlled offsite copies and retention. Restore from the offsite copy.
+4. Include uploads/logos/attachments, deployment build/configuration, PostgreSQL
+   owner/runtime roles and versions, Data Protection keys, and required encrypted
+   provider credentials/secure recovery procedures. Never put plaintext secrets in
+   this report, logs, task command arguments or public web directories.
+5. Restore into a clean, access-controlled environment with required secrets and
+   assets using production-strength authentication, rather than this trust-auth
+   synthetic harness. Run database verification and start the restored app build.
+   Confirm staff login and scoped customer/product/invoice/attachment access.
+6. Reconcile known pre-backup sales, collections/refunds/dues and signed stock
+   movements to recovered source documents. Record missing committed-data cutoff
+   versus backup snapshot for observed RPO; record time to completed validation
+   for observed RTO. Compare both to the agreed targets; preserve failure evidence.
+7. Demonstrate approved same-profile/different-profile shop behavior with the real
+   deployment topology. Existing tenant/profile-shared masters remain a release
+   design gate; no destructive repartition or approved-independent-shop claim.
+
+Not yet exhaustive: every historical movement/refund permutation, broad full
+posting lifecycle within all four profiles, every role/definer boundary, a real
+network-disconnect test, real scanners/printers, offsite encryption, restored
+uploads/secrets/authentication and production service availability. Existing
+profile capabilities and posted snapshots were not rewritten. No fictitious
+government/provider response or balancing entry was created.
+
+Changed files
+database/maintenance/Test-StockFlowRestore.ps1
+tests/P0CleanRestoreChecks.ps1
+tests/StockFlow.MasterDataChecks/ReliabilityChecks.cs
+tests/StockFlow.MasterDataChecks/NewSaleIntegrationChecks.cs
+tests/StockFlow.MasterDataChecks/DraftLifecycleChecks.cs
+tests/StockFlow.MasterDataChecks/Program.cs
+docs/planning/StockFlow-P0-reliability-2026-11-02.txt

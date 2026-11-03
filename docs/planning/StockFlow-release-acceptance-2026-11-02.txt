@@ -1,0 +1,162 @@
+StockFlow acceptance and release gates - 2026-11-02
+
+Purpose
+Extend the existing PowerShell pilot runner, MasterDataChecks HTTP/PostgreSQL
+harness and Playwright checks. This is executable release evidence, not a second
+application/test framework or another broad feature audit. Building artifacts
+does not confer feature completeness or production deployment authorization.
+
+Entry point (from E:/StockFlow)
+Private-shop/Expenses follow-up: the catalog now contains 25 automated gates.
+Dedicated private-shop and expense gates exercise actual branch/permission
+repositories, PostgreSQL RLS and a live expense browser workflow. Reconciliation
+covers Cash Closing/refund concurrency and explicitly shared transfer catalogs.
+085 implements private masters and explicit sharing; 086 implements Expenses.
+Actual legacy ownership mapping, deployment and operational sign-off remain open.
+The expense gate requires the existing Playwright Node runtime and Edge as well
+as the disposable database, because its live UI is verified against PostgreSQL.
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/Run-ShopPilotChecks.ps1
+  -ReleaseAcceptance -WithDatabase -WithBrowser -WithCleanRestore
+  -ApplicationVersion 'YOUR_CANDIDATE_VERSION' -EnvironmentName 'ACTUAL_ENVIRONMENT'
+  -Shop 'ACTUAL_SHOP_OR_ACCEPTANCE_SCOPE'
+
+Put these arguments on one command line when invoking directly. Without optional
+database/browser/restore flags, those required gates stay NOT_RUN and release is
+BLOCKED. -Only accepts gate IDs for focused diagnostics; omitted gates remain
+required. It cannot redefine a subset as full acceptance. The existing pilot
+runner's legacy mode remains available without -ReleaseAcceptance.
+Use a stable full scope for -Shop, for example tenant/store/location/profile IDs,
+rather than a display name shared by shops. A profile/configuration change requires
+a new scope/review; record the profile separately in the pilot CSV as well.
+
+Prerequisites
+- .NET 10; rg; PowerShell; current repository dependencies.
+- Existing disposable PostgreSQL fixture product_edit_069_test on loopback:55443.
+  Database suites create/drop GUID-named clones and apply migrations only there.
+  Do not substitute a business database or change scripts to a production port.
+- Build StockFlow.UiChecks once to install its Playwright Node runtime. The
+  browser suites use headless Edge; actual physical-device checks remain manual.
+- Clean-restore mode also requires PostgreSQL initdb/pg_dump/pg_restore/psql in
+  the existing installation path and free loopback port 55444. It starts/stops
+  its own synthetic-data cluster; never pass business archives to that harness.
+- The runner does not install a scheduled task, contact a provider, send external
+  messages or publish/deploy an application. The runner itself is not a production
+  migration mechanism; 085/086 are separate manual implementation migrations.
+
+Classification
+READY: every required gate passed with matching current evidence and required
+review. READY describes the selected candidate/environment/shop, not an automatic
+authorization to deploy it. ProductionDeploymentAuthorized is always false here.
+CONDITIONAL: only noncritical issues remain, each with named explicit acceptance
+and a recorded mitigation. Exit code 3 forces a separate controlled-pilot decision.
+BLOCKED: critical/mandatory failure, missing evidence, unrun check or invalid
+evidence. Exit code 2. CI must never ignore it with unconditional success flags.
+READY exits 0. Harness errors remain blocked; failed suites do not prevent the
+remaining independent suites from running and recording their own outcomes.
+
+Evidence identity
+Each run writes a unique directory under tests/bin/release-acceptance:
+release-report.json, release-report.txt and per-command logs. Results include
+source SHA256 fingerprint, candidate version, environment, shop, check timestamp,
+exit code, elapsed time and log hash. The fingerprint covers relevant src/tests/
+database/deploy source; generated outputs, uploads, third-party browser libraries,
+appsettings files and business data are excluded. Runtime configuration/secrets
+and the actual deployment identity need separate manual acceptance evidence.
+Evidence older than 24 hours, future-dated, from another source/version/shop/
+environment, duplicated or with changed/missing artifacts cannot satisfy a pass.
+Re-run after relevant source changes. Source changes during execution block the
+run rather than certifying a mixed build. Do not hand-edit generated reports.
+Keep logs/review documents in protected operator storage outside wwwroot; do not
+publish backup contents, credentials or customer records as release attachments.
+
+Automated catalog
+tests/acceptance/gates.json maps each requirement to its executable suite.
+- Gate-policy negative cases, application/test build and billing validation.
+- P0 stock/financial reconciliation through HTTP + real PostgreSQL repositories.
+- Sale last-unit/serial concurrency, retries, original-invoice recovery and legacy
+  collections/split compatibility without enabling new credit or split checkout.
+- Direct/partial/damaged/serialized receiving, retries, exact SKU and supplier due.
+- Five payment methods, receipt confirmation, pricing/discount permissions,
+  approvals, GST allocation and immutable invoice snapshots.
+- Product-profit regression fixtures for unknown cost, original dates, return-only
+  rows, tax-exclusive estimates, legacy discounts and shop scope. No net-profit or
+  authoritative cost-ledger claim; F06 fixes are reused, F05 remains separate.
+- Draft HTTP recovery against current schema, including uncertain-save retries,
+  exclusive editor/lease rules and checkout failure/completion behavior.
+- GST setup/catalog source authorization and scoped e-way preparation. The latter
+  tests unavailable official generation, not a fictional successful provider.
+- Real HTTP pagination/filter validation, report authorization, private operational
+  endpoint diagnostics and all four profile onboarding fixtures.
+- Backup scheduler contract without task installation, and real fresh-cluster
+  synthetic dump/restore plus app restricted-role product/invoice reads.
+- Actual Razor/script browser checks: ten requested CSS sizes, effective scaling
+  simulations, dialogs, focus, contained table scroll, live cart state, estimate
+  presentation, and saved-invoice A4/80mm print media. These HTTP responses are
+  mocked unless the fixture was produced by a database suite; no physical printer
+  or actual Windows display-scaling certification is implied.
+
+Receiving suite correction
+ReceiveStockIntegrationChecks formerly depended on an older standalone fixture on
+55439. It now uses the same 069 disposable template on 55443 and applies every
+current migration (through 084) before exercising receiving. Source correction/
+cancellation and broader historical cases remain separate explicit release gates,
+rather than being falsely covered by receipt success alone.
+
+Mandatory operator reviews
+The manual catalog keeps these open until actual evidence exists:
+- Receiving source correction/rollback and supported cancellation behavior.
+- After-sales coverage: full/partial/damaged returns, original quantity limits,
+  warranty/repair/parts/payments and supported reversal behavior. Unimplemented
+  reversal capabilities must stay unavailable, not receive a fictional pass.
+- Approved independent-shop master model and deployed same/different-profile
+  topology, including product/contact search, invoices and exports.
+- Applied migration baseline, historical compatibility and compatible rollback or
+  reviewed forward-fix plan. Fixture migrations are not deployment migrations.
+- Actual scheduled/offsite encrypted backup and clean restore including uploads,
+  roles, configuration, keys/secrets, login and essential source records. Record
+  agreed RPO/RTO, observed backup age and usable recovery time, missing assets and
+  any failure. Synthetic cluster timing is not a production recovery guarantee.
+- Actual HTTPS host/service restart, private storage, logs and delivered alerts.
+- Physical USB/camera/label/A4/80mm/58mm devices within the supported shop scope.
+  Browser PDF generation does not certify USB/Bluetooth printer integration.
+- Owner/accountant pilot acceptance for the exact version/environment/shop.
+- Noncritical usability issues resolved or explicitly accepted with mitigations.
+
+Review recording
+Use docs/planning/StockFlow-pilot-acceptance.csv with the existing /Admin/Pilot
+checklist and docs/phase8-pilot-signoff.md. All rows start PENDING. Capture shop,
+profile, version/environment/date, workflow, expected result, actual result,
+evidence, result, issue, reviewer and sign-off date. Editing results requires a
+new sign-off. No pilot or hardware result was automatically marked passed.
+
+Optional machine-readable operator review:
+Copy tests/acceptance/signoff.template.json into protected operator storage.
+For each manual gate record the report fingerprint/version/environment/shop,
+checkedUtc, actual authorized reviewer and authorityReference (approval/ticket/
+signed sign-off reference), expectedResult, actualResult and a private evidence
+file with SHA256. Use PASSED only after successful review. A noncritical remaining
+issue may use ACCEPTED_ISSUE with mitigation and acceptedBy. Critical gates cannot
+be waived. All other pending/failed fields remain blocking.
+Pass -SignOffFile <private-json-path> to the same entry point when rerunning.
+The runner copies only explicitly supplied proof into that run's protected
+artifact directory and verifies its checksum and context. This is a trusted
+release-operator input, NOT cryptographic authentication of a reviewer or a new
+application permission system. The operator must independently confirm authority;
+typing a name is not proof of authorization. Do not feed untrusted/public uploads
+to this tool. Automated failures cannot be replaced by manual attestations.
+
+Pipeline integration
+No existing .github workflow was present. No new hosting/provider/CI account was
+invented. Use this entry point as a fail-closed CI command on the configured
+Windows test host with disposable fixtures. Preserve its nonzero status for both
+BLOCKED and CONDITIONAL; attach the report/logs privately. The separate release
+packaging script remains artifact generation and must not be described as a
+production readiness decision or deployment approval.
+
+Definition of done
+Expected behavior; server authorization; safe migration if needed; API validation;
+working UI and failure handling; safe retries; applicable automated passes;
+historical compatibility; actual shop isolation; device results or explicit open
+gates; and required user acceptance. "Build passed" satisfies only one gate.
+The release report lists gaps rather than filling them with optimistic values.

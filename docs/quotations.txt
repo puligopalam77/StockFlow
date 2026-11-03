@@ -1,0 +1,115 @@
+StockFlow Quotations & Estimates — Q01
+
+Routes
+Sales & Billing > Quotations & Estimates (/Quotations).
+Create /Quotations/Create; revise /Quotations/Edit?id=<quotation UUID>;
+details/history /Quotations/Details?id=<UUID>; print /Quotations/Print?id=<UUID>&revision=<number>.
+
+Workflow
+1. Select a customer, exact catalog SKUs or authorized manual items, quantities,
+   prices, discounts, dates, notes and terms. The existing server sale calculator,
+   tax resolver, MRP checks and versioned billing policy calculate the estimate.
+2. Save creates a shop/location/profile-owned Draft and immutable revision with
+   customer, company/shop, commercial line and calculation snapshots. QTN counters
+   are store scoped and separate from invoice/draft counters. Retries retain the
+   same operation identity, including after a lost response and later price change.
+3. Print/Save as PDF the selected revision. Use an authorized channel to share the
+   PDF. Record Sent only after confirming the actual manual sharing action. No
+   automatic email/WhatsApp message is sent by these screens. Record the customer's
+   acceptance or rejection with confirmation notes. A revision resets to Draft;
+   existing shared revisions remain unchanged. Expiry is effective on read and
+   conversion even without a scheduled job. Cancellation is terminal.
+4. Accepted, unexpired current revisions may Open in New Sale. Existing unfinished
+   bills are preserved: hold/clear them before importing another quotation. The
+   conversion preparation revalidates customer, catalog, effective tax, stock and
+   selected serials. Catalog-priced lines adopt current catalog prices with a
+   notice; intentional quoted overrides retain their reason and need current
+   authority. A changed tax mode or invalid/expired classification requires review.
+5. New Sale performs the usual final price/discount approval, stock, tax and payment
+   validation. Source quotation/revision/version survive draft save, hold/recovery,
+   retry and final posting. A source-bound approval hash prevents reusing approval
+   for a different quotation revision. The sale transaction alone records the
+   conversion link and Converted lifecycle event. Any subsequent payment/stock/tax
+   failure rolls back both sale and quotation conversion. Independent concurrent
+   conversions cannot create two invoices for one quotation.
+
+Quotations do not deduct or reserve stock, create products, record payments/revenue,
+or generate GST tax invoices. Prices/availability in a saved estimate are not a
+reservation or approval grant. Serial quotes use exact available unit selection;
+each selected serial remains unreserved and must still be available at checkout.
+No unsupported lot tracking, credit checkout or split-payment policy is introduced.
+
+Permissions and scope
+New QUOTATIONS actions: VIEW, CREATE, EDIT, STATUS, CONVERT, PRINT, EXPORT. Existing
+sales discount/price/manual-item/tax permissions still apply; quotation permissions
+do not grant those authorities. Conversion also requires SALES CREATE. Existing
+customer/catalog/variant/inventory permissions govern the corresponding pickers.
+Owners receive the new actions; other users require explicit permission assignment.
+Middleware, repository checks, scoped RLS and narrow guarded SQL writer functions
+enforce access. Header scope is tenant/store/location/profile; children inherit the
+immutable scoped parent/revision identity. Ordinary runtime has no direct quotation
+write privilege. Revisions, lines, history, operation receipts and conversion links
+are append-only. CSV export includes scope, timestamp, source IDs and formula-safe
+customer strings. Consolidated contexts must select one authorized stock location.
+
+API
+GET /api/quotations: term/status/from/to/page/pageSize (1..100).
+GET /api/quotations/options; GET /api/quotations/{id}?revision=n.
+POST /api/quotations/preview: CreateSaleRequest without payments/credit/trade-in.
+POST /api/quotations: SaveQuotationRequest, ExpectedVersion=0.
+PUT /api/quotations/{id}: new immutable revision, ExpectedVersion>0.
+POST /api/quotations/{id}/state: operation ID, expected version, status, notes.
+POST /api/quotations/{id}/checkout: expected version and immutable revision.
+GET /api/quotations/export: same list filters, at most 10,000 rows.
+Existing POST /api/sales remains the only checkout/finalization endpoint.
+
+Migration / deployment
+083_quotations.sql is MANUAL ONLY, after 082. It adds quotations, counters, immutable
+revisions/lines, events, operation receipts and sale-conversion links; scoped RLS;
+guarded writer/replay functions; module/actions/navigation; and an AFTER INSERT sales
+trigger. Legacy requests without a source quotation are unaffected by that trigger.
+The migration has been exercised on disposable test databases, not applied to the
+configured application database or production by this implementation task.
+
+Before application: verify the actual environment, backups including protection
+keys/assets and isolated restoration; stop writers; apply the entire file as
+postgres; verify roles/navigation; deploy the matching application; run supervised
+smoke tests before reopening. Do not infer production readiness from local tests.
+If the transaction fails, ROLLBACK and investigate; do not apply individual fragments.
+Rollback after business use must retain quotations/conversion lineage. Disable the
+module and reconcile pending checkouts before any application downgrade. Do not
+drop tables or restore an old database over newer unrelated transactions. Use an
+approved recovery plan/forward correction after live use.
+
+Release gate A02/A03/A09/A16
+Existing catalogs/categories/contacts still use tenant/profile ownership and may be
+deliberately shared. No products/contacts were copied, repartitioned or reassigned;
+no historic invoice IDs were changed. New quote documents are strictly shop/location
+scoped, but this does not solve independent same-profile shop master catalogs.
+Before production release, establish the actual two-shop topology and decide:
+  - Separate tenants versus independent stores inside an existing tenant.
+  - Explicit catalog/contact sharing policy per store, with authorization.
+  - Per-store profile configuration rather than assuming tenant-wide selection.
+  - Additive store-to-master membership/ownership and immutable source mappings.
+  - A reviewed mapping/cutoff for existing records, with preserved history and IDs.
+Then test same/different-profile stores, another tenant, exports and shared-master
+edits. No destructive master-data migration is justified by the one-store local
+development database. Production backup/restore and physical printing remain gates.
+
+Verification
+--quotation-checks uses real PostgreSQL disposable clones, repositories, APIs and
+actual Razor print rendering. It covers non-posting creation/acceptance, revisions,
+expiry/rejection/cancellation, retries/stale versions, changed catalog prices/tax,
+insufficient stock, manual lines, late-payment rollback, competing conversions,
+shop/profile/tenant/role rejection, existing price/discount permissions, CSRF,
+numbering, CSV safety and immutable selected-revision output.
+quotations-offline.cjs uses actual Razor/assets with mocked HTTP: create/revise,
+manual sharing/acceptance, links/list, eight viewport sizes and A4 PDF generation.
+fast-billing-offline.cjs also checks quotation import into the actual New Sale
+editor, draft reload and final source lineage, alongside existing billing cases.
+Physical printers and exact Windows 150% OS scaling are not certified by browser
+tests; verify actual devices and production topology before release.
+Captured final results: docs/quotation-verification-2026-11-02.txt. The temporary
+test PostgreSQL cluster was stopped after validation. Quotation expiry uses the
+application's current India business-date convention (Asia/Kolkata); verify this
+matches deployment configuration at the release gate.

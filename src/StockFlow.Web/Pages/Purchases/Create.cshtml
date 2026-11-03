@@ -1,0 +1,176 @@
+@page
+@model StockFlow.Web.Pages.Purchases.CreateModel
+@inject StockFlow.Application.Common.BusinessScope BusinessScope
+@{
+    ViewData["Title"] = "Receive Stock";
+    var canRegister = Access.Can("PRODUCTS","CREATE") && Access.Can("PRODUCT_VARIANTS","CREATE") && Access.Can("PRODUCT_VARIANTS") && Access.Can("CATEGORIES");
+    var canScan = Access.Can("SCAN","SCAN") && Access.Can("SCAN");
+    var directReceipt = !Request.Query.ContainsKey("id") && Request.Query["mode"] != "order";
+    var canComplete = Access.Can("PURCHASES","APPROVE");
+}
+@section PageHeader {
+<header class="sf-page-heading purchase-page-heading">
+    <span class="purchase-heading-icon" aria-hidden="true">&#9636;</span>
+    <div>
+        <h1 id="purchase-title">Receive Stock</h1>
+        @if (!directReceipt) { <p id="purchase-help" hidden></p> }
+    </div>
+</header>
+}
+@if (directReceipt) {
+    <partial name="_ReceiveGoods" />
+} else {
+<div id="purchase-workspace" data-direct-receipt="@directReceipt.ToString().ToLowerInvariant()" data-storage-key="stockflow.purchase.@BusinessScope.TenantId.@BusinessScope.UserId.@BusinessScope.LocationId@BusinessScope.DraftProfileSuffix" data-can-complete="@Access.Can("PURCHASES","APPROVE").ToString().ToLowerInvariant()" data-can-images="@Access.Can("PRODUCTS").ToString().ToLowerInvariant()" data-can-register="@canRegister.ToString().ToLowerInvariant()">
+    <div id="purchase-message" class="alert alert-danger" hidden role="alert">
+    </div>
+    <div id="purchase-pending" class="alert alert-warning" hidden role="status">
+        <p id="purchase-pending-text">
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+            <button id="purchase-retry" type="button" class="btn btn-outline-primary">Retry saved receipt</button>
+            <a href="/Purchases" class="btn btn-outline-secondary">Check purchase history</a>
+            <button id="purchase-checked" type="button" class="btn btn-outline-secondary" hidden>I checked history; start a new order</button>
+        </div>
+    </div>
+@if(BusinessScope.Consolidated){<p class="alert alert-info">Select one stock location in the top bar to record a purchase.</p>}
+    <form id="purchase-form" data-inline-validation>
+        <fieldset id="purchase-fields" disabled>
+            <section class="card card-body mb-3 purchase-receipt-details">
+                <h2 class="h6 purchase-section-title">Receipt details</h2>
+                <div class="purchase-receipt-grid">
+                    <div class="col-md-6 col-xl-3">
+                        <label for="supplierId" class="form-label">Supplier *</label>
+                        <select id="supplierId" class="form-select" required>
+                        </select>
+                        @if (!directReceipt && Access.Can("SUPPLIERS") && Access.Can("SUPPLIERS", "CREATE")) {
+                        <button id="add-record" type="button" class="btn btn-outline-primary btn-sm mt-2" disabled>+ Add Supplier</button>
+                        }
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <label for="supplierInvoiceNumber" class="form-label">Invoice Number</label>
+                        <input id="supplierInvoiceNumber" class="form-control" maxlength="100" placeholder="Enter invoice number" />
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <label for="receivedDate" class="form-label">Goods received date *</label>
+                        <input type="date" id="receivedDate" required="@directReceipt" class="form-control" />
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <label for="purchaseDate" class="form-label">Purchase Date *</label>
+                        <input type="date" id="purchaseDate" class="form-control" required />
+                    </div>
+
+
+
+                    <div class="col-md-6 col-xl-3">
+                        <label for="notes" class="form-label">Notes</label><textarea id="notes" class="form-control" maxlength="4000" placeholder="Add any notes (optional)..." rows="1"></textarea>
+                    </div>
+                </div>
+            </section>
+            <section class="card card-body mb-3 purchase-scan-section">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <h2 class="h6 mb-0 purchase-section-title">Add Products</h2>@if(canRegister){<a id="purchase-register" href="/Products" class="btn btn-outline-primary">+ Add new product</a>}</div>
+                <div class="purchase-scan-controls @(canScan ? "" : "purchase-manual-only")">
+  @if(canScan){<div><label for="productScanner" class="form-label">Product Scan</label>
+                <div class="d-flex gap-2 mb-3">
+                    <input id="productScanner" class="form-control" autocomplete="off" maxlength="150" aria-describedby="purchase-scan-help" placeholder="Click here, then scan" />
+                    <button id="purchase-lookup" type="button" class="btn btn-primary">Search</button>
+                </div>
+                <p id="purchase-scan-help" class="small text-muted mb-0">Click the box, then scan the product barcode. You can also type the code and press Enter. Scan the same product again to add one more. If it is new, enter its details first.</p></div>}
+                <div>
+                <label for="purchase-search" class="form-label">Search Products</label>
+                <input id="purchase-search" class="form-control" type="search" placeholder="Product name, model, item code or barcode" />
+                </div>
+                </div>
+            </section>
+            <section class="card card-body mb-3 purchase-items-section">
+                <h2 id="purchase-items-title" class="h6 purchase-section-title">Receipt Items (0)</h2>
+                <div id="purchase-items">
+                </div>
+                <button type="button" id="add-item" class="btn btn-outline-primary align-self-start">Add another item</button>
+            </section>
+            <section id="purchase-options" class="card card-body mb-3">
+                <h2 class="h6 purchase-section-title">Invoice Details</h2>
+                <div class="purchase-extra-grid">
+                    <div class="col-md-3">
+                        <label for="supplierInvoiceDate" class="form-label">Invoice Date</label>
+                        <input type="date" id="supplierInvoiceDate" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="invoiceAttachment" class="form-label">Invoice File</label>
+                        <input type="file" id="invoiceAttachment" class="form-control" accept="application/pdf,image/jpeg,image/png" />
+                        <small class="text-muted">One PDF, JPG or PNG up to 5 MB.</small>
+                    </div>
+                    <div class="col-12" hidden="@directReceipt">
+                        <label>
+                            <input id="purchase-as-order" type="checkbox" checked="@(!canComplete)" disabled="@(!canComplete)" /> Order goods for later / partial deliveries</label>
+                        <p class="small text-muted mb-0">Saving an order does not add stock. Record each actual delivery from the order details.</p>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="paymentTermsDays" class="form-label">Credit Days</label>
+                        <input id="paymentTermsDays" type="number" min="0" max="365" step="1" class="form-control" placeholder="Use supplier default" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="freightAmount" class="form-label">Freight (&#8377;)</label>
+                        <input id="freightAmount" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="0" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="otherLandedCost" class="form-label">Other Charges (&#8377;)</label>
+                        <input id="otherLandedCost" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="0" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="discountAmount" class="form-label">Invoice Discount (&#8377;)</label>
+                        <input id="discountAmount" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="0" />
+                    </div>
+                </div>
+                <section class="purchase-bulk-options">
+                    <h3 class="purchase-options-title">Add Variants</h3>
+                    <label for="bulk-product" class="form-label mt-2">Product</label>
+                    <select id="bulk-product" class="form-select">
+                    </select>
+                    <div id="bulk-variants" class="my-2">
+                    </div>
+                    <button id="bulk-add" type="button" class="btn btn-outline-primary">Add Selected</button>
+                </section>
+            </section>
+            <section class="purchase-summary card card-body">
+                <div id="purchase-totals" class="purchase-totals-grid" aria-live="polite"></div>
+                <div class="purchase-summary-actions d-flex flex-wrap gap-2">
+                    <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+                    <button id="purchase-draft" type="submit" class="btn btn-outline-secondary" value="draft" hidden="@(directReceipt || !canComplete)">Save as draft</button>
+                    <button id="purchase-save" type="submit" class="btn btn-primary" value="@(directReceipt || canComplete ? "complete" : "draft")" disabled="@(directReceipt && !canComplete)">@(directReceipt ? "Confirm Receipt" : canComplete ? "Save stock receipt" : "Save purchase order")</button>
+                </div>
+            </section>
+        </fieldset>
+    </form>
+    <section id="receipt-success" class="card card-body" hidden role="status">
+        <h2>Stock received successfully</h2><p id="receipt-success-number"></p><p id="receipt-success-summary"></p>
+        <div class="d-flex gap-2"><a id="receipt-view" class="btn btn-primary">View Receipt</a><a href="/Purchases/Create" class="btn btn-outline-primary">Receive More Stock</a></div>
+    </section>
+    <dialog id="receipt-confirm" aria-labelledby="receipt-confirm-title">
+        <h2 id="receipt-confirm-title" class="h5">Confirm Stock Receipt</h2><dl id="receipt-confirm-summary"></dl>
+        <p>This action will update inventory.</p>
+        <div class="d-flex justify-content-end gap-2"><button id="receipt-confirm-cancel" type="button" class="btn btn-outline-secondary">Cancel</button><button id="receipt-confirm-save" type="button" class="btn btn-primary">Confirm &amp; Receive</button></div>
+    </dialog>
+</div>
+}
+@if (!directReceipt) { <partial name="_QuickAddSupplier" /> }
+@section Styles {
+@if (directReceipt) { <link rel="stylesheet" href="~/css/receive-goods.css" asp-append-version="true" /> }
+<link rel="stylesheet" href="~/css/purchase-receiving.css" asp-append-version="true" />
+@if (!directReceipt && Access.Can("SUPPLIERS") && Access.Can("SUPPLIERS", "CREATE")) {<link rel="stylesheet" href="~/css/configuration.css" asp-append-version="true" />}
+}
+@section Scripts {
+ <script src="~/js/product-image-preview.js" asp-append-version="true"></script>
+ <script src="~/js/common/scanner.js" asp-append-version="true"></script>
+ <script src="~/js/purchase-common.js" asp-append-version="true"></script>
+ @if (directReceipt) {
+ <script src="~/js/receive-goods.js" asp-append-version="true"></script>
+ } else {
+ <script src="~/js/purchase-create.js" asp-append-version="true"></script>
+ }
+ @if (!directReceipt && Access.Can("SUPPLIERS") && Access.Can("SUPPLIERS", "CREATE")) {
+ <script src="~/js/master-data.js" asp-append-version="true"></script>
+ <script src="~/js/supplier.js" asp-append-version="true"></script>
+ }
+}

@@ -1,0 +1,6 @@
+Generated with the built-in image_gen tool on 2026-10-08.
+Output: assistant-robot.png, transparent background.
+The application animates the raised hand with CSS; this is not a video file.
+
+Prompt:
+Use case: stylized-concept. Asset type: transparent app assistant mascot, premium realistic 3D product render. A friendly small white robot with a dark navy rounded glass face, smiling luminous crescent eyes, a small hot pink antenna, hot pink trim and white glossy rounded head and short torso. Like a welcoming shop assistant. Front facing. The robot's head and torso occupy the LEFT 65 percent of the square canvas. Its RIGHT hand is raised in greeting in the RIGHTMOST 30 percent, clearly separated from head and body by transparent empty space, short wrist at x=78%, y=70%, open palm at x=82%, y=40%. This spatial separation is essential because the rightmost hand will rotate independently in CSS. White and chrome realistic materials, soft studio lighting, delicate contact shading on robot itself, no background, actual transparent background, no ground shadow, no text, no labels, no watermark, no border. One robot only, full silhouette visible, ample empty transparent margin around raised hand for motion.

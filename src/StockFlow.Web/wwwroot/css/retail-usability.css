@@ -1,0 +1,53 @@
+﻿@media screen {
+ .sf-retail-ui .retail-screen-guide { margin:8px 0 14px; border:1px solid #dce6f3; border-radius:9px; background:#f7faff; color:#334761; }
+ .retail-screen-guide summary { display:flex; gap:9px; align-items:center; padding:9px 12px; cursor:pointer; font-size:13px; line-height:1.5; list-style:none; }
+ .retail-screen-guide summary::-webkit-details-marker { display:none; }
+ .retail-guide-symbol { display:grid; place-items:center; width:20px; height:20px; flex-shrink:0; border:1px solid #7999bd; border-radius:50%; font-weight:700; }
+ .retail-guide-prompt { margin-left:auto; flex-shrink:0; color:#315d94; text-decoration:underline; font-size:12px; }
+ .retail-screen-guide ol { margin:0; padding:0 18px 12px 48px; font-size:14px; line-height:1.65; }
+ .retail-screen-guide li { padding:3px 0; }
+ .sf-retail-ui .sf-main :is(.form-control,.form-select) { min-height:38px !important; font-size:14px !important; line-height:1.5; }
+ .sf-retail-ui .sf-main :is(.form-label,label) { line-height:1.45; }
+ .sf-retail-ui .sf-main .btn { min-height:36px !important; }
+ .sf-retail-ui .sf-main .text-muted { color:#54647a !important; }
+ .sf-retail-ui .sf-main :is(button,a,input,select,textarea,summary):focus-visible { outline:3px solid #397fff; outline-offset:3px; }
+ .sf-retail-ui :is(.alert-danger,.invalid-feedback,.sf-field-validation) { line-height:1.5; }
+ .retail-daily-actions { margin:0 0 24px; padding:12px 0; background:#fff7fb; border-radius:12px; box-shadow:0 0 0 1px #e0e6f0; }
+ .retail-daily-actions h2, .retail-overview-title { font-size:18px; margin:0 0 10px; }
+ .retail-daily-actions nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+ .retail-daily-actions a { display:flex; align-items:center; gap:12px; padding:15px; background:#fff; border:1px solid #e0e6f0; border-radius:12px; text-decoration:none; color:#172748; }
+ .retail-daily-actions a:hover { border-color:#ff70b5; background:#fff7fb; }
+ .retail-daily-actions .sf-icon { width:26px; height:26px; color:#f0007d; flex-shrink:0; }
+ .retail-daily-actions strong, .retail-daily-actions small { display:block; }
+ .retail-daily-actions strong { font-size:15px; }
+ .retail-daily-actions small { font-size:12px; color:#596b82; margin-top:3px; }
+ .retail-product-dialog { width:min(1050px,calc(100vw - 24px)); }
+ .retail-product-section { border:1px solid #e2e8f2; border-radius:10px; padding:16px; margin:14px 0; background:#fff; }
+ .retail-product-section > h3, .retail-product-section > summary { font-size:16px; font-weight:650; margin:0 0 6px; }
+ .retail-product-section > p { margin:0 0 12px; line-height:1.5; }
+ .retail-product-section > .row > section { width:100%; margin-top:16px; border-top:1px solid #e5ebf4; padding-top:14px; }
+ .retail-product-dialog :is(.form-control,.form-select) { min-height:40px; font-size:14px; }
+ .retail-product-dialog label { font-size:13px; font-weight:550; }
+ .retail-product-dialog small { display:block; font-size:12px; margin-top:4px; }
+ .retail-product-dialog #quick-specifications > :is(label,select):first-of-type { display:none; }
+ .retail-product-dialog details:not([open]) > :not(summary) { display:none; }
+ .retail-product-dialog details[open] > summary { margin-bottom:12px; }
+ .retail-product-dialog .purchase-registration { scroll-padding-top:12px; }
+ @media(min-width:992px) { .retail-product-section .col-lg-4 { width:33.333333%; } }
+ @media(max-width:767px) {
+  .retail-daily-actions nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .retail-guide-prompt { max-width:65px; text-align:right; }
+  .sf-retail-ui .sf-main :is(.form-control,.form-select) { min-height:44px !important; font-size:16px !important; }
+  .sf-retail-ui .sf-main .btn { min-height:42px !important; }
+  .retail-product-dialog :is(.form-control,.form-select) { min-height:44px !important; font-size:16px !important; }
+  .retail-product-section { padding:12px; }
+ }
+ @media(max-width:399px) {
+  .retail-daily-actions nav { grid-template-columns:minmax(0,1fr); }
+  .retail-screen-guide summary { align-items:start; }
+ }
+}
+@media print { .retail-screen-guide,.retail-daily-actions { display:none !important; } }
+.product-extra-specifications { margin:10px 0; border-top:1px solid #e5eaf2; padding-top:10px; }
+.product-extra-specifications > summary { font-size:13px; color:#36557c; cursor:pointer; }
+.product-extra-specifications[open] { padding-bottom:12px; }

@@ -1,0 +1,241 @@
+StockFlow implementation status — starting from the 62-workflow audit
+
+Q01 Quotations & Estimates: implemented in source, with real persisted database/API
+and browser verification. Production release remains gated; migration 083 is manual
+and has not been applied to the configured application database or production.
+
+Existing functionality reused: SalesRepository.QuoteAsync/CreateSaleAsync, SaleRules,
+BillingPolicyStore/BillingDiscountPolicy, BillingApproval, current catalog/customer/
+serial lookup, company snapshots, New Sale drafts/recovery, existing payment and GST
+posting, Razor/browser printing and current authorization/RLS infrastructure.
+
+Core files added:
+ database/migrations/083_quotations.sql
+ src/StockFlow.Application/DTOs/Sales/QuotationModels.cs
+ src/StockFlow.Application/Interfaces/IQuotationRepository.cs
+ src/StockFlow.Infrastructure/Repositories/QuotationRepository.cs
+ src/StockFlow.Web/Controllers/QuotationsController.cs
+ src/StockFlow.Web/Filters/QuotationExceptionFilter.cs
+ src/StockFlow.Web/Pages/Quotations/{Index,Create,Edit,Details,Print}.cshtml
+ src/StockFlow.Web/Pages/Quotations/Print.cshtml.cs
+ src/StockFlow.Web/Pages/Shared/_QuotationEditor.cshtml
+ src/StockFlow.Web/wwwroot/{js/quotations.js,js/quotation-print.js,css/quotations.css}
+ tests/StockFlow.MasterDataChecks/QuotationChecks.cs
+ tests/StockFlow.UiChecks/quotations-offline.cjs
+
+Existing files extended: SaleModels.cs (nullable source lineage preserving old JSON),
+SaleRules.cs (complete source identity), BillingApproval.cs (source-bound approval),
+SalesRepository.cs (migration guard), Program.cs (DI), PermissionCatalog.cs and
+PermissionMiddleware.cs (new actions), sales-create.js (scoped quotation import and
+draft/source recovery), test Program/FakeSecurityRepository and billing browser test.
+
+New QUOTATIONS permission actions: VIEW/CREATE/EDIT/STATUS/CONVERT/PRINT/EXPORT.
+No stock, payment, revenue, GST invoice or implicit reservation is posted by a quote.
+Conversion links atomically within the existing sale transaction. Dedicated quote
+counters and immutable commercial revisions preserve previously shared documents.
+
+Verification commands (isolated output):
+ dotnet build tests/StockFlow.MasterDataChecks --artifacts-path E:\StockFlow\.artifacts\quotations -v quiet
+ dotnet .artifacts/quotations/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --quotation-checks
+ dotnet .artifacts/quotations/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --billing-checks
+ dotnet .artifacts/quotations/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --fast-billing-checks
+ Playwright Node: tests/StockFlow.UiChecks/quotations-offline.cjs
+ Playwright Node: tests/StockFlow.UiChecks/fast-billing-offline.cjs
+Build and the five listed suites passed. Durable captured evidence is in
+docs/quotation-verification-2026-11-02.txt; full local outputs are in
+.artifacts/quotations/*.log. Browser HTTP is mocked; database
+checks use separate disposable databases, not the configured application database.
+
+Release decisions still outstanding: A03 production shop-master ownership mapping,
+actual two-shop topology, verified production backup/recovery and physical devices.
+The backward-compatible additive ownership proposal and rollout/recovery notes are
+in docs/quotations.txt. Existing shared masters/history were not changed.
+No FIFO/weighted-average or historical cost ledger policy was selected or backfilled.
+
+F04 Expenses and F06 report corrections are subsequent independent implementation
+slices. F05 authoritative costing remains gated on explicit valuation-policy design.
+No other audit row should be marked complete merely because Q01 is implemented.
+
+Competitive addendum integrated into existing phases (2026-11-02)
+This does not restart the 62-workflow audit or create another implementation project.
+
+Delivered foundation increment C/D and safe B improvements:
+ - Existing Admin/Pilot gains evidence-based legal/GST/contact/catalog/opening-stock
+   confirmations, four-profile instructions and shop/location/profile-specific local
+   storage. Browser-local evidence is explicitly distinct from central audit records.
+ - Existing health API stays anonymous liveness only. Protected DB readiness and
+   operational evidence return generic failures, no credentials/archive contents.
+ - Existing backup tooling now distinguishes archive/checksum from recoverability.
+   A private collector publishes allowlisted evidence after matching an actual
+   isolated restore test. Admin UI warns on missing/stale evidence and overdue backup.
+ - Existing shop summary defines its source/cutoff/scope, adds current stockout counts
+   and explicitly marks unbuilt finance metrics unavailable. It reuses ReportingRepository.
+ - No checkout controls, new posting path, business-profile engine, financial policy
+   or application-database migration was introduced. See docs/operational-readiness.txt.
+
+Release sequencing and acceptance additions:
+Q01 release: retain A02/A03 shop-master isolation, actual two-shop topology and A09
+production recovery gates. Quotations can be developed/tested independently on scoped
+fixtures; these new checks do not certify deployed ownership or production recovery.
+
+A feature simplicity: after A03 ownership/per-shop profile design is accepted, extend
+the existing BusinessProfiles/BusinessScope and module navigation infrastructure with
+per-shop feature availability (not permission grants). Effective feature use must be
+supported-profile capability AND shop availability AND actor permission AND source
+scope. Owner disable overrides presentation and backend entry points; toggles cannot
+enable unsupported modules. Default migration preserves all four supported profiles;
+it must not repartition or merge masters/history. Add role and same/different-profile
+shop tests at that slice. No per-shop feature toggle is claimed implemented here.
+
+F04 Expenses second vertical slice: expense incurred/paid source semantics, reversal,
+receipts and existing cash closing integration first; then add period expenses and
+drill-down to this same overview. Persist onboarding completion centrally with existing
+permissions/audit patterns in that release; imported record counts alone cannot pass.
+
+F06 correction slice: fix unknown-cost, cross-period receipt/return and tax-exclusive
+estimate defects against repository fixtures before enabling overview profit. FIFO
+versus weighted-average and F05 historical ledger/backfill still need explicit policy.
+Do not implement a guessed cost policy to fill a dashboard tile.
+
+F03/F07/F08: agree invoice-vs-order supplier liability and cutoff before overview AP;
+complete source-report drill-down/export reconciliation, including opening balances.
+F09: unmatched settlement count only after statement/matching/reversal facts exist.
+I08/I10: lot expiry/fractional quantities remain disabled until every receipt, sale,
+return, count, transfer, service and reporting consumer supports the chosen model.
+
+D operations follow-up: existing failure outbox remains reused. Add durable scheduled
+run/overdue alert history and complete migration/checksum tracking when a trusted job
+reporter/deployment identity is configured. Current probes detect capabilities only;
+current stale/overdue alerts are administrator UI warnings, not background notifications.
+Perform actual offsite/asset/key restore and source-balance drill before release.
+
+Every slice keeps white/navy/charcoal/pink compact UI, contextual advanced controls,
+existing pagination/responsive tables, tenant/shop/role denials, immutable history,
+retry/concurrency checks and supported-profile regressions. No operational controls
+belong in New Sale. No existing audit status is promoted by planning alone.
+
+Foundation increment verification (actual results, 2026-11-02)
+Build: PASS, 0 warnings, 0 errors (isolated .artifacts/readiness output).
+Operational readiness API/evidence suite: PASS, including real runtime-scoped test DB
+success, actual connection failure/503, no credential/path leakage, anonymous/staff
+and denied-SECURITY rejection, tenant evidence mapping and all four profile contexts.
+Existing reports application suite: PASS (route/source-scope and permission checks).
+Existing shop readiness application suite: PASS (cash closing and pilot permissions).
+New onboarding Playwright suite: PASS (actual Razor/assets, HTTP mocked).
+Existing summary Playwright suite: PASS (stockouts incl zero/negative fixtures,
+responsive layouts, period controls, empty/error handling and current-stock display).
+RecoveryEvidenceChecks.ps1 -RunDatabaseIntegration: PASS, actual pg_dump/checksum and
+isolated pg_restore with verification/cleanup on the dedicated test cluster only.
+BackupTaskChecks.ps1: PASS, mocked Task Scheduler; no real task registered.
+Test cluster started for these checks and stopped after successful verification.
+No configured application/production database or deployed backup schedule changed.
+
+Captured final outputs:
+
+Source .artifacts/readiness/build.log
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Source .artifacts/readiness/checks.log
+PASS: Missing recovery configuration is unknown, never passed
+PASS: Archive evidence alone never claims a restore test
+PASS: Matching collector evidence records database-only restore scope
+PASS: Stale collector and overdue backup are independent warnings
+PASS: Future backup evidence rejected
+PASS: Restore evidence cannot predate the matching archive
+PASS: Malformed private evidence fails closed
+PASS: Oversized evidence not loaded
+PASS: Public liveness has no database or backup diagnostics
+PASS: Anonymous denied /api/database/health
+PASS: Anonymous denied /api/database/operations
+PASS: Sales cannot read operational evidence
+PASS: Sales cannot probe database readiness
+PASS: Service cannot read operational evidence
+PASS: Service cannot probe database readiness
+PASS: Real connection failure returns readiness 503
+PASS: Readiness response omits credentials, paths and unrecognized evidence fields
+PASS: Operational response is not cached
+PASS: Database failure omits provider diagnostics
+PASS: Owner/admin status does not override denied SECURITY permission
+PASS: Tenant evidence mapping cannot fall back to another tenant's file
+PASS: ELECTRICAL has profile/shop-specific onboarding context
+PASS: BIKE_ACCESSORIES has profile/shop-specific onboarding context
+PASS: CLOTHING has profile/shop-specific onboarding context
+PASS: FOOTWEAR has profile/shop-specific onboarding context
+PASS: Real test database succeeds through runtime-scoped readiness probe
+PASS: Actual SQL capability results serialize with the documented fields
+PASS: Actual runtime database readiness returns 200
+Operational readiness checks passed. No production database, backup or task was modified.
+
+Source .artifacts/readiness/reports.log
+PASS: Reports renders and hides unauthorized destinations.
+
+Source .artifacts/readiness/pilot-regression.log
+PASS: Cash closing includes receipts, refunds, supplier payments and manual movements exactly once
+PASS: Invalid cash closing rejected
+PASS: Invalid cash closing rejected
+PASS: Invalid cash closing rejected
+PASS: Invalid cash closing rejected
+PASS: Invalid cash closing rejected
+PASS: Cash differences require a reason
+PASS: Anonymous cash closing rejected
+PASS: Sales cannot review owner cash totals
+PASS: Sales cannot open cash closing page
+PASS: Sales cannot sign off shop pilot
+PASS: Service cannot review owner cash totals
+PASS: Service cannot open cash closing page
+PASS: Service cannot sign off shop pilot
+PASS: Cash closing requires CSRF token
+PASS: Owner reads authoritative cash report
+PASS: Owner saves closing with a reason
+PASS: Consolidated location cannot close cash
+Shop readiness checks passed using mocked repositories. Physical shop checks remain pending.
+
+Source .artifacts/readiness/browser.log
+PASS: actual onboarding Razor, evidence-required sign-off, edit invalidation, reload, all four profile contexts, archive/stale/overdue warnings and mobile layout; mocked HTTP.
+
+Source .artifacts/readiness/summary-browser.log
+PASS: five KPIs, real comparisons, six panels, trend, top products, current/low stock, activity, shared dates, responsive layouts, empty results and error handling.
+
+Source .artifacts/readiness/recovery.log
+PASS: archive-only status, reserved output protection and checksum mismatch rejection.
+Restore test passed: stockflow_restore_test_1065c80206da4c5eb0950e749e9109b6
+PASS: actual pg_dump, checksum, isolated pg_restore, schema/index/RLS verification, disposable restore cleanup and matching evidence publication. Test database only.
+
+Source .artifacts/readiness/backup-task.log
+PASS: generated daily backup task, unattended settings, quoted paths, refusal to replace existing task and maintenance script syntax. No scheduled task was installed.
+
+E-way request increment (2026-11-02)
+G10 is now Partial, not Missing or complete. The independently useful preparation
+release is implemented; no authorized NIC/GSP adapter/specification/credentials were
+supplied, so official API generation and lifecycle remain blocked and not exposed.
+The existing 62-row matrix was updated only for G10; no repeat audit was performed.
+
+Manual migration 084_eway_preparation.sql follows 083. It adds scoped preparation
+and immutable revision/action history, granular existing-system permissions and
+narrow writer functions. It also fixes a reproduced alias/row-variable ambiguity in
+051's actual transfer request/approval profile guard, retaining the same scope check.
+No configured application or production migration was applied by this work.
+
+Reused: actual GST invoice snapshots, legal registrations/effective shop mappings,
+sales/purchase/transfer sources, current authorization/RLS, CSRF, Razor/CSV/printing,
+existing HTTPS deployment and logs. No extra financial/stock posting or GST calculator.
+Source references/revisions, original-value preservation, strict shop/profile/source
+scope, portal worksheet, unverified external references and local metering are tested.
+No StockFlow monthly numeric cap is present; commercial unlimited-provider entitlement
+is not claimed without the actual plan/provider agreement. Provider fees remain unknown.
+
+Screens: /EWayBills, /EWayBills/Prepare, /EWayBills/Provider; contextual GST/admin,
+sales/purchase/transfer links. No New Sale controls were added.
+API: /api/ewaybills source/register/draft/revision/validate/external/export/history/
+usage/provider-readiness actions. No official generate/cancel/update endpoint exists.
+Actual privacy tests confirm e-way party, transport and evidence bodies/search terms
+are omitted from generic logs. Temporary 120/minute actor+tenant request throttling
+is distinct from a monthly quota.
+
+Provider status, phased external dependencies, exact source/validation/export limits,
+files/endpoints/security/rollout and official documentation references are recorded
+in docs/eway-bills.txt. Final test evidence: docs/eway-verification-2026-11-02.txt.
+Do not promote G10 to complete or advertise production automatic generation based
+on this preparation release. E-invoice/IRN functionality is still not implemented.

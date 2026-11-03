@@ -1,0 +1,157 @@
+StockFlow Receive Stock modernization — 2026-10-31
+
+Delivered layout
+Five numbered sections on the same page:
+1. Supplier & Receipt Info
+2. Find or Add Products
+3. Items in This Receipt
+4. Invoice Charges & Attachment
+5. Receipt Summary & Actions
+White cards, navy headings, soft pink section bands, numbered pink indicators,
+charcoal actions and pink hover use scoped Receive Stock styles. Show Steps is
+in the heading and retains the actual guide. Sidebar, navigation and AI assistant
+functionality remain unchanged. The summary stays in document flow so it cannot
+obscure receipt items. Mobile uses stacked editable rows; desktop table overflow
+is confined to its container.
+
+Existing workflow inspected and retained
+- Direct Receipt uses the established POST /api/purchases request with
+  completeImmediately=true. The existing transaction creates the purchase/invoice
+  record and physical receipt together. It does not leave a separate unreceived PO.
+- PO receiving uses POST /api/purchases/{id}/receipts and original purchase-item
+  IDs. A partial delivery updates received/damaged quantities and leaves the
+  remainder open. Original order prices, discounts and taxes remain authoritative.
+- PurchaseRepository and PurchaseReceiptRepository retain their transactions,
+  profile locking, idempotent request IDs, serial validation, inventory posting,
+  historical records and cost handling. No posting service was rewritten.
+- PurchaseRules remains authoritative for quantities, purchase costs, tax,
+  discounts, landed charges and attachment validation. Existing tax-exclusive
+  preview calculation was retained, including damaged deliveries in supplier
+  invoice value until a return/credit is recorded. Accepted value is disclosed
+  separately. No new tax mode or valuation formula was introduced.
+- Drafts remain in IndexedDB, keyed by tenant/user/location/profile, including
+  invoice attachment data. Saving/reviewing a draft makes no inventory write.
+  The same pending request is retained for uncertain response retries. Definitive
+  400/422 validation failures unlock correction; authorization/connection failures
+  retain the pending request for safe reconciliation/retry.
+- Invoice terms, costs, attachments, supplier outstanding balance and supplier
+  payments retain their existing source records. Receiving does not mark a bill paid.
+
+Product and supplier selection
+- The standalone Add Variants panel was a bulk selector for existing variants,
+  not a registration API. It is removed. Existing registered sizes/colors/models
+  now appear as exact SKU rows in the product search table. Quantities can be
+  entered per selected receipt row, preserving the essential receiving capability.
+- One scan/search field supports current catalog relationships: product/parent
+  code, SKU, model, brand, part/supplier references, barcode mappings, structured
+  attributes/fitments and legacy SKU aliases. Search is debounced, limited to 30
+  server results, and stale responses cannot replace newer results.
+- Exact scans use the existing scanner queue, camera handler and scan endpoint.
+  Existing physical units cannot be received again. Ambiguous identifiers require
+  explicit SKU selection. An active SKU with zero current stock can be received.
+- Search results include product identity/image, variant, SKU, barcode, brand,
+  current stock and Add. Arrow keys highlight and Enter chooses a highlighted
+  result; Escape closes suggestions. Scanner Enter does not submit the receipt.
+- Add New Product opens /Products/Create in another tab. Authorized Manage variants
+  actions open /Products/Edit?id=... in another tab. These are the existing Product
+  Registration/Edit workflows, not receipt-specific product or SKU creation forms.
+  The receipt remains open and its draft is saved. Returning refreshes selected
+  catalog data and the current search; Refresh Products is also available.
+- Supplier selection has search by name/code/GSTIN/phone and displays available
+  contact metadata. PO selection fills and locks its supplier. Receipt context
+  must be valid before adding products, with inline guidance and focus to the
+  missing control. Inactive/unavailable restored supplier references are retained
+  for review rather than silently replaced by an unrelated supplier.
+- Restored/selected product tracking, pack configuration and active status are
+  checked. Invalid draft items remain visible for review/reselection. Edited
+  commercial prices are not silently replaced by catalog defaults.
+
+Receipt editing and confirmation
+- Rows retain received, damaged and accepted quantity, price, discount, tax,
+  exact SKU, serial IDs and purchase-item IDs. Current stock and editable MRP
+  are visible; +/- controls respect quantity limits. Batch/date/supplier-code,
+  damage-reason and serial/internal-ID controls remain in the existing detail dialog.
+- Repeat scans merge only compatible standard receipt contexts. Batch/date,
+  price, tax, discount, MRP or damage differences keep separate lines. Serial
+  identifiers remain individually recorded and duplicate IDs are rejected.
+- Add More Items focuses the existing search and never creates a blank line.
+  Clear All Items uses the shared application confirmation and preserves supplier
+  and invoice fields. Cancel keeps every receipt line.
+- Credit days, due-date preview, freight, charges and invoice discount remain.
+  PDF/JPG/PNG attachment handling retains the existing 5,000,000-byte limit and
+  stored draft references. Remove attachment explicitly clears its draft reference.
+- Summary includes line count, received quantity, subtotal, tax, charges, invoice
+  discount and grand total. No unsupported free-quantity accounting was added.
+- Review Receipt rechecks catalog and live PO eligibility/outstanding quantities
+  while locking background edits. It performs no inventory write. Changed PO
+  prices require review/reselection instead of silently changing agreed inputs.
+- Review shows supplier, receipt type/PO, dates/location, invoice/notes/attachment,
+  SKU/batch/serial identities, received/damaged/accepted counts and financial totals.
+  The centered warning icon, white review dialog, charcoal/pink buttons, keyboard
+  behavior and Confirm & Receive Stock action use the approved theme.
+- Only final confirmation sends the existing posting request. Damaged units stay
+  outside sellable stock. Successful completion clears/marks the draft clean.
+
+API/database changes
+GET /api/products/variants adds optional receiving=true, using the existing
+catalog query with active variants and SQL LIMIT 30. Empty searches return no
+catalog dump, terms are bounded to 200 characters, a selected location is required,
+and existing PRODUCT_VARIANTS authorization remains. Other callers and billing
+mode retain their behavior. IVariantRepository has a compatible default
+SearchForReceiptAsync implementation; the production repository bounds SQL results.
+No schema migration, historical-data update, SKU regeneration or business-database
+script is required. The legacy SKU correction script was not changed or rerun.
+
+Validation executed
+PASS: --receive-stock-ui-checks (Razor section/action labels, removal of standalone
+variant control, existing Product route, empty/oversized query handling, permissions).
+PASS: receive-goods-offline.cjs with real page scripts and mocked APIs: supplier
+context, registered SKU selection, zero-stock Add, keyboard/pointer search, product
+registration tab and draft preservation, calculations/damage, invoice attachment,
+draft restoration, review/cancel without posting, lost-response exact retry,
+partial PO receipt, over-receipt blocking, PO supplier locking, duplicate serials,
+internal-unit-ID retry, Add More Items, quantity controls and clear/cancel.
+Responsive checks executed at 1600/1366/1024/768/390/320 pixels.
+PASS: --receive-stock-integration-checks, real PostgreSQL temporary clone only:
+registration and PO creation add no stock; parent lookup returns exact zero-stock
+SKUs; concurrent direct receipt creates one document; taxes/charges/discount,
+terms/attachment, exact variant/cost/batch metadata, accepted/damaged stock,
+idempotent posting, partial PO quantities and over-receipt rejection, serial unit
+states, stable barcode preparation without stock movement, supplier partial-payment
+idempotency, and location/tenant/stale-profile isolation.
+PASS: --receiving-catalog-extension-checks (existing purchase/attachment rules).
+PASS: --billing-checks (existing billing API/page regression).
+PASS: product-details-offline.cjs (four-step Product Add/Edit browser regression).
+Release build PASS: zero warnings, zero errors.
+Temporary integration databases were dropped and the disposable PostgreSQL cluster
+was stopped after testing.
+Screenshots: tests/bin/receive-goods-main.png, receive-goods-item.png,
+receive-goods-review.png, receive-goods-success.png.
+
+Validation limits and capabilities
+Browser APIs were mocked; PostgreSQL posting tests were separate and used a
+temporary clone of the existing disposable 069 fixture, never the business DB.
+Physical camera/scanner devices and paper label printing require device checks;
+existing camera/printing paths were reused, not replaced. Serial barcode identity
+and no-stock-change preparation were verified through the real repositories.
+Free quantities are not represented by the current purchase model, so no fake
+free-quantity column/accounting was added. Batch/expiry fields retain current
+purchase metadata behavior; no new batch valuation or reservation architecture
+was introduced. Desktop Product Registration remains the same four-step workflow.
+The broad legacy --variant-ui-fixtures command encountered an unrelated existing
+StoreAssignmentChecks assertion; the scoped receiving check generated the required
+fixtures directly and all reported receiving checks then completed.
+
+Files modified/added
+src/StockFlow.Web/Pages/Shared/_ReceiveGoods.cshtml
+src/StockFlow.Web/wwwroot/js/receive-goods.js
+src/StockFlow.Web/wwwroot/css/receive-goods.css
+src/StockFlow.Web/Controllers/VariantController.cs
+src/StockFlow.Application/Interfaces/IVariantRepository.cs
+src/StockFlow.Infrastructure/Repositories/VariantRepository.cs
+tests/StockFlow.MasterDataChecks/ConfigurationChecks.cs
+tests/StockFlow.MasterDataChecks/ReceiveStockChecks.cs
+tests/StockFlow.MasterDataChecks/ReceiveStockIntegrationChecks.cs
+tests/StockFlow.MasterDataChecks/Program.cs
+tests/StockFlow.UiChecks/receive-goods-offline.cjs
+docs/receive-stock-modernization.txt

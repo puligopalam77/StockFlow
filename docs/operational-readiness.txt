@@ -1,0 +1,98 @@
+StockFlow onboarding and operational readiness - 2026-11-02
+
+This extends the existing Administration pilot checklist, reporting source and
+maintenance scripts. It is not a replacement audit or a new financial subsystem.
+No SQL migration is required for this addition. Migration 083 remains separately
+manual and was not applied to the configured application database by this work.
+
+Administration /Admin/Pilot
+Owner/admin review plus SECURITY VIEW is required through existing middleware.
+The existing operator checklist now includes legal identity, GST applicability,
+contact/catalog readiness and opening-stock reconciliation. No automatic pass is
+inferred from records existing. All 15 confirmations need evidence before sign-off;
+an edit invalidates sign-off. Serial and repair instructions apply only to Electrical.
+Local confirmations are keyed by tenant, actor, shop, location and existing profile.
+Old browser records remain under their original key. Nothing copies confirmations
+into another scope. Exported JSON includes scope key, profile and timestamps.
+This is browser-local operator evidence, not an immutable central compliance record.
+Clearing browser data loses it unless exported. General opening AR/AP import is
+unsupported and cannot be approved by a new checkbox. Do not enter personal data,
+passwords, archive paths or backup contents in the checklist.
+
+Health and evidence
+GET /api/health is anonymous application liveness only, no DB/storage diagnostics.
+GET /api/database/health requires SECURITY VIEW and owner/admin review; SELECT 1
+uses the existing runtime-scoped connection and a five-second cancellation budget.
+Failures return 503 with a generic error, not provider messages or credentials.
+GET /api/database/operations has the same authority plus a positive tenant scope.
+It returns scoped IDs, current database availability, detected 082/083 function
+capabilities and only allowlisted recovery status/timestamps. Capability detection
+is not migration checksum/history verification. No business tables are read here.
+Failure logs contain failure type, tenant/request IDs; no exception message/SQL/data.
+All health/readiness responses disable caching. Nothing is added to New Sale.
+
+Evidence deployment (operator action; not configured automatically)
+Use the existing Backup-StockFlow.ps1, scheduled task installer, failure-alert wrapper
+and Test-StockFlowRestore.ps1. Backup output now says archive/checksum created,
+not recoverability verified. The existing bearer-authorized failure alert remains
+the mechanism for an actually failed backup. No external alert was sent in tests.
+
+After an actual backup/restore run, publish an allowlisted status file:
+ powershell.exe -NoProfile -File database/maintenance/Get-StockFlowRecoveryStatus.ps1 -Archive <private dump path> -OutputFile <private status path>
+The collector hashes the real archive, checks the manifest checksum and only records
+a restore when matching successful isolated-restore evidence has the same checksum,
+the expected disposable database identity and sensible timestamps. A dump by itself
+produces ArchiveOnly. No paths, database names, hashes or raw verification rows are
+published to the application. Publishing does not perform a restore itself.
+The collector and evidence producer are trusted OS administrator tools. Restrict
+ACLs: backup operator writes; application identity reads the small status file only.
+The application must have no access to backup contents. Evidence is not digitally
+signed: a compromised authorized operator can forge local files.
+
+Configure on the deployed server (environment/secret configuration, not a public file):
+ Operations:Tenants:<actual tenant ID>:RecoveryEvidenceFile = absolute private status file
+ Operations:BackupMaximumAgeHours = 26 (default, configurable 1..8760)
+Never point at wwwroot or a web-served directory; direct wwwroot paths are rejected.
+Web-server aliases/symlinks must also be kept private by deployment ACL/configuration.
+Do not map one tenant's file to another tenant. A shared physical multi-tenant
+database restore is deployment-level evidence, not proof of per-shop recoverability.
+The API never accepts a tenant or path override from the caller.
+
+Run the collector periodically (at least hourly) from the existing operations job,
+using the latest successful archive for the intended deployment, and after restore
+tests. A collector observation older than one hour is stale; old backups are flagged
+overdue independently. Missing/malformed evidence remains unknown/unavailable.
+The status does not claim the most recent scheduled task succeeded: a failed newer
+job may coexist with an older successful backup. Check existing failure alerts/task
+history too. No task, retention policy or offsite replication was installed here.
+
+Restoration scope is deliberately limited: the existing restore test verifies actual
+pg_restore plus required tables, index validity, runtime role and cash-closing RLS.
+It does not certify every policy, source balance, uploaded asset, external secret,
+physical device, offsite copy or RPO/RTO. Full deployment recovery still needs an
+isolated app startup with assets/keys, financial/stock reconciliation and timed drill.
+
+Business Overview
+Existing /Reports/Activity remains the source; no duplicate calculation engine.
+Collapsed definitions specify tax-inclusive period invoice/return values, period
+sale collections less refunds, as-of customer outstanding and current SKU stock.
+Scope and dates remain visible. Stockouts count active scoped SKUs with current
+quantity <=0; negative balances require reconciliation. Existing stock/low-stock
+reports provide investigation links. Shared-master SKUs with no shop movement can
+appear as zero under the existing ownership model; this is not a demand forecast.
+Expenses/AP/verified margin/unmatched settlements are explicitly unavailable,
+not zero. Further source drill-down and finance figures follow their phased slices.
+
+Verification
+ dotnet build tests/StockFlow.MasterDataChecks --artifacts-path E:\StockFlow\.artifacts\readiness -v quiet
+ dotnet .artifacts/readiness/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --operational-readiness-database-checks
+ dotnet .artifacts/readiness/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --reports-checks
+ dotnet .artifacts/readiness/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --shop-readiness-checks
+ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/RecoveryEvidenceChecks.ps1 -RunDatabaseIntegration
+ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/BackupTaskChecks.ps1
+ Playwright Node: tests/StockFlow.UiChecks/operational-readiness.cjs
+ Playwright Node: tests/StockFlow.UiChecks/shop-summary-offline.cjs
+Database integration uses only the dedicated port-55443 test cluster/template.
+It never loads production credentials, creates a production backup or registers
+a real scheduled task. Browser HTTP is mocked; Razor output and assets are real.
+Final captured results are appended to the existing implementation status file.

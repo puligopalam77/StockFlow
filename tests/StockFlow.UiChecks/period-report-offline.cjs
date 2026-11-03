@@ -1,0 +1,27 @@
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
+const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/reports-ui-fixtures');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[],queries=[];let denied=false,stockOnly=false,empty=false;
+ page.on('pageerror',e=>errors.push(e.message));await page.clock.setFixedTime(new Date('2026-03-08T12:00:00'));
+ await page.route('**/*',async route=>{const url=new URL(route.request().url()),json=(body,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});
+  if(url.pathname==='/Reports/Activity')return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(output,stockOnly?'ActivityStockOnly.html':'Activity.html'),'utf8')});
+  if(url.pathname==='/api/branches/context')return json({canReviewStores:true,locations:[{locationId:1,storeId:1,storeName:'Main',locationName:'Counter'}],locationId:1,storeId:1});
+  if(url.pathname==='/api/reports/activity'){queries.push(Object.fromEntries(url.searchParams));if(denied)return json({message:'Report permission revoked'},403);return json({scope:'Main store / Counter',canSeeStock:true,canSeeSales:!stockOnly,stock:empty?[]:[{locationId:1,variantId:1,storeName:'Main',locationName:'Counter',productName:'Shirt / Blue M',opening:10,openingAdded:3,receipts:5,sales:2,adjustmentIn:2,adjustmentOut:1,transferIn:0,transferOut:0,transferLoss:0,otherIn:2,otherOut:0,closing:19,reconciles:true}],financial:stockOnly||empty?[]:[{storeName:'Main',locationName:'Counter',invoiceCount:1,invoiceQuantity:2,salesValue:200,collections:90,creditOutstanding:210,reconciles:true}],credit:stockOnly||empty?[]:[{invoiceNumber:'INV-1',saleDate:'2026-03-01T10:00:00',customerName:'A customer',locationName:'Counter',outstanding:210}]});}
+  if(url.pathname.startsWith('/api/'))return json([]);
+  const file=path.join(root,'src/StockFlow.Web/wwwroot',url.pathname.replace(/\.[a-z0-9]{10}(?=\.(js|css|png)$)/,''));if(fs.existsSync(file)&&fs.statSync(file).isFile())return route.fulfill({path:file});return route.fulfill({status:404,body:''});
+ });
+ await page.goto('http://stockflow.test/Reports/Activity');await page.waitForSelector('#activity-stock tr');assert.deepEqual(queries.at(-1),{from:'2026-03-08',to:'2026-03-08'});
+ assert((await page.locator('#stock-summary').textContent()).includes('Closing 19'));assert((await page.locator('#activity-financial').textContent()).includes('210'));assert((await page.locator('#activity-credit').textContent()).includes('A customer'));
+ await page.locator('#activity-period').selectOption('week');await page.locator('#activity-load').click();await page.waitForFunction(()=>document.querySelector('#activity-status').textContent.includes('2026-03-02'));
+ assert.deepEqual(queries.at(-1),{from:'2026-03-02',to:'2026-03-08'});
+ await page.locator('#activity-period').selectOption('month');await page.locator('#activity-load').click();await page.waitForFunction(()=>document.querySelector('#activity-status').textContent.includes('2026-03-01'));
+ assert.deepEqual(queries.at(-1),{from:'2026-03-01',to:'2026-03-08'});
+ await page.locator('#activity-period').selectOption('custom');await page.locator('#activity-from').fill('2026-02-01');await page.locator('#activity-to').fill('2026-02-28');await page.locator('#activity-load').click();await page.waitForFunction(()=>document.querySelector('#activity-status').textContent.includes('2026-02-28'));
+ const count=queries.length;await page.locator('#activity-from').fill('2026-03-01');await page.locator('#activity-load').click();await page.waitForSelector('#activity-error:not([hidden])');assert.equal(queries.length,count,'invalid dates never sent');
+ await page.locator('#activity-from').fill('2026-02-01');denied=true;await page.locator('#activity-load').click();await page.waitForFunction(()=>document.querySelector('#activity-error').textContent.includes('revoked'));assert(await page.locator('#activity-results').isHidden(),'previous data hidden after denial');
+ denied=false;empty=true;await page.locator('#activity-load').click();await page.waitForSelector('#activity-results:not([hidden])');assert((await page.locator('#activity-stock').textContent()).includes('No records'));
+ empty=false;for(const width of [1440,390,320]){await page.setViewportSize({width,height:1000});await page.locator('#activity-load').click();await page.waitForSelector('#activity-results:not([hidden])');await page.waitForFunction(()=>innerWidth>991||(parseFloat(getComputedStyle(document.querySelector('.sf-workspace')).marginLeft)===0&&document.querySelector('.sf-sidebar').getBoundingClientRect().right<=0));assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'period report fits '+width);await page.screenshot({path:path.join(output,`period-${width}.png`),fullPage:true});}
+ stockOnly=true;await page.goto('http://stockflow.test/Reports/Activity?from=2026-03-01&to=2026-03-07');await page.waitForSelector('#activity-stock tr');assert.equal(await page.locator('#financial-report').count(),0);assert.deepEqual(queries.at(-1),{from:'2026-03-01',to:'2026-03-07'});assert.deepEqual(errors,[]);
+ console.log('PASS Today/This Week/This Month/custom dates, totals, permissions, empty/error states and responsive period reports');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

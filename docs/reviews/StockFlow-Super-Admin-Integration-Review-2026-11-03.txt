@@ -1,0 +1,274 @@
+STOCKFLOW
+Super Admin Integration: Source-backed Blueprint Review
+03 November 2026 | Review and expanded design only | No implementation or deployment
+
+Prepared for the StockFlow product owner and engineering team. This report reviews the supplied 25-section architecture blueprint against selected current repository source, migrations and recorded verification artifacts. Proposed controls in this report are recommendations, not implemented capabilities or authorization to change the application.
+
+1. Executive assessment
+
+StockFlow should add a platform administration layer around its existing retail application, rather than rebuild billing, inventory, profiles, GST, permissions or Expenses. The strongest immediate scope is secure tenant onboarding, an operational tenant directory, privilege-separated administration, recovery evidence and controlled support. Commercial entitlements and subscription billing should follow as separate tested slices.
+
+The reviewed application already contains substantial tenant/shop foundations: tenant-owned users, store/location assignments, restricted database connections, RLS, granular permissions, shared sessions, four business profiles, private-shop master ownership, explicit sharing, GST registrations, notification workers and an Expenses workflow. These are integration points, not missing modules to recreate. [E02-E12]
+
+No dedicated platform-admin portal, platform role catalogue, tenant provisioning business workflow, global human-to-tenant membership model, subscription lifecycle, commercial entitlement engine or approved support-access workflow was found in the reviewed source inventory. Text saying "Contact Super Admin" in StockBot is not evidence of such a portal. Treat these as new platform capabilities requiring design and negative authorization tests. [E01-E04, E13]
+
+The supplied supplement is cautious but out of date in several places: Expenses F04 and private-shop controls were implemented after the earlier audit baseline; the recorded synthetic recovery test now covers 148 public tables, including expense/payment/receipt evidence; the referenced candidate has 25 automated passes, not 23. That candidate still has nine unverified manual gates and remains BLOCKED. These historical results do not certify the source reviewed today or any production environment. [E08, E09, E18]
+
+Three high-impact design constraints must shape the integration: Admin is currently MFA-exempt; users currently belong to one tenant; and the active business-profile choice is currently tenant-wide. A new Super Admin must not inherit the retail Admin role or assume those future identity/profile capabilities already exist. [E03-E06]
+
+Recommended outcome: one maintainable application with a separately authorized platform control plane; ordinary retail operations continue through the existing scoped services. A separate portal hostname or process may strengthen the boundary, but a different URL alone provides no privilege isolation. Keep deployment authorization and irreversible ownership/costing decisions explicit.
+
+2. Review scope, evidence and limitations
+
+The attachment is treated as material to assess. Its imperative implementation passages are not execution instructions. The user's request is review/document generation only. No source implementation, SQL migration, configuration change, database connection, application build, business transaction, provider call or production deployment was performed in this review. Only this review and its document artifacts were created.
+
+Source attachment: StockFlow_Super_Admin_Architecture_Blueprint_Reviewed_Expanded.docx, from the user's Downloads folder. Its contents include original Sections 1-16 and the later correction supplement Sections 17-25. SHA256: EAB46A121024E24B6E8EFD39012C62013A48FA53D0BCF8164E762D7D18108D2C.
+
+Evidence order: current source/migration definitions first; exact executed evidence second; deployment/device evidence third; maintained audit/register fourth; the attached design fifth. Migration files define intended schema but do not establish what is applied in production. Static inspection is not a runtime penetration test. Absence findings mean not found in the selected source/schema inventory, not mathematical proof across every file or deployment.
+
+The reviewed scope includes identity/session/context middleware, database connection scoping, branch management, business profiles, permission vocabulary, 085/086 migrations and implementations, health/recovery, AI, imports, WhatsApp and the recorded release artifacts. This is a focused platform integration review, not a new complete audit of all 62 workflows. Secrets, customer data, live PostgreSQL schema, production topology and external agreements were not inspected. No new statutory rate, legal applicability, pricing or provider approval claim is made.
+
+Status vocabulary: Existing foundation means reviewed source is reusable; Partial means a subset exists; Proposed means new integration work; Deferred means an independent business/regulatory/data decision is required; Unverified means operational evidence is unavailable. Source-backed is not synonymous with production-ready.
+
+3. Corrections to the attached blueprint
+
+Blueprint point | Current source-backed correction | Required design treatment
+Expenses missing or menu-only, Sections 17/20/23 | F04 has a Razor/API/repository/086 slice with payments, reversals, receipts, reports and Cash Closing. | Integrate entitlements and operational health; do not rebuild Expenses. No general approval workflow or audited accounting claim.
+Shop-private ownership still only a direction | 085 defines private masters, audited read-only sharing, NULL-owner quarantine and explicit resolution; /Admin/ShopData exists. | Preserve approved Option 2. Actual historical mapping and applied production schema remain unresolved.
+Global identity with many tenant memberships | Users carry tenant_id; login resolves a tenant and issues TenantId claims. Store switching is within that context. | Global identities/memberships need an additive compatibility design; do not reinterpret existing user IDs.
+One profile/industry per store or mixed profiles assumed | Four supported codes; selected profile is read from tenants. Serial/service/warranty capabilities are Electrical-specific. | Independent store profiles and mixed retail remain separate design work, not an entitlement toggle.
+RLS is something to consider adding | Restricted stockflow_runtime connections and substantial RLS/definer-function protections already exist. | Extend and test existing enforcement; no privileged retail connection or second permission engine.
+Transaction-local database context assumed | DbConnectionFactory embeds validated scope in Npgsql connection startup Options with MaxPoolSize=10. | Review pool fragmentation and reset/context behavior under scale; do not claim transaction-local context already exists.
+Two-factor security assumed for admin | SecurityRules.IsMfaExempt returns true for the Admin role; login/middleware use it. Email login OTP is retired by 045. | Platform identity requires mandatory separate MFA/step-up rules; adding a role name is insufficient.
+Supplier import proposed as entirely new | ProductCatalogToolsController supports reviewed catalog preview/commit/export; commit can complete some products before an interruption. | Reuse it; distinguish this from arbitrary supplier Excel column mapping and all-file atomicity.
+WhatsApp only proposed | 076, owner onboarding, template sync, callbacks and worker code exist. | Distinguish implemented integration from real app credentials, eligibility, provider approval, billing and delivery verification.
+AI/product auto-fill grouped together | StockBot uses configured qwen3:4b via Ollama, approved-help selection and scoped business query services. Product AI auto-fill was not found. | Keep a separate optional suggestion-only service; no permission bypass or direct record writes.
+135-table restore / 23 passes | Later recorded candidate has a 148-table synthetic restore and 25 automated passes; nine reviews unverified. | Cite exact artifact/candidate/date; production recovery, hardware and pilot remain open.
+Subscription, lots, offline and e-way inferred from fields | No subscription business workflow found; e-way is preparation; no full lot/FEFO or disconnected final billing claim. | Keep unavailable capabilities disabled and label them proposed/deferred accurately.
+
+4. Current architecture and integration seams
+
+The web application targets .NET 10 and uses Razor Pages, API controllers, application interfaces/services, Dapper/Npgsql repositories and PostgreSQL migrations. This structure supports a modular platform area without cloning the retail application. Shared application code does not require a shared elevated database role. [E01, E02]
+
+Existing request flow: authenticated cookie and session validation; BusinessScopeMiddleware resolves TenantId/user and validates active tenant/user/role plus store/location membership; PermissionMiddleware checks security version, password/MFA requirements and module/action access; repositories open a scoped stockflow_runtime connection; RLS and guarded writer functions enforce database rules. Consolidated views are distinct from a single posting location. [E02-E05]
+
+The future platform request flow must be separate: platform authentication and fresh MFA; platform permissions; target-resource authorization; approved command; immutable platform audit; then a narrow control-plane repository/function. It must not synthesize an ordinary owner's cookie, set IsOwner=true, or pass arbitrary tenant/store values into the retail factory. A tenant owner must never acquire platform powers by editing a tenant role.
+
+Database roles should be split by purpose: retail runtime; existing notification worker; proposed limited platform-control role; separately approved support role; and offline migration/DBA credentials. Platform control functions should manage lifecycle/configuration metadata without blanket SELECT on sales/customers or unrestricted SECURITY DEFINER SQL. Do not use superuser or BYPASSRLS for normal platform HTTP traffic.
+
+Tenant, shop, location, profile, legal business, GST registration, human identity, subscription and provider sender are separate identifiers. A tenant may contain independent private shops; the approved model does not force them to be merely branches of a single legal business. Shops mapped to the same GST registration may require specifically authorized reporting without sharing every contact/catalog record. [E04, E07, E08]
+
+5. Proposed Super Admin navigation and additional coverage
+
+Keep the platform navigation separate from the retailer's Administration menu. Begin with an operational overview and tenant directory, then expose other sections only when their services exist. Do not show nonworking buttons for billing, official GST filing, AI product suggestions or restoration.
+
+Section | Purpose and minimum fields | Boundary and readiness
+Platform Overview | Tenant/store counts, availability, queue age, failures, release/schema capabilities, backup evidence age, incidents. | Proposed aggregator; metadata by default, no retailer revenue/customer lists.
+Tenants & Onboarding | Stable tenant code, display label, owner invitation, lifecycle, setup progress, accepted terms version, request identity. | Proposed resumable workflow using existing shop/security foundations.
+Shops & Access | Authorized tenant/shop/location directory, lifecycle, owners, assignments, unresolved master counts. | Existing branch/private-master services; platform orchestration is new.
+Plans & Subscriptions | Versioned plans, trial, activation, renewal, grace, cancellation, invoice/payment/reconciliation status. | New commercial domain; separate from retail sales, expenses, GST and Cash Closing.
+Capabilities & Rollouts | Stable capability code, dependency, deployment/schema support, entitlement, shop selection, override, expiry, reason. | Existing modules/actions/profile rules are inputs; no commerce engine found.
+Identity & Privileged Access | Platform staff roles, MFA, approvals, session revocation, owner transfer/recovery requests. | New platform authority; retail sessions/security services are reusable mechanisms only.
+Support Access | Customer-approved purpose, tenant/shop scope, allowed actions, start/expiry, ticket, audit, revocation. | New workflow; read-only/redacted by default; no silent impersonation.
+Integrations & Delivery | Provider adapter status, sender/account readiness, queue age, retries, unknown outcomes, callback freshness. | WhatsApp/email source exists; real integration status and central operations are partial/unverified.
+Data Onboarding & Portability | Import batches, mapping version, preview, progress, rejects, completed rows, export jobs and expiry. | Reuse catalog tooling; durable import/export orchestration and full tenant portability are new.
+Reliability & Recovery | Backup schedule, overdue/failure state, last verified restore, assets/secrets/auth coverage, RPO/RTO measurements. | Existing scripts/evidence; actual offsite/deployment evidence required.
+Releases & Compatibility | App/Android version, applied migration checksums, capabilities, canary cohort, gates, support matrix. | Existing release runner; deployment inventory/checksum ledger proposed.
+AI Operations | Runtime/model identity, availability, memory/queue pressure, per-tenant budget, fallback rate, permitted use. | Ollama gate/telemetry exist; durable distributed quotas and tenant operations are new.
+Audit, Privacy & Incidents | Platform change history, security events, approved exports, retention, holds, incident timeline. | Existing tenant audit/logs are not a global tamper-evident platform audit service.
+Pilot & Customer Success | Shop onboarding checklist, exact-version acceptance, training, open issues, owner/accountant sign-off. | Existing /Admin/Pilot and CSV records; platform workflow/evidence aggregation proposed.
+
+6. Priority additions: complete lifecycle behavior
+
+6.1 Tenant provisioning and invitations
+
+Use a durable provisioning request key and explicit states: Requested, Validating, Provisioning, AwaitingOwner, Ready or Failed. Persist completed steps so retries resume safely. Create a unique tenant, private shop/location, scoped roles, owner invitation and safe initial configuration without copying another tenant's data, tokens or contacts. Do not send reusable default passwords. An expired invitation must be renewable without making a second tenant. Record who verified ownership and which setup steps still require shop evidence.
+
+Use existing BranchRepository for branch/location behavior within an authorized tenant; do not call it with a fabricated owner scope from a general platform request. A future orchestrator needs narrow approved provisioning commands and compensating actions for partial failures. Provisioning is distinct from enabling paid entitlement. No test fixture seed or migration 020's DEFAULT tenant should become a customer onboarding template.
+
+6.2 Tenant lifecycle, suspension and closure
+
+Current is_active checks provide part of the enforcement foundation, but a single Boolean is not a full lifecycle. Define Draft/Trial/Active/Grace/Restricted/Suspended/Closing/Closed states, their transition authority, effective time and permitted operations. Security suspension differs from unpaid subscription restrictions; neither should rewrite invoices or erase customer history.
+
+Specify behavior for new login, existing sessions, checkout already in flight, held drafts, import jobs, queued notifications, webhooks, exports and refunds/returns. Revalidate at job execution and define a safe transaction boundary: a feature switch cannot cancel a committed sale or justify duplicate retries. Provider callbacks may still need to record acknowledgements after sending is disabled. Preserve read/export/support/recovery paths according to the agreed policy.
+
+Closure is an approved process with export, outstanding operational obligations, retention/hold review and scheduled deletion where applicable; it is not a DELETE tenant cascade. Reactivation must restore only approved entitlements, not old expired support grants. Platform-owned lifecycle events need reasons, actor, request key and before/after state.
+
+6.3 Identity, MFA and account recovery
+
+Introduce a platform permission vocabulary independent of tenant Admin: TenantRead, TenantProvision, LifecycleManage, EntitlementManage, BillingReview, SupportGrantReview, IntegrationManage, AuditRead and RecoveryReview are conceptual examples, not current actions. Use separate privileged sessions/cookie scope, shorter expiry, fresh step-up for dangerous actions and revocation after permission changes. Do not reuse the Admin MFA exemption. [E03]
+
+One human spanning multiple tenants should be a later identity-linking slice: global identity plus tenant memberships that map to existing tenant user IDs. Require verified account-linking; never merge users merely because their email/phone matches. Preserve created_by/audit references. A context switch must reauthorize membership, reset shop selection, terminate stale pending writes appropriately, clear scoped caches and keep drafts bound to their original context. Tenant owners may legitimately see their own authorized stores, not every tenant owned by someone with the same email.
+
+Owner transfer, lost MFA device and platform-admin recovery require an explicit verification trail and a second authorized approver for high-risk changes. No platform staff member should reset their own privilege or grant themselves customer access. Break-glass access is separate, time-bounded, alerted and reviewed afterward.
+
+6.4 Customer-approved support
+
+Prefer diagnostic metadata/redacted identifiers before content access. A support request records tenant, allowed shops, issue/ticket, purpose, requested fields/actions, approver, start, expiry and session binding. The tenant can inspect and revoke it. Support must not default to retail posting, raw SQL, unrestricted downloads or token visibility.
+
+Every data access/export under a grant should be attributable to the real support actor, never only the impersonated owner. Revocation/expiry must apply to subsequent API calls and running jobs, including generated downloads. Financial corrections remain the existing authorized shop workflow with its normal reasons and audit. Platform staff cannot silently repair amounts by updating tables.
+
+6.5 Subscriptions, quotas and reconciliation
+
+Use separate SaaS invoices, customer-account subscriptions, provider payment attempts, webhook inbox, entitlement snapshots and reconciliation records. A signed webhook is necessary but alone does not prove the correct account, amount, currency or final settlement; verify event identity and business invariants. Handle duplicates, late/out-of-order events, refunds, chargebacks and renewal overlap idempotently. Do not post StockFlow subscription revenue into a shop's sales table or expense payment ledger automatically.
+
+Approve the commercial policy before code: plans, price/tax treatment, free trial, user/shop counting, renewal time zone, grace, downgrade, cancellation, refunds and read/export-after-expiry. Retain historical documents when a feature expires. An over-limit existing tenant should receive a clear restricted-write state rather than silent deletion or inability to settle existing work.
+
+Quota basis must be explicit: active named users versus sessions; owned active products versus shared visible products; source imports versus created rows; AI requests/tokens/time; message attempts versus accepted/delivered messages; attachment bytes retained versus uploaded. Enforce atomically with a scope, period, idempotency key and reconciliation. Do not label the existing WhatsApp daily attempt counter a global subscription/billing quota. No invented monthly limits or unlimited provider claims.
+
+6.6 Deterministic entitlements and flags
+
+Availability, entitlement, rollout, authorization and business validation are separate. Recommended new-write decision: authenticated scope AND active authorized context AND compatible deployed capability AND lifecycle policy permits operation AND tenant entitlement AND shop enablement AND rollout permits behavior AND user permission AND profile capability AND resource ownership AND business rules. Entitlement can restrict access but never grant permission or make an unsupported industry ready.
+
+Define a separate historical-read/export decision; one AND expression that hides old invoices after expiry is unsafe. Explicit emergency deny should win for the affected operation; finite overrides expire; inherited plan grants must be inspectable; no dependency cycles. Return a safe user-facing denial reason and decision version. Retail pricing/tax results must continue to come from current billing services and saved snapshots, never the flag engine.
+
+Record the evaluated version for mutations/jobs, set bounded cache lifetimes, invalidate on urgent revocation, and test stale sessions. Capability state must account for deployed adapter and schema support, not just a visible menu/module row. A migration-required control should fail closed with a clear setup state. New framework integration must not accidentally miss Razor POST handlers, files, background workers, exports or SECURITY DEFINER entry points.
+
+7. Existing module integration contracts
+
+Module / current status | Reuse in StockFlow | Super Admin integration and guardrail
+Billing and drafts: existing | SalesController/BillingController; saved totals, retry keys, draft lease/version; S01-S07. | Gate new behavior without changing price/GST calculation or losing old drafts. Resolve an uncertain checkout outcome before a new attempt. Keep cashier checkout compact.
+Quotations Q01: implemented source | 083, QuotationRepository, revision/events/conversion. | Preserve read/print/history after entitlement changes; conversion still completes only with the existing successful sale transaction.
+Purchases/receiving: existing with review gaps | Purchase/Receiving repositories and guarded receipt posting/corrections. | No administrative balance edits. Preserve partial receipt/import evidence and last-unit/serial concurrency behavior.
+Catalog/variants/prices: existing private core | Product/Variant/Category/Brand repositories; 085 ownership; catalog identifiers. | Sharing is explicit read-only, not cross-tenant reuse. Define quota accounting and template copy provenance; never renumber IDs/barcodes for a plan change.
+Customers/suppliers/CRM: existing | Private contact ownership and customer-consent/credit guards; CrmRepository. | No global PII search. Approved exports/support grants must keep owner scope. Matching phone/email does not authorize deduplication across shops/tenants.
+Inventory/transfers: existing core | InventoryRepository, TransferRepository, transaction ledger, explicit shared transfer catalog. | Entitlement does not grant source/destination rights. Drafts are not reservations. Lot/expiry/fractional quantity remain independent readiness work.
+Expenses F04: implemented source | 086, /Expenses, ExpenseRepository, signed payments, receipts, /Expenses/Report and Cash Closing. | Do not introduce a second expense module. Gate create/pay/refund separately; retain history. Current-basis operational report is not audited accrual/net profit.
+Reports/Cash Closing: existing core | ReportingRepository, CashClosingRepository, saved snapshots and recount rules. | Authorized shop-set aggregates only; no default platform sales drill-down. Bound exports and disclose cutoffs/unknown costs; do not equate collections with sales.
+GST G01-G09: partial overall | gst_legal_businesses, gst_registrations, gst_shop_mappings; /api/gst; issued snapshots/registers/export. | Reuse effective mappings and VIEW_REGISTRATION; don't rebuild legal businesses. Export/preparation is not filing or eligible ITC. No new statutory logic in this review.
+E-way G10: preparation only | 084, EWayRepository, UnavailableEWayProvider. | Provider-adapter/version/credential/approval gates precede official generation. Preserve unknown-submit reconciliation; no fabricated EBN or unlimited official access.
+Service/warranty/serial: Electrical capability | Service/Warranty repositories and historical relationships. | New plan flags cannot enable unsupported profiles. Never remap old warranty/serial history when changing a business setup.
+Business profiles: four supported | BusinessProfiles, BusinessProfileRepository, tenant-wide version and setup lock. | Independent store profile/mixed-store design is a later compatibility slice. No second engine, automatic catalog merging or grocery readiness by checkbox.
+Users/roles/shops: existing tenant admin | /api/admin, /api/branches, SecurityRepository, assignments and sessions. | Separate platform authority; prevent privilege escalation. Review which tenant Admin aggregates are legitimate under private-shop policy.
+Notifications/WhatsApp: implemented integration source | /Configuration/Notifications/WhatsApp; 076; callbacks, encrypted tokens, consent, durable attempts. | App-level secrets and customer senders have different owners. Metadata-only central views, secret rotation, verified live setup, provider-outage isolation.
+StockBot: existing local AI integration | OllamaHelpProvider, qwen3:4b configuration, HelpBusinessRepository, HelpModelGate, feedback. | Server-local concurrency/cooldowns are not distributed tenant quotas. Keep prompts minimal and business numbers service-derived; auto-fill remains proposed.
+Imports/exports/media: partial platform orchestration | /api/products/catalog preview/commit/export, existing image handling, expense private receipts. | Completed-row resume, upload scanning/quarantine policy, storage accounting, expiring export access, retention and tenant-safe file keys. No arbitrary global file browser.
+Hardware/offline: limited supported mechanisms | Browser/Android print and scanner input; server/browser draft recovery. | Central device/capability inventory and compatibility evidence proposed. Offline final invoicing and hardware certification remain unverified/unimplemented scopes.
+
+8. PostgreSQL and data governance design
+
+Reuse tenants, stores, store_locations, users, roles, modules, module_actions, user/role action permissions, user_store_access, user_location_access, auth_sessions and the existing GST entities. Do not introduce illustrative blueprint aliases such as legal_entities/tax_registrations as duplicate replacements for gst_legal_businesses/gst_registrations. Modules currently form a permission/navigation vocabulary, not a paid-plan catalogue. [E02, E04, E07]
+
+Conceptual additions, subject to later approved design: platform_principals/roles/assignments; tenant_provisioning_requests and invitations; tenant_lifecycle_events; plan_versions/subscriptions/billing_events; entitlement_versions/shop_capability_assignments; feature_definitions/overrides; support_access_requests/grants/access_events; operational_incidents; deployment/schema evidence; export_jobs and retention/hold decisions. Names are suggestions, not existing tables, migrations or APIs.
+
+Each control command should have actor identity, target tenant/shop, permission, expected version, idempotency key, reason, effective time, correlation ID and result. Immutable events and a current-state projection support investigation. Audit should record evidence hashes/references while excluding passwords, tokens, message contents and attachment payloads. Retention and tamper resistance require a policy and tested storage controls; a table named audit is not sufficient.
+
+085 is additive but still requires an approved real-data migration review. Only exactly-one-store tenants get automatic legacy allocation; multi/no-store records remain NULL-owned. Existing SKU/barcode/code namespaces remain tenant-wide. Cross-tenant template distribution should copy approved metadata into fresh tenant/shop IDs, not share live retailer rows. Retain source-template/version provenance and existing validation.
+
+Per-scope connection-string Options create distinct Npgsql pools; MaxPoolSize=10 is per distinct pool, not an application-wide ten-connection cap. Capacity planning must measure tenant/user/store cardinality, connection peaks and job pools. Test alternating contexts, reused connections, failures, cancellation, readonly consolidation and raw SQL helpers. A future transaction-local context redesign must be explicit and separately verified, not assumed from the blueprint. No pool or DB-role change is made here.
+
+9. Reliability, recovery and operational coverage to add
+
+Public /api/health is liveness only. /api/database/health and /api/database/operations are permissioned tenant operational checks; the latter reads a server-mapped private recovery evidence file and probes selected capabilities (082/083), not every applied migration/checksum. Extend with a real schema/deployment inventory for 084/085/086 and future releases; never label a capability probe a verified full migration history. [E11]
+
+Existing backup/scheduler/restore scripts are assets to reuse, not an absent recovery implementation. Platform operations should show last successful archive, schedule/failure alerts, offsite replication, retention, most recent isolated restore and exactly what was restored. Recovery of a shared database is not automatically a safe single-tenant restore: validate tenant filtering, dependencies, roles, files, keys and reconciliation before offering tenant-level restore. Restoring over production requires separate authority.
+
+The 148-table synthetic result proves that fixture's database digests and selected restricted app reads, including an expense/payment/PDF, survived restoration. It does not prove offsite credentials, application assets, actual login, current production recovery, RPO/RTO or historical data correctness. Preserve the evidence scope in the dashboard. Record operator, archive identity, source build/schema, destination isolation, timestamps, measured durations, validation results and expiry. [E18]
+
+Add measured service-level indicators for login/checkout availability, DB latency, queue oldest age, unknown provider outcomes, certificate expiry, disk/storage saturation, AI pressure, export/import completion and backup age. Use per-tenant dimensions internally with minimal public detail. Platform alerts need routing, acknowledgement, escalation, resolution and deduplication, not just red tiles. Do not load retailer amounts/PII into general metrics labels.
+
+Notifications and WhatsApp already use durable guarded functions and execution-time checks; preserve those fences. The future job registry should carry tenant/shop/sender/context, operation identity, payload version, entitlement version, attempt state and cancellation policy. Unknown remote outcomes require reconciliation rather than blind retry. Webhook acknowledgement and records retention must continue when outbound messaging is paused, subject to the defined security policy. [E12]
+
+Shared Data Protection keys exist in database-backed storage. Losing/deleting keys can invalidate sessions or make encrypted sender credentials unusable. Review envelope/key-at-rest protection, backup access and rotation/recovery procedures with the actual host; source storage alone does not prove a secure deployed key vault. Separate application secrets, tenant provider tokens and human passwords in access/audit/export policies. [E05, E12]
+
+10. AI governance and future Product Auto-Fill
+
+StockBot's provider is Ollama; configured model is qwen3:4b at the local loopback endpoint. The provider selects approved help sections and interprets structured business queries; authoritative amounts come from scoped application services. The local worker can start an already installed runtime and sets OLLAMA_NO_CLOUD=1. This is configured behavior, not proof of model availability on each deployed server. [E13]
+
+Current HelpModelGate allows one model lease per application process, and the account question gate/cooldown uses IMemoryCache. These limit contention locally but do not provide cluster-wide tenant fairness, durable commercial usage accounting or distributed limits. HelpTelemetry intentionally avoids raw questions/answers/audio; add safe tenant-associated aggregate metrics without turning support logs into a customer-data warehouse.
+
+Proposed AI operations: approved model registry and version/hash, endpoint allowlist, dependency health, queue budgets, tenant quotas, per-use timeout, fallback/error rate, prompt/content minimization, evaluation datasets and opt-out. Product suggestions should have a separate schema and request budget; preserve StockBot/manual wizard availability under contention. No model-generated SQL, prices, stock, tax applicability, HSN/GST decisions or automatic saves. Human review and existing product APIs remain authoritative.
+
+11. Proposed control-plane APIs and screen behavior
+
+All routes in this section are proposed examples. Existing business route names remain unchanged. Platform APIs require platform authentication/authorization, not merely [Authorize] plus the retail Admin role.
+
+Proposed route | Purpose | Safety requirements
+GET /platform/tenants | Paged metadata directory and readiness summary. | TenantRead, restricted fields, bounded filters and audit for sensitive queries.
+POST /platform/provisioning | Start/resume tenant onboarding. | TenantProvision, idempotency key, explicit owner invitation and approved template version.
+POST /platform/tenants/{id}/transitions | Request lifecycle change. | Expected version, reason, step-up, scheduled/effective policy, optional second approval.
+GET /platform/tenants/{id}/capabilities | Explain availability/entitlements/denials. | No provider secrets, retail invoices or grant of user permission.
+POST /platform/tenants/{id}/entitlement-changes | Schedule plan/override change. | Version/dependency validation, commercial approval, no historical deletion.
+POST /platform/support-requests | Request purpose-bound access. | Customer approval, finite scope/expiry, separate execution identity.
+POST /platform/support-grants/{id}/revoke | End approved support access. | Immediate invalidation, tenant visibility and audit; no continuing download/job grants.
+GET /platform/operations | Health/evidence/queue metadata. | Operational role, allowlisted diagnostics and observation age.
+GET /platform/releases/{id}/evidence | Inspect candidate gates/schema compatibility. | Evidence provenance and exact scope, no fabricated READY state.
+
+Platform forms should show target tenant/shop clearly, effective date, expected impact, dependencies and audit reason before high-risk changes. Show read-only history with actor/time and an accessible explanation of denied actions. Do not add platform accounting/security/monitoring controls to New Sale. Existing compact white/navy/charcoal/pink styling and responsive tables can be reused; the platform area needs its own unmistakable session/context banner.
+
+12. Recommended sequence; review does not authorize execution
+
+Sequence | Scope | Exit evidence before expansion
+R0 - Approve boundaries | Confirm platform versus tenant/shop powers, lifecycle/downgrade policy and identity direction; inventory actual deployment/schema. | Signed scope/decisions and source map; no rewrite of approved private-shop model.
+R1 - Privileged foundation | Separate platform identity/MFA/session/roles, platform audit, redacted directory and operational evidence reads. | Retail owner cannot call platform APIs; platform identity cannot read retail contents by default; no MFA exemption reuse.
+R2 - Onboarding/lifecycle/support | Resumable provisioning/invitations, safe transitions/revocation, customer-approved temporary support. | Interrupted provisioning recovers once; suspended jobs/sessions obey policy; support expiry/revocation tests pass.
+R3 - Capabilities/commerce | Explainable capability resolver, versioned entitlements/flags, approved plans/subscription payment reconciliation. | Duplicate/out-of-order webhooks, downgrades, dependency cycles, stale caches and history access tests.
+R4 - Operational integration | Metadata adapters for existing modules, imports/export jobs, integration queues, storage, deployment/restore evidence. | Current-source regressions, tenant job isolation, export/download scopes, actual restore and operational sign-off.
+R5 - Optional advanced slices | Global identities, independent shop profiles/mixed retail, AI suggestions, advanced industry/provider services. | Separate migration, business/provider decisions and end-to-end acceptance for each slice.
+
+This sequence is narrower than another full retail implementation project. Keep F05 costing policy, official e-way/GST filing, lot/fractional inventory, offline finalized billing, new hardware drivers and legally scoped requirements in their existing independent roadmap. Platform availability should reveal supported services accurately, not pretend these gaps are solved by selling a module.
+
+13. Acceptance plan for a future implementation
+
+Test group | Required scenario | Pass condition
+Privilege separation | Tenant Admin/owner calls every platform API; platform operator opens retail invoice/customer endpoints without support grant. | Denied regardless of hidden menus or supplied tenant ID.
+MFA and recovery | Admin-name collision, missing/expired MFA, stolen ordinary cookie, recovery approval and session revoke. | Platform challenge required; ordinary exemption cannot apply; revoked privileged session stops working.
+Provisioning | Same request twice, step failure, invitation expiry, concurrent tenant code, empty/reused seeds. | One tenant/owner/shop set; resumable audit; no copied private data/secrets.
+Scope and pools | Alternate tenants/same-profile shops, consolidated views, cancellation/failed connections and background jobs. | No data/context leakage; explicit ownership; stable IDs and historical snapshots.
+Support | Tenant denies/revokes grant, grant expires mid-export, staff changes scope, operator attempts financial write. | Live checks and bounded download/job access; real actor audit; posting denied.
+Lifecycle | Suspension while sale commits or provider is sending; renewal, restricted read/export and reactivation. | Defined transaction boundary; no duplicate posting, lost history or unrecorded callback.
+Entitlements | Global deny, expiry, shop override, dependency cycle, unavailable schema/adapter, downgrade over quota. | Deterministic safe denial; no permission elevation; old documents remain accessible per policy.
+Commerce | Invalid signatures, wrong account/amount/currency, repeated/late events, refund/chargeback, renewal race. | Verified idempotent lifecycle and reconciliation; no retail financial posting.
+Retail regression | Existing billing/receiving/returns/quotes/Expenses/Cash Closing/GST/CRM/reports in all supported profiles. | Correct balances, dates, authorization, immutable history and unchanged live calculations.
+Imports/files | Partial commit/resume, spoofed file, huge/unsafe export, cross-tenant download, retention and legal hold. | Complete-row evidence, bounded storage/access, no duplicates or public private-data URLs.
+Recovery | Encrypted offsite archive plus assets/keys/config/auth into isolated environment; tenant restore rehearsal. | Actual app/login and record reconciliation; measured RPO/RTO; no cross-tenant replacement.
+AI | Runtime offline/busy, malicious prompt, foreign customer name, stale context and competing tenants. | Correct fallback, bounded fair use, no unauthorized data or model-authored financial result.
+Release | Current candidate fingerprint, migrations, compatibility, canary, real hardware and pilot sign-offs. | Mandatory gates genuinely pass; build-only result never marks production ready.
+
+No tests in this table were newly executed by this review. Reuse the existing runner/harness rather than creating a parallel readiness scoring system. Old results remain immutable; every future source/config/schema change needs evidence appropriate to that candidate and environment.
+
+14. Decisions still required
+
+- Choose platform staff identity/session separation and MFA/recovery policy. Do not promote the existing retail Admin role unchanged.
+- Decide whether global human identities are needed in the first release or can follow tenant-bound onboarding; define verified linking and historical ID preservation.
+- Approve lifecycle states, security suspension versus nonpayment, read/export/returns/refunds policy during restriction, retention and closure handling.
+- Approve subscription plans, limits, counting definitions, taxes/provider agreement, webhook reconciliation and commercially authorized overrides.
+- Approve support purpose/scopes, tenant approvers, dual control, finite expiry, auditable downloads and emergency access.
+- Resolve real ambiguous master allocations through owner decisions; do not reopen Option 2 as if it were undecided. Private-shop policy is already approved.
+- Decide when independent per-store profiles or mixed retail are actually required. Existing tenant-wide selection is an explicit limitation, not a super-admin flag fix.
+- Identify actual deployment topology, DB login grants, shared-key protection, offsite retention, RPO/RTO, incident contacts and device/app compatibility.
+- Confirm provider ownership and live Meta approval/billing/template/delivery; official GST/e-way services need their own authorized integration and acceptance.
+
+15. Evidence index and traceability
+
+All repository paths are relative to E:/StockFlow. In abbreviated index entries, Web means src/StockFlow.Web, Infrastructure means src/StockFlow.Infrastructure and Application means src/StockFlow.Application; unqualified companion filenames use the same directory as the preceding file. They identify inspected source, related implementation references and recorded evidence used for this review, not newly executed tests. Proposed entities/routes above must not be mistaken for these implemented references.
+
+ID | Current implementation references | What the evidence supports
+E01 | src/StockFlow.Web/StockFlow.Web.csproj; Program.cs; Controllers and Pages/Admin inventory. | .NET 10 Razor/API architecture and existing dependency/middleware structure; no dedicated platform portal found in reviewed inventory.
+E02 | src/StockFlow.Infrastructure/Data/DbConnectionFactory.cs; src/StockFlow.Application/Common/BusinessScope.cs. | Restricted runtime role and connection Options scoping; location/profile lock requirements; pool design.
+E03 | src/StockFlow.Application/Common/SecurityRules.cs; src/StockFlow.Web/Security/PermissionMiddleware.cs; Infrastructure/Repositories/SecurityRepository.cs. | Tenant permissions/security-version checks and current Admin MFA exemption; not platform MFA readiness.
+E04 | database/migrations/020_tenants_stores_locations.sql; Web/Security/BusinessScopeMiddleware.cs; Infrastructure/Repositories/BranchRepository.cs; Web/Controllers/BranchController.cs. | Tenant/store/location/user assignments, active checks, branch creation/switching/consolidation; tenant-bound user model.
+E05 | database/migrations/033_shared_login_sessions.sql; Web/Security/PostgresSessionStore.cs; SharedProtectionKeys.cs; Web/Controllers/SessionController.cs; Pages/Account/Login.cshtml.cs. | Shared sessions, database-backed protection-key repository, session actions and issued tenant claims.
+E06 | Application/Common/BusinessProfiles.cs; Infrastructure/Repositories/BusinessProfileRepository.cs; BranchRepository.UserStateAsync; database/migrations/045_disable_login_email_otp.sql. | Four profiles, Electrical capability limits, tenant-wide active profile, retired email OTP.
+E07 | database/migrations/070_gst_foundation.sql; 071_gst_source_documents.sql; Web/Controllers/GstController.cs; Infrastructure/Repositories/GstRepository.cs. | Existing legal businesses/registrations/shop mappings and working document/report/export services.
+E08 | database/migrations/085_private_shop_masters.sql; Infrastructure/Repositories/ShopMasterRepository.cs; Web/Controllers/ShopMastersController.cs; Pages/Admin/ShopData.cshtml. | Additive private ownership, explicit sharing/audit and quarantined historical resolution; no production application proof.
+E09 | database/migrations/086_operating_expenses.sql; Infrastructure/Repositories/ExpenseRepository.cs; CashClosingRepository.cs; Web/Controllers/ExpensesController.cs; Pages/Expenses/*.cshtml. | Real F04 slice, signed payments, files, operational reports and Cash Closing integration.
+E10 | Web/Controllers/ProductCatalogToolsController.cs; Infrastructure/Repositories/ProductRepository.cs; VariantRepository.cs. | Existing preview/commit/export through product validation; per-product atomicity and explicit partial completion.
+E11 | Web/Controllers/HealthController.cs; DatabaseHealthController.cs; OperationalReadinessController.cs; Web/Operations/RecoveryEvidence.cs. | Liveness vs restricted readiness, allowlisted recovery evidence, limited capability probes.
+E12 | database/migrations/076_whatsapp_business_notifications.sql; Web/Controllers/WhatsAppController.cs; Web/Notifications/NotificationWorker.cs; docs/whatsapp-business-integration.md. | Scoped onboarding/templates/consent/callback/durable worker source; live approval/billing not established.
+E13 | Web/Help/HelpAiService.cs; LocalAiWorker.cs; HelpTelemetry.cs; Web/Controllers/HelpAiController.cs; Web/appsettings.json HelpAi keys only. | Ollama/qwen3:4b configuration, approved-help/scoped queries, local gates and privacy-conscious telemetry; no product AI suggestion implementation found.
+E14 | database/migrations/083_quotations.sql; Infrastructure/Repositories/QuotationRepository.cs; Web/Controllers/QuotationsController.cs. | Existing persisted quotations/revisions; reuse sale-finalization contract rather than rebuild.
+E15 | database/migrations/084_eway_preparation.sql; Infrastructure/Repositories/EWayRepository.cs; UnavailableEWayProvider.cs. | Preparation subset and explicit lack of operational official generation adapter.
+E16 | database/maintenance/Backup-StockFlow.ps1; Run-StockFlowBackupWithAlerts.ps1; Install-StockFlowBackupTask.ps1; Test-StockFlowRestore.ps1; Export-StockFlowOwnershipReview.ps1. | Existing maintenance/review tooling; actual schedule/offsite/data mapping remains separately verified.
+E17 | tests/Run-ShopPilotChecks.ps1; tests/acceptance/ReleaseGates.psm1; Invoke-ReleaseAcceptance.ps1; gates.json; Web/Pages/Admin/Pilot.cshtml.cs. | Existing release/pilot framework to extend, not duplicate.
+E18 | tests/bin/release-acceptance/5d0ebb0df81f4648b9d27f36b901f79c/release-report.txt and .json; tests/bin/p0-clean-restore/a30bd70906ae4551a5bad408395eb811/result.json. | 2 Nov LocalSynthetic candidate 2026.11.02-shop-isolation-expenses: 25 automated PASSED, 9 UNVERIFIED, BLOCKED; 148-table synthetic restore only.
+E19 | docs/planning/StockFlow-private-shops-expenses-implementation-2026-11-02.txt; StockFlow-evidence-policy-2026-11-02.txt; StockFlow-feature-evidence-register-2026-11-02.csv. | Maintained historical evidence/definitions; source takes priority where dated notes disagree.
+E20 | Web/Controllers/ErrorLogController.cs; Web/Program.cs. | /error-log is a generic exception handler, not a privileged log-browsing endpoint; no new platform logging authority inferred from its name.
+
+The E18 candidate fingerprint is 474F58DC700FC7F0670FB3BA9B520D9C12B6E554668837F8C9E8F4BF5916C71D. Subsequent navigation changes mean that artifact must not be relabelled a current-source acceptance pass. The nine unverified reviews are receiving-corrections, after-sales, shop-model, migration-deployment, production-recovery, production-hosting, physical-devices, pilot-acceptance and usability-issues.
+
+16. Final recommendation
+
+Adopt the supplied blueprint as a direction, with this source-backed addendum replacing its stale status statements and unverified assumptions. Start future implementation with the privileged platform boundary and resumable onboarding, then add explainable entitlements and commercially approved subscription flows. Integrate existing retail modules through their current services and ownership rules. Preserve all current financial/inventory/history contracts, keep unsupported capabilities disabled and retain BLOCKED readiness until the relevant mandatory evidence exists.
+
+DOCUMENT STATUS: Review-only architecture and coverage recommendations. No application implementation, production migration or deployment is authorized or performed by this document.

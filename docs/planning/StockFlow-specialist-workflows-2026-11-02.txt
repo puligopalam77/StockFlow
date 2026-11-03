@@ -1,0 +1,147 @@
+Specialist workflows — first implementation increment, 2026-11-02
+
+Scope
+Uses the existing 62-workflow audit, rather than repeating it. This increment
+prioritizes verified reporting defects, transaction/variant safety verification,
+small keyboard/scanner corrections, and benchmark/pilot preparation. It is not a
+claim that every phase of the specialist brief has been delivered.
+
+Delivered report corrections (F06)
+OperationsRepository.ProductSalesAsync now uses original saved line amounts and
+tax-exclusive bases. Modern allocated invoice discounts remain in the saved line
+base; legacy saved after-tax allowances are allocated proportionally using
+cumulative rounding, once only. Report sales follow invoice date, returns follow
+return date, and collection/refund events do not create product revenue.
+Return-only catalog and manual rows remain visible, including negative net
+quantity. Returns use their saved amount and original line-tax proportion. This
+does not rewrite original invoices or create statutory GST credit notes.
+
+The existing received-price-average management estimate is retained using receipt
+price/discount snapshots in the original sale's location, both received and
+recorded before that sale. Future receipts, including later-recorded backdated
+receipts, cannot reprice it. There is no fallback to an all-time current purchase
+price or zero when evidence is absent. Manual costs remain unknown. Nonpositive
+raw purchase-price evidence is treated conservatively as unknown. If any event in
+a product row lacks evidence, that row's estimated cost/profit stays unknown.
+
+This is a price-history estimate, NOT a selected FIFO/weighted-average inventory
+costing policy, authoritative COGS, valuation ledger or net profit. Available
+receipt-price evidence does not establish actual acquisition cost for every sold
+unit. Opening/direct-intake/transfer costs, landed costs and prospective cost
+adjustments remain F05 work requiring explicit policy/migration decisions.
+Subsequent source corrections/reversals can affect evidence; no immutable cost
+posting or historical backfill is claimed by this increment.
+
+The report labels tax-exclusive sales and estimated gross profit, shows actual
+SKU, marks unknown rows and partial totals, and displays Unknown rather than zero
+when every row lacks a cost estimate. Its API additionally requires SALES VIEW
+alongside REPORTS VIEW; source RLS remains authoritative. API route unchanged:
+GET /api/operations/reports/product-sales. Sku is additive; manual aggregate
+ProductId/VariantId are now explicitly nullable rather than fabricated zero IDs.
+
+Checkout refinements and safety
+Existing request identities, finalization transaction, verification-only recovery,
+discount policy and payment rules are reused. No new posting engine or balance
+calculator. A refreshed pending checkout now says unconfirmed/verification rather
+than presenting every saved request as an older billing draft.
+Scanner held-key/modifier Enter events cannot add items; a real repeated scan can
+still intentionally increment quantity. Search-result Enter also ignores key
+repeat. Arrow/Escape/customer navigation remain in the existing implementation.
+Global Alt shortcuts ignore typing, composition, repeats, Ctrl/Meta combinations
+and native/Bootstrap dialogs. Alt+S search, Alt+C customer, Alt+P payment, Alt+H
+hold; Alt+B focuses the checkout button and does not submit. A selected customer
+is focused via the existing Clear Customer control without clearing it.
+Discoverability uses a compact, closed Keyboard shortcuts disclosure.
+
+Actual verification
+PASS dotnet build tests/StockFlow.MasterDataChecks --artifacts-path
+     E:/StockFlow/.artifacts/specialist-workflows -v quiet
+     0 warnings, 0 errors.
+PASS StockFlow.MasterDataChecks.dll --workflow-reporting-checks
+     Disposable PostgreSQL clone, all migrations through 084. Unknown costs; saved
+     tax exclusion; legacy allowance once; pre-sale receipt estimate; later and
+     backdated-receipt non-repricing; prior-sale returns; manual return without
+     invented identity/cost; old-invoice cash/digital collections and later refund;
+     actual same-profile second shop, foreign tenant and other-profile isolation;
+     no extra invoice/payment/movement records from report reads.
+PASS StockFlow.MasterDataChecks.dll --new-sale-integration-checks
+     Disposable clone. Generated exact SKU, manufacturer barcode, parent search
+     exposing distinct variants, serialized-unit selection, last-unit concurrent
+     finalization, one invoice/movement under concurrent duplicate completion,
+     changed retry rejection, original paid-invoice recovery and no-post lookup
+     for an absent request. Also actual returns, legacy credit/split replay,
+     idempotent later collections, cutoff reporting and source/tenant/profile scope.
+PASS StockFlow.MasterDataChecks.dll --fast-billing-checks
+     Disposable clone: current payment methods, reasons/approval policy, manual and
+     mixed catalog posting, original SKU snapshots, refunds, GST/discount allocation,
+     tax snapshot/register/credit-note agreement and source authorization.
+PASS StockFlow.MasterDataChecks.dll --billing-checks
+     Application/Razor/rules checks; no application database accessed.
+PASS StockFlow.MasterDataChecks.dll --reports-checks
+     Source-sales denial on product-sales API; existing report permissions/scope.
+PASS StockFlow.MasterDataChecks.dll --list-screen-fixtures
+     Actual Razor report fixtures generated for browser verification.
+PASS product-profit-offline.cjs (headless Edge, real Razor, mocked HTTP)
+     Totals, nullable/partial cost, actual SKU, negative return-only rows, charts,
+     five viewports and visible shared-toast errors. Report's own range guard is
+     tested directly; native/shared form validation separately intercepts invalid
+     submission before the page handler.
+PASS fast-billing-offline.cjs (headless Edge, real Razor, mocked HTTP)
+     Ten screen sizes, scanner key-repeat/modifier guards, shortcut focus/typing
+     safety, explicit checkout activation, policy/contextual reasons, customer,
+     manual item, hold/resume, GST constraints and quotation lineage. Lost-success
+     response simulation locks the snapshot; double click sends once; refresh and
+     recovery verify that exact snapshot without submitting a new sale. Backend
+     idempotency/races are independently exercised by the real database suite.
+     Also passed a 911x512 effective CSS viewport at device scale factor 1.5:
+     checkout remains reachable without horizontal overflow. This simulates a
+     1366x768 workstation at 150%; it is not real Windows/hardware acceptance.
+
+Benchmark and pilot artifacts
+StockFlow-workflow-benchmark.txt defines a matched dataset and 12 tasks.
+StockFlow-workflow-benchmark-results.csv has one NOT RUN row per task/product.
+The existing docs/phase8-pilot-signoff.md now includes baseline/observation metrics
+and links to those artifacts. Existing /Admin/Pilot remains the checklist surface.
+No Vyapar tests, measured superiority, live pilot, physical scanner/printer test,
+actual Windows display-scaling verification, provider submission or external
+message delivery has been performed. Templates do not constitute passed checks.
+
+Next increments, in the existing roadmap
+1. Serial history: connect existing units, receipts, invoice, warranty, claim and
+   service records with source permissions on every link. A unified chronological
+   history UI and its cross-shop/privacy tests are NOT delivered in this increment.
+2. Stock explanation: extend the existing history screen using the existing signed
+   movement/report sources for opening/inflows/outflows/closing, source/user/reason
+   and reliable running balances. No replacement ledger or fabricated movements.
+3. Remaining lifecycle verification: purchase/partial/damaged receipts, transfer,
+   count, manufacturer-part search/verified vehicle fitment, every supported profile
+   and same/different-profile shop combinations need their slice's tests. Existing
+   suites are not labeled passed here merely because they are present.
+4. Quotations remains the implemented first module; Expenses remains its separately
+   planned next vertical slice. This brief does not authorize choosing a costing
+   policy or replacing the F05 financial-correctness roadmap.
+5. Run the documented competitor tasks and owner-supervised live pilot only with
+   authorized accounts/devices/data. Set targets from measured baselines.
+
+Release limits
+Actual production two-shop topology and strict shop-master isolation remain release
+gates. Existing tenant/profile-shared masters are not repartitioned. Genuine
+hardware, isolated restore acceptance and broader financial reconciliation remain
+the existing production gates. No unsafe offline finalization or new split/credit
+checkout enabled. No SQL migration or application/production data changes.
+
+Modified implementation/test files
+src/StockFlow.Infrastructure/Repositories/OperationsRepository.cs
+src/StockFlow.Application/DTOs/Operations/OperationModels.cs
+src/StockFlow.Web/Controllers/OperationsController.cs
+src/StockFlow.Web/Pages/Reports/ProductSales.cshtml
+src/StockFlow.Web/wwwroot/js/product-sales-report.js
+src/StockFlow.Web/Pages/Sales/Create.cshtml
+src/StockFlow.Web/wwwroot/js/sales-create.js
+src/StockFlow.Web/wwwroot/js/common/scanner.js
+tests/StockFlow.MasterDataChecks/WorkflowReportingChecks.cs
+tests/StockFlow.MasterDataChecks/Program.cs
+tests/StockFlow.MasterDataChecks/NewSaleIntegrationChecks.cs
+tests/StockFlow.MasterDataChecks/ReportsChecks.cs
+tests/StockFlow.UiChecks/product-profit-offline.cjs
+tests/StockFlow.UiChecks/fast-billing-offline.cjs

@@ -1,0 +1,84 @@
+/* One size source for icon-only actions; text buttons and decorative icons opt out. */
+:root {
+    --sf-action-compact:26px; --sf-action-compact-icon:13px;
+    --sf-action-standard:32px; --sf-action-standard-icon:16px;
+    --sf-action-touch:44px; --sf-action-touch-icon:18px;
+    --sf-action-icon-gap:4px; --sf-action-icon-radius:4px;
+}
+@media screen {
+    /* Important layer declarations outrank legacy unlayered page-specific
+       !important dimensions, without adding ever-more-specific selectors. */
+    @layer stockflow-action-icons {
+        .sf-action-icon {
+            --sf-action-face:var(--sf-action-compact)!important;
+            --sf-action-glyph:var(--sf-action-compact-icon)!important;
+            --sf-action-target:var(--sf-action-face)!important;
+            --sf-action-surface:var(--sf-action-bg,#191d23)!important;
+            box-sizing:border-box!important;
+            align-items:center!important; justify-content:center!important;
+            flex:0 0 auto!important; position:relative!important; isolation:isolate!important;
+            width:var(--sf-action-target)!important; height:var(--sf-action-target)!important;
+            min-width:var(--sf-action-target)!important; min-height:var(--sf-action-target)!important;
+            max-width:var(--sf-action-target)!important; max-height:var(--sf-action-target)!important;
+            padding:0!important; margin:0!important; border:0!important;
+            border-radius:var(--sf-action-icon-radius)!important;
+            background:transparent!important; box-shadow:none!important;
+            color:#fff!important; font-size:var(--sf-action-glyph)!important;
+            line-height:1!important; vertical-align:middle!important; text-decoration:none!important;
+            overflow:visible!important; cursor:pointer!important;
+        }
+        .sf-action-icon::before {
+            content:''!important; position:absolute!important; z-index:-1!important;
+            left:50%!important; top:50%!important; transform:translate(-50%,-50%)!important;
+            width:var(--sf-action-face)!important; height:var(--sf-action-face)!important;
+            border-radius:var(--sf-action-icon-radius)!important;
+            background:var(--sf-action-surface)!important; pointer-events:none!important;
+            transition:background-color 180ms ease!important;
+        }
+        /* These modal close controls are anchored to their dialog, rather than
+           participating in the centered confirmation content or header flow. */
+        .sf-action-icon:is(.sf-confirm-close,.sf-dialog-close) {
+            position:absolute!important;
+            z-index:1;
+        }
+        .sf-action-icon[data-action-size="standard"] {
+            --sf-action-face:var(--sf-action-standard)!important;
+            --sf-action-glyph:var(--sf-action-standard-icon)!important;
+        }
+        .sf-action-icon[data-action-size="touch"] {
+            --sf-action-face:var(--sf-action-touch)!important;
+            --sf-action-glyph:var(--sf-action-touch-icon)!important;
+        }
+        .sf-action-icon :is(svg,.sf-icon) { width:var(--sf-action-glyph)!important; height:var(--sf-action-glyph)!important; min-width:0!important; margin:0!important; flex-shrink:0!important; color:inherit!important; }
+        .sf-action-icon:hover:not(:disabled):not(.disabled):not([aria-disabled="true"]) { --sf-action-surface:var(--sf-action-hover,#ff007f)!important; }
+        .sf-action-icon:focus-visible { outline:2px solid var(--sf-action-hover,#ff007f)!important; outline-offset:3px!important; }
+        .sf-action-icon:is(:disabled,.disabled,[aria-disabled="true"]) { opacity:.55!important; cursor:not-allowed!important; }
+        .sf-action-group { align-items:center!important; justify-content:flex-start!important; gap:var(--sf-action-icon-gap)!important; flex-wrap:nowrap!important; width:max-content!important; min-width:max-content!important; vertical-align:middle!important; }
+        .sf-action-cell { white-space:nowrap!important; text-align:left!important; vertical-align:middle!important; }
+        .sf-action-cell > .sf-action-icon + .sf-action-icon { margin-inline-start:var(--sf-action-icon-gap)!important; }
+        @media (pointer:coarse) {
+            /* The 26px face stays compact inside a separate 44px hit target.
+               Layout reserves all 44px: adjacent targets never overlap.
+               Use the primary pointer so touch-enabled mouse/trackpad laptops
+               retain the compact desktop group instead of extra blank spacing. */
+            .sf-action-icon { --sf-action-target:var(--sf-action-touch)!important; }
+        }
+        @media (prefers-reduced-motion:reduce) { .sf-action-icon::before { transition:none!important; } }
+    }
+    /* Leave visibility below existing permission/state styles and inline display:none. */
+    .sf-action-icon { display:inline-flex; }
+    .sf-action-group { display:inline-flex; }
+    .sf-action-icon[hidden],.sf-action-group[hidden] { display:none!important; }
+    /* Two product actions need 54px plus cell padding; permit touch targets to
+       expand the intrinsic column width rather than clip into the next cell. */
+    #master-data[data-module="products"] .sf-action-cell,
+    #master-data[data-module="products"] table:has(.sf-action-cell) #master-head th:last-child { width:96px; min-width:96px; }
+    .sf-action-tooltip-passive,.sf-action-tooltip-passive * { pointer-events:none!important; }
+    .sf-action-tooltip {
+        position:fixed; inset:auto; margin:0; padding:6px 9px;
+        width:max-content; max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px);
+        overflow-wrap:anywhere; overflow:auto; pointer-events:none;
+        border:1px solid #526077; border-radius:5px; background:#182438; color:#fff;
+        box-shadow:0 5px 18px #0003; font:400 12px/1.5 system-ui,sans-serif; z-index:20000;
+    }
+}

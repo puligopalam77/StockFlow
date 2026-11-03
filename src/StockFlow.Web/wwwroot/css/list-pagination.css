@@ -1,0 +1,24 @@
+/* Shared list footer presentation; each page owns its records and query state. */
+@media screen {
+ .sf-pagination[hidden],.sf-pagination [hidden] { display:none!important; }
+ .sf-page-hidden { display:none!important; }
+ .sf-pagination { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 16px;width:100%;min-width:0;max-width:100%;box-sizing:border-box;padding:10px 14px;margin:0;background:#fff;border:1px solid #dce3ed;border-radius:0 0 7px 7px;color:#52627b;font-size:13px; }
+ .sf-pagination-info { display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;min-width:0; }
+ .sf-pagination-size { display:inline-flex;align-items:center;gap:7px;white-space:nowrap;margin:0; }
+ .sf-pagination-size .form-select { width:64px!important;min-width:64px;min-height:36px!important;height:36px;padding:5px 24px 5px 7px!important;border:1px solid #dce3ed;border-radius:6px;background-color:#fff;color:#233146;font-size:13px; }
+ .sf-pagination-nav,.sf-pagination-numbers { display:inline-flex;align-items:center;gap:4px; }
+ .sf-pagination-nav { flex-wrap:wrap;margin-left:auto; }
+ .sf-pagination .sf-page-button { display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:36px;padding:5px 9px;border:1px solid #dce3ed;border-radius:6px;background:#fff;color:#233146;font-family:inherit;font-size:13px;font-weight:600;line-height:1.4;cursor:pointer;transition:background-color 180ms,border-color 180ms; }
+ .sf-pagination .sf-page-arrow { font-size:20px;line-height:1; }
+ .sf-pagination .sf-page-button:hover:not(:disabled),.sf-pagination .sf-page-button[aria-current=page] { background:var(--sf-pink,#ff007f);border-color:var(--sf-pink,#ff007f);color:#fff; }
+ .sf-pagination .sf-page-button:disabled { background:#f2f5f8;color:#8c99ab;cursor:not-allowed;opacity:1; }
+ .sf-pagination :is(button,input,select):focus-visible { outline:2px solid var(--sf-pink,#ff007f);outline-offset:2px; }
+ .sf-pagination-range { white-space:nowrap; }
+ .sf-pagination-jump { display:flex;align-items:center;gap:5px;margin:0; }
+ .sf-pagination-jump input { width:58px;min-width:0;min-height:36px;border:1px solid #dce3ed;border-radius:6px;padding:4px;color:#233146; }
+ .sf-pagination-error { flex:0 0 100%;margin:0;color:#b42318;overflow-wrap:anywhere; }
+ @media(max-width:600px) { .sf-pagination { justify-content:flex-start;gap:10px;padding:10px; }.sf-pagination-info { width:100%;gap:8px; }.sf-pagination-nav { flex-basis:100%;margin-left:0; }.sf-pagination-range { white-space:normal; } }
+ @media(pointer:coarse) { .sf-pagination .sf-page-button,.sf-pagination-jump input,.sf-pagination-size .form-select { min-height:44px!important; }.sf-pagination .sf-page-button { min-width:40px; } }
+ @media(prefers-reduced-motion:reduce) { .sf-pagination .sf-page-button { transition:none; } }
+}
+@media print { .sf-pagination { display:none!important; } }

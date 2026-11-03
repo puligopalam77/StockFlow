@@ -1,0 +1,7 @@
+@page
+@{ViewData["Title"]="Expense Report";}
+<div id="expenses" data-mode="report"><h1>Expense Report</h1><p><a href="/Expenses">Back to Expenses</a></p><div id="expense-message" role="alert" hidden></div>
+<form id="expense-filters" class="card card-body expense-filters"><label>From<input id="expense-from" class="form-control" type="date" required /></label><label>To<input id="expense-to" class="form-control" type="date" required /></label><button class="btn btn-dark">Apply</button><a id="expense-export" class="btn btn-outline-secondary" permission-module="EXPENSES" permission-action="EXPORT">Export CSV</a></form>
+<div class="card card-body"><p id="expense-summary" role="status"></p><p id="expense-definition"></p><div class="table-responsive"><table class="table"><thead><tr><th>Incurred</th><th>Category</th><th>Payee</th><th>Amount</th><th>Paid to date</th><th>Status</th><th></th></tr></thead><tbody id="expense-rows"></tbody></table></div><h2>Payment movements in period</h2><div class="table-responsive"><table class="table"><thead><tr><th>Paid date</th><th>Expense</th><th>Type</th><th>Method</th><th>Signed amount</th></tr></thead><tbody id="expense-report-payments"></tbody></table></div></div></div>
+@section Scripts {<script src="~/js/expenses.js" asp-append-version="true"></script>}
+@section Styles {<link rel="stylesheet" href="~/css/expenses.css" asp-append-version="true" />}

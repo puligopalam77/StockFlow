@@ -1,0 +1,43 @@
+StockFlow 069: Product editing integrity
+
+Manual deployment
+1. Back up the complete database and stop application/workers.
+2. Confirm migrations 067 and 068 were committed successfully.
+3. Apply the complete 069_product_edit_integrity.sql as PostgreSQL superuser.
+4. Deploy/restart the updated application. Reload the browser after deployment.
+
+This migration creates guarded functions/triggers only. It does not rewrite historical IDs,
+SKUs, barcodes, prices, serial provenance, quantities or transaction snapshots.
+It was applied and tested only against the isolated product_edit_069_test database on port 55439.
+The live StockFlow database was not modified by this implementation.
+
+Rules
+- Saved Product Codes and SKUs are permanent in ordinary editing. Grandfathered spelling and whitespace are retained when the existing 067 guard would otherwise normalize an unchanged identifier.
+- Registration may still initialize a newly inserted LEGACY default SKU inside its original
+  transaction, using the existing identifier ledger/current-transaction proof from 067.
+- Products with any inventory, purchase, sale, physical-unit, stock-count or transfer history
+  cannot change their stock unit, tracking method or simple/variant structure.
+- Used variants cannot change their pack conversion or tracking method.
+- Variant deactivation is blocked by stock at any location, pending purchase quantities,
+  open sales fulfilments, or open transfers. Existing product status workflows remain in effect.
+- Runtime history/category-lock functions validate tenant and business-profile ownership
+  before checking all locations. Runtime users receive EXECUTE, not access to protected ledgers.
+- Price, tax, warranty, descriptions, photos and reorder edits remain prospective settings.
+
+Concurrency
+No new version column is required. GET /api/products/{id} returns an editVersion derived
+from the product, variants, barcode mappings and supplier mapping row versions.
+PUT /api/products/{id} requires expectedEditVersion. It is checked while holding the product
+lock, before any writes. Conflicts return HTTP 409. The UI preserves unsaved input and offers
+an explicitly confirmed reload. Existing create/idempotency behavior remains in use.
+API clients that update products must load and submit this token.
+
+Compatibility
+Before 069 is installed, the updated application conservatively locks inventory configuration
+and category changes, and blocks variant deactivation. Price/metadata updates can continue
+with an edit token. Install 069 to enable accurate history-based unlocking and all-location guards.
+Existing category/attribute/code protections can be stricter than the general editing matrix.
+Configured categories and categories bound to an issued code stay locked; no category-based
+SKU is regenerated. Saved variant-defining options remain protected by the existing validators.
+There is no new unit-conversion, tracking-conversion, SKU-correction or stock-adjustment workflow.
+Barcode management remains additive: previously issued mappings are retained.

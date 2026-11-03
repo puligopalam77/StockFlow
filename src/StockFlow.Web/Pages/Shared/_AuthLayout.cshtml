@@ -1,0 +1,27 @@
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#080e18" />
+        <script src="~/js/common/form-validation.js" asp-append-version="true"></script>
+        <script src="~/js/common/language.js" asp-append-version="true"></script>
+    @if(User.Identity?.IsAuthenticated == true) {<meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />}
+        <title>@ViewData["Title"] - StockFlow</title>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/stockflow.css" asp-append-version="true" />
+        <link rel="preload" href="~/images/warehouse-stockflow.png" as="image" />
+        @await RenderSectionAsync("Styles", required: false)
+        <link rel="stylesheet" href="~/css/button-theme.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/action-icons.css" asp-append-version="true" />
+    </head>
+    <body class="sf-auth-body">
+        <a href="#main-content" class="sf-skip-link">Skip to sign in</a>
+    @RenderBody()
+    <script src="~/js/stockflow-shell.js" asp-append-version="true"></script>
+    <script src="~/js/action-icons.js" asp-append-version="true"></script>
+        <partial name="_IdleSession" />
+    @await RenderSectionAsync("Scripts", required: false)
+    </body>
+</html>

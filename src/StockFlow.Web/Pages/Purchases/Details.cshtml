@@ -1,0 +1,24 @@
+@page "{id:long}"
+@model StockFlow.Web.Pages.Purchases.DetailsModel
+@{ ViewData["Title"] = "Purchase details"; }
+@section PageHeader {<header class="sf-page-heading pd-page-heading"><div><div class="pd-title-line"><h1 id="purchase-title">Purchase details</h1><span id="purchase-status" class="pd-status" hidden></span></div><p id="purchase-subtitle" class="text-muted"></p></div><div class="pd-header-actions"><div data-can-barcodes="@Access.Can("BARCODES","VIEW").ToString().ToLowerInvariant()" data-edit="@Access.CanExplicit("PURCHASES","EDIT").ToString().ToLowerInvariant()" data-adjust="@Access.Can("STOCK_ADJUSTMENT","ADJUST").ToString().ToLowerInvariant()" data-approve="@Access.Can("PURCHASES","APPROVE").ToString().ToLowerInvariant()" id="purchase-actions"></div>@if(Access.Can("STOCK_INFLOW","RECEIVE")){<button id="purchase-receive-open" class="btn btn-outline-primary" type="button" hidden>Receive Stock</button>}<button id="purchase-print" class="btn btn-outline-secondary" type="button">Print</button><a href="/Purchases" class="btn btn-outline-secondary">Back</a></div></header>}
+<div id="purchase-dashboard" class="pd-dashboard" aria-busy="true">
+    <p permission-module="EWAY_BILLS"><a asp-page="/EWayBills/Prepare" asp-route-purchaseId="@RouteData.Values["id"]" class="btn btn-sm btn-outline-secondary">Prepare / find inward E-Way Bill</a> <small>Uses the separately recorded supplier tax invoice; verify who is responsible for generation.</small></p>
+    @if(Access.Can("GST_REPORTS","CREATE")){<p><a asp-page="/Reports/Gst" asp-route-purchaseId="@RouteData.Values["id"]" asp-fragment="gst-record-panel" class="btn btn-sm btn-outline-secondary">Record supplier tax invoice</a> <small class="text-muted">Record one actual supplier invoice; separate goods receipts are not separate tax invoices.</small></p>}
+    <div id="purchase-message" class="alert alert-danger" hidden role="alert"></div>
+    <div class="pd-top-grid"><partial name="Partials/_AdditionalPurchaseDetails" /><partial name="Partials/_PurchaseSummary" /></div>
+    <nav class="pd-tabs" aria-label="Purchase sections"><button class="active" type="button" data-pd-tab="items" aria-pressed="true">Items</button><button type="button" data-pd-tab="supplier" aria-pressed="false">Supplier &amp; Charges</button><button type="button" data-pd-tab="receipts" aria-pressed="false">Stock Receipts</button><button type="button" data-pd-tab="payments" aria-pressed="false">Payments &amp; Returns</button></nav>
+    <partial name="Partials/_PurchaseItemsTable" />
+    <div id="purchase-bottom" class="pd-bottom-grid"><partial name="Partials/_StockReceipts" /><partial name="Partials/_SupplierPaymentsAndReturns" /></div>
+    <partial name="Partials/_OrderReceiveForm" />
+    <partial name="Partials/_PurchaseChanges" />
+    <a href="/Purchases" class="pd-back-link">&#8592; Back to purchase orders</a>
+</div>
+@section Styles {<link rel="stylesheet" href="~/css/order-receiving.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/purchase-details.css" asp-append-version="true" />}
+@section Scripts {
+    <script src="~/js/purchase-common.js" asp-append-version="true"></script>
+    <script src="~/js/purchase-details.js" asp-append-version="true"></script>
+    <script src="~/js/purchase-changes.js" asp-append-version="true"></script>
+    <script src="~/js/purchase-receipts.js" asp-append-version="true"></script>
+    <script src="~/js/shop-operations.js" asp-append-version="true"></script>
+}

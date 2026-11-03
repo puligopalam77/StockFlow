@@ -1,0 +1,8 @@
+#business-profile-workspace { max-width:1000px; }
+#business-profile-workspace dl { display:grid; grid-template-columns:minmax(140px,1fr) minmax(0,2fr); margin:0; gap:8px; }
+#business-profile-workspace dd { margin:0; overflow-wrap:anywhere; }
+.business-profile-preview { background:#f5f8ff; border:1px solid #dfe7f3; padding:16px; border-radius:8px; }
+.business-profile-preview h3 { font-size:16px; }
+.business-profile-preview p { margin:6px 0; }
+#business-profile-workspace :is(label,input,select,textarea) { max-width:100%; }
+@media(max-width:575px) { #business-profile-workspace dl { grid-template-columns:minmax(0,1fr); gap:4px; } #business-profile-workspace dd { margin-bottom:10px; } }

@@ -1,0 +1,14 @@
+.variant-attribute-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 8px; }
+#variant-rows td { max-width: 220px; overflow-wrap: anywhere; }
+#variant-rows td:last-child { min-width: 125px; }
+#variant-existing-barcodes { overflow-wrap: anywhere; }
+.stock-label { display: inline-block; width: 65mm; max-width: 100%; padding: 4mm; margin: 2mm 0; border: 1px solid #ddd; text-align: center; break-inside: avoid; }
+.stock-label svg { width: 55mm; max-width: 100%; height: 18mm; }
+@media print {
+  body * { visibility: hidden; }
+  #label-dialog { position: absolute; inset: 0; width: 100%; max-width: none; max-height: none; overflow: visible; padding: 0; border: 0; box-shadow: none; }
+  #label-dialog::backdrop { background: transparent; }
+  #variant-labels, #variant-labels * { visibility: visible; }
+  #variant-labels { position: absolute; left: 0; top: 0; width: 100%; }
+  .stock-label { border: 0; }
+}

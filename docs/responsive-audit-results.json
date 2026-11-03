@@ -1,0 +1,423 @@
+{
+  "date": "2026-11-01",
+  "timezone": "Asia/Calcutta",
+  "routeDescriptors": 75,
+  "distinctPages": 60,
+  "screenUrls": 109,
+  "fullSweep": {
+    "visits": 1526,
+    "rendered": 1484,
+    "layoutFailures": 0,
+    "dialogChecks": 77,
+    "dialogFailures": 0,
+    "scriptErrors": 0
+  },
+  "finalSmoke": {
+    "visits": 327,
+    "failures": 0
+  },
+  "populatedForms": {
+    "urls": 42,
+    "visits": 588,
+    "failures": 0,
+    "scriptErrors": 0,
+    "apiLimitations": [
+      {
+        "url": "/Categories/create",
+        "width": 1920,
+        "height": 1080,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 1536,
+        "height": 864,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 1366,
+        "height": 768,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 1280,
+        "height": 720,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 1280,
+        "height": 650,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 1280,
+        "height": 600,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 1024,
+        "height": 768,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 768,
+        "height": 1024,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 390,
+        "height": 844,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 375,
+        "height": 667,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 320,
+        "height": 640,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 1024,
+        "height": 480,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 853,
+        "height": 400,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/create",
+        "width": 640,
+        "height": 400,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 1920,
+        "height": 1080,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 1536,
+        "height": 864,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 1366,
+        "height": 768,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 1280,
+        "height": 720,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 1280,
+        "height": 650,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 1280,
+        "height": 600,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 1024,
+        "height": 768,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 768,
+        "height": 1024,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 390,
+        "height": 844,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 375,
+        "height": 667,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 320,
+        "height": 640,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 1024,
+        "height": 480,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 853,
+        "height": 400,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      },
+      {
+        "url": "/Categories/Index/create",
+        "width": 640,
+        "height": 400,
+        "endpoint": "/api/categories/sku-prefix-suggestion",
+        "status": 500
+      }
+    ]
+  },
+  "sharedComponents": {
+    "check": "responsive-components",
+    "passed": true
+  },
+  "releaseBuild": {
+    "check": "release-build",
+    "passed": true
+  },
+  "applicationRegressions": [
+    {
+      "check": "dashboard-ui-fixtures",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/dashboard-ui-fixtures.log"
+    },
+    {
+      "check": "security-ui-fixtures",
+      "passed": false,
+      "log": "tests/bin/responsive-audit/security-ui-fixtures.log"
+    },
+    {
+      "check": "reports-checks",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/reports-checks.log"
+    },
+    {
+      "check": "navigation-checks",
+      "passed": false,
+      "log": "tests/bin/responsive-audit/navigation-checks.log"
+    },
+    {
+      "check": "master-screen-checks",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/master-screen-checks.log"
+    },
+    {
+      "check": "receive-stock-ui-checks",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/receive-stock-ui-checks.log"
+    },
+    {
+      "check": "product-registration-core-checks",
+      "passed": false,
+      "log": "tests/bin/responsive-audit/product-registration-core-checks.log"
+    },
+    {
+      "check": "purchase-receiving-checks",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/purchase-receiving-checks.log"
+    },
+    {
+      "check": "inventory-control-checks",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/inventory-control-checks.log"
+    },
+    {
+      "check": "quick-customer-checks",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/quick-customer-checks.log"
+    },
+    {
+      "check": "field-validation-checks",
+      "passed": false,
+      "log": "tests/bin/responsive-audit/field-validation-checks.log"
+    },
+    {
+      "check": "notification-checks",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/notification-checks.log"
+    },
+    {
+      "check": "login-validation-checks",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/login-validation-checks.log"
+    }
+  ],
+  "browserRegressions": [
+    {
+      "check": "billing",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-billing.log"
+    },
+    {
+      "check": "receive-goods",
+      "passed": false,
+      "log": "tests/bin/responsive-audit/browser-receive-goods.log"
+    },
+    {
+      "check": "product-registration",
+      "passed": false,
+      "log": "tests/bin/responsive-audit/browser-product-registration.log"
+    },
+    {
+      "check": "product-wizard-validation",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-product-wizard-validation.log"
+    },
+    {
+      "check": "master-screens",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-master-screens.log"
+    },
+    {
+      "check": "dashboard",
+      "passed": false,
+      "log": "tests/bin/responsive-audit/browser-dashboard.log"
+    },
+    {
+      "check": "inventory-control",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-inventory-control.log"
+    },
+    {
+      "check": "purchase-receiving",
+      "passed": false,
+      "log": "tests/bin/responsive-audit/browser-purchase-receiving.log"
+    },
+    {
+      "check": "application-dialogs",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-application-dialogs.log"
+    },
+    {
+      "check": "login-responsive",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-login-responsive.log"
+    },
+    {
+      "check": "login-validation",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-login-validation.log"
+    },
+    {
+      "check": "notifications",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-notifications.log"
+    },
+    {
+      "check": "reports",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-reports.log"
+    },
+    {
+      "check": "shared-layout-scrolling",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-shared-layout-scrolling.log"
+    },
+    {
+      "check": "page-scrolling",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-page-scrolling.log"
+    },
+    {
+      "check": "button-theme",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-button-theme.log"
+    },
+    {
+      "check": "flag-notifications",
+      "passed": true,
+      "log": "tests/bin/responsive-audit/browser-flag-notifications.log"
+    }
+  ],
+  "dashboardRetest": {
+    "check": "dashboard-content-regression",
+    "passed": true
+  },
+  "finalFunctional": [
+    {
+      "check": "master-screens",
+      "passed": true
+    },
+    {
+      "check": "receiving",
+      "passed": true
+    },
+    {
+      "check": "product-wizard-validation",
+      "passed": true
+    }
+  ],
+  "deniedRoutes": [
+    "/Account/AccessDenied",
+    "/Notifications/Index",
+    "/Privacy"
+  ],
+  "apiLimitations": [
+    "/api/brands/1 404",
+    "/api/categories/1 404",
+    "/api/customers/1 404",
+    "/api/products/1 404",
+    "/api/purchases 500",
+    "/api/operations/purchases/1 500",
+    "/api/purchases/1 500",
+    "/api/purchases/1/receipts 500",
+    "/api/operations/reports/product-sales 500",
+    "/api/sales/billing/policy 500",
+    "/api/suppliers/1 404"
+  ],
+  "cloudDeployed": false,
+  "sqlMigrationRequired": false
+}

@@ -1,0 +1,239 @@
+@page "{id:long}"
+@model StockFlow.Web.Pages.Sales.InvoiceModel
+@using System.Globalization
+@{
+    var invoice = Model.Invoice;
+    ViewData["Title"] = invoice.InvoiceNumber;
+    string Money(decimal amount) => amount.ToString("N2", CultureInfo.InvariantCulture);
+    var hasSerials = invoice.Items.Any(i => !string.IsNullOrWhiteSpace(i.SerialNumber));
+    var hasReferences = invoice.Payments.Any(p => !string.IsNullOrWhiteSpace(p.ReferenceNumber));
+    var hasPaymentDates = invoice.Payments.Any(p => p.PaymentDate.HasValue && p.PaymentDate.Value.Date != invoice.SaleDate.Date);
+}
+@section Styles { <link rel="stylesheet" href="~/css/invoice.css" asp-append-version="true" /> }
+<div class="invoice-actions no-print">
+    <div class="invoice-action-group">
+    @if (Access.Can("SALES")) { <a asp-page="/Sales/Index" class="btn btn-secondary">Back to sales</a>
+    <a asp-page="/Sales/Details" asp-route-id="@invoice.SaleId" class="btn btn-secondary">Sale details</a> }
+    else { <a asp-page="/Scan/Index" class="btn btn-secondary">Back to scan</a> }
+    <label for="invoice-print-layout" class="align-self-center">Print format</label>
+    <select id="invoice-print-layout" class="form-select w-auto">
+        <option value="a4">A4 invoice</option>
+        <option value="thermal">80 mm receipt</option>
+    </select>
+    </div><div class="invoice-action-group">
+    <button permission-module="INVOICES" permission-action="EXPORT" id="print-invoice" class="btn btn-primary" type="button">Print invoice</button>
+    <button permission-module="INVOICES" permission-action="EXPORT" id="save-invoice-pdf" class="btn btn-outline-primary" type="button">Save as PDF</button>
+    <a asp-page="/Sales/Create" permission-module="SALES" permission-action="CREATE" class="btn btn-primary">New bill</a>
+    </div>
+</div>
+<details class="no-print invoice-print-help"><summary>Print and PDF help</summary><p>Select “Save as PDF” in the browser print dialog to save a copy. Turn off browser headers and footers. For receipts, select 80 mm paper and 100% scale; paper length is controlled by your printer driver.</p></details>
+@if (!invoice.HasHistoricalDetails) { <p class="invoice-legacy-note">Some original contact or product details were not captured for this older invoice. Missing details are omitted; recorded amounts are unchanged.</p> }
+<article class="invoice-paper" aria-label="Invoice @invoice.InvoiceNumber">
+@if(invoice.Gst is {} gst){
+    <div class="invoice-gst-particulars">
+        <strong>@gst.DocumentTitle</strong> · Place of supply: @gst.PlaceOfSupply — @StockFlow.Application.Common.GstRules.States.GetValueOrDefault(gst.PlaceOfSupply) · Reverse charge: No
+        @if(!string.IsNullOrWhiteSpace(gst.DeliveryAddress)){<p>Delivery address: @gst.DeliveryAddress</p>}
+        @if(gst.RegistrationType=="COMPOSITION"){<p>Composition taxable person, not eligible to collect tax on supplies.</p>}
+    </div>
+    <p class="no-print invoice-legacy-note">GST document template requires practitioner acceptance. Amounts and tax classifications below come from the saved invoice.</p>
+}
+<header class="invoice-heading">
+    <div class="invoice-company">
+        @if (!string.IsNullOrWhiteSpace(invoice.Company.LogoDataUrl)) { <img class="invoice-business-logo" src="@invoice.Company.LogoDataUrl" alt="@invoice.Company.CompanyName logo" /><h1>@invoice.Company.CompanyName</h1> }
+        else { <partial name="_InvoiceBrand" model="invoice.Company.CompanyName" /> }
+        <div class="invoice-company-contact">
+            @if (!string.IsNullOrWhiteSpace(invoice.Company.LegalBusinessName)) { <div>@invoice.Company.LegalBusinessName</div> }
+            @if (!string.IsNullOrWhiteSpace(invoice.Company.City+invoice.Company.State+invoice.Company.PinCode)) { <div>@string.Join(", ", new[]{invoice.Company.City,invoice.Company.State,invoice.Company.PinCode}.Where(v=>!string.IsNullOrWhiteSpace(v)))</div> }
+            @if (!string.IsNullOrWhiteSpace(invoice.Company.AlternatePhone)) { <div>Alternate phone: @invoice.Company.AlternatePhone</div> }
+            @if (!string.IsNullOrWhiteSpace(invoice.Company.Website)) { <div>@invoice.Company.Website</div> }
+            @if (!string.IsNullOrWhiteSpace(invoice.Company.PanNumber)) { <div>PAN: @invoice.Company.PanNumber</div> }
+            @if (!string.IsNullOrWhiteSpace(invoice.Company.Address)) { <div class="invoice-multiline">@invoice.Company.Address</div> }
+            @if (!string.IsNullOrWhiteSpace(invoice.Company.MobileNumber)) { <div>Phone: @invoice.Company.MobileNumber</div> }
+            @if (!string.IsNullOrWhiteSpace(invoice.Company.Email)) { <div>@invoice.Company.Email</div> }
+            @if (!string.IsNullOrWhiteSpace(invoice.Company.GstNumber)) { <div>GST: @invoice.Company.GstNumber</div> }
+        </div>
+    </div>
+    <div class="invoice-identification">
+        <h2>@(invoice.Gst?.DocumentTitle.ToUpperInvariant() ?? "INVOICE")</h2>
+        <strong id="invoice-number">@invoice.InvoiceNumber</strong>
+        <div>@invoice.SaleDate.ToString("dd MMM yyyy, HH:mm", CultureInfo.InvariantCulture)</div>
+        @if (!string.IsNullOrWhiteSpace(invoice.Company.SalespersonName)) { <div>Salesperson: @invoice.Company.SalespersonName</div> }
+        <div class="invoice-status @(invoice.Status == "CANCELLED" ? "invoice-cancelled" : "")">
+            <span aria-hidden="true">@(invoice.Status == "COMPLETED" ? "✓" : "!")</span> @invoice.Status</div>
+    </div>
+</header>
+<section class="invoice-customer" aria-labelledby="bill-to">
+    <span class="invoice-section-icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5" /><path d="M6 28v-4c0-9 20-9 20 0v4Z" />
+        </svg>
+    </span>
+    <div class="invoice-customer-details">
+        <h2 id="bill-to">Bill to</h2>
+        <strong>@(invoice.CustomerName ?? (invoice.HasHistoricalDetails ? "Walk-in customer" : "Customer not captured"))</strong>
+        @if (!string.IsNullOrWhiteSpace(invoice.CustomerMobile)) { <div>
+        <span>Mobile:</span> @invoice.CustomerMobile</div> }
+        @if (!string.IsNullOrWhiteSpace(invoice.CustomerAddress)) { <div class="invoice-multiline">
+    <span>Address:</span> @invoice.CustomerAddress</div> }
+        @if (!string.IsNullOrWhiteSpace(invoice.CustomerGstNumber)) { <div>
+<span>GSTIN:</span> @invoice.CustomerGstNumber</div> }
+        @if(string.IsNullOrWhiteSpace(invoice.CustomerName)){<p class="no-print invoice-customer-hint">Select or add a customer during billing to include their contact details.</p>}
+</div>
+</section>
+<p class="invoice-currency">All amounts in INR (₹)</p>
+<div class="invoice-table-scroll">
+    <table class="invoice-items" aria-label="Invoice items">
+        <colgroup><col style="width:4%" /><col style="width:@(hasSerials ? "26%" : "40%")" />@if(hasSerials){<col style="width:14%" />}<col style="width:6%" /><col style="width:12%" /><col style="width:12%" /><col style="width:10%" /><col style="width:16%" /></colgroup>
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Product / model</th>
+                @if(hasSerials){<th scope="col">Serial / Unit ID</th>}
+                <th scope="col" class="quantity">Qty</th>
+                <th scope="col" class="amount">Rate</th>
+                <th scope="col" class="amount">Discount</th>
+                <th scope="col" class="amount">Tax</th>
+                <th scope="col" class="amount">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+                @for (var index = 0; index < invoice.Items.Count; index++)
+                {
+                    var item = invoice.Items[index];
+                    var rate = item.EnteredRate ?? item.SellingPrice;
+                    var discount = item.EnteredDiscount ?? item.DiscountAmount;
+            <tr>
+                <td class="invoice-line-number">@(index + 1)</td>
+                <td class="invoice-product">
+                    <strong>@item.ProductName</strong>
+                    <div class="thermal-only invoice-quantity-rate">@item.Quantity × @Money(rate)</div>
+                    @if(invoice.Gst?.Lines.FirstOrDefault(l=>l.SourceLineId==item.SaleItemId) is {} gstLine){
+                        <div>HSN/SAC: @gstLine.HsnSac · UQC: @gstLine.Uqc · Taxable: @Money(gstLine.TaxableValue)</div>
+                        @if(gstLine.Cgst>0){<div>CGST @((gstLine.TaxRate/2).ToString("0.####"))%: @Money(gstLine.Cgst)</div>}
+                        @if(gstLine.Sgst>0){<div>SGST @((gstLine.TaxRate/2).ToString("0.####"))%: @Money(gstLine.Sgst)</div>}
+                        @if(gstLine.Utgst>0){<div>UTGST @((gstLine.TaxRate/2).ToString("0.####"))%: @Money(gstLine.Utgst)</div>}
+                        @if(gstLine.Igst>0){<div>IGST @gstLine.TaxRate.ToString("0.####")%: @Money(gstLine.Igst)</div>}
+                        @if(gstLine.Cess>0){<div>Cess: @Money(gstLine.Cess)</div>}
+                    }
+                        @if (!string.IsNullOrWhiteSpace(item.AttributeSummary)) { <div>@item.AttributeSummary</div> }
+                        @if(item.IsManual){<div>Manual Item</div>}
+                        @if(invoice.Gst is null && item.IsManual && !string.IsNullOrWhiteSpace(item.HsnSac)){<div>HSN/SAC: @item.HsnSac · @item.GstTreatment</div>}
+                        @if(item.Mrp is {} mrp){<div>MRP: ₹ @Money(mrp)</div>}
+                        @if(!string.IsNullOrWhiteSpace(item.Description)){<div>@item.Description</div>}
+                        @if (!string.IsNullOrWhiteSpace(item.Sku)) { <div>SKU: @item.Sku</div> }
+                        @if (!string.IsNullOrWhiteSpace(item.UnitOfMeasure) && item.UnitOfMeasure != "PIECE") { <div>Unit: @item.UnitOfMeasure</div> }
+                        @if (!string.IsNullOrWhiteSpace(item.BrandName)) { <div>@item.BrandName</div> }
+                        @if (!string.IsNullOrWhiteSpace(item.Model)) { <div>Model: @item.Model</div> }
+                </td>
+                @if(hasSerials){<td class="invoice-serial @(string.IsNullOrWhiteSpace(item.SerialNumber) ? "invoice-empty" : "")">@item.SerialNumber@if(!string.IsNullOrWhiteSpace(item.SerialNumber)){<small class="d-block">@(item.SerialSource == "MANUFACTURER" ? "Manufacturer Serial" : item.SerialSource == "INTERNAL" ? "Internal Unit ID" : "Source unverified")</small>}</td>}
+                <td class="quantity invoice-quantity">@item.Quantity</td>
+                <td class="amount invoice-rate">@Money(rate)</td>
+                <td class="amount invoice-discount @(discount == 0 ? "invoice-empty" : "")"><span class="thermal-only">Discount: </span>@Money(discount)@if(item.DiscountType=="PERCENTAGE" && item.DiscountPercent.HasValue && (item.EnteredDiscount.HasValue || (invoice.InvoiceDiscountAmount.GetValueOrDefault()==0 && !invoice.PricesIncludeTax))){<small class="d-block">@item.DiscountPercent.Value.ToString("0.##")%</small>}</td>
+                <td class="amount invoice-tax @(item.TaxPercentage == 0 ? "invoice-empty" : "")"><span class="thermal-only">Tax: </span>@item.TaxPercentage.ToString("0.##", CultureInfo.InvariantCulture)%<small class="d-block">@Money(item.LineTotal - (item.Quantity * item.SellingPrice - item.DiscountAmount))</small></td>
+                <td class="amount invoice-line-total"><span class="thermal-only">Line total: </span>@Money(item.LineTotal)</td>
+            </tr>
+                }
+        </tbody>
+    </table>
+</div>
+<section class="invoice-totals" aria-label="Invoice totals">
+        @if(invoice.TradeInAllowance>0){<p>Trade-in allowance: ₹ @Money(invoice.TradeInAllowance) — included in the after-tax allowance below.</p>}
+        @if(invoice.InvoiceDiscountAmount>0){<p>Invoice discount is included in the saved line amounts; it is not deducted again.</p>}
+        @if(invoice.PricesIncludeTax){<p>Entered item prices include tax. Saved taxable amounts and tax are shown separately.</p>}
+    <dl>
+        @if(invoice.ItemSubtotal is {} originalSubtotal){
+        <dt>Item Subtotal</dt><dd>@Money(originalSubtotal)</dd>
+        @if(invoice.ItemDiscountAmount>0){<dt>Item Discounts</dt><dd>-@Money(invoice.ItemDiscountAmount.Value)</dd>}
+        @if(invoice.InvoiceDiscountAmount>0){<dt>Invoice Discount</dt><dd>-@Money(invoice.InvoiceDiscountAmount.Value)</dd>}
+        }
+        @if(invoice.ItemSubtotal.HasValue){
+        @if(invoice.TaxableAmount!=0){<dt>Taxable Amount</dt><dd>@Money(invoice.TaxableAmount)</dd>}
+        @if(invoice.Subtotal>invoice.TaxableAmount){<dt>Other supplies (excluding GST)</dt><dd>@Money(invoice.Subtotal-invoice.TaxableAmount)</dd>}
+        }else{
+        <dt>Subtotal (after line discounts)</dt><dd>@Money(invoice.Subtotal)</dd>
+        }
+        @if(invoice.TaxAmount!=0){<dt>@(invoice.ItemSubtotal.HasValue ? "GST" : "Tax")</dt>
+        <dd>@Money(invoice.TaxAmount)</dd>
+        }
+        @if(invoice.Gst is {} gstTotals){
+        @if(gstTotals.Cgst>0){<dt>CGST</dt><dd>@Money(gstTotals.Cgst)</dd>}
+        @if(gstTotals.Sgst>0){<dt>SGST</dt><dd>@Money(gstTotals.Sgst)</dd>}
+        @if(gstTotals.Utgst>0){<dt>UTGST</dt><dd>@Money(gstTotals.Utgst)</dd>}
+        @if(gstTotals.Igst>0){<dt>IGST</dt><dd>@Money(gstTotals.Igst)</dd>}
+        @if(gstTotals.Cess>0){<dt>Cess</dt><dd>@Money(gstTotals.Cess)</dd>}
+        }
+        @if(invoice.DiscountAmount!=0){<dt>@(invoice.ItemSubtotal.HasValue ? "Other allowance (after tax)" : "Invoice discount (after tax)")</dt>
+        <dd>-@Money(invoice.DiscountAmount)</dd>}
+        <dt class="grand-total">Grand total</dt>
+        <dd class="grand-total">₹ @Money(invoice.TotalAmount)</dd>
+    </dl>
+</section>
+<section class="invoice-payments" aria-labelledby="invoice-payment-heading">
+    <h2 id="invoice-payment-heading" class="invoice-section-heading">
+        <span class="invoice-section-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><rect x="4" y="7" width="24" height="19" rx="2" /><path d="M4 13h24M8 21h7" />
+            </svg>
+        </span>Payment details</h2>
+    <table aria-label="Payments">
+        <thead>
+            <tr>
+                <th scope="col">Mode</th>
+                @if(hasReferences){<th scope="col">Reference</th>}
+                @if(hasPaymentDates){<th scope="col">Collected on</th>}
+                <th scope="col" class="amount">Amount (INR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var payment in invoice.Payments) { <tr>
+            <td>@(payment.PaymentMode == "CARD" && payment.CardType == "DEBIT" ? "Debit Card" : payment.PaymentMode == "CARD" && payment.CardType == "CREDIT" ? "Credit Card" : payment.PaymentMode == "CREDIT" ? "Customer Credit / Pay Later" : payment.PaymentMode)</td>
+            @if(hasReferences){<td>@payment.ReferenceNumber</td>}
+            @if(hasPaymentDates){<td>@payment.PaymentDate?.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</td>}
+            <td class="amount">@Money(payment.Amount)</td>
+        </tr> }
+            @if (invoice.Payments.Count == 0) { <tr>
+        <td colspan="@(2+(hasReferences?1:0)+(hasPaymentDates?1:0))">No payments recorded.</td>
+    </tr> }
+</tbody>
+</table>
+@if(invoice.CreditAmount>0){<p>Collections recorded: ₹ @Money(invoice.AmountReceived) · Credit recorded at sale: ₹ @Money(invoice.CreditAmount)</p>}
+@if(invoice.Settlement is {} settlement && (invoice.CreditAmount>0 || settlement.ReturnedTotal>0 || settlement.Outstanding>0)){
+    <p>Current outstanding: ₹ @Money(settlement.Outstanding)</p>
+    @if(settlement.ReturnedTotal>0){<p>Returns recorded: ₹ @Money(settlement.ReturnedTotal)</p>}
+    @if(settlement.RefundedTotal>0){<p>Refunds recorded: ₹ @Money(settlement.RefundedTotal)</p>}
+}
+        @if(invoice.CashTendered.HasValue){<p>Cash tendered: ₹ @Money(invoice.CashTendered.Value) · Change returned: ₹ @Money(invoice.CashChange ?? 0)</p>}
+        @if (invoice.Status == "CANCELLED") { <p>
+<strong>This invoice is cancelled. Payment entries show the original sale records, not refund confirmation.</strong>
+</p> }
+</section>
+@if(invoice.Items.Any(i=>i.WarrantyMonths>0 || i.WarrantyEndDate.HasValue)){
+<section class="invoice-warranties" aria-labelledby="invoice-warranty-heading">
+    <h2 id="invoice-warranty-heading" class="invoice-section-heading">
+        <span class="invoice-section-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><path d="M16 3 27 7v9c0 7-7 12-11 14C12 28 5 23 5 16V7Z" /><path d="m10 16 4 4 8-8" />
+            </svg>
+        </span>Warranty summary</h2>
+        @foreach (var item in invoice.Items.Where(i => i.WarrantyMonths > 0 || i.WarrantyEndDate.HasValue))
+        {
+    <div class="invoice-warranty">
+        <strong>@item.ProductName</strong> @(item.SerialNumber is null ? "" : " / " + item.SerialNumber)
+                @if (item.WarrantyMonths > 0) { <span> — @item.WarrantyMonths months</span> }
+                @if (item.WarrantyStartDate.HasValue && item.WarrantyEndDate.HasValue) { <div>@item.WarrantyStartDate.Value.ToString("dd MMM yyyy", CultureInfo.InvariantCulture) to @item.WarrantyEndDate.Value.ToString("dd MMM yyyy", CultureInfo.InvariantCulture) · @item.WarrantyStatus</div> }
+                else { <div>No unit warranty registration recorded.</div> }
+    </div>
+        }
+</section>
+}
+@* Sale notes have no customer-visible classification. Keep them in authorized sale details. *@
+    @if (!string.IsNullOrWhiteSpace(invoice.Company.InvoiceFooter)) { <div class="invoice-footer invoice-multiline">@invoice.Company.InvoiceFooter</div> }
+    @if (!string.IsNullOrWhiteSpace(invoice.Company.TermsAndConditions)) { <div class="invoice-footer invoice-multiline"><strong>Terms &amp; conditions</strong><br />@invoice.Company.TermsAndConditions</div> }
+<footer class="invoice-brand-footer">
+    @if (!string.IsNullOrWhiteSpace(invoice.Company.LogoDataUrl))
+    {
+        <img class="invoice-footer-logo" src="@invoice.Company.LogoDataUrl" alt="@invoice.Company.CompanyName logo" />
+    }
+    else { <partial name="_InvoiceBrand" model="invoice.Company.CompanyName" /> }
+    <span>Simplifying inventory. Powering your business.</span>
+</footer>
+@if(invoice.Gst is not null){<p class="invoice-gst-signature">For @(invoice.Company.LegalBusinessName ?? invoice.Company.CompanyName)<br /><br />Authorized signatory: ____________________</p>}
+</article>
+@section Scripts { <script src="~/js/invoice.js" asp-append-version="true"></script> }

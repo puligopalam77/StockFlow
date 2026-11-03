@@ -1,0 +1,17 @@
+@using StockFlow.Web.Help
+@inject StockFlow.Application.Common.BusinessScope GuideScope
+@{
+    var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    var guide = RetailScreenGuides.For(page, GuideScope.BusinessProfileCode);
+    if (page == "/Purchases/Create" && (Context.Request.Query["mode"] == "order" || Context.Request.Query.ContainsKey("id")))
+        guide = RetailScreenGuides.For("/Purchases/Index", GuideScope.BusinessProfileCode);
+}
+@if (guide is not null && User.Identity?.IsAuthenticated == true)
+{
+<aside id="retail-screen-guide" class="retail-screen-guide no-print" aria-label="Help with this screen">
+    <details>
+        <summary><span class="retail-guide-symbol" aria-hidden="true">i</span><span>@guide.Purpose</span><span class="retail-guide-prompt">Show steps</span></summary>
+        <ol>@foreach (var step in guide.Steps) { <li>@step</li> }</ol>
+    </details>
+</aside>
+}

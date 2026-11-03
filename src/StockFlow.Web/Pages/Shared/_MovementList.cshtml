@@ -1,0 +1,29 @@
+<div id="dashboard-message" class="alert alert-danger" role="alert" hidden>
+</div>
+<form id="movement-filter" class="row g-3 mb-3">
+    <div class="col-md-4">
+        <label for="movement-term" class="form-label">Product / invoice / service / claim</label>
+        <input id="movement-term" class="form-control" maxlength="200" />
+    </div>
+    <div class="col-md-2">
+        <label for="movement-type" class="form-label">Movement</label>
+        <select id="movement-type" class="form-select">
+            <option value="">All</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label for="movement-from" class="form-label">From</label>
+        <input id="movement-from" type="date" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label for="movement-to" class="form-label">Through</label>
+        <input id="movement-to" type="date" class="form-control" />
+    </div>
+    <div class="col-md-2 align-self-end">
+        <button class="btn btn-primary">Search</button>
+    </div>
+</form>
+<div id="dashboard-results" aria-live="polite">
+</div>
+<button id="previous" class="btn btn-secondary" disabled>Previous</button>
+<button id="next" class="btn btn-secondary" disabled>Next</button>

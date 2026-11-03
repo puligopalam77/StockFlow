@@ -1,0 +1,111 @@
+@model StockFlow.Web.Pages.IndexModel
+<div class="sf-recent-grid">
+    @if (Access.Can("SALES"))
+    {
+    <section class="sf-panel sf-recent-panel" id="recent-sales">
+        <div class="sf-panel-header">
+            <h2>Recent Sales</h2>
+            <a href="/Sales">View All</a>
+        </div>
+        <div class="table-responsive">
+            <table class="sf-recent-table">
+                <thead>
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                    </tr>
+                </thead>
+                <tbody>
+            @foreach(var s in Model.Data.RecentSales) {
+                    <tr>
+                        <td>
+                            <a href="/Sales/Invoice/@s.SaleId">@s.InvoiceNumber</a>
+                        </td>
+                        <td>@(s.CustomerName ?? "Walk-in")</td>
+                        <td>@s.SaleDate.ToString("dd MMM yyyy")</td>
+                        <td>@Model.Money(s.TotalAmount)</td>
+                        <td>@s.Payment</td>
+                    </tr>
+            }
+            @if(Model.Data.RecentSales.Count==0) { <tr>
+                    <td colspan="5" class="sf-table-empty">@(Model.DataUnavailable ? "Unable to load sales." : "No completed sales yet.")</td>
+                </tr> }
+            </tbody>
+        </table>
+    </div>
+</section>
+    }
+<section class="sf-panel sf-recent-panel" id="recent-services">
+    <div class="sf-panel-header">
+        <h2>Recent Service Requests</h2>
+        <a href="/Service">View All</a>
+    </div>
+    <div class="table-responsive">
+        <table class="sf-recent-table">
+            <thead>
+                <tr>
+                    <th>Service #</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Status</th>
+                    <th>Expected delivery</th>
+                </tr>
+            </thead>
+            <tbody>
+        @foreach(var s in Model.Data.RecentServices) {
+                <tr>
+                    <td>
+                        <a href="/Service/Details/@s.ServiceRequestId">@s.ServiceNumber</a>
+                    </td>
+                    <td>@s.CustomerName</td>
+                    <td>@s.ProductName</td>
+                    <td>@s.Status.Replace('_',' ')</td>
+                    <td>@(s.ExpectedDeliveryDate?.ToString("dd MMM yyyy") ?? "—")</td>
+                </tr>
+        }
+        @if(Model.Data.RecentServices.Count==0) { <tr>
+                <td colspan="5" class="sf-table-empty">@(Model.DataUnavailable ? "Unable to load services." : "No service requests yet.")</td>
+            </tr> }
+        </tbody>
+    </table>
+</div>
+</section>
+</div>
+<section class="sf-panel sf-recent-panel mt-3" id="low-stock-products">
+    <div class="sf-panel-header">
+        <h2>Low Stock Products</h2>
+        <a href="/Inventory/LowStock">View All</a>
+    </div>
+    <div class="table-responsive">
+        <table class="sf-recent-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Current stock</th>
+                    <th>Minimum</th>
+                    <th>Required</th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach(var p in Model.Data.LowStock) {
+                <tr>
+                    <td>
+                        <a href="/Inventory?term=@Uri.EscapeDataString(p.ProductName)">@p.ProductName</a>
+                    </td>
+                    <td>@p.CategoryName</td>
+                    <td>@p.CurrentStock</td>
+                    <td>@p.MinimumStockLevel</td>
+                    <td>@p.Required</td>
+                </tr>
+    }
+    @if(Model.Data.LowStock.Count==0) { <tr>
+                <td colspan="5" class="sf-table-empty">@(Model.DataUnavailable ? "Unable to load low stock." : "No products at or below minimum stock.")</td>
+            </tr> }
+        </tbody>
+    </table>
+</div>
+</section>

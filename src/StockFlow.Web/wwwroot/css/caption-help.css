@@ -1,0 +1,35 @@
+.sf-caption-group {
+    display: inline-flex; align-items: center; justify-content: flex-start;
+    gap: .25rem; max-width: 100%; vertical-align: middle; margin-bottom: .25rem;
+}
+.sf-caption-group > label { margin-block: 0 !important; }
+.sf-caption-heading-group { display: flex; grid-column: 1 / -1; margin-bottom: .4rem; }
+.sf-caption-heading-group > :is(h1,h2,h3,h4) { margin-block: 0 !important; min-width: 0; }
+.sf-caption-field-group { display: block; position: relative; width: 100%; }
+.sf-caption-field-group > .sf-caption-help { position: absolute; inset-inline-end: 0; top: 0; }
+.sf-filter-bar > .sf-caption-field-group { flex: 1 1 120px; min-width: 0; }
+.sf-caption-help { display: inline-flex; align-items: center; flex: 0 0 auto; vertical-align: middle; }
+.sf-caption-info {
+    display: inline-flex; align-items: center; justify-content: center;
+    inline-size: 14px; block-size: 14px; min-width: 14px; min-height: 14px; padding: 0;
+    border: 1px solid #96a2b2; border-radius: 50%; background: transparent;
+    color: #68788d; font: 500 10px/1 system-ui, sans-serif; cursor: help;
+    box-shadow: none;
+}
+.sf-caption-info:hover, .sf-caption-info:focus-visible { color: #b90060; border-color: #b90060; background: #fff2f8; }
+.sf-caption-info:focus-visible { outline: 2px solid #b90060; outline-offset: 3px; }
+.sf-caption-tooltip {
+    position: fixed; inset: auto; margin: 0; z-index: 20000;
+    width: max-content; max-width: min(22rem, calc(100vw - 16px)); max-height: calc(100dvh - 16px);
+    overflow: auto; padding: .65rem .8rem; border: 1px solid #526077; border-radius: .5rem;
+    background: #182438; color: #fff; box-shadow: 0 5px 18px #0003;
+    font: 400 .8125rem/1.5 system-ui, sans-serif; text-align: start; white-space: normal;
+    overflow-wrap: anywhere;
+}
+.sf-caption-tooltip[hidden] { display: none; }
+.sf-caption-help-source { display: none !important; }
+@media (pointer: coarse) {
+    .sf-caption-info { position: relative; }
+    .sf-caption-info::after { content: ''; position: absolute; inset: -7px; }
+}
+@media print { .sf-caption-help { display: none !important; } }

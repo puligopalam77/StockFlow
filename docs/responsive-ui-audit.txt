@@ -1,0 +1,142 @@
+StockFlow responsive UI audit — 1 November 2026 (Asia/Calcutta)
+
+Scope and safety
+Inspected registered Razor screens and controller endpoints, the shared shell,
+navigation, forms, tables, dialogs, dashboard, StockBot, and existing browser
+regressions. No production/shop records were created or modified. The route
+audit uses an authenticated synthetic Admin, in-memory repositories, a
+loopback-only TestServer adapter, blocked HTTP writes and a deliberately
+unreachable database connection. No schema/API/permission/financial changes.
+No cloud deployment was performed.
+
+Inventory
+Runtime discovery found 75 Razor route descriptors for 60 distinct page
+definitions and expanded them into 109 screen URLs, including aliases and
+Add/Edit/View modes. Controller endpoints were inventoried separately; these
+are API contracts, not additional browser screens. Full route details and
+per-URL coverage are in responsive-route-coverage.csv and
+tests/bin/responsive-audit/inventory.json.
+
+Missing features were not invented. For example, customer/supplier registration
+uses existing master screens, and password recovery uses the existing Forgot
+Password screen rather than a new Reset Password route.
+
+Findings and implemented corrections
+1. Date inputs could exceed narrow filter columns on Product Sales and Sales
+   History. Shared form controls now respect parent widths and filters wrap.
+2. The 320px top bar wrapped the profile trigger to a second row. Its popup could
+   cover the trigger. Language/profile/notification controls now fit one row.
+3. Dashboard Quick Actions used three columns irrespective of the card count,
+   leaving the fourth card on its own row. Container queries choose balanced
+   columns, including three columns for larger sets of actions. Hero statistic
+   chips reflow in narrower containers. No metrics were changed or removed.
+4. Shared dialogs now have viewport bounds, responsive action wrapping, readable
+   long messages, and consistent centered confirmation styling. Form dialogs
+   retain their form-oriented headers. Native dismissal and focus behavior
+   remain unchanged. Profile panels scroll on short viewports.
+5. Receipt summaries become normal-flow content on short/mobile screens so
+   sticky actions cannot consume the available editing height.
+6. StockBot repositions around visible interactive controls and horizontal table
+   scrollbars. Extra document footer space lets final actions scroll clear of
+   the launcher. Native dialogs remain above the floating assistant.
+7. Shared grid/card/table children can shrink within their containers; text
+   errors wrap; table overflow stays inside existing wrappers; keyboard controls
+   have visible focus. Touch admin action targets expand on coarse pointers.
+8. Populated-editor checks found registered /Module/Index/Create, Edit and View
+   aliases bypassed the shared editor initialization. The initializer now
+   normalizes the Index segment and uses the same existing form/API contracts.
+9. Login's previously implemented height-aware stylesheet remains unchanged and
+   passed its responsive and validation suites again.
+
+Application files changed
+- Pages/Shared/_Layout.cshtml: load shared responsive CSS/JS.
+- wwwroot/css/responsive-foundations.css: scoped screen-only foundations.
+- wwwroot/js/responsive-shell.js: presentation-only launcher positioning.
+- wwwroot/js/master-pages.js: normalize registered Index aliases.
+
+Audit/test files changed
+- tests/StockFlow.MasterDataChecks/Program.cs: audit-server flag.
+- tests/StockFlow.MasterDataChecks/ResponsiveAuditServer.cs: route discovery,
+  synthetic master data, blocked writes/database access and loopback adapter.
+- tests/StockFlow.MasterDataChecks/NotificationChecks.cs: expose its existing
+  nested fake repository to the audit harness only.
+- tests/StockFlow.UiChecks/responsive-audit.cjs: route-wide viewport checks.
+- tests/StockFlow.UiChecks/responsive-components.cjs: interactive shared checks.
+- tests/StockFlow.UiChecks/dashboard-offline.cjs: replace the old fixed 290px
+  banner-height assumption with containment of readable/reflowed content.
+
+Responsive verification
+Full sweep: 1,526 route/viewport visits across 109 discovered URLs. 1,484 HTTP
+200 views were measured. No page-width overflow, dialog-bound failures or
+browser script errors. There were 77 additional dialog-bound checks at laptop
+and mobile widths. A final 327-visit smoke sweep also had zero layout failures.
+Populated master screens were checked separately after synthetic seeding:
+588 visits across 42 canonical/alias screen URLs and 14 viewport sizes, with
+explicit initialization waits for Add/Edit/View forms. No layout failures or
+browser script errors. See responsive-audit-results.json for detailed counts.
+
+CSS viewport matrix
+1920x1080, 1536x864, 1366x768, 1280x720, 1280x650, 1280x600,
+1024x768, 768x1024, 390x844, 375x667, 320x640, 1024x480, 853x400,
+640x400. Reduced CSS viewports model increased zoom; OS display settings were
+not changed. Physical HP hardware, native device keyboards/date pickers and
+printers were not controlled by this automated run.
+
+Interactive checks passed
+Navigation drawer open/close, profile popup bounds, long confirmation and
+Escape, assistant/primary-action collision checks, customer modal values
+preserved while resizing, and reachable Save actions. Existing suites passed
+for billing/cart/payment/retry behavior, receiving, product wizard validation,
+master Add/Edit/View screens, inventory controls, application dialogs, login,
+notifications, reports, page scrolling, button theme and notification flags.
+Dashboard regression passed with content-based containment checks.
+
+Regression findings that remain open
+The broad legacy suite is not entirely green. These failures were recorded,
+not suppressed and not used to justify changes to business rules:
+- StoreAssignmentChecks expects #assigned-store markup that is absent. The
+  security-fixtures flag reaches this check before writing its fixtures.
+- NavigationChecks expects earlier menu labels, including Dashboard and Setup.
+- ProductRegistrationChecks gets a 409 Conflict after its initial metadata
+  check. The current product wizard browser suite passes separately.
+- FieldValidationChecks fails the BusinessProfileChange.ExpectedVersion
+  maximum-value assertion.
+- receive-goods-offline waits for a navigation not supplied by its fixture.
+  The receiving browser suite and receiving API checks pass separately.
+- product-registration-offline waits for the superseded modal's [open] state.
+  Current full-page master registration and product wizard suites pass.
+- purchase-receiving-offline uses a strict text locator matching both the
+  original alert source and the notification popup. Its API suite passes.
+Full logs and pass/fail lists are retained under tests/bin/responsive-audit.
+
+Coverage limitations
+- /Account/AccessDenied returns its expected 403. /Privacy and the registered
+  /Notifications/Index alias are also denied to the synthetic Admin. These
+  account for 42 visits excluded from the HTTP-200 layout measurements. The
+  canonical /Notifications screen was included.
+- Some purchase/detail, billing-policy and product-performance API calls are
+  deliberately unavailable in the loopback harness because their repositories
+  are not mocked. Their page error/empty states were inspected, while existing
+  module browser suites supply synthetic successful data for their workflows.
+- Category prefix suggestions are also unavailable in the blocked-database
+  adapter (28 failed suggestion requests during the populated-form sweep).
+  Form initialization and layout pass; identifier-generation behavior was not
+  changed or certified by this UI audit.
+- This is not an end-to-end production transaction, two-shop database or cloud
+  deployment certification. Backend scope and posting code were untouched.
+- Screenshots are synthetic. Native dropdown/date-picker UI and print output
+  still need device-specific checks. Screen-only CSS excludes printed documents.
+
+Build and artifacts
+Release web build passed with zero warnings/errors. There are no SQL migrations
+or manual SQL scripts to run. Screenshots and machine-readable coverage are in
+tests/bin/responsive-audit. Open regression findings above should be reviewed
+before treating the client's cloud deployment as fully regression-cleared.
+
+Reproduce
+Build tests/StockFlow.MasterDataChecks with an isolated OutputPath. Run its
+--responsive-audit-server flag in one terminal; it listens only on
+127.0.0.1:55863. In another terminal run responsive-audit.cjs using the local
+Playwright Node runtime with AUDIT_FULL=1 and AUDIT_DIALOGS=1. Run
+responsive-components.cjs for shared interaction checks. GET /_audit/stop stops
+the owned test adapter. This adapter must never be exposed publicly.

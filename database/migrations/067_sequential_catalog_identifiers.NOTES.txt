@@ -1,0 +1,70 @@
+Sequential category-based identifiers (migration 067)
+
+Deployment
+- Manual migration only. It is not run by application startup.
+- Back up the complete database and stop every application/worker writer.
+- Apply after 066 as PostgreSQL superuser with psql ON_ERROR_STOP=1.
+- Run 067_sku_prefix_dry_run.sql first. It is read-only and flags duplicate prefix suggestions and existing numeric high-water marks.
+- For the inspected tenant-1 installation, 067_reviewed_local_prefix_plan.sql supplies 35 reviewed mappings. IDs AND category names must match; it does not map runtime category names to SKUs.
+- In the SAME psql session run the reviewed plan, then 067_sequential_catalog_identifiers.sql. For a different installation prepare a temporary sf_sku_prefix_plan(tenant_id bigint,category_id integer,prefix text) with reviewed overrides instead.
+- The migration refuses invalid/duplicate prefixes and ambiguous existing parent/SKU ownership. Resolve the mapping; do not renumber historical products.
+- Restart the application only after migration succeeds. New registration allocation intentionally reports a clear migration-required error beforehand.
+
+Existing generation findings
+- New-family codes previously used random SF-hex browser values, simple default SKUs appended -STD, and generated combinations concatenated attribute text with a hash. The saved-product variant editor also had a random fallback. These generation paths have been replaced; CSV/manual import entry remains controlled manual entry.
+- Purchasing, receiving, stock and invoices already reference stable product/variant IDs. No stock calculation or historical identifier replacement was needed.
+
+Format and operation
+- Category prefixes support 3-8 uppercase letters/digits, beginning with a letter. Existing category codes and IDs are preserved.
+- Examples in the reviewed plan: Brake Parts=BRK, Full Face Helmets=HLM, Half Face Helmets=HFL, Head Lights=HDL, Mirrors=MIR.
+- Product codes: BRK-0001; simple default SKU: BRK-0001; variant SKUs: HLM-0007-01, HLM-0007-02. Numeric portions expand naturally.
+- The Generate action and first transition to Step 2 reserve a backend code. Navigation reuses it. Variant generation reserves exact suffixes on the backend; the browser never chooses final sequence numbers.
+- Reservations commit independently of product saving. Abandoned/failed saves leave gaps. Parent requests and variant-operation IDs make network retries idempotent.
+- Permanent catalog_identifier_ledger rows retain reservations and issued identifiers after deactivation/deletion. Prefix registry entries also survive retirement.
+- All allocation/write paths take the existing tenant catalog advisory transaction lock. Counters are scoped by tenant + business profile + prefix. Row updates atomically advance counters.
+- Current Electrical and Bike shops share tenant 1, so business-profile metadata is backfilled onto products/variants and their SKU indexes become profile-scoped. Barcode uniqueness/scoping is unchanged.
+- Initial counters inspect ALL product codes, product SKU aliases and variant SKUs, including inactive/manual/legacy values resembling PREFIX-number or PREFIX-number-suffix. Manually reserved/saved numeric identifiers advance high-water marks too.
+- Existing identifiers are not normalized or rewritten during migration. Saved IDs, barcode mappings, stock and document rows remain unchanged.
+- Saved product codes and variant SKUs are read-only in normal editors and guarded in SQL. Changes require a separate reviewed migration. Adding variants reserves the next unused suffix without touching saved rows.
+- Existing-product variant reservations use a PUT endpoint so Product Edit plus Variant Create permissions remain sufficient; creating a new product uses the Create permission.
+- Moving a product between categories in its original shop preserves identifiers. Converting a registered simple item whose SKU equals its family code to a variant family requires registering a separate product, protecting the original stock identity.
+- Manual entry remains supported for new identifiers, with format, ownership, reservation and collision checks. It never silently overwrites a manual value.
+- Category prefix suggestions query the server registry (including retired prefixes); the visible field can be edited before use. Concurrent conflicts fail clearly and preserve the form.
+- Draft allocation/save carries its original business profile; a shop switch requires returning to the original shop.
+- Purchase/receipt/billing continue using exact variant IDs. Scanner lookup also accepts SKU text; matches for one variant are deduplicated while ambiguous different-item/unit matches remain errors.
+
+Implementation files
+database/migrations/067_sequential_catalog_identifiers.sql
+database/migrations/067_sku_prefix_dry_run.sql
+database/migrations/067_reviewed_local_prefix_plan.sql
+src/StockFlow.Application/DTOs/Products/IdentifierReservation.cs
+src/StockFlow.Application/DTOs/Products/CreateProductRequest.cs
+src/StockFlow.Application/DTOs/Categories/CreateCategoryRequest.cs
+src/StockFlow.Application/DTOs/Categories/CategoryResponse.cs
+src/StockFlow.Application/Services/CategoryService.cs
+src/StockFlow.Application/Services/ProductService.cs
+src/StockFlow.Domain/Entities/Category.cs
+src/StockFlow.Infrastructure/Repositories/CatalogIdentifierAllocator.cs
+src/StockFlow.Infrastructure/Repositories/CategoryRepository.cs
+src/StockFlow.Infrastructure/Repositories/ProductRepository.cs
+src/StockFlow.Infrastructure/Repositories/ScanRepository.cs
+src/StockFlow.Web/Controllers/ProductController.cs
+src/StockFlow.Web/Controllers/CategoryController.cs
+src/StockFlow.Web/Pages/Shared/_ProductRegistrationForm.cshtml
+src/StockFlow.Web/wwwroot/js/product-registration-form.js
+src/StockFlow.Web/wwwroot/js/product-registration.js
+src/StockFlow.Web/wwwroot/js/catalog-attributes.js
+src/StockFlow.Web/wwwroot/js/category-registration.js
+src/StockFlow.Web/wwwroot/js/product.js
+
+Verification files
+tests/StockFlow.MasterDataChecks/SequentialSkuDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/Program.cs
+tests/StockFlow.MasterDataChecks/ProductIdentityDatabaseChecks.cs (expected new simple SKU)
+tests/fixtures/sequential-sku-prepare.sql
+tests/Run-SequentialSkuChecks.ps1
+tests/StockFlow.UiChecks/sequential-sku-offline.cjs
+tests/StockFlow.UiChecks/sequential-sku-mock.cjs
+tests/StockFlow.UiChecks/{product-review,product-identity,photos-review,variant-chips}-offline.cjs (reservation fixtures/async waits)
+
+See tests/bin/sequential-sku/verification.txt for the final executed checks and limits.

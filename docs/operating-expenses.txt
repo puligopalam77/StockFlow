@@ -1,0 +1,50 @@
+Operating Expenses F04 - implemented source scope, 2 November 2026
+
+Requires manual 085 then 086 migrations before deploying this candidate. No
+migration runs at startup. These migrations were tested on disposable databases
+only; production deployment and owner/accountant acceptance remain unverified.
+
+Use /Expenses to search and page by incurred date, /Expenses/Create to save a
+draft, /Expenses/Details?id=UUID to post/pay/correct and /Expenses/Report to report
+or export. Category and payee identities are created/reused within the active
+shop/profile; choose a different retained record in a correction rather than
+renaming historical master labels. Posting makes the expense reportable and
+allows payment. Saving a draft creates neither inventory nor cash movements.
+
+Incurred amount: current corrected POSTED expense amount by incurred date.
+Paid amount: signed payment movements by their paid/returned/reversal dates.
+Outstanding at cutoff: current corrected posted expenses incurred by cutoff less
+signed payments dated through cutoff. This is a current-basis operational report,
+not a historical as-recorded accrual ledger or audited net-profit statement.
+Draft/cancelled expense amounts are excluded. Payment history is retained even
+when fully refunded expenses are cancelled. Corrections retain version snapshots.
+
+Cash Closing subtracts signed CASH expense movements. A cash refund/reversal
+increases drawer cash on that recorded movement date. UPI/card/bank expense
+payments do not affect drawer cash. Do not also record the same expense as extra
+cash removed. Old saved closings remain immutable; later activity changes the
+fingerprint and requires a reasoned recount.
+
+Payments cannot exceed amount outstanding; refunds cannot exceed net paid.
+Reversing a payment/refund creates a linked opposite movement and cannot be
+repeated. Cancel only after net paid is zero. Paid dates cannot precede incurred
+dates; prepaid-expense accounting is outside this workflow. All five supported
+methods record manual outflow evidence, not verified bank/provider settlement.
+
+Receipt evidence: PDF/PNG/JPEG, maximum 5 MB, checked signatures, stored privately
+in PostgreSQL, downloaded through scoped authorization with no-store/attachment
+headers. No public upload URL. Supporting files are not automatically trusted or
+eligible GST ITC evidence. No invoice, stock, tax document or eligible ITC posting.
+
+JSON mutation identities persist for unchanged retries across reload. After an
+unknown result, use Retry unchanged request. For an unconfirmed attachment,
+reselect the same file. The server rejects changed values using the same identity.
+Concurrent operators must reload after a version conflict. Expense viewing,
+creation, editing, posting, payments, reversal/refund, cancellation, attachments
+and export use separate existing permission actions and database checks.
+
+Current active profile selection still uses the existing tenant-wide engine.
+Expense records are additionally private to store/location/profile; no profile
+change reassigns or merges records. Consolidated general/GST reports retain their
+existing explicit authority. The expense report itself requires one active shop
+location. No general opening balances, full accounting or automatic settlement.

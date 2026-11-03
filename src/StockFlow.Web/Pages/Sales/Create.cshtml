@@ -1,0 +1,279 @@
+@page
+@model StockFlow.Web.Pages.Sales.CreateModel
+@inject StockFlow.Application.Common.BusinessScope BusinessScope
+@inject Microsoft.Extensions.Options.IOptions<StockFlow.Application.Common.ShopTimeOptions> ShopTime
+@{ ViewData["Title"] = "New Sale";
+   var drawerTimeZone = TimeZoneInfo.TryConvertWindowsIdToIanaId(ShopTime.Value.TimeZoneId, out var ianaTimeZone) ? ianaTimeZone : ShopTime.Value.TimeZoneId;
+}
+<header class="sf-page-heading">
+    <div>
+        <h1>New Sale</h1><p id="billing-draft-reference" class="small text-muted mb-0">Provisional draft</p>
+    </div>
+</header>
+<div id="billing-workspace" data-can-gst-edit="@Access.Can("GST_SETTINGS","EDIT").ToString().ToLowerInvariant()" data-can-scan="@Access.Can("SCAN","SCAN").ToString().ToLowerInvariant()" data-can-search="@Access.Can("PRODUCT_VARIANTS").ToString().ToLowerInvariant()" data-tax-inclusive="@((Model.Company.DefaultTaxMode == "INCLUSIVE").ToString().ToLowerInvariant())" data-payment-terms="@Model.Company.DefaultPaymentTermsDays" data-storage-key="stockflow.sale.@BusinessScope.TenantId.@BusinessScope.UserId.@BusinessScope.LocationId@BusinessScope.DraftProfileSuffix" data-can-invoice="@Access.Can("INVOICES","PRINT").ToString().ToLowerInvariant()" data-can-units="@Access.Can("INVENTORY").ToString().ToLowerInvariant()">
+    <div id="sale-message" class="alert alert-danger" role="alert" hidden>
+    </div>
+    <div id="pending-sale" class="alert alert-warning" hidden>A sale has an unconfirmed result. Retry this saved sale to retrieve its invoice safely. <button id="retry-sale" class="btn btn-primary" type="button">Retry saved sale</button>
+    </div>
+@if(BusinessScope.Consolidated){<p class="alert alert-info">Choose one location in the administrator's top bar before billing.</p>}
+    <section class="card card-body mb-3">
+        <div class="d-flex flex-wrap gap-2">
+            <button id="hold-bill" type="button" class="btn btn-outline-primary">Hold Bill</button>
+            <button id="show-held" type="button" class="btn btn-outline-secondary">Saved bills</button>
+            <span id="draft-status" role="status" class="small align-self-center">
+            </span>
+        </div>
+    </section>
+    <dialog id="saved-bills-drawer" class="billing-saved-drawer" aria-labelledby="saved-bills-title" aria-describedby="saved-bills-description" data-time-zone="@drawerTimeZone">
+        <header class="billing-saved-header">
+            <div class="billing-saved-heading"><h2 id="saved-bills-title">Saved Bills</h2><span id="saved-bills-count" class="billing-saved-count"></span></div>
+            <button id="saved-bills-close" type="button" class="billing-saved-close sf-dialog-close" aria-label="Close Saved Bills">&times;</button>
+            <p id="saved-bills-description">Resume a previously saved or held bill.</p>
+            <label class="visually-hidden" for="saved-bills-search">Search saved bills</label>
+            <input id="saved-bills-search" class="form-control" type="search" maxlength="150" placeholder="Search customer, mobile or draft number..." />
+            <p class="billing-saved-sort">Most recently saved first</p>
+            <button id="saved-bills-recovery" type="button" class="btn btn-sm btn-outline-secondary mb-2">Recover interrupted bills</button>
+        </header>
+        <div id="saved-bills-feedback" role="status"></div>
+        <div id="saved-bills-list" class="billing-saved-list" aria-label="Saved bills"></div>
+        <footer class="billing-saved-pagination"><button id="saved-bills-prev" type="button" class="btn btn-outline-secondary">Previous</button><span id="saved-bills-page"></span><button id="saved-bills-next" type="button" class="btn btn-outline-secondary">Next</button></footer>
+    </dialog>
+    <dialog id="resume-bill-confirm" class="sf-confirm-dialog billing-resume-confirm" aria-labelledby="resume-bill-title" aria-describedby="resume-bill-message">
+        <button type="button" class="sf-confirm-close" id="resume-bill-close" aria-label="Cancel resume">&times;</button>
+        <div class="sf-confirm-symbol" aria-hidden="true">!</div>
+        <h2 id="resume-bill-title">Resume saved bill?</h2>
+        <p id="resume-bill-message">Your current unfinished bill contains items or entered details. Choose what to do before opening the saved bill.</p>
+        <div class="sf-confirm-actions"><button type="button" id="resume-bill-cancel" class="btn btn-dark">Cancel</button><button type="button" id="resume-bill-hold" class="btn btn-primary">Hold Current Bill &amp; Resume</button><button type="button" id="resume-bill-discard" class="btn btn-outline-danger">Discard Current Draft &amp; Resume</button></div>
+    </dialog>
+    <form id="sale-form" novalidate>
+        <fieldset id="sale-editor">
+            <div id="sale-gst-context" class="alert alert-info" hidden>
+                <label for="sale-gst-pos" class="form-label">Place of supply for this bill</label>
+                <select id="sale-gst-pos" class="form-select"><option value="">Choose actual delivery / collection state…</option>
+                @foreach(var state in StockFlow.Application.Common.GstRules.States.Where(s=>s.Key!="28")){<option value="@state.Key">@state.Key — @state.Value</option>}
+                </select>
+                <label for="sale-gst-delivery" class="form-label mt-2">Delivery address (required for registered recipients and applicable full-detail invoices)</label>
+                <textarea id="sale-gst-delivery" class="form-control" maxlength="1000" rows="2"></textarea>
+                <label class="form-check-label mt-2"><input type="checkbox" id="sale-gst-recipient-details" class="form-check-input" /> Customer requests full recipient particulars</label>
+                <small>Domestic goods only. Select the actual supply destination; customer GSTIN alone does not establish place of supply.</small>
+            </div>
+            <nav class="billing-stepper" aria-label="Billing stages" hidden>
+                <a href="#billing-add-card"><span>1</span>Add items</a>
+                <a href="#billing-customer-card"><span>2</span>Customer</a>
+                <a href="#billing-payment-card"><span>3</span>Payment &amp; bill</a>
+            </nav>
+            <div class="billing-layout">
+                <div class="billing-items">
+                    <section id="billing-add-card" class="card card-body mb-3 billing-stage-card">
+                        <h2 class="h5">Scan or Search Product</h2>
+@if(Access.Can("SCAN","SCAN") || Access.Can("PRODUCT_VARIANTS")){
+                        <label for="sale-scan" class="form-label">Scan Barcode or Search Product</label>
+                        <div class="billing-scan-row">
+                            <input id="sale-scan" maxlength="200" autocomplete="off" class="form-control" aria-describedby="sale-scan-help product-result-status" aria-controls="product-results" aria-expanded="false" placeholder="Scan barcode or search product name, SKU, code, brand or model..." />
+                            <button id="scan-sale" type="button" class="btn btn-dark" aria-label="Search or scan product" title="Search or scan product">?</button>
+                        @if(Access.Can("SALES","MANUAL_ITEM")){<button id="quick-add-item" type="button" class="btn btn-outline-secondary billing-quick-add">+ Quick Add Item</button>}
+                        </div>
+
+                        <p id="sale-scan-help" class="small text-muted mt-2 mb-0">Scan an exact barcode and press Enter, or type to search and choose the correct SKU.</p>
+                        <details class="small text-muted mt-1"><summary>Keyboard shortcuts</summary><p class="mb-0">From outside a text field or dialog: Alt+S focuses product search, Alt+C customer search, Alt+P payment, Alt+B Complete Sale, and Alt+H holds the bill. Arrow keys and Enter select search results; Escape closes them. Complete Sale still needs deliberate activation.</p></details>
+                        <p id="product-result-status" class="small mt-2 mb-1" role="status"></p>
+                        <div id="product-results" class="billing-product-results" hidden aria-label="Matching products"></div>
+}else{<p class="small text-muted">Product lookup is unavailable for your account.</p>}
+                        <div id="unit-picker" class="mt-3" hidden>
+                            <p id="unit-picker-title">Scan the individual serial to identify one unit.</p>
+@if(Access.Can("INVENTORY")){
+                            <label for="serial-search" class="form-label">Find serial / internal unit ID / barcode</label>
+                            <div class="billing-scan-row">
+                                <input id="serial-search" class="form-control" />
+                                <button id="find-sale-units" class="btn btn-outline-primary" type="button">Find units</button>
+                            </div>
+                            <label for="sale-unit" class="form-label mt-2">Item in stock</label>
+                            <select id="sale-unit" class="form-select">
+                            </select>
+                            <button id="add-unit" type="button" class="btn btn-outline-primary mt-2">Add item to bill</button>
+}
+                        </div>
+                    </section>
+                    <section id="billing-cart-card" class="card card-body mb-3 billing-stage-card">
+                        <h2 class="h5">Items in This Bill <span id="sale-item-count" class="small text-muted">0 items
+                            </span>
+                        </h2>
+                        <button id="clear-bill-items" class="btn btn-outline-primary billing-clear" type="button" title="Clear Bill" hidden disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></svg>Clear Bill</button>
+                        <div id="sale-empty" class="text-muted">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m12 3 9 5v9l-9 5-9-5V8zM3 8l9 5 9-5M12 13v9"/></svg>
+                            <strong>Your bill is empty</strong><span>Scan a barcode or search for a product to start billing.</span>
+                        </div>
+                        <p class="small text-muted">@(Model.Company.DefaultTaxMode == "INCLUSIVE" ? "Item prices include tax." : "Price per item is before tax. Each item total includes tax.")</p>
+                        <p id="billing-cart-scroll-hint" class="small text-muted" hidden>Scroll horizontally for all columns, line totals and actions.</p>
+                        <div class="table-responsive billing-cart-scroll" role="region" aria-label="Items in this bill; scroll horizontally for all columns" aria-describedby="billing-cart-scroll-hint" tabindex="0" hidden>
+                            <table class="table billing-cart" aria-label="Items in this bill">
+                                <thead>
+                                    <tr>
+                                        <th>Product / Variant</th>
+                                        <th>SKU</th>
+                                        <th>Available Stock</th>
+                                        <th>Qty</th>
+                                        <th>MRP (₹)</th><th>Selling Price (₹)</th>
+                                        <th>Discount (%)</th>
+                                        <th>Tax (%)</th>
+                                        <th title="After item and allocated invoice discounts, including applicable tax">Line Total (₹)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sale-cart">
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                <div class="billing-checkout">
+                    <section id="billing-customer-card" class="card card-body mb-3 billing-stage-card">
+                        <h2 class="h5">Customer</h2>
+                        <label for="customer-current" class="form-label">Bill To</label>
+                        <div id="customer-picker" class="billing-customer-picker">
+                            <div id="customer-current" hidden>
+                                <svg class="billing-customer-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 22v-4a8 8 0 0 1 16 0v4"/></svg>
+                                <span class="billing-customer-identity"><strong id="customer-name"></strong><span id="customer-mobile"></span></span>
+                                <button id="customer-clear" type="button" title="Clear Customer" aria-label="Clear Customer">&#215;</button>
+                            </div>
+@if(Access.Can("CUSTOMERS")){
+                            <label for="customer-search" class="visually-hidden">Search customers by name or mobile</label>
+                            <input id="customer-search" placeholder="Search customer by name or mobile..." class="form-control" maxlength="150" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="customer-results" aria-describedby="customer-search-status" />
+}
+                            <label for="sale-customer" class="visually-hidden">Select customer</label>
+                            <select id="sale-customer" hidden tabindex="-1" aria-hidden="true"><option value="">Select customer</option></select>
+                            <div id="customer-results" role="listbox" aria-label="Customers" hidden></div>
+                        </div>
+                        <p id="customer-search-status" class="small mt-2 mb-0" role="status"></p>
+@if(Access.Can("CUSTOMERS","CREATE")){
+                        <details id="billing-new-customer" class="mt-3">
+                            <summary>Add a new customer</summary>
+                            <label for="new-customer-name" class="form-label mt-2">Name</label>
+                            <input id="new-customer-name" minlength="2" maxlength="150" class="form-control" />
+                            <label for="new-customer-mobile" class="form-label mt-2">Mobile (optional)</label>
+                            <input id="new-customer-mobile" type="tel" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" class="form-control" />
+                            <label for="new-customer-address" class="form-label mt-2">Address (optional)</label><textarea id="new-customer-address" maxlength="1000" rows="2" class="form-control"></textarea><label for="new-customer-gst" class="form-label mt-2">GSTIN (optional)</label>
+                            <input id="new-customer-gst" maxlength="15" class="form-control" />
+                            <button id="create-customer" type="button" class="btn btn-outline-primary mt-2">Save and select customer</button>
+                        </details>
+}
+                    </section>
+                    <section id="billing-payment-card" class="card card-body mb-3 billing-stage-card">
+                        <h2 class="h5">Payment Method</h2>
+                        <div class="billing-total">
+                            <span>Total to pay</span>
+                            <strong id="sale-total-amount">0.00</strong>
+                        </div>
+                        <p id="sale-totals" class="small" role="status">Add items to calculate totals.</p>
+                        <div id="billing-simple-payment">
+                            <label for="payment-mode" class="form-label">Payment method</label>
+                            <select id="payment-mode" class="form-select">
+                                <option value="CASH">Cash</option>
+                                <option value="UPI">UPI</option>
+                                <option value="CARD">Card</option>
+                                <option value="BANK_TRANSFER">Bank transfer</option>
+                            </select>
+                            <input id="payment-card-type" type="hidden" value="" />
+                            
+                            
+                            <div id="payment-reference-field" class="mt-2" hidden>
+                                <label for="payment-reference" class="form-label">Transaction reference (optional)</label>
+                                <input id="payment-reference" maxlength="100" class="form-control" />
+                            </div>
+                        </div>
+                        <div id="cash-change-field" class="mt-2">
+                            <label for="cash-received" class="form-label">Cash received</label>
+                            <input id="cash-received" type="text" inputmode="decimal" maxlength="24" autocomplete="off" class="form-control" placeholder="Exact amount if left empty" />
+                            <p id="cash-change" class="fw-bold mt-2" role="status">Change: 0.00</p>
+                        </div>
+                    <section id="billing-adjustments" class="mt-2" hidden>
+                        <label for="sale-discount" class="form-label">Invoice discount (after tax)</label>
+                        <input id="sale-discount" type="number" min="0" max="9999999999.99" step="0.01" value="0" class="form-control" />
+                        <label for="sale-notes" class="form-label mt-2">Notes (optional)</label><textarea id="sale-notes" maxlength="2000" rows="2" class="form-control"></textarea><button id="refresh-quote" hidden type="button" class="btn btn-outline-secondary mt-2">Recalculate totals</button>
+                        <div id="billing-adjustment-fields" hidden><label for="adjustment-reason" class="form-label mt-2">Invoice discount reason</label>
+                        <input id="adjustment-reason" maxlength="500" class="form-control" /></div>
+                        <p id="discount-policy-status" class="small mt-2">
+                        </p>
+                        <button id="request-discount-approval" type="button" class="btn btn-outline-primary">Request discount approval</button>
+                        <button id="show-discount-approvals" type="button" class="btn btn-outline-secondary" hidden>Review approval requests</button>
+                        <div id="discount-approvals" class="mt-2" hidden>
+                        </div>
+                        </section>
+                        <label id="billing-split-toggle" hidden class="billing-split-toggle">
+                            <input id="use-split-payment" type="checkbox" /> </label>
+                        <div id="billing-split-payment" hidden>
+                            <p class="small text-muted">Collected payment allocations must cover the exact total. Confirm each electronic payment before completing.</p>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Method</th>
+                                            <th>Amount</th>
+                                            <th>Reference</th>
+                                            <th>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sale-payment-inputs">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button id="add-payment" type="button" class="btn btn-outline-primary">Add payment</button>
+                            <p id="payment-balance" role="status" class="small mt-2">
+                            </p>
+                        </div>
+@if(Access.Can("SALES","FULFIL") && BusinessScope.BusinessProfileCode == "ELECTRICAL"){<details id="trade-in-options" class="mt-3" hidden>
+                    <summary>Exchange / Trade-in</summary>
+                    <label class="d-block mt-2">
+                        <input id="use-trade-in" type="checkbox" /> Receive a trade-in with this sale</label>
+                    <div id="trade-in-fields" hidden>
+                        <label for="trade-in-type" class="form-label">Item type *</label>
+                        <input id="trade-in-type" maxlength="50" class="form-control" />
+                        <label for="trade-in-model" class="form-label mt-2">Brand / model</label>
+                        <input id="trade-in-model" maxlength="200" class="form-control" />
+                        <label for="trade-in-serial" class="form-label mt-2">Serial</label>
+                        <input id="trade-in-serial" maxlength="150" class="form-control" />
+                        <label for="trade-in-allowance" class="form-label mt-2">Value of the old item</label>
+                        <input id="trade-in-allowance" type="number" min="0" step="0.01" value="0" class="form-control" />
+                        <p class="small mt-2">Allowance is included automatically in the invoice discount. Do not enter it again above.</p>
+                    </div>
+                </details>}
+
+            <button id="complete-sale" class="btn btn-primary w-100 mt-3" type="submit">@(Access.Can("INVOICES","PRINT") ? "Complete Sale & Generate Bill" : "Complete Sale")</button>
+            <p class="small text-muted mt-2 mb-0">Finishing the sale saves the bill and removes the sold items from stock.</p>
+        </section>
+        <a asp-page="Index" permission-module="SALES" class="btn btn-outline-secondary">Back to sales</a>
+    </div>
+</div>
+</fieldset>
+</form>
+<div id="payment-confirmation-modal" class="modal fade" tabindex="-1" aria-labelledby="payment-confirmation-title" aria-describedby="payment-confirmation-message payment-confirmation-help" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="payment-confirmation-title" class="modal-title fs-5">Confirm Electronic Payments</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+            </div>
+            <div class="modal-body">
+                <div id="payment-confirmation-components" hidden></div>
+                <p id="payment-confirmation-message"></p>
+                <p id="payment-confirmation-help" class="small text-muted mb-0">StockFlow does not verify this payment automatically. Confirm only after checking the payment in your UPI/bank application or payment device.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="confirm-payment" type="button" class="btn btn-primary">Yes, Payment Received</button>
+            </div>
+        </div>
+    </div>
+</div>
+<section id="billing-success" class="alert alert-success" role="status" hidden>
+    <h2 class="h5">Bill saved</h2>
+    <p id="billing-result">
+    </p>
+    <a id="billing-invoice" class="btn btn-primary" hidden>Open invoice</a>
+    <button id="billing-another" class="btn btn-outline-primary" type="button">Start next sale</button>
+</section>
+</div>
+@section Styles {<link rel="stylesheet" href="~/css/billing.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/billing-customer.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/billing-cart.css" asp-append-version="true" />}
+@section Scripts {
+<script src="~/js/company-billing-defaults.js" asp-append-version="true"></script><script src="~/js/common/scanner.js" asp-append-version="true"></script><script src="~/js/sales-common.js" asp-append-version="true"></script><script src="~/js/billing-customer.js" asp-append-version="true"></script><script src="~/js/billing-layout.js" asp-append-version="true"></script><script src="~/js/sales-create.js" asp-append-version="true"></script>}

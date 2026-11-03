@@ -1,0 +1,95 @@
+@using System.Text.Json
+@using StockFlow.Web.Help
+@{
+    var articles = HelpCatalog.Articles.Select(article => article with
+    {
+        Links = article.Links.Where(link => Access.CanVisit(link.Url)).ToArray()
+    });
+}
+<button id="help-open" type="button" class="sf-help-open sf-help-mascot" aria-label="Open StockBot Assist" title="StockBot Assist" aria-haspopup="dialog" aria-controls="help-panel" data-no-translate>
+    <span class="sf-mascot-body" aria-hidden="true"></span><span class="sf-mascot-hand" aria-hidden="true"></span>
+    <span class="sf-mascot-eyelids" aria-hidden="true"></span>
+    <span class="sf-mascot-caption"><span class="sf-mascot-chat" aria-hidden="true"><svg class="sf-icon"><use href="/images/icons.svg#chat" /></svg></span><span>Ask StockBot Assist</span></span>
+</button>
+<dialog id="help-panel" class="sf-help-panel" aria-labelledby="help-title" data-no-translate>
+    <header class="sf-help-header">
+        <span class="sf-assistant-logo" aria-hidden="true"><svg class="sf-icon"><use href="/images/icons.svg#box" /></svg></span>
+        <div><h2 id="help-title">StockFlow <span>Assistant</span></h2><p>Product assist</p></div>
+        <button id="help-close" type="button" aria-label="Close help"><span aria-hidden="true">×</span></button>
+    </header>
+    <div class="sf-assistant-body">
+    <section class="sf-assistant-intro">
+        <span class="sf-assistant-bot" aria-hidden="true"><span>●</span><b>⌒‿⌒</b></span>
+        <div><h3>Hi, how can I help you today?</h3><p>Get instant answers about StockFlow, or browse help articles.</p></div>
+    </section>
+    <section class="sf-help-suggestions" aria-label="Suggested questions">
+        <h4>Suggested questions</h4>
+        <div id="help-suggested"></div>
+    </section>
+    <div class="sf-assistant-shortcuts" aria-label="Quick help" hidden>
+        @if (Access.Can("INVENTORY")) {
+        <button type="button" data-help-stock><i><svg class="sf-icon"><use href="/images/icons.svg#barcode" /></svg></i><span>Check stock</span><b aria-hidden="true">›</b></button>
+        }
+        <button type="button" data-help-article="billing"><i><svg class="sf-icon"><use href="/images/icons.svg#document" /></svg></i><span>Create a bill</span><b aria-hidden="true">›</b></button>
+        <button type="button" data-help-article="receiving-stock"><i><svg class="sf-icon"><use href="/images/icons.svg#box" /></svg></i><span>Receive stock</span><b aria-hidden="true">›</b></button>
+        <button type="button" data-help-article="warranty"><i><svg class="sf-icon"><use href="/images/icons.svg#shield" /></svg></i><span>Warranty &amp; returns</span><b aria-hidden="true">›</b></button>
+    </div>
+    @if (Access.Can("INVENTORY"))
+    {
+    <details class="sf-help-stock" hidden>
+        <summary>How much stock is available?</summary>
+        <form id="help-stock-form" class="mt-2">
+            <label for="help-stock-term">Product name, item code or barcode</label>
+            <input id="help-stock-term" class="form-control" type="search" minlength="2" maxlength="150" />
+            <label class="d-block my-2"><input id="help-stock-low" type="checkbox" /> Show low stock only</label>
+            <button id="help-stock-check" class="btn btn-primary btn-sm" type="submit">Check stock</button>
+        </form>
+        <div id="help-stock-result" class="mt-3" role="status" aria-live="polite" hidden></div>
+    </details>
+    }
+    <div id="help-user-question" class="sf-assistant-question" hidden></div>
+    <div id="help-ai-answer" role="status" aria-live="polite" class="sf-assistant-answer" hidden></div>
+    <div id="help-answer-tools" class="sf-help-answer-tools" hidden></div>
+    <p id="help-language-status" class="small text-muted" role="status" hidden></p>
+    <p id="help-ai-support-note" class="small mt-2" hidden>Contact Super Admin with the screen name and your question. Never share your password. Ticket submission is not configured.</p>
+    <details id="help-library" class="sf-help-library" hidden>
+    <summary>Browse help articles</summary>
+    <label for="help-search">Search help articles</label>
+    <input id="help-search" class="form-control" type="search" maxlength="150" placeholder="Try barcode, payment or warranty" autocomplete="off" />
+    <p id="help-context" class="small text-muted"></p>
+    <div id="help-questions" class="sf-help-questions" aria-label="Suggested questions"></div>
+    <p id="help-count" class="small" role="status" aria-live="polite"></p>
+    <div id="help-results" class="sf-help-results" aria-label="Help articles"></div>
+    <section id="help-article" hidden aria-labelledby="help-article-title">
+        <button id="help-back" type="button" class="btn btn-outline-secondary btn-sm">Back to articles</button>
+        <h3 id="help-article-title" tabindex="-1"></h3>
+        <div id="help-content"></div>
+        <nav id="help-links" class="sf-help-links" aria-label="Open a StockFlow screen"></nav>
+        <p class="small text-muted">Available screens depend on your permissions. Ask your administrator if you need access.</p>
+    </section>
+    </details>
+    </div>
+    <footer class="sf-assistant-footer">
+        <p id="help-question-error" class="sf-help-question-error" role="alert" hidden></p>
+        <form id="help-ai-form" class="sf-assistant-composer" novalidate>
+            <button id="help-voice-start" type="button" aria-label="Record question" title="Record question" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg></button>
+            <label class="visually-hidden" for="help-ai-question">What do you need help with?</label>
+            <textarea id="help-ai-question" minlength="3" maxlength="500" rows="1" required placeholder="Ask a question..."></textarea>
+            <button id="help-ai-submit" type="submit" aria-label="Send question"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#send" /></svg></button>
+        </form>
+        <div class="sf-help-voice-controls">
+            <label><input id="help-voice-auto" type="checkbox" /> Speak replies</label>
+            <button id="help-voice-read" type="button">Read reply</button>
+            <button id="help-voice-stop" type="button" hidden>Stop voice</button>
+            <button id="help-voice-cancel" type="button" hidden>Cancel recording</button>
+        </div>
+        <p id="help-voice-status" class="sf-help-voice-status" role="status" aria-live="polite" hidden></p>
+        <div id="help-voice-consent" class="sf-help-voice-consent" hidden>
+            <p>On-device recognition is unavailable for this language. Your browser's speech service may process microphone audio online. Audio is not stored by StockFlow.</p>
+            <button id="help-voice-allow" type="button">Use browser speech service</button>
+        </div>
+        <nav class="sf-assistant-actions" aria-label="More help"><button id="help-browse" type="button">Browse help articles</button><button id="help-ai-support" type="button">Contact Super Admin</button></nav>
+        <p class="sf-assistant-privacy">Keep passwords and customer details out of your question.</p>
+    </footer>
+</dialog>
+<script id="help-data" type="application/json">@Html.Raw(JsonSerializer.Serialize(articles, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }))</script>

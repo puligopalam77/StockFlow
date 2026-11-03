@@ -1,0 +1,88 @@
+@using StockFlow.Application.DTOs.Crm
+@{
+    var enquiries=ViewData["CrmMode"]?.ToString()=="enquiries";
+}
+<link rel="stylesheet" href="~/css/crm.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/billing-customer.css" asp-append-version="true" />
+<div class="crm-workspace" id="crm-workspace" data-mode="@(enquiries?"enquiries":"customers")" data-edit="@Access.Can("CRM","EDIT").ToString().ToLowerInvariant()" data-follow="@Access.Can("CRM","FOLLOW_UP").ToString().ToLowerInvariant()" data-create="@Access.Can("CRM","CREATE").ToString().ToLowerInvariant()" data-sales="@((Access.Can("SALES","CREATE")&&Access.Can("CUSTOMERS")).ToString().ToLowerInvariant())" data-assign="@Access.Can("CRM","ASSIGN").ToString().ToLowerInvariant()" data-customer-edit="@Access.Can("CUSTOMERS","EDIT").ToString().ToLowerInvariant()">
+    <header class="crm-heading"><div><h1>@ViewData["Title"]</h1><p>View customer activity, purchases and follow-ups.</p></div><nav aria-label="Customer Relationships"><a href="/Crm">Customer Overview</a><a href="/Crm/Enquiries">Enquiries &amp; Follow-ups</a></nav></header>
+    <div id="crm-message" role="alert" hidden></div>
+    <p id="crm-period" class="crm-help"></p><div class="crm-metrics" id="crm-dashboard"></div>
+    <section class="crm-card">
+        <form id="crm-filters" class="crm-filters">
+            <div class="crm-field crm-search"><label for="crm-term">@(enquiries?"Search enquiries":"Search customers")</label><input type="search" id="crm-term" maxlength="200" placeholder="@(enquiries?"Enquiry no., customer, mobile or product…":"Customer name, mobile, email or customer ID…")" /></div>
+            @if(enquiries){
+                <div class="crm-field"><label for="crm-status">Status</label><select id="crm-status"><option value="">All</option>@foreach(var s in CrmRules.Statuses){<option value="@s">@s.Replace('_',' ')</option>}</select></div>
+                <div class="crm-field"><label for="crm-due">Reminders</label><select id="crm-due"><option value="">All</option><option value="TODAY">Due today</option><option value="OVERDUE">Overdue</option><option value="UPCOMING">Upcoming</option><option value="COMPLETED">Completed</option></select></div>
+                <div class="crm-field"><label for="crm-priority">Priority</label><select id="crm-priority"><option value="">All</option>@foreach(var s in CrmRules.Priorities){<option>@s</option>}</select></div>
+                <div class="crm-field"><label for="crm-assigned">Assigned staff</label><select id="crm-assigned"><option value="">All authorized</option></select></div>
+                <div class="crm-field"><label for="crm-sort">Sort</label><select id="crm-sort"><option value="updated">Last updated</option><option value="due">Next follow-up</option><option value="priority">Priority</option><option value="customer">Customer</option></select></div>
+                <details><summary>More filters</summary><div class="crm-grid">
+                    <div class="crm-field"><label for="crm-filter-type">Enquiry type</label><select id="crm-filter-type"><option value="">All</option>@foreach(var s in CrmRules.Types){<option value="@s">@s.Replace('_',' ')</option>}</select></div>
+                    <div class="crm-field"><label for="crm-filter-product-search">Find product</label><input id="crm-filter-product-search" type="search" maxlength="200" /><button type="button" id="crm-filter-product-find">Find product</button><select id="crm-filter-product" aria-label="Product filter"><option value="">All products</option></select></div>
+                    <div class="crm-field"><label for="crm-from">Created from</label><input id="crm-from" type="date" /></div><div class="crm-field"><label for="crm-to">Created to</label><input id="crm-to" type="date" /></div>
+                </div></details>
+            }else{
+                <div class="crm-field"><label for="crm-active">Customer status</label><select id="crm-active"><option value="">All</option><option value="true">Active</option><option value="false">Inactive</option></select></div>
+                <div class="crm-field"><label for="crm-filter-type">Customer type</label><select id="crm-filter-type"><option value="">All</option><option value="INDIVIDUAL">Individual</option><option value="BUSINESS">Business</option></select></div>
+                <details><summary>More filters</summary><div class="crm-grid"><div class="crm-field"><label for="crm-inactive-days">No purchase within days</label><input id="crm-inactive-days" type="number" min="1" max="3650" step="1" /></div><div class="crm-field"><label for="crm-due">Next follow-up</label><select id="crm-due"><option value="">All</option><option value="TODAY">Due today</option><option value="OVERDUE">Overdue</option><option value="UPCOMING">Upcoming</option></select></div></div></details>
+            }
+            <div class="crm-actions"><button type="submit">Apply</button><button type="button" id="crm-reset">Reset</button></div>
+        </form>
+        <div class="crm-actions">
+        @if(Access.Can("CRM","CREATE")) {<button id="crm-add" type="button">New Enquiry</button>}
+        @if(Access.Can("CUSTOMERS","CREATE")){<a class="crm-button" href="/Customers/Create">Add Customer</a>}
+        @if(!enquiries&&Access.Can("CRM","CREATE")&&Access.Can("CUSTOMERS")){
+            <details><summary>Link an existing customer to this shop</summary><p class="crm-help">Reuses the existing customer ID. Does not copy balances or another shop's activity.</p><div class="crm-actions"><label for="crm-link-search">Find customer</label><input id="crm-link-search" type="search" maxlength="200" /><button type="button" id="crm-link-find">Find</button><select id="crm-link-customer" aria-label="Existing customer"></select><button type="button" id="crm-link">Link to CRM</button></div></details>
+        }
+        </div>
+        <div class="crm-table" id="crm-list" aria-live="polite"></div><div id="crm-pager"></div>
+    </section>
+    <section class="crm-card" id="crm-detail" hidden aria-live="polite"></section>
+    <dialog id="crm-dialog" aria-labelledby="crm-dialog-title">
+        <form id="crm-enquiry-form">
+            <header class="crm-modal-header"><div><h2 id="crm-dialog-title">New Enquiry</h2><p>Record a customer request and plan the next action.</p></div><button type="button" data-close aria-label="Close">×</button></header>
+            <div class="crm-dialog-body">
+                <div id="crm-dialog-error" role="alert" hidden></div>
+                <h3>Customer &amp; requirement</h3>
+                <div class="crm-actions" id="crm-customer-tools"><label for="crm-customer-search">Find linked customer</label><input id="crm-customer-search" type="search" maxlength="200" /><button type="button" id="crm-customer-find">Find</button></div>
+                <div class="crm-grid">
+                    <div class="crm-field"><label for="enquiry-customer">Customer *</label><select id="enquiry-customer" required></select></div>
+                    <div class="crm-field"><label for="enquiry-type">Enquiry type *</label><select id="enquiry-type">@foreach(var s in CrmRules.Types){<option value="@s">@s.Replace('_',' ')</option>}</select></div>
+                    <div class="crm-field crm-wide"><label for="enquiry-subject">Subject / requirement *</label><input id="enquiry-subject" required minlength="3" maxlength="200" /></div>
+                    <div class="crm-field crm-wide"><label for="enquiry-description">Description / internal notes</label><textarea id="enquiry-description" maxlength="2000"></textarea></div>
+                </div>
+                <h3>Product request (optional)</h3><p class="crm-help">An enquiry does not reserve or deduct stock. Availability is for the selected stock location.</p>
+                <div class="crm-actions"><label for="crm-product-search">Find product or SKU</label><input id="crm-product-search" type="search" maxlength="200" /><button type="button" id="crm-product-find">Find</button></div>
+                <div class="crm-grid"><div class="crm-field"><label for="enquiry-product">Product / variant</label><select id="enquiry-product"><option value="">No product</option></select></div><div class="crm-field"><label for="enquiry-quantity">Requested quantity</label><input id="enquiry-quantity" type="number" min="0.001" max="10000" step="0.001" /></div></div>
+                <h3>Assignment &amp; follow-up</h3><div class="crm-grid">
+                    <div class="crm-field"><label for="enquiry-staff">Assigned staff *</label><select id="enquiry-staff" required></select></div>
+                    <div class="crm-field"><label for="enquiry-priority">Priority</label><select id="enquiry-priority">@foreach(var s in CrmRules.Priorities){<option value="@s" selected="@(s=="NORMAL")">@s</option>}</select></div>
+                    <div class="crm-field"><label for="enquiry-next">Next follow-up (shop time)</label><input id="enquiry-next" type="datetime-local" /></div>
+                    <div class="crm-field"><label for="enquiry-method">Contact method</label><select id="enquiry-method">@foreach(var s in CrmRules.Methods){<option value="@s">@s.Replace('_',' ')</option>}</select></div>
+                    <div class="crm-field"><label for="enquiry-status">Status</label><select id="enquiry-status">@foreach(var s in CrmRules.Statuses){<option value="@s">@s.Replace('_',' ')</option>}</select></div>
+                </div>
+            </div>
+            <footer class="crm-modal-footer"><button type="button" data-close>Cancel</button><button type="submit" id="crm-save">Save Enquiry</button></footer>
+        </form>
+    </dialog>
+    <dialog id="crm-follow-dialog" aria-labelledby="crm-follow-title"><form id="crm-follow-form">
+        <header class="crm-modal-header"><div><h2 id="crm-follow-title">Record Follow-up</h2><p id="crm-follow-reference"></p></div><button type="button" data-close aria-label="Close">×</button></header>
+        <div class="crm-dialog-body"><div id="crm-follow-error" role="alert" hidden></div><div class="crm-grid">
+            <div class="crm-field"><label for="follow-date">Activity date &amp; time *</label><input id="follow-date" type="datetime-local" required /></div>
+            <div class="crm-field"><label for="follow-method">Contact method *</label><select id="follow-method">@foreach(var s in CrmRules.Methods){<option value="@s">@s.Replace('_',' ')</option>}</select></div>
+            <div class="crm-field"><label for="follow-outcome">Outcome *</label><select id="follow-outcome">@foreach(var s in new[]{"CONTACTED","NO_ANSWER","INTERESTED","NOT_INTERESTED","CALLBACK","AWAITING_STOCK","RESOLVED"}){<option value="@s">@s.Replace('_',' ')</option>}</select></div>
+            <div class="crm-field"><label for="follow-status">Updated status</label><select id="follow-status">@foreach(var s in CrmRules.Statuses){<option value="@s">@s.Replace('_',' ')</option>}</select></div>
+            <div class="crm-field crm-wide"><label for="follow-notes">Staff notes</label><textarea id="follow-notes" maxlength="2000"></textarea></div>
+            <div class="crm-field"><label for="follow-next">Next follow-up (shop time)</label><input id="follow-next" type="datetime-local" /></div>
+        </div></div><footer class="crm-modal-footer"><button type="button" data-close>Cancel</button><button type="submit">Save Follow-up</button></footer>
+    </form></dialog>
+    @if(Access.Can("CUSTOMERS","CREATE")&&Access.Can("CRM","CREATE")){
+        <div id="crm-new-customer" hidden>
+            <label for="new-customer-name">Customer name</label><input id="new-customer-name" minlength="2" maxlength="150" class="form-control" />
+            <label for="new-customer-mobile">Mobile</label><input id="new-customer-mobile" type="tel" maxlength="10" pattern="[0-9]{10}" class="form-control" />
+            <label for="new-customer-gst">GSTIN</label><input id="new-customer-gst" maxlength="15" class="form-control" />
+            <label for="new-customer-address">Address</label><textarea id="new-customer-address" maxlength="1000" class="form-control"></textarea><button id="create-customer" type="button">Save customer</button>
+        </div>
+    }
+</div>

@@ -1,0 +1,8 @@
+@page "{mode?}"
+@model StockFlow.Web.Pages.Suppliers.IndexModel
+@{ ViewData["Title"] = "Suppliers"; }
+<partial name="_ConfigurationMaster" model='@("Suppliers")' />
+@section Scripts {
+    <script src="~/js/master-data.js" asp-append-version="true"></script>
+    <script src="~/js/supplier.js" asp-append-version="true"></script>
+}

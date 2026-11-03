@@ -1,0 +1,39 @@
+﻿@page
+@model StockFlow.Web.Pages.Inventory.LowStockModel
+@inject StockFlow.Application.Common.BusinessScope Scope
+@{ ViewData["Title"]="Low stock"; }
+@section PageHeader {
+<header class="sf-page-heading">
+    <div>
+        <h1>Low stock</h1>
+    </div>
+</header>
+}
+<div id="low-stock-message" class="alert alert-danger" role="alert" hidden>
+</div>
+<form id="low-stock-search" class="d-flex gap-2 mb-3">
+    <input id="low-stock-term" class="form-control" placeholder="Product, size, color, SKU, barcode or serial" aria-label="Find low-stock items" />
+    <button class="btn btn-primary">Search</button>
+</form>
+<p id="low-stock-summary" role="status">
+</p>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Item / size / model</th>
+                <th>Available</th>
+                <th>Minimum</th>
+                <th>Quantity needed to reach the limit</th>
+                <th>
+                </th>
+            </tr>
+        </thead>
+        <tbody id="low-stock-results">
+        </tbody>
+    </table>
+</div>
+@if(Access.Can("PURCHASES","CREATE")){<a href="/Purchases/Create" class="btn btn-outline-primary">Receive new stock</a>}
+@if(Access.Can("STOCK_TRANSFER")){<a href="/Transfers" class="btn btn-outline-secondary">Review transfers</a>}
+@section Scripts {<script src="~/js/low-stock.js" asp-append-version="true"></script>}
+

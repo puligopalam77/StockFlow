@@ -1,0 +1,23 @@
+@page
+@model StockFlow.Web.Pages.Purchases.IndexModel
+@{ ViewData["Title"] = "Purchase orders & deliveries"; }
+@section PageHeader {
+<header class="sf-page-heading receipt-page-heading">
+    <span class="receipt-heading-icon" aria-hidden="true">&#9636;</span>
+    <div><h1>Purchase orders &amp; deliveries</h1></div>
+</header>
+}
+<div id="purchase-message" class="alert alert-danger" hidden role="alert"></div>
+<div class="table-responsive"><table class="table table-striped">
+    <thead><tr><th>Purchase #</th><th>Supplier</th><th>Date</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody data-edit="@Access.CanExplicit("PURCHASES","EDIT").ToString().ToLowerInvariant()" id="purchase-rows"></tbody>
+</table></div>
+@section Styles {
+<link rel="stylesheet" href="~/css/stock-receipts.css" asp-append-version="true" />
+}
+@section Scripts {
+@if(Access.Can("PURCHASES")){
+<script src="~/js/purchase-common.js" asp-append-version="true"></script>
+<script src="~/js/purchase-index.js" asp-append-version="true"></script>
+}
+}

@@ -1,0 +1,67 @@
+<section class="pd-card" id="purchase-settlement">
+    <div class="pd-card-heading"><h2><span class="pd-icon">&#8377;</span>Supplier Payments &amp; Returns</h2></div>
+    <p id="purchase-account-summary">
+    </p>
+    <div class="pd-settlement-actions">@if(Access.Can("PURCHASES","PAY") && Access.Can("PURCHASES","EDIT")){<button id="purchase-pay-open" class="btn btn-outline-primary" type="button" disabled>+ Pay Supplier</button>}@if(Access.Can("PURCHASES","RETURN") && Access.Can("PURCHASES","APPROVE")){<button id="purchase-return-open" class="btn btn-outline-secondary" type="button" disabled>Return Stock</button>}</div><div id="purchase-operation-history" class="table-responsive">
+    </div>
+    <div permission-module="PURCHASES" permission-action="PAY">
+@if(Access.Can("PURCHASES","EDIT")){<dialog id="supplier-payment-dialog" class="pd-dialog" aria-label="Pay supplier"><div class="pd-dialog-heading"><h2>Pay Supplier</h2><button class="pd-dialog-close" data-pd-close="supplier-payment-dialog" type="button" aria-label="Close payment">&times;</button></div><div id="supplier-payment-message" class="alert alert-danger" role="alert" hidden></div>
+        
+        <form id="supplier-payment-form" class="row g-2 mt-1">
+            <div class="col-md-3">
+                <label class="form-label" for="supplier-payment-amount">Amount</label>
+            <input id="supplier-payment-amount" type="number" min="0.01" step="0.01" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="supplier-payment-mode">Method</label>
+            <select id="supplier-payment-mode" class="form-select">
+                    <option value="CASH">Cash</option>
+                    <option value="UPI">UPI</option>
+                    <option value="BANK">Bank payment</option>
+                    <option value="CHEQUE">Cheque</option>
+                    <option value="CARD">Card</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="supplier-payment-reference">Reference</label>
+            <input id="supplier-payment-reference" class="form-control" maxlength="100" />
+            </div>
+            <div class="col-md-2 align-self-end">
+                <button class="btn btn-primary">Record payment</button>
+            </div>
+        </form>
+    </dialog>}
+</div>
+<div permission-module="PURCHASES" permission-action="RETURN">
+@if(Access.Can("PURCHASES","APPROVE")){<dialog id="supplier-return-dialog" class="pd-dialog" aria-label="Return stock to supplier"><div class="pd-dialog-heading"><h2>Return Stock to Supplier</h2><button class="pd-dialog-close" data-pd-close="supplier-return-dialog" type="button" aria-label="Close return">&times;</button></div><div id="supplier-return-message" class="alert alert-danger" role="alert" hidden></div>
+    
+    <form id="purchase-return-form" class="row g-2 mt-1">
+        <div class="col-md-5">
+            <label class="form-label" for="purchase-return-item">Purchase item</label>
+            <select id="purchase-return-item" class="form-select" required>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="purchase-return-quantity">Quantity</label>
+            <input id="purchase-return-quantity" type="number" min="1" value="1" class="form-control" required />
+        </div>
+        <div class="col-md-3" id="purchase-return-unit-wrap" hidden>
+            <label class="form-label" for="purchase-return-unit">Serial</label>
+            <select id="purchase-return-unit" class="form-select">
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="purchase-return-reference">Supplier reference</label>
+            <input id="purchase-return-reference" class="form-control" maxlength="100" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="purchase-return-reason">Reason</label>
+            <input id="purchase-return-reason" class="form-control" maxlength="1000" required />
+        </div>
+        <div class="col-md-2 align-self-end">
+            <button class="btn btn-warning">Save return to supplier</button>
+        </div>
+    </form>
+</dialog>}
+</div>
+</section>

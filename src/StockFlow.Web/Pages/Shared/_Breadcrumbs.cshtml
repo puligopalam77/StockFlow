@@ -1,0 +1,70 @@
+﻿@{
+    var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "/Index";
+    var title = ViewData["Title"]?.ToString() ?? "Page";
+    var home = Access.Can("DASHBOARD") ? "/" : "/Account/Home";
+    var parents = new List<(string Label, string? Url)>();
+    string? parentLabel = null;
+    string? parentUrl = null;
+    if (page.StartsWith("/Admin/", StringComparison.OrdinalIgnoreCase))
+    {
+        parentLabel = page == "/Admin/Gst" ? "Administration" : "Admin & Security";
+        parentUrl = Access.Can("USER_MANAGEMENT") ? "/Admin/Users" : Access.Can("ROLE_MANAGEMENT") ? "/Admin/Roles" : Access.Can("STORES") ? "/Admin/Stores" : Access.Can("SECURITY") ? "/Admin/Security" : "/Admin/AuditLogs";
+        if (page == "/Admin/Users") title = "User list";
+    }
+    else if (page.StartsWith("/Labels/")) { parentLabel = "Purchases"; parentUrl = "/Purchases"; }
+    else if (page == "/Purchases/Details") { parentLabel = "Purchase Orders"; parentUrl = "/Purchases"; }
+    else if (page.StartsWith("/Purchases/")) { parentLabel = "Receive Stock"; parentUrl = "/Purchases"; }
+    else if (page.StartsWith("/StockInflow")) { parentLabel = "Receive Stock"; parentUrl = "/StockInflow"; }
+    else if (page.StartsWith("/Sales/")) { parentLabel = "Sales & Billing"; parentUrl = "/Sales"; }
+    else if (page.StartsWith("/Service/")) { parentLabel = "Repairs"; parentUrl = "/Service"; }
+    else if (page.StartsWith("/Warranty/")) { parentLabel = "Warranty"; parentUrl = "/Warranty/Lookup"; }
+    else if (page.StartsWith("/Inventory/")) { parentLabel = "Stock on hand"; parentUrl = "/Inventory"; }
+    else if (page == "/Configuration/WhatsApp") { parentLabel = "Notifications"; parentUrl = "/Configuration/Notifications"; }
+    else if (page.StartsWith("/Settings/") || page == "/Configuration/Notifications") { parentLabel = "Setup"; }
+    else if (page.StartsWith("/Account/") && page != "/Account/Home") { parentLabel = "My account"; parentUrl = "/Account/Home"; }
+    if (page == "/Purchases/Create" && Context.Request.Query.ContainsKey("id")) title = "Edit draft";
+    if (Access.Can("REPORTS") && (page.StartsWith("/Reports/") && page != "/Reports/Index" || Context.Request.Query["fromReports"] == "1"))
+    {
+        parentLabel = "Reports";
+        parentUrl = "/Reports";
+    }
+    if (page == "/Sales/Details") title = "Sale details";
+    if (page == "/Sales/Invoice") title = "Invoice";
+    if (page == "/Account/Home") title = "My account";
+    var currentUrl = page.EndsWith("/Index") ? page[..^6] : page;
+    if (parentLabel is not null && (parentUrl != currentUrl || page.StartsWith("/Admin/")))
+        parents.Add((parentLabel, parentUrl is not null && (parentUrl.StartsWith("/Account/") || Access.CanVisit(parentUrl)) ? parentUrl : null));
+    var backUrl = parents.LastOrDefault(p => p.Url is not null).Url ?? home;
+    if (backUrl == currentUrl) backUrl = home;
+}
+<nav id="app-breadcrumb" class="sf-breadcrumb no-print" aria-label="Breadcrumb">
+    @if (page != "/Index")
+    {
+    <a id="breadcrumb-back" class="sf-breadcrumb-back" href="@backUrl" aria-label="Back to parent page" title="Back to parent page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" />
+        </svg>
+    </a>
+    }
+    <ol>
+        @if(page == "/Index") { <li>
+        <span id="breadcrumb-current" aria-current="page">Home</span>
+    </li> }
+        else
+        {
+    <li>
+        <a href="@home">Home</a>
+    </li>
+            @foreach (var parent in parents)
+            {
+    <li>@if(parent.Url is not null){<a href="@parent.Url">@parent.Label</a>}else{<span>@parent.Label</span>}</li>
+            }
+            @if(page == "/Admin/Users") { <li id="breadcrumb-user-list" hidden>
+    <a href="/Admin/Users">User list</a>
+</li> }
+<li>
+    <span id="breadcrumb-current" aria-current="page">@title</span>
+</li>
+        }
+</ol>
+</nav>
+

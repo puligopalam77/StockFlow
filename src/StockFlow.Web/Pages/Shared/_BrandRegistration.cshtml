@@ -1,0 +1,17 @@
+<dialog id="editor" class="configuration-dialog brand-registration" aria-labelledby="editor-title" aria-describedby="editor-help">
+    <header class="brand-registration-heading"><div><h2 id="editor-title">Add Brand</h2><p id="editor-help">Register a brand once and associate it with the categories it supplies.</p></div><button id="close-editor" type="button" aria-label="Close registration">&#215;</button></header>
+    <div id="editor-message" class="alert d-none" role="alert"></div>
+    <form id="master-form">
+        <div class="brand-registration-content">
+            <section class="brand-registration-section"><h3>Basic Brand Information</h3><div id="form-fields" class="row g-3"></div>
+                <div class="brand-logo-field"><label for="brand-logo" class="form-label">Brand Logo (optional)</label><input id="brand-logo" type="file" class="form-control" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG or WebP, up to 2 MB.</small><div id="brand-logo-preview" hidden><img id="brand-logo-image" alt="Brand logo preview" /><button id="brand-remove-logo" type="button" class="btn btn-outline-secondary btn-sm">Remove logo</button></div><p id="brand-logo-error" class="text-danger small" role="alert"></p></div>
+            </section>
+            <section class="brand-registration-section"><h3>Applicable Categories</h3><p class="small text-muted">Choose the categories this brand usually supplies. Leave subcategories unselected to cover the whole category.</p>
+                <label class="brand-all-label"><input id="brand-all-categories" type="checkbox" checked /> Applicable to all categories</label>
+                <div id="brand-category-selection" hidden><label for="brand-category-search" class="form-label">Find categories</label><input id="brand-category-search" type="search" class="form-control mb-3" placeholder="Search categories" /><div id="brand-category-choices"></div></div>
+            </section>
+            <section class="brand-registration-section"><h3>Additional Information</h3><label for="brand-website" class="form-label">Official Website (optional)</label><input id="brand-website" type="url" maxlength="2048" placeholder="https://example.com" class="form-control" /><label class="brand-active-label"><input id="brand-active" type="checkbox" checked /> Brand is active</label></section>
+        </div>
+        <footer class="brand-registration-footer"><button id="cancel-edit" type="button" class="btn btn-outline-secondary">Cancel</button><button id="brand-save" type="submit" class="btn btn-primary">Save Brand</button></footer>
+    </form>
+</dialog>

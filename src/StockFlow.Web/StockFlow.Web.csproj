@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\StockFlow.Application\StockFlow.Application.csproj" />
+    <ProjectReference Include="..\StockFlow.Infrastructure\StockFlow.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <PackageReference Include="QRCoder" Version="1.8.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!-- The distributable release bundle obtains configuration from hosting secrets. -->
+  <ItemGroup Condition="'$(StockFlowReleaseBundle)' == 'true'">
+    <Content Update="appsettings*.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="../../docs/help/products.md;../../docs/help/receiving-stock.md;../../docs/help/billing.md;../../docs/help/returns.md;../../docs/help/warranty.md;../../docs/help/common-problems.md;../../docs/help/application-features.md;../../docs/help/mobile-and-devices.md">
+      <LogicalName>HelpContent.%(Filename).md</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

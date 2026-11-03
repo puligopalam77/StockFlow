@@ -1,0 +1,55 @@
+068: Unit identifier provenance and durable allocation
+
+Status: manual migration. Tested on the isolated identifier_integration_test database
+on 127.0.0.1:55439 only. Not applied to the live database. Apply 067 first.
+Back up the complete database and stop application/workers before applying as a
+PostgreSQL superuser. Do not add this file to startup migration automation.
+
+Existing model retained:
+ products.parent_product_code: product family code
+ product_variants.variant_id / sku: exact stock item
+ variant_barcodes: SKU barcode aliases, including manufacturer mappings
+ product_units.product_unit_id: physical-unit database identity
+ product_units.serial_number: existing immutable tracking value
+ product_units.internal_barcode / manufacturer_barcode / barcode: scan mappings
+
+Additions:
+ product_units.serial_source: MANUFACTURER, INTERNAL or LEGACY_UNKNOWN.
+ Existing rows are LEGACY_UNKNOWN; no pattern-based manufacturer inference.
+ unit_identifier_number: server sequence, separate from all SKU counters.
+ unit_identifier_requests and unit_identifier_reservations: permanent allocation
+ ledger, shop/location/variant/actor pinned, request-ID idempotent. No runtime
+ SELECT or direct mutation grants. Access is through the scoped definer function.
+
+Generation:
+ POST /api/receiving/unit-identifiers requires receipt approval, stock receiving,
+ or opening-stock adjustment permission, CSRF, selected location and shop pin.
+ Returns SFN-prefixed internal unit identifiers, never manufacturer serials.
+ Existing identifiers are checked before issuance, including legacy/manual codes.
+ Concurrent requests use a sequence and transactional request locks. Abandoned
+ requests leave permanent reservations; sequence gaps are expected, never reused.
+ Reservation alone creates no physical units, receipt, labels, sales or stock.
+
+On receipt, the insert trigger recognizes a committed reservation and checks its
+shop, location, SKU and prior assignment. The assignment rolls back with a failed
+receipt. Other entered serials retain the manufacturer serial workflow. Existing
+historical serial values keep unknown provenance. Barcode generation writes only
+the barcode fields; it never copies a barcode into the serial field.
+
+The update guard preserves saved unit IDs, variant links, serial/source values and
+non-null barcode mappings. Status/location transitions for sale, return and stock
+transfer remain allowed. There is no new public identity-correction endpoint;
+any legitimate historical correction requires a separately reviewed procedure.
+
+No original ID, code, barcode, serial, price, stock, receipt, invoice or warranty
+value is backfilled or renumbered. Existing serial uniqueness scope is preserved.
+New quantity labels in the Barcodes workspace share one SKU barcode; existing
+per-piece labels retain their original codes and print-history keys.
+
+Compatibility before 068:
+ Existing manufacturer-serial receiving, lookup and print flows remain usable.
+ Source-aware reads use to_jsonb fallbacks and show unverified source.
+ Internal unit ID generation returns a clear migration-required validation error.
+ Existing profile restrictions remain: individually tracked products are enabled
+ only for the profiles already supported by the backend. Batch/lot metadata is
+ retained; no unsupported batch tracking mode is added.

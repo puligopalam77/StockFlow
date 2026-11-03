@@ -1,0 +1,22 @@
+@{
+    var orders = Access.Can("PURCHASES");
+    var receipts = Access.Can("STOCK_INFLOW");
+    var receiptRoute = Context.Request.Path.StartsWithSegments("/StockInflow");
+    var selected = receipts && (receiptRoute || !orders) ? "receipts" : "orders";
+}
+<div id="orders-receipt-history" data-default-tab="@selected">
+    <div class="history-view-tabs" role="tablist" aria-label="Orders and stock receipt history">
+        @if(orders){<button type="button" id="history-orders-tab" role="tab" aria-controls="history-orders-panel" aria-selected="@(selected == "orders" ? "true" : "false")" data-history-tab="orders">Purchase orders &amp; deliveries</button>}
+        @if(receipts){<button type="button" id="history-receipts-tab" role="tab" aria-controls="history-receipts-panel" aria-selected="@(selected == "receipts" ? "true" : "false")" data-history-tab="receipts">Stock receipts</button>}
+    </div>
+    @if(orders){
+    <section id="history-orders-panel" role="tabpanel" aria-labelledby="history-orders-tab" hidden="@(selected != "orders")">
+        <p class="small text-muted">Track pending orders and record full or partial deliveries. Open an order to receive its goods.</p>
+        <div id="purchase-message" class="alert alert-danger" hidden role="alert"></div>
+        <div class="table-responsive"><table class="table table-striped">
+            <thead><tr><th>Purchase #</th><th>Supplier</th><th>Date</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="purchase-rows"></tbody>
+        </table></div>
+    </section>}
+    @if(receipts){<section id="history-receipts-panel" role="tabpanel" aria-labelledby="history-receipts-tab" hidden="@(selected != "receipts")"><partial name="_StockReceiptHistory" /></section>}
+</div>

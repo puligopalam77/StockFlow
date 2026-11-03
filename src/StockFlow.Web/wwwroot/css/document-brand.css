@@ -1,0 +1,6 @@
+.sf-document-brand{display:flex;align-items:center;gap:16px;margin-bottom:14px;break-inside:avoid}
+.sf-document-brand img{display:block;max-width:120px;max-height:90px;object-fit:contain;flex-shrink:0}
+.sf-document-brand strong{font-size:20px;overflow-wrap:anywhere}
+.sf-report-brand{display:none}
+@media(max-width:575px){.sf-document-brand img{max-width:90px;max-height:70px}.sf-document-brand strong{font-size:17px}}
+@media print{.sf-report-brand{display:block!important}.sf-document-brand{display:flex!important;break-inside:avoid}.sf-document-brand img{display:block!important;max-width:120px;max-height:90px;object-fit:contain}}

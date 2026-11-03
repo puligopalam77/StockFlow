@@ -1,0 +1,28 @@
+@page
+@{ ViewData["Title"] = "Shop Business Profile"; }
+<header class="sf-page-heading"><div><h1>Shop Business Profile</h1><p>Choose the business experience for this company and all its branches. Review the impact before saving.</p></div></header>
+<div id="business-profile-workspace">
+    <div id="business-profile-message" class="alert alert-danger" role="alert" hidden></div>
+    <p id="business-profile-status" role="status"></p>
+    <section class="card card-body mb-3"><h2 class="h5">Current configuration</h2><dl id="business-profile-current"></dl></section>
+    <form id="business-profile-form">
+        <fieldset id="business-profile-fields" disabled>
+            <section class="card card-body mb-3">
+                <label for="business-profile-code" class="form-label">Shop type</label><select id="business-profile-code" class="form-select mb-3" required></select>
+                <div id="business-profile-preview" class="business-profile-preview" aria-live="polite"></div>
+                <label class="mt-3"><input id="business-profile-categories" type="checkbox" checked /> Create the suggested starter categories when changing profile</label>
+                <p class="small text-muted">Existing categories remain stored under their original profile. You can enter relevant product specifications manually.</p>
+            </section>
+            <section class="card card-body mb-3">
+                <h2 class="h5">Review and apply</h2>
+                <p id="business-profile-impact"></p>
+                <p id="business-profile-preservation" class="alert alert-info">Existing products, stock and history will be preserved. Review the setup before applying it.</p>
+                <label for="business-profile-reason" class="form-label">Reason for change *</label><textarea id="business-profile-reason" class="form-control mb-3" minlength="5" maxlength="500" rows="2" required></textarea>
+                <label><input id="business-profile-acknowledge" type="checkbox" required /> I have reviewed the categories and enabled features for this business.</label>
+            </section>
+            <div class="d-flex gap-2 flex-wrap"><a href="/Settings/Company" class="btn btn-outline-secondary">Business &amp; Billing</a><button id="business-profile-save" class="btn btn-primary" type="submit">Apply shop profile</button></div>
+        </fieldset>
+    </form>
+</div>
+@section Styles { <link rel="stylesheet" href="~/css/business-profile.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/business-profile.js" asp-append-version="true"></script> }

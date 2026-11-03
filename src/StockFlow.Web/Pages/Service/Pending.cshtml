@@ -1,0 +1,12 @@
+@page
+@model StockFlow.Web.Pages.Service.PendingModel
+@{ ViewData["Title"] = "Pending repairs"; }
+<h1>Pending repairs</h1>
+<p>
+    <a asp-page="Index">All repair history</a> · <a asp-page="Index" asp-route-status="DELIVERED">Completed repairs</a>
+</p>
+<partial name="_ServiceList" />
+@section Scripts {
+    <script src="~/js/service-common.js" asp-append-version="true"></script>
+    <script src="~/js/service-index.js" asp-append-version="true"></script>
+}

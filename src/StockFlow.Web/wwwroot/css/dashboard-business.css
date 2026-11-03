@@ -1,0 +1,18 @@
+.sf-kpi-link,.sf-kpi-link:hover{color:inherit;text-decoration:none}
+.sf-kpi-link:hover{box-shadow:0 5px 20px #253c7020}
+.sf-business-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+.sf-business-kpis .sf-kpi strong{font-size:clamp(19px,1.8vw,28px);overflow-wrap:anywhere}
+.sf-chart-months.dense{gap:3px;padding:0}
+.sf-chart-months.dense .sf-bar-pair{gap:1px}
+.sf-chart-months.dense .sf-chart-month>span:not(.visually-hidden){font-size:9px;white-space:nowrap}
+.sf-recent-grid>.sf-panel{min-width:0}
+.sf-hero{min-height:0;padding:20px 28px}
+.sf-hero h1{font-size:clamp(26px,2.4vw,38px);line-height:1.12;margin:10px 0}
+.sf-hero-content>p{margin:8px 0 16px}
+.sf-hero-note{font-size:24px;top:20px}
+.sf-hero-stat{padding:10px 12px}
+.sf-kpi-link:focus-visible{outline:3px solid var(--sf-pink);outline-offset:3px}
+.sf-business-kpis .sf-kpi:last-child{grid-column:auto}
+@media(max-width:699px){.sf-hero{min-height:0;padding:18px}.sf-hero h1{font-size:28px}.sf-hero-content>p{margin:8px 0 12px}}
+@media(max-width:767px){.sf-business-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:380px){.sf-business-kpis{grid-template-columns:1fr}}

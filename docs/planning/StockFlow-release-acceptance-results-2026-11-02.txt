@@ -1,0 +1,139 @@
+Acceptance implementation and actual final result - 2026-11-02
+
+Final classification: BLOCKED. No production deployment authorized.
+22 automated gates PASSED; 0 FAILED; 9 review gates UNVERIFIED.
+This is a completed acceptance-system increment, not certification that all
+StockFlow workflows or all P0 production gates are complete.
+
+Canonical final run:
+tests/bin/release-acceptance/e21fa9661f7d4409b79bce6ee33986d6/release-report.json
+tests/bin/release-acceptance/e21fa9661f7d4409b79bce6ee33986d6/release-report.txt
+Source SHA256:
+DC4D367BC8D2E58D59700BE832106D4A811DA7DC12AE101447DF21CE9B7D425B
+Declared candidate: 2026.11.02-acceptance
+Environment: LocalSynthetic. Shop scope: DISPOSABLE-FIXTURES.
+This source fingerprint remained stable for the final run.
+
+Actual final command (one line):
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/Run-ShopPilotChecks.ps1 -ReleaseAcceptance -WithDatabase -WithBrowser -WithCleanRestore -ApplicationVersion '2026.11.02-acceptance'
+Native exit code: 2, deliberately BLOCKED for missing review evidence.
+Build: 0 warnings, 0 errors. Individual command outputs and hashes are retained
+in the canonical run directory. Command mapping: tests/acceptance/gates.json.
+
+Implemented gates (A16; reuses S01/S02/S04/S05/S07, P02/P05, I04/I05/I06/I07,
+F02/F03/F06, G01/G02/G03/G05, A02/A03/A08/A09)
+- Acceptance mode extends the existing Run-ShopPilotChecks.ps1 entry point.
+- Explicit static catalog and independent per-command statuses. A failed or
+  unavailable prerequisite leaves dependent checks unrun and blocking; the
+  remaining independent checks still execute.
+- READY/CONDITIONAL/BLOCKED evaluation, source/version/environment/shop/date
+  identity and evidence-artifact checksums. Critical failures cannot be waived;
+  only explicitly accepted noncritical issues permit CONDITIONAL (exit 3).
+- Build-only, stale/wrong-scope/changed/duplicate/empty evidence cannot produce
+  readiness. A changed source during a run blocks it. No automatic deployment.
+- 17 synthetic policy regression cases exercise positive and negative decisions.
+  Synthetic reviewer identities in those tests are never actual pilot approval.
+- Private manual-evidence template and pending owner/accountant CSV, linked from
+  the existing pilot sign-off document. No new application permission/profile
+  model and no monitoring controls added to cashier checkout.
+
+Receiving extension (P02/A16)
+The old ReceiveStockIntegrationChecks target was an earlier fixture on port
+55439. It now clones product_edit_069_test on 55443 and applies current migrations
+through 084. Passed direct receipt concurrency/retry, accepted/damaged quantities,
+exact variants, source price/batch evidence, supplier attachment/payment balance,
+partial receipt/over-receipt, accepted/damaged serialized units, stable barcode
+identity and scope denial. New tests passed:
+- Changed quantity using the original receipt identity is rejected, stock unchanged.
+- Invalid final line in a multi-line receipt leaves no receipt, received quantity
+  or inventory movement from that failed transaction.
+No defect in those posting invariants was reproduced; no speculative financial
+or inventory engine change was made.
+
+Automated evidence actually passed
+gate-policy; build; billing-rules; reconciliation; sales-retries; receiving;
+billing-gst; product-profit; draft-recovery; gst-setup; gst-catalog;
+eway-preparation; pagination-http; operations-privacy; reports-http;
+report-fixtures; backup-scheduler-contract; clean-restore; billing-browser;
+cart-browser; profit-browser; print-consistency.
+
+Reconciliation results
+Existing P0 suite independently checks opening 10, accepted receipt +4 (damaged
+quantity not saleable), +2/-2 adjustments, sale -2 once, restock +1, supplier
+return -1, count to 11, transfer source 8/destination 3 with partial transit 1.
+Duplicate checkout returns one invoice; changed payload is rejected; quote,
+invoice and payment agree. Customer settlement accounts for return/refund once.
+Supplier order-basis operational due is 250-70-50=130, not a verified standalone
+AP-invoice liability. Sale last-unit and same-serial races permit one winner.
+F06 regressions retain unknown costs, original receipt/date evidence, return-only
+rows, tax-exclusive estimates and invoice discounts. Collections on old invoices
+do not become today's invoiced revenue. No new authoritative cost policy, COGS
+ledger, net-profit claim or balancing transactions.
+
+Scope/security results
+Real PostgreSQL RLS/guarded functions are exercised by core transaction/GST/e-way
+suites, including same-profile destination shop, other tenant and profile denials.
+HTTP authorization/filter tests are explicitly separate from repository behavior.
+Browser HTTP mocks verify UI behavior, not database authorization. Production
+same-profile master independence and full deployed role/export matrices remain
+open; the current shared tenant/profile master model was not silently changed.
+
+Backup/recovery result
+tests/bin/p0-clean-restore/8779303bf4684d02b1399e5b53a1b0af/result.json
+135 public tables matched frozen-source row digests and counts in a fresh cluster.
+App startup, restricted stockflow_runtime product read and issued-invoice retrieval
+passed. Corrupted archive checksum invalidated old success evidence. Full synthetic
+drill: 54.69 seconds, archive age at verification 16.518 seconds. These are not
+agreed/achieved production RPO/RTO. Assets/secrets/login/offsite/scheduled production
+recovery remain unverified. Scheduler test uses mocks and installs no actual task.
+
+UI/print results
+Ten requested viewport sizes passed for billing/cart, with contained scrolling,
+reachable actions, focus, pending/invalid input and modal/approval behavior.
+Existing effective-viewport scaling simulation remains a simulation. Actual saved
+database invoice fixture rendered in A4 and thermal print media and browser PDFs.
+No physical USB/camera scanner, label/A4/80mm/58mm printer or actual Windows
+150-percent scaling was tested. PDF output is not printer-driver integration.
+Official e-way/provider generation stays unavailable; no external provider send.
+
+Open blockers in the final report
+receiving-corrections: source correction/cancellation/rollback coverage and scope.
+after-sales: broader complete warranty/repair/parts/payment/reversal acceptance.
+shop-model: approved independent-shop master model and actual deployment topology.
+migration-deployment: actual applied migration/history/RLS/rollback acceptance.
+production-recovery: scheduled/encrypted-offsite recovery with assets/secrets and
+                     agreed/measured RPO/RTO, login and essential records.
+production-hosting: actual HTTPS/restart/persistent storage/logs/delivered alerts.
+physical-devices: representative real scanners and supported printers.
+pilot-acceptance: authorized owner/accountant acceptance for exact candidate/scope.
+usability-issues: resolve issues or record explicit noncritical mitigation/acceptance.
+These gates have no fabricated failure, pass, review or mitigation. No pilot was
+automatically signed off. Missing broader automated coverage must be supplied as
+real test evidence, not waived through a reviewer-name field.
+
+Additional actual verification
+PASS powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/ReleaseGateChecks.ps1
+PASS preflight dotnet build tests/StockFlow.MasterDataChecks --artifacts-path E:/StockFlow/.artifacts/acceptance-preflight -v quiet
+PASS dotnet .artifacts/acceptance-preflight/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --receive-stock-integration-checks
+PASS negative integration: -ReleaseAcceptance -Only gate-policy produced BLOCKED
+     and native exit 2 with all omitted mandatory checks still required.
+An initial full run also passed automation but correctly blocked source changes
+made during implementation. Its report is superseded by the stable final run.
+
+Files changed
+tests/Run-ShopPilotChecks.ps1
+tests/acceptance/Invoke-ReleaseAcceptance.ps1
+tests/acceptance/ReleaseGates.psm1
+tests/acceptance/gates.json
+tests/acceptance/signoff.template.json
+tests/ReleaseGateChecks.ps1
+tests/StockFlow.MasterDataChecks/ReceiveStockIntegrationChecks.cs
+docs/phase8-pilot-signoff.md
+docs/planning/StockFlow-pilot-acceptance.csv
+docs/planning/StockFlow-release-acceptance-2026-11-02.txt
+docs/planning/StockFlow-release-acceptance-results-2026-11-02.txt
+
+No database migration, production data/configuration change, new business feature,
+external message, provider submission or deployment. No existing CI workflow was
+present; the repeatable Windows entry point returns failure until acceptance
+passes. Treat release packaging as artifact creation, not a readiness decision.

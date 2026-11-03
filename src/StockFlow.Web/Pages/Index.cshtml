@@ -1,0 +1,307 @@
+@page
+@model IndexModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Dashboard";
+    var data = Model.Data;
+    var isAdmin = Access.Can("SUPPLIERS");
+    var chartMax = Math.Max(4L, data.Months.Select(m => Math.Max(m.Inflow, m.Outflow)).DefaultIfEmpty(0).Max());
+    var categories = data.Categories.Where(c => c.Quantity > 0).Take(4).ToList();
+    var remainder = data.Categories.Where(c => c.Quantity > 0).Skip(4).Sum(c => c.Quantity);
+    if (remainder > 0) categories.Add(new StockFlow.Application.DTOs.Dashboard.CategoryStock { CategoryName = "Other", Quantity = remainder });
+    var categoryTotal = categories.Sum(c => c.Quantity);
+    var colors = new[] { "#ff087c", "#1988ff", "#ffa51f", "#8835f5", "#18bea5" };
+    decimal position = 0;
+    var segments = new List<string>();
+    for (var i = 0; i < categories.Count; i++) {
+        var next = position + (decimal)categories[i].Quantity / categoryTotal * 100;
+        segments.Add($"{colors[i]} {position.ToString("0.###", CultureInfo.InvariantCulture)}% {next.ToString("0.###", CultureInfo.InvariantCulture)}%");
+        position = next;
+    }
+    var donut = categories.Count == 0 ? "#e9edf4" : $"conic-gradient({string.Join(", ", segments)})";
+}
+@if (Model.DataUnavailable) {
+<div class="alert alert-warning" role="status">Dashboard data is temporarily unavailable. Refresh to try again.</div>
+}
+@section DashboardWelcome {
+<section class="sf-hero">
+    <img src="~/images/warehouse-stockflow.png" class="sf-hero-photo" alt="" width="1536" height="1024" fetchpriority="high" />
+    <div class="sf-hero-shade">
+    </div>
+    <div class="sf-hero-content">
+        <div class="sf-eyebrow">Good to see you again <span>
+            </span>
+        </div>
+        <h1>Welcome back,<br /><em data-no-translate>@Model.DisplayName!</em>
+        </h1>
+        <p>Your sales, stock, repairs and pending payments in one place.</p>
+        <div class="sf-hero-stats">
+            <div class="sf-hero-stat">
+                <span class="sf-stat-icon ">
+                    <svg class="sf-icon">
+                        <use href="/images/icons.svg#in" />
+                    </svg>
+                </span>
+                <span>
+                    <small>Stock received today</small>
+                    <strong>@Model.Count(data.TodayInflow) <span>Units</span>
+                    </strong>
+                </span>
+            </div>
+            <div class="sf-hero-stat">
+                <span class="sf-stat-icon ">
+                    <svg class="sf-icon">
+                        <use href="/images/icons.svg#out" />
+                    </svg>
+                </span>
+                <span>
+                    <small>Items that left today</small>
+                    <strong>@Model.Count(data.TodayOutflow) <span>Units</span>
+                    </strong>
+                </span>
+            </div>
+            <div class="sf-hero-stat">
+                <span class="sf-stat-icon purple">
+                    <svg class="sf-icon">
+                        <use href="/images/icons.svg#box" />
+                    </svg>
+                </span>
+                <span>
+                    <small>Current Stock</small>
+                    <strong>@Model.Count(data.CurrentStock) <span>Units</span>
+                    </strong>
+                </span>
+            </div>
+            <div class="sf-hero-stat">
+                <span class="sf-stat-icon">
+                    <svg class="sf-icon">
+                        <use href="/images/icons.svg#users" />
+                    </svg>
+                </span>
+                <span>
+                    <small>@(isAdmin ? "Suppliers" : "Customers")</small>
+                    <strong>@Model.Count(isAdmin ? data.TotalSuppliers : data.TotalCustomers)</strong>
+                </span>
+            </div>
+        </div>
+    </div>
+    <p class="sf-hero-note">Better<br />Tracking.<br />Brighter<br />Business.</p>
+</section>
+}
+<partial name="_RetailDailyActions" />
+<h2 class="retail-overview-title">Business Overview</h2>
+<section class="sf-kpi-grid" aria-label="Inventory summary">
+    <a class="sf-kpi sf-kpi-link" href="/Products">
+        <span class="sf-kpi-icon black">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#box" />
+            </svg>
+        </span>
+        <div>
+            <h2>Total Products</h2>
+            <strong>@Model.Count(data.TotalProducts)</strong>
+            <p>Active product items</p>
+        </div>
+    </a>
+    <a class="sf-kpi sf-kpi-link" href="/StockInflow">
+        <span class="sf-kpi-icon green">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#in" />
+            </svg>
+        </span>
+        <div>
+            <h2>Stock received</h2>
+            <strong>@Model.Count(data.StockInflow)</strong>
+            <p>Units received · all time</p>
+        </div>
+    </a>
+    <a class="sf-kpi sf-kpi-link" href="/StockOutflow">
+        <span class="sf-kpi-icon pink">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#out" />
+            </svg>
+        </span>
+        <div>
+            <h2>Stock leaving the shop</h2>
+            <strong>@Model.Count(data.StockOutflow)</strong>
+            <p>Units issued · all time</p>
+        </div>
+    </a>
+    <a class="sf-kpi sf-kpi-link" href="/Inventory">
+        <span class="sf-kpi-icon blue">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#box" />
+            </svg>
+        </span>
+        <div>
+            <h2>Current Stock</h2>
+            <strong>@Model.Count(data.CurrentStock)</strong>
+            <p>Units available</p>
+        </div>
+    </a>
+    <a class="sf-kpi sf-kpi-link" href="@(isAdmin ? "/Suppliers" : "/Customers")">
+        <span class="sf-kpi-icon orange">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#users" />
+            </svg>
+        </span>
+        <div>
+            <h2>@(isAdmin ? "Total Suppliers" : "Total Customers")</h2>
+            <strong>@Model.Count(isAdmin ? data.TotalSuppliers : data.TotalCustomers)</strong>
+            <p>Active @(isAdmin ? "suppliers" : "customers")</p>
+        </div>
+    </a>
+</section>
+<partial name="_BusinessCards" model="Model" />
+<div class="sf-chart-grid" id="stock-trends">
+    <section class="sf-panel sf-trend-panel">
+        <div class="sf-panel-header">
+            <h2>Stock Inflow vs Outflow</h2>
+            <label class="visually-hidden" for="chart-period">Chart period</label>
+            <select id="chart-period" class="sf-period">
+                <option value="7days">Last 7 Days</option>
+                <option value="30days">Last 30 Days</option>
+                <option value="6months" selected>Last 6 Months</option>
+                <option value="12months">Last 12 Months</option>
+            </select>
+        </div>
+        <p id="trend-message" class="sf-chart-empty" role="status" hidden>
+        </p>
+        <div class="sf-chart-legend">
+            <span><i class="green"></i> Stock Inflow</span>
+            <span><i class="pink"></i> Stock Outflow</span>
+        </div>
+        <div class="sf-bar-chart" role="img" aria-label="Monthly stock inflow and outflow. Exact quantities are listed below each month.">
+            <div class="sf-chart-axis" id="chart-axis">@for(var i = 4; i >= 0; i--) { <span>@((chartMax * i / 4).ToString("N0"))</span> }</div>
+            <div class="sf-chart-plot">
+                <div class="sf-chart-lines"><i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="sf-chart-months" id="chart-months">
+                    @foreach(var month in data.Months) {
+                        var inflowHeight = ((decimal)month.Inflow / chartMax * 100).ToString("0.###", CultureInfo.InvariantCulture);
+                        var outflowHeight = ((decimal)month.Outflow / chartMax * 100).ToString("0.###", CultureInfo.InvariantCulture);
+                    <div class="sf-chart-month" data-inflow="@month.Inflow" data-outflow="@month.Outflow">
+                        <div class="sf-bar-pair">
+                            <div class="sf-bar green" style="height: @(inflowHeight)%" title="Inflow: @month.Inflow.ToString("N0")">
+                            </div>
+                            <div class="sf-bar pink" style="height: @(outflowHeight)%" title="Outflow: @month.Outflow.ToString("N0")">
+                            </div>
+                        </div>
+                        <span>@month.Month.ToString("MMM")</span>
+                        <span class="visually-hidden">Inflow @month.Inflow; Outflow @month.Outflow</span>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <p id="trend-empty" class="sf-chart-empty" hidden="@(Model.DataUnavailable || data.Months.Any(m => m.Inflow != 0 || m.Outflow != 0))">No stock movements in this period.</p>
+    </section>
+    <section class="sf-panel">
+        <div class="sf-panel-header">
+            <h2>Stock Category Overview</h2>
+        </div>
+        <div class="sf-category-chart">
+            <div class="sf-donut" style="background: @donut" role="img" aria-label="@categoryTotal.ToString("N0") units across @categories.Count category groups">
+                <div>
+                    <strong>@(Model.DataUnavailable ? "—" : categoryTotal.ToString("N0"))</strong>
+                    <span>Total units</span>
+                </div>
+            </div>
+            <ul class="sf-category-legend">
+                @for (var i = 0; i < categories.Count; i++) {
+                    var category = categories[i];
+                <li><i style="background:@colors[i]"></i>
+                    <span>@category.CategoryName</span>
+                    <strong>@category.Quantity.ToString("N0") <small>(@(((decimal)category.Quantity / categoryTotal * 100).ToString("0"))%)</small>
+                    </strong>
+                </li>
+                }
+                @if (categories.Count == 0) { <li class="sf-category-empty">No stock recorded yet.</li> }
+            </ul>
+        </div>
+        @if (data.Categories.Any(c => c.Quantity < 0)) { <p class="sf-chart-empty">Some categories have negative balances. The chart shows positive balances only.</p> }
+    </section>
+</div>
+<div class="sf-recent-grid" id="recent-activity">
+    <section class="sf-panel sf-recent-panel" id="recent-inflow">
+        <div class="sf-panel-header">
+            <h2>
+                <span class="sf-mini-icon green">
+                    <svg class="sf-icon">
+                        <use href="/images/icons.svg#in" />
+                    </svg>
+                </span>Recent Stock Inflow</h2>
+            <a asp-page="/StockInflow">View All <svg class="sf-icon">
+                    <use href="/images/icons.svg#arrow" />
+                </svg>
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="sf-recent-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>@(isAdmin ? "Supplier" : "Movement")</th>
+                    </tr>
+                </thead>
+                <tbody>
+            @foreach (var item in data.RecentInflow) {
+                    <tr>
+                        <td>@item.CreatedAt.ToString("dd MMM yyyy")</td>
+                        <td>@item.ProductName</td>
+                        <td>@item.Quantity.ToString("N0")</td>
+                        <td>@if (item.ReferenceUrl is not null) { <a href="@item.ReferenceUrl">@item.MovementLabel</a> } else { @item.MovementLabel } @if (item.PartyName is not null) { <small class="d-block">@item.PartyName</small> }</td>
+                    </tr>
+            }
+            @if (data.RecentInflow.Count == 0) { <tr>
+                    <td colspan="4" class="sf-table-empty">@(Model.DataUnavailable ? "Unable to load activity." : "No stock inflow recorded yet.")</td>
+                </tr> }
+            </tbody>
+        </table>
+    </div>
+</section>
+<section class="sf-panel sf-recent-panel" id="recent-outflow">
+    <div class="sf-panel-header">
+        <h2>
+            <span class="sf-mini-icon pink">
+                <svg class="sf-icon">
+                    <use href="/images/icons.svg#out" />
+                </svg>
+            </span>Recent Stock Outflow</h2>
+        <a asp-page="/StockOutflow">View All <svg class="sf-icon">
+                <use href="/images/icons.svg#arrow" />
+            </svg>
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="sf-recent-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Issued to / Movement</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in data.RecentOutflow) {
+                <tr>
+                    <td>@item.CreatedAt.ToString("dd MMM yyyy")</td>
+                    <td>@item.ProductName</td>
+                    <td>@item.Quantity.ToString("N0")</td>
+                    <td>@if (item.ReferenceUrl is not null) { <a href="@item.ReferenceUrl">@item.MovementLabel</a> } else { @item.MovementLabel } @if (item.PartyName is not null) { <small class="d-block">@item.PartyName</small> }</td>
+                </tr>
+            }
+            @if (data.RecentOutflow.Count == 0) { <tr>
+                <td colspan="4" class="sf-table-empty">@(Model.DataUnavailable ? "Unable to load activity." : "No stock outflow recorded yet.")</td>
+            </tr> }
+        </tbody>
+    </table>
+</div>
+</section>
+</div>
+<partial name="_BusinessTables" model="Model" />
+@section Styles { <link rel="stylesheet" href="~/css/dashboard-business.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/dashboard.js" asp-append-version="true"></script> }

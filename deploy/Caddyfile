@@ -1,0 +1,6 @@
+# Set STOCKFLOW_DOMAIN to the real public hostname before starting Caddy.
+# DNS must point here; TCP 80/443 must reach Caddy for public certificates.
+{$STOCKFLOW_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:5220
+}

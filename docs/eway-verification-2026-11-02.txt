@@ -1,0 +1,263 @@
+﻿E-way preparation verification - 2026-11-02
+
+Build: PASS, 0 warnings/errors. Source module only; no live provider verified.
+Real PostgreSQL suites use disposable clones of the dedicated test template on
+127.0.0.1:55443. They do not load or mutate the configured application/production DB.
+Provider traffic is not sent. Browser HTTP is mocked with real Razor/assets and
+real database-produced source snapshots. No scheduled/external job was registered.
+
+Commands:
+ dotnet build tests/StockFlow.MasterDataChecks --artifacts-path E:\StockFlow\.artifacts\eway -v quiet
+ dotnet .artifacts/eway/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --eway-checks
+ dotnet .artifacts/eway/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --quotation-checks
+ dotnet .artifacts/eway/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --fast-billing-checks
+ dotnet .artifacts/eway/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --error-log-checks
+ Playwright Node: tests/StockFlow.UiChecks/eway-preparation.cjs
+
+Limitations: no genuine NIC/GSP sandbox/production response, official generation,
+portal JSON upload, cancellation/update/extension or production topology acceptance.
+Positive movement fixtures are Electrical; other supported profiles have explicit
+cross-profile denial checks, not a completed positive industry pilot. Physical
+printing, accountant applicability review and production recovery remain unverified.
+The new migration is MANUAL and has not been applied to the configured app database.
+
+Captured successful final results:
+
+Source: .artifacts/eway/build.log
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Source: .artifacts/eway/checks.log
+PASS: Concurrent identical save creates one version/event
+PASS: Preparation posts no additional stock, payment, sale or GST document
+PASS: New preparation has no invented official EBN or validity
+PASS: Complete domestic worksheet passes basic data checks while applicability remains Review Required
+PASS: Historical source values never reprice from current catalog
+PASS: Revision preserves prior saved source/body history
+PASS: Previous bill/ship/dispatch arrangement remains immutable
+PASS: Stale version cannot overwrite a revision
+PASS: External reference is idempotent and remains explicitly unverified
+PASS: External reference freezes its preparation instead of editing official Part A locally
+PASS: Bad PIN produces a missing-information issue
+PASS: Incomplete data cannot be marked externally referenced through application service
+PASS: Nonexistent source is denied
+PASS: Forged registration cannot reuse a source invoice
+PASS: Client cannot replace immutable invoice goods/value snapshots
+PASS: Inward preparation uses actual separately recorded supplier tax invoice without treating purchase order as e-way invoice or posting stock
+PASS: Approved transfer links without a fake sale or inferred consignment value
+PASS: Same-profile other shop cannot read stored preparation
+PASS: Shared GSTIN does not expose another shop source
+PASS: Different profile cannot read historical source or preparation
+PASS: Forged tenant cannot read preparation
+PASS: Ungrant​ed staff cannot access preparation via runtime SQL authority
+PASS: Runtime has no direct mutation privilege
+PASS: Revoked original sales authority also hides stored e-way snapshots
+PASS: All e-way actions leave transaction/source totals unchanged
+PASS: More than ten persisted preparations work with server pagination and no monthly quota
+PASS: Additional preparations do not duplicate transaction postings
+PASS: Metering separates local operations from real provider generations; no numeric cap or invented fees
+PASS: Production adapter exposes no fake supported operations
+PASS: Test-only adapter contract represents unknown transmission separately from confirmed generation
+PASS: Unavailable provider cannot transmit or invent an official response
+PASS: E-way mutations require antiforgery token
+PASS: Actual API persists scoped source-linked draft: {"version":1}
+PASS: Worksheet is clearly non-submission and neutralizes CSV formula injection
+PASS: Source selector uses real server-side scope and pagination
+PASS: BIKE_ACCESSORIES cannot inherit another profile's preparations
+PASS: CLOTHING cannot inherit another profile's preparations
+PASS: FOOTWEAR cannot inherit another profile's preparations
+PASS: API permission middleware denies module access before repository
+PASS: Anonymous cannot access e-way data
+PASS: Temporary API abuse throttle returns 429 independently of monthly usage
+E-way preparation checks passed in disposable database. No live provider or application database used.
+
+Source: .artifacts/eway/browser.log
+PASS: real Razor/source snapshots, guided preparation, unknown fields, same-operation lost-response retry, CSV/PDF worksheets, eight viewports, unverified external state, frozen history, source links, transfer/challan distinction, Part A controls and blocked provider; mocked HTTP.
+
+Source: .artifacts/eway/quotation-regression.log
+PASS: concurrent identical create reuses one immutable quotation revision
+PASS: persisted sequential reference and initial draft state
+PASS: quotation creation posts no sale, payment, tax invoice or stock movement
+PASS: lost-response retry retrieves original revision even after catalog price changes
+PASS: edit creates a second immutable commercial revision
+PASS: previous commercial terms remain unchanged
+PASS: stale version cannot overwrite a shared quotation
+PASS: manual sent lifecycle decision is idempotent
+PASS: sending and accepting a quotation does not reserve stock or post money
+PASS: changed shop tax mode requires a reviewed quotation revision before conversion
+PASS: old revision/version cannot convert
+PASS: conversion loads today's catalog price with an explicit change notice
+PASS: opening New Sale does not mark converted or change stock
+PASS: late checkout failure rolls back quotation conversion
+PASS: failed sale leaves quotation, stock and money unchanged
+PASS: duplicate concurrent checkout request creates one invoice
+PASS: successful existing sale transaction marks converted and links original revision
+PASS: converted quotation cannot be revised
+PASS: a second independent checkout cannot convert the same quotation again
+PASS: expiry is effective even without a background job
+PASS: expired quotation cannot open checkout
+PASS: revising a rejected quotation returns to Draft with history
+PASS: cancelled quotations cannot convert
+PASS: concurrent number allocation and paged listing retain unique shop references
+PASS: accepted quotation fails safely when current stock is insufficient
+PASS: insufficient-stock conversion leaves all stock and money sources unchanged
+PASS: effective tax changes are recalculated and explicitly disclosed before checkout
+PASS: controlled manual quotation lines persist without catalog or financial posting
+PASS: independent concurrent conversion requests finalize exactly one invoice
+PASS: restricted staff cannot read quotation records
+PASS: explicitly authorized staff can read and create ordinary quotations before financial override denials are tested
+PASS: quotation permission does not grant the existing sales discount permission
+PASS: quotation permission does not grant the existing sales price-override permission
+PASS: different shop with the same profile cannot read original quotation
+PASS: forged store identifier rejected before any quotation write
+PASS: different shop/profile context cannot access original quotation
+PASS: forged tenant cannot read original quotation
+PASS: runtime role cannot bypass guarded writer or rewrite revisions
+PASS: quotation mutation rejects requests without antiforgery token
+PASS: actual quotation API persists with existing antiforgery and permission middleware: {"version":1,"quotationId":"9b3136a6-90fb-4815-84e6-f8c852c4be78"}
+PASS: actual list API enforces supported filters/pagination
+PASS: quotation CSV neutralizes spreadsheet formulas
+PASS: actual Razor print renders selected immutable revision rather than latest terms
+PASS: API rejects unauthorized module access before repository
+Quotation checks passed in a disposable database. Application database unchanged.
+
+Source: .artifacts/eway/billing-regression.log
+PASS: GST is optional for ordinary manual billing and adds no tax
+PASS: ordinary no-GST manual bill is idempotent
+PASS: ordinary billing does not invent HSN or a GST exemption
+PASS: draft tax classifications cannot be billed
+PASS: existing shops retain mandatory routine reasons before explicit opt-in
+PASS: existing policy management permission protects Fast Billing opt-in
+PASS: authorized owner explicitly enables Fast Billing on existing policy
+PASS: stale settings cannot overwrite a newer policy version
+PASS: saved policy distinguishes routine and exceptional requirements
+PASS: 0% routine discount requires no reason or approval at a strictly-above 10% threshold
+PASS: routine checkout records policy version, shop and financial authorization without inventing a reason
+PASS: 5% routine discount requires no reason or approval at a strictly-above 10% threshold
+PASS: routine checkout records policy version, shop and financial authorization without inventing a reason
+PASS: 10% routine discount requires no reason or approval at a strictly-above 10% threshold
+PASS: routine checkout records policy version, shop and financial authorization without inventing a reason
+PASS: routine invoice discount follows the same no-reason policy
+PASS: exceptional discount still requires its configured reason
+PASS: cashier cannot approve their own approval request
+PASS: pending exception cannot finalize
+PASS: unprivileged approver is rejected on backend
+PASS: existing approval workflow records manager rejection
+PASS: quote reports rejected approval distinctly
+PASS: rejected exception cannot finalize
+PASS: different authorized manager approves exact requested amounts
+PASS: selling price edit invalidates approval
+PASS: discount edit invalidates approval
+PASS: quantity edit invalidates approval
+PASS: policy version change invalidates previously approved amounts
+PASS: combined item and invoice reductions cannot bypass the threshold
+PASS: no-reason routine discounts still require discount permission
+PASS: another shop retains strict inherited policy
+PASS: runtime cannot read another shop policy row
+Fast Billing policy and existing approval workflow checks passed.
+PASS: invoice keeps original price and separate item/invoice discount snapshots
+PASS: allocated quote, persisted lines, invoice and full payment agree
+PASS: invoice details read allocated-discount snapshots without repricing history
+PASS: percentage discount uses authoritative tax-inclusive/exclusive calculator
+PASS: 0% discount on multiple quantity
+PASS: 5% discount on multiple quantity
+PASS: 10% discount on multiple quantity
+PASS: 2.55% discount on multiple quantity
+PASS: 100% discount on multiple quantity
+PASS: saved fixed amount remains fixed
+PASS: tax-inclusive customer payable amount cannot exceed MRP
+PASS: missing manual MRP remains unknown
+PASS: empty manual descriptions rejected
+PASS: invalid rule rejected
+PASS: customer required on new invoices
+PASS: new split payments rejected on server
+PASS: unverified electronic collection rejected
+PASS: concurrent identical retries create one manual invoice
+PASS: invoice details preserve manual identity, MRP, unit and percentage snapshots
+PASS: manual posting creates neither stock movements nor products
+PASS: sales history searches manual item descriptions
+PASS: manual refund is idempotent and does not restock
+PASS: manual return history retains line description
+PASS: unchanged price and zero discount require no approval
+PASS: seven percent discount is below the configured ten percent approval threshold
+PASS: exact threshold retains the existing strictly-above semantics
+PASS: above-threshold discount requires a matching approval
+PASS: quote distinguishes requested approval from missing reason
+PASS: quote recognizes a current approval for the exact line adjustments
+PASS: quantity changes invalidate the matching approval status
+PASS: combined item and invoice reductions use the existing aggregate policy
+PASS: new per-line adjustments cannot use a generic bill reason for another missing line reason
+PASS: barcode/SKU scan includes the saved variant MRP
+PASS: quote reads saved variant MRP and authorized ordinary-bill tax override
+PASS: registered product MRP cap is enforced using its saved variant value
+PASS: tax change requires a recorded reason
+PASS: out-of-range tax override rejected
+PASS: tax override permission enforced by backend
+PASS: successful checkout stores overridden line tax
+PASS: tax override reason retained in original sale request
+PASS: original invoice request retains the reason against the specific adjusted line
+PASS: mixed invoice preserves both lines and correct variant MRP
+PASS: mixed checkout posts stock only for the registered SKU
+PASS: manual refund on a mixed invoice never restocks its registered neighbor
+PASS: full CASH  checkout posts one allocation
+PASS: full UPI  checkout posts one allocation
+PASS: confirmed UPI  checkout accepts an omitted transaction reference
+PASS: reference-free electronic checkout remains idempotent
+PASS: reference-free UPI still requires collection confirmation
+PASS: reused electronic reference rejected
+PASS: full CARD DEBIT checkout posts one allocation
+PASS: confirmed CARD DEBIT checkout accepts an omitted transaction reference
+PASS: reference-free electronic checkout remains idempotent
+PASS: reference-free CARD still requires collection confirmation
+PASS: full CARD CREDIT checkout posts one allocation
+PASS: confirmed CARD CREDIT checkout accepts an omitted transaction reference
+PASS: reference-free electronic checkout remains idempotent
+PASS: reference-free CARD still requires collection confirmation
+PASS: full BANK_TRANSFER  checkout posts one allocation
+PASS: confirmed BANK_TRANSFER  checkout accepts an omitted transaction reference
+PASS: reference-free electronic checkout remains idempotent
+PASS: reference-free BANK_TRANSFER still requires collection confirmation
+PASS: manual cost and profit are unknown, never zero-cost profit
+PASS: financial quantity reconciliation explicitly separates non-stock lines
+PASS: another shop cannot reuse a manual tax classification
+PASS: manual billing permission enforced inside database
+PASS: GST bills cannot bypass their required reviewed tax mappings with a manual override
+PASS: authorized tax override cannot replace an effective reviewed GST rate
+PASS: GST-enabled invoice still requires a reviewed classification
+PASS: checkout cannot bypass GST invoice checks using an ordinary held item
+PASS: manual lines reach GST snapshot and invoice template by original line ID
+PASS: allocated invoice tax components and GST line snapshots reconcile to the collected total
+PASS: HSN report includes posted manual goods
+PASS: sales tax register includes manual invoices
+PASS: manual tax note cannot substitute another original line identity
+PASS: manual GST credit note records once against its original line
+PASS: manual goods cannot be cumulatively credited beyond the original invoice
+PASS: actual Razor invoice renders manual name, note, MRP, percentage and HSN for A4/thermal printing
+PASS: all manual workflows leave inventory unchanged
+PASS: explicitly unregistered shop can post an ordinary bill without a GST document
+PASS: ordinary unregistered bills are not reported as missing GST snapshots
+Fast billing checks passed on a disposable database clone.
+
+Source: .artifacts/eway/privacy-regression.log
+PASS: Swagger definition loads and excludes internal error endpoint
+PASS: middleware failure returns API JSON 500
+PASS: response hides exception and includes request ID
+PASS: log preserves user and original path, with no duplicate
+PASS: log includes India time and stack trace
+PASS: nested secrets and query token redacted, business data retained
+PASS: raw session identifiers are redacted from error details
+PASS: error controller renders page despite database failure
+PASS: form data redacted
+PASS: business barcode retained while verification code redacted
+PASS: account body omitted
+PASS: E-way addresses, evidence and search terms are omitted from generic error logs
+PASS: Assistant question text and search terms omitted from generic error logs
+PASS: handled HTTP error logged
+PASS: login antiforgery token available
+PASS: Razor validation error logged when form returns HTTP 200
+PASS: known exception keeps validation response
+PASS: handled exception recorded once
+PASS: log write failure does not replace application error
+Error log checks passed. Test logs: E:\StockFlow\tests\bin\errorlog-checks\9343321b6d1048a49e245338dfb38fb1
+Dedicated test PostgreSQL cluster stopped after verification.

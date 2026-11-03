@@ -1,0 +1,41 @@
+#gst-settings .gst-catalog-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}#gst-settings .gst-catalog-cards strong{display:block;font-size:24px;margin-top:5px}#gst-settings .gst-catalog-filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin:12px 0}#gst-settings .gst-catalog-filters details{grid-column:1/-1}#gst-settings .gst-catalog-filters>.gst-button{justify-self:start}#gst-settings .gst-table-wrap td small{display:block;color:#58677d;font-size:11px}#gst-settings .gst-table-wrap td>.gst-actions{display:inline-flex;align-items:center;justify-content:flex-start;flex-wrap:nowrap;gap:4px;margin:0}#gst-settings .gst-table-wrap input[type=checkbox]{width:16px;height:16px}#gst-settings .gst-tax-dialog{width:min(1050px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto}#gst-settings .gst-tax-dialog>header{position:sticky;top:0;background:white;z-index:1}#gst-settings .gst-tax-dialog-body{padding:16px;min-width:0}#gst-settings .gst-tax-dialog>footer{position:sticky;bottom:0;background:white;z-index:1;border-top:1px solid #dce3ee;flex-wrap:wrap}#gst-settings .gst-tax-dialog .gst-field{margin:5px 0}#gst-settings .gst-tax-dialog .gst-grid{margin-bottom:12px}#gst-settings .gst-catalog-message{color:#b51f3d;overflow-wrap:anywhere}#gst-settings .gst-tax-dialog .sf-pagination{flex-wrap:wrap}#gst-settings .gst-tax-dialog .gst-table-wrap{max-height:45dvh}#gst-settings .gst-tax-dialog .gst-table-wrap table{min-width:760px}#gst-settings .gst-tax-dialog fieldset{border:0;padding:0}#gst-settings .gst-tax-dialog a.gst-button{text-decoration:none;display:inline-block}@media(max-width:1024px){#gst-settings .gst-catalog-cards,#gst-settings .gst-catalog-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){#gst-settings .gst-catalog-filters{grid-template-columns:minmax(0,1fr)}#gst-settings .gst-catalog-cards{grid-template-columns:repeat(2,minmax(0,1fr))}#gst-settings .gst-catalog-cards .gst-summary-card{padding:10px;font-size:12px}#gst-settings .gst-tax-dialog-body{padding:12px}#gst-settings .gst-tax-dialog footer .gst-button{flex:1 1 120px}}
+
+#gst-settings .gst-catalog-body h3{font-size:16px;margin:12px 0 6px}#gst-settings .gst-catalog-inline-error{color:#b51f3d;padding:10px;background:#fff0f2;border-radius:6px}
+
+#gst-settings .gst-review-acknowledgment{display:flex;align-items:flex-start;gap:8px;margin:12px 0;font-size:13px}#gst-settings .gst-review-acknowledgment input{width:18px;height:18px;flex:none}
+
+/* Compact catalog navigation and contextual mapping controls. */
+#gst-settings .gst-catalog-tabs{gap:3px;padding:3px;border:1px solid #dce3ee;border-radius:8px;width:fit-content;background:#f4f6fa}
+#gst-settings .gst-catalog-tabs button{min-height:32px;padding:6px 10px;font-size:12px}
+#gst-settings .gst-configuration-status{display:grid;grid-template-columns:minmax(180px,1fr) minmax(100px,220px) auto;align-items:center;gap:16px;padding:12px 14px;border:1px solid #dce3ee;border-radius:8px;margin:12px 0;background:#f8fafc}
+#gst-settings .gst-configuration-status strong,#gst-settings .gst-configuration-status small{display:block}
+#gst-settings .gst-configuration-status strong{font-size:14px}#gst-settings .gst-configuration-status small{font-size:12px;color:#61718a;margin-top:3px}
+#gst-settings .gst-configuration-status progress{width:100%;height:8px;accent-color:#ff007f}#gst-settings .gst-configuration-status summary{margin:0;font-size:12px}
+#gst-settings .gst-configuration-status p{font-size:12px;margin:6px 0 0}
+#gst-settings .gst-mapping-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#gst-settings .gst-mapping-heading h3{margin:0}#gst-settings .gst-mapping-heading>.gst-actions{margin:0;gap:6px}
+#gst-settings .gst-more-menu{position:relative}#gst-settings .gst-more-menu>summary{list-style:none;margin:0;padding:8px 12px;min-height:36px;border:1px solid #191e25;border-radius:6px;background:#191e25;color:#fff;font-size:12px}
+#gst-settings .gst-more-menu>summary::-webkit-details-marker{display:none}
+#gst-settings .gst-more-menu-items{position:absolute;right:0;top:calc(100% + 5px);display:grid;gap:6px;min-width:225px;padding:10px;background:#fff;border:1px solid #dce3ee;border-radius:8px;box-shadow:0 8px 22px #17284222;z-index:5}
+#gst-settings .gst-catalog-filters{grid-template-columns:minmax(150px,2fr) minmax(120px,1fr) minmax(120px,1fr) auto;gap:10px;margin:12px 0;align-items:end}
+#gst-settings .gst-catalog-filters .gst-filter-reset{margin:0;align-self:end;justify-self:stretch}
+#gst-settings .gst-catalog-filters details{grid-column:1/-1}#gst-settings .gst-catalog-filters summary{margin:0;font-size:12px}
+#gst-settings .gst-selection-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:8px 12px;border:1px solid #ffd0e5;border-radius:7px;background:#fff4f9;margin:10px 0}
+#gst-settings .gst-selection-bar strong{font-size:12px}#gst-settings .gst-selection-bar .gst-actions{margin:0}
+#gst-settings .gst-mapping-table{min-width:650px}#gst-settings .gst-mapping-table th:first-child{width:32px}#gst-settings .gst-mapping-table th:last-child{width:104px}
+#gst-settings .gst-mapping-table td:nth-child(2){min-width:160px}#gst-settings .gst-mapping-table td:nth-child(3){max-width:230px}
+#gst-settings .gst-mapping-table .gst-status{display:inline-block;background:#edf2f8;padding:3px 7px;border-radius:12px;font-size:11px;white-space:nowrap}
+#gst-settings .gst-tax-dialog>header{padding-right:55px;flex:none}#gst-settings .gst-tax-close{top:13px;right:14px}
+#gst-settings .gst-import-dialog[open],#gst-settings .gst-export-dialog[open]{display:flex;flex-direction:column;width:min(660px,calc(100vw - 24px));overflow:hidden}
+#gst-settings .gst-import-dialog .gst-tax-dialog-body,#gst-settings .gst-export-dialog .gst-tax-dialog-body{overflow:auto;min-height:0;overscroll-behavior:contain}
+#gst-settings .gst-import-dialog>footer,#gst-settings .gst-export-dialog>footer{flex:none;margin:0}
+#gst-settings .gst-import-templates{border-bottom:1px solid #dce3ee;padding-bottom:12px}#gst-settings .gst-import-templates .gst-actions{margin:8px 0}
+#gst-settings .gst-tax-dialog h3{font-size:15px;line-height:1.4;margin:12px 0 8px}
+#gst-settings .gst-tax-dialog .gst-tax-details-table{min-width:0;margin-bottom:14px}
+#gst-settings .gst-import-scope{font-size:12px;color:#536582}
+#gst-settings .gst-file-drop{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;border:2px dashed #b9c8dc;border-radius:8px;background:#f7f9fc;min-height:100px;padding:16px;cursor:pointer;text-align:center;font-size:13px}
+#gst-settings .gst-file-drop.dragover,#gst-settings .gst-file-drop:focus-visible{border-color:#ff007f;background:#fff3f9;outline:2px solid #ff007f;outline-offset:2px}
+#gst-settings .gst-import-dialog input[type=file]{display:block;width:100%;max-width:100%;font-size:12px;min-height:38px}
+#gst-settings .gst-selected-file{overflow-wrap:anywhere;font-size:13px;font-weight:600}
+@media(max-width:800px){#gst-settings .gst-configuration-status{grid-template-columns:minmax(0,1fr) minmax(80px,160px)}#gst-settings .gst-configuration-status details{grid-column:1/-1}#gst-settings .gst-catalog-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){#gst-settings .gst-catalog-filters{grid-template-columns:minmax(0,1fr)}#gst-settings .gst-configuration-status{grid-template-columns:minmax(0,1fr);gap:8px}#gst-settings .gst-catalog-tabs{width:100%;flex-wrap:wrap}#gst-settings .gst-catalog-tabs button{flex:1 1 auto;font-size:11px}#gst-settings .gst-mapping-heading>.gst-actions{width:100%;flex-wrap:wrap}#gst-settings .gst-mapping-heading>.gst-actions>.gst-button{flex:1}#gst-settings .gst-import-dialog>footer .gst-button{flex:1 1 auto}#gst-settings .gst-file-drop{flex-direction:column}}

@@ -1,0 +1,20 @@
+/* Shared action colors. Navigation, tabs and disclosure controls keep their own states. */
+:root{--sf-action-bg:#171b22;--sf-action-hover:#ff007f}
+:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action,button[type=submit],input[type=submit],input[type=button]):not([role=tab]){
+ --bs-btn-bg:var(--sf-action-bg);--bs-btn-border-color:var(--sf-action-bg);--bs-btn-color:#fff;
+ --bs-btn-hover-bg:var(--sf-action-hover);--bs-btn-hover-border-color:var(--sf-action-hover);--bs-btn-hover-color:#fff;
+ --bs-btn-active-bg:var(--sf-action-bg);--bs-btn-active-border-color:var(--sf-action-bg);--bs-btn-active-color:#fff;
+ --bs-btn-disabled-bg:var(--sf-action-bg);--bs-btn-disabled-border-color:var(--sf-action-bg);--bs-btn-disabled-color:#fff;
+ background-color:var(--sf-action-bg)!important;background-image:none!important;border-color:var(--sf-action-bg)!important;color:#fff!important;
+ transition:background-color .18s ease,border-color .18s ease,color .18s ease;
+}
+:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action,button[type=submit],input[type=submit],input[type=button]):not([role=tab]):hover:not(:disabled):not(.disabled):not([aria-disabled=true]){
+ background-color:var(--sf-action-hover)!important;border-color:var(--sf-action-hover)!important;color:#fff!important;
+}
+:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action,button[type=submit],input[type=submit],input[type=button]):not([role=tab]):focus-visible{
+ outline:3px solid var(--sf-action-hover)!important;outline-offset:3px;
+}
+:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action,button[type=submit],input[type=submit],input[type=button]):not([role=tab]):is(:disabled,.disabled,[aria-disabled=true]){
+ opacity:.55;cursor:not-allowed;
+}
+@media(prefers-reduced-motion:reduce){:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action){transition:none}}

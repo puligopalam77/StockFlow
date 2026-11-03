@@ -1,0 +1,256 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using Dapper;
+using StockFlow.Application.Common;
+using StockFlow.Application.DTOs.Security;
+using StockFlow.Application.Interfaces;
+using StockFlow.Infrastructure.Data;
+
+namespace StockFlow.Infrastructure.Repositories;
+
+public class BranchRepository : IBranchRepository
+{
+    private readonly DbConnectionFactory factory;
+    private readonly BusinessScope scope;
+    // ASP.NET supplies these services when it creates this class.
+    public BranchRepository(DbConnectionFactory factory, BusinessScope scope)
+    {
+        this.factory = factory;
+        this.scope = scope;
+    }
+
+    public async Task<BranchUserState?> UserStateAsync()
+    {
+        using var c = factory.CreateConnection();
+        // Reading the optional key through to_jsonb keeps existing databases
+        // working until the owner manually installs migration 046. This does
+        // not catch database failures or silently bypass tenant validation.
+        return await c.QuerySingleOrDefaultAsync<BranchUserState>("""
+            SELECT u.is_tenant_owner AS IsOwner,
+                lower(btrim(r.role_name))='admin' AS IsAdmin,
+                u.is_active AND t.is_active AND r.is_active AS IsActive,
+                COALESCE(NULLIF(btrim(to_jsonb(t)->>'business_profile_code'),''),'ELECTRICAL') AS BusinessProfileCode,
+                NULLIF(btrim(to_jsonb(t)->>'business_profile_code'),'') IS NOT NULL AS BusinessProfilePersisted,
+                COALESCE((to_jsonb(t)->>'business_profile_version')::bigint,0) AS BusinessProfileVersion,
+                to_jsonb(t) ? 'business_profile_version' AS BusinessProfileConfigurationAvailable,
+                COALESCE((to_jsonb(t)->>'profile_catalog_switching_enabled')::boolean,false) AS ProfileCatalogSwitchingAvailable,
+                COALESCE((to_jsonb(t)->>'profile_data_visibility_enabled')::boolean,false) AS ProfileDataVisibilityAvailable,
+                COALESCE((to_jsonb(t)->>'catalog_registration_enhancements_enabled')::boolean,false) AS CatalogRegistrationEnhancementsAvailable,
+                COALESCE((to_jsonb(t)->>'product_image_gallery_enabled')::boolean,false) AS ProductImageGalleryAvailable
+            FROM users u JOIN tenants t USING(tenant_id) JOIN roles r ON r.role_id=u.role_id
+            WHERE u.user_id=@UserId AND u.tenant_id=@TenantId
+            """,
+scope);
+    }
+
+    public async Task<IEnumerable<BranchLocation>> LocationsAsync()
+    {
+        using var c = factory.CreateConnection();
+        return await c.QueryAsync<BranchLocation>("""
+            SELECT l.location_id AS LocationId,l.store_id AS StoreId,COALESCE(s.store_name,'Central warehouse') AS StoreName,
+            l.location_name AS LocationName,l.location_type AS LocationType,l.is_active AS IsActive,
+            EXISTS(SELECT 1 FROM user_store_access a WHERE a.user_id=@UserId AND a.store_id=l.store_id AND a.is_default AND a.is_active) AS IsDefault
+            FROM store_locations l LEFT JOIN stores s ON s.store_id=l.store_id
+            WHERE l.is_active AND l.location_type<>'TRANSIT' AND (l.store_id IS NULL OR s.is_active) ORDER BY IsDefault DESC,l.store_id NULLS LAST,l.location_id
+            """,
+scope);
+    }
+
+    public async Task<object> StoresAsync()
+    {
+        using var c = factory.CreateConnection();
+        return await c.QueryAsync("SELECT store_id AS \"storeId\",store_code AS \"storeCode\",store_name AS \"storeName\",address,city,state,mobile_number AS \"mobileNumber\",gst_number AS \"gstNumber\" FROM stores WHERE is_active ORDER BY store_name");
+    }
+
+    private void Owner()
+    {
+        if (!scope.IsOwner)
+        {
+            throw new UnauthorizedAccessException("Only the business owner can manage stores and assign store access.");
+        }
+    }
+
+    public async Task<long> CreateStoreAsync(StoreRequest r)
+    {
+        Owner();
+        Validator.ValidateObject(r, new ValidationContext(r), true);
+        if (string.IsNullOrWhiteSpace(r.StoreCode) || string.IsNullOrWhiteSpace(r.StoreName))
+        {
+            throw new ValidationException("Store name and code are required.");
+        }
+
+        using var c = factory.CreateConnection();
+        await c.OpenAsync();
+        using var t = c.BeginTransaction();
+        var id = await c.ExecuteScalarAsync<long>("INSERT INTO stores(store_code,store_name,address,city,state,mobile_number,gst_number) VALUES(@StoreCode,@StoreName,@Address,@City,@State,@MobileNumber,@GstNumber) RETURNING store_id",
+r,
+t);
+        await c.ExecuteAsync("INSERT INTO store_locations(store_id,location_name,location_type) VALUES(@id,'Main stock','SALES_FLOOR'); INSERT INTO audit_logs(user_id,module_name,action_name,table_name,record_id) VALUES(@actor,'Stores','CREATE','stores',@id)",
+new
+{
+    id,
+    actor = scope.UserId
+},
+t);
+        t.Commit();
+        return id;
+    }
+
+    public async Task<long> CreateLocationAsync(LocationRequest r)
+    {
+        Owner();
+        Validator.ValidateObject(r, new ValidationContext(r), true);
+        if (r.LocationType is not ("SALES_FLOOR" or "BACKROOM" or "STOCKROOM" or "WAREHOUSE" or "SERVICE_CENTER") || string.IsNullOrWhiteSpace(r.LocationName) || r.StoreId is null && r.LocationType != "WAREHOUSE")
+        {
+            throw new ValidationException("Choose a valid location name and type. A location without a store must be a central warehouse.");
+        }
+
+        using var c = factory.CreateConnection();
+        return await c.ExecuteScalarAsync<long>("INSERT INTO store_locations(store_id,location_name,location_type) VALUES(@StoreId,@LocationName,@LocationType) RETURNING location_id",
+r);
+    }
+
+    public async Task<StoreAccessRequest> AccessAsync(int userId)
+    {
+        Owner();
+        using var c = factory.CreateConnection();
+        if (!await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM users WHERE user_id=@userId)", new
+        {
+            userId
+        }))
+        {
+            throw new KeyNotFoundException("User not found.");
+        }
+
+        return new()
+        {
+            StoreIds = (await c.QueryAsync<long>("SELECT store_id FROM user_store_access WHERE user_id=@userId AND is_active", new
+            {
+                userId
+            })).ToList(),
+            DefaultStoreId = await c.QuerySingleOrDefaultAsync<long?>("SELECT store_id FROM user_store_access WHERE user_id=@userId AND is_active AND is_default", new
+            {
+                userId
+            }),
+            WarehouseLocationIds = (await c.QueryAsync<long>("SELECT location_id FROM user_location_access WHERE user_id=@userId", new
+            {
+                userId
+            })).ToList()
+        };
+    }
+
+    public async Task SetAccessAsync(int userId, StoreAccessRequest r)
+    {
+        Owner();
+        if (r.StoreIds is null || r.WarehouseLocationIds is null || r.StoreIds.Count > 500 || r.WarehouseLocationIds.Count > 500 || r.StoreIds.Distinct().Count() != r.StoreIds.Count || r.WarehouseLocationIds.Distinct().Count() != r.WarehouseLocationIds.Count || r.DefaultStoreId.HasValue && !r.StoreIds.Contains(r.DefaultStoreId.Value))
+        {
+            throw new ValidationException("Choose distinct stores and a default from the assigned stores.");
+        }
+
+        using var c = factory.CreateConnection();
+        await c.OpenAsync();
+        using var t = c.BeginTransaction();
+        var target = await c.QuerySingleOrDefaultAsync<BranchUserState>("SELECT is_tenant_owner AS IsOwner FROM users WHERE user_id=@userId FOR UPDATE", new
+        {
+            userId
+        }, t) ?? throw new KeyNotFoundException("User not found.");
+        if (!target.IsOwner && r.StoreIds.Count + r.WarehouseLocationIds.Count == 0)
+        {
+            throw new ValidationException("Assign at least one store or central warehouse.");
+        }
+
+        if (await c.ExecuteScalarAsync<long>("SELECT count(*) FROM stores WHERE store_id=ANY(@ids) AND is_active", new
+        {
+            ids = r.StoreIds.ToArray()
+        }, t) != r.StoreIds.Count)
+        {
+            throw new ValidationException("A store is outside this business or inactive.");
+        }
+
+        if (await c.ExecuteScalarAsync<long>("SELECT count(*) FROM store_locations WHERE location_id=ANY(@ids) AND store_id IS NULL AND location_type='WAREHOUSE' AND is_active",
+new
+{
+    ids = r.WarehouseLocationIds.ToArray()
+},
+t) != r.WarehouseLocationIds.Count)
+        {
+            throw new ValidationException("Choose central warehouses in this business.");
+        }
+
+        await c.ExecuteAsync("DELETE FROM user_store_access WHERE user_id=@userId;DELETE FROM user_location_access WHERE user_id=@userId",
+new
+{
+    userId
+},
+t);
+        foreach (var id in r.StoreIds)
+        {
+            await c.ExecuteAsync("INSERT INTO user_store_access(user_id,store_id,is_default) VALUES(@userId,@id,@isDefault)",
+new
+{
+    userId,
+    id,
+    isDefault = id == (r.DefaultStoreId ?? r.StoreIds.First())
+},
+t);
+        }
+
+        foreach (var id in r.WarehouseLocationIds)
+        {
+            await c.ExecuteAsync("INSERT INTO user_location_access(user_id,location_id) VALUES(@userId,@id)", new
+            {
+                userId,
+                id
+            }, t);
+        }
+
+        await c.ExecuteAsync("INSERT INTO audit_logs(user_id,module_name,action_name,table_name,record_id,new_values) VALUES(@actor,'Stores','ASSIGN','users',@userId,CAST(@payload AS jsonb))",
+new
+{
+    actor = scope.UserId,
+    userId,
+    payload = JsonSerializer.Serialize(r)
+},
+t);
+        t.Commit();
+    }
+
+    public async Task<IEnumerable<StockComparison>> ComparisonAsync(string? term)
+    {
+        using var c = factory.CreateConnection();
+        return await c.QueryAsync<StockComparison>("""
+            SELECT v.variant_id AS VariantId,p.product_name AS ProductName,v.variant_name AS VariantName,
+            COALESCE(s.store_name,CASE WHEN l.location_type='TRANSIT' THEN 'In transit' ELSE 'Central warehouse' END) AS StoreName,
+            l.location_name AS LocationName,l.location_type AS LocationType,b.current_stock AS CurrentStock
+            FROM vw_location_current_stock b JOIN product_variants v ON v.variant_id=b.variant_id JOIN products p ON p.product_id=v.product_id
+            JOIN store_locations l ON l.location_id=b.location_id LEFT JOIN stores s ON s.store_id=l.store_id
+            WHERE sf_visible_location(l.location_id) AND (@term IS NULL OR p.product_name ILIKE @term OR v.variant_name ILIKE @term)
+            ORDER BY p.product_name,v.variant_id,s.store_name,l.location_id
+            """,
+new
+{
+    term = string.IsNullOrWhiteSpace(term) ? null : "%" + term.Trim() + "%"
+});
+    }
+
+    public async Task<object> SummaryAsync(bool includeSales)
+    {
+        using var c = factory.CreateConnection();
+        return await c.QueryAsync("""
+            SELECT COALESCE(s.store_name,CASE WHEN l.location_type='TRANSIT' THEN 'In transit' ELSE 'Central warehouse' END) AS "storeName",
+            l.location_name AS "locationName",l.location_type AS "locationType",
+            COALESCE((SELECT sum(current_stock) FROM vw_location_current_stock b WHERE b.location_id=l.location_id),0) AS "currentStock",
+            COALESCE((SELECT sum(quantity) FROM inventory_transactions i WHERE i.location_id=l.location_id AND i.transaction_type IN('PURCHASE','CUSTOMER_RETURN','ADJUSTMENT_IN','SERVICE_IN')),0) AS "externalInflow",
+            COALESCE((SELECT sum(quantity) FROM inventory_transactions i WHERE i.location_id=l.location_id AND i.transaction_type IN('SALE','SUPPLIER_RETURN','DAMAGED','ADJUSTMENT_OUT','SERVICE_OUT','WARRANTY_REPLACEMENT','TRANSFER_LOSS')),0) AS "externalOutflow",
+            COALESCE((SELECT sum(quantity) FROM inventory_transactions i WHERE i.location_id=l.location_id AND i.transaction_type='TRANSFER_IN'),0) AS "transferIn",
+            COALESCE((SELECT sum(quantity) FROM inventory_transactions i WHERE i.location_id=l.location_id AND i.transaction_type='TRANSFER_OUT'),0) AS "transferOut",
+            CASE WHEN @includeSales THEN COALESCE((SELECT sum(total_amount) FROM sales x WHERE x.location_id=l.location_id AND x.status='COMPLETED'),0) END AS "salesTotal"
+            FROM store_locations l LEFT JOIN stores s ON s.store_id=l.store_id
+            WHERE sf_visible_location(l.location_id) ORDER BY s.store_name,l.location_id
+            """,
+new
+{
+    includeSales
+});
+    }
+}

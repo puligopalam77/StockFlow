@@ -1,0 +1,6 @@
+Edited with the built-in image_gen tool on 2026-10-08.
+Input: assistant-robot.png. Output: assistant-robot-cyan.png (transparent).
+The app animates the hand and eyelids with CSS.
+
+Prompt:
+Edit only the two luminous crescent eyes of this existing transparent robot image: change their white light to saturated bright turquoise cyan (#20e6ef), with matching subtle cyan glow. Preserve the exact robot silhouette, square canvas, face position, eye crescent shapes, smiling white mouth, antenna, raised right hand, pink/white/navy materials, all other details, and actual background transparency. Do not reposition, resize, redraw or add any elements. This is the same robot for an animated app launcher, and its pixel positions must stay the same.

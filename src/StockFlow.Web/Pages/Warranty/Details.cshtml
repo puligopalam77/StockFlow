@@ -1,0 +1,123 @@
+@page "{id:long}"
+@model StockFlow.Web.Pages.Warranty.DetailsModel
+@{ ViewData["Title"] = "Warranty details"; }
+<h1>Warranty details</h1>
+<a asp-page="Lookup">Back to warranty search</a>
+<div id="warranty-message" class="alert alert-danger" role="alert" hidden>
+</div>
+<div id="warranty-results" class="mt-3" aria-live="polite">
+</div>
+@if (Access.Can("WARRANTY_LOOKUP","EDIT") || Access.Can("WARRANTY_CLAIMS","CREATE") || Access.Can("WARRANTY_CLAIMS","EDIT"))
+{
+<form permission-module="WARRANTY_CLAIMS" permission-action="CREATE" id="create-claim" class="my-4" hidden>
+    <h2>Start a warranty request</h2>
+    <label for="complaint" class="form-label">Problem reported</label><textarea id="complaint" class="form-control mb-2" maxlength="1000" required></textarea><button class="btn btn-warning">Save warranty request</button>
+</form>
+<details permission-module="WARRANTY_LOOKUP" permission-action="EDIT" class="my-4" id="coverage-section" hidden>
+    <summary>Warranty type and provider</summary>
+    <form id="coverage-form">
+        <label for="coverage-type" class="form-label">Type</label>
+        <select id="coverage-type" class="form-select">
+            <option value="">Unspecified</option>
+            <option value="FULL_REPLACEMENT">Full replacement</option>
+            <option value="PRO_RATA">Partial replacement credit</option>
+            <option value="REPAIR">Repair</option>
+            <option value="SERVICE_ONLY">Service only</option>
+        </select>
+        <label for="coverage-provider" class="form-label">Provider</label>
+        <select id="coverage-provider" class="form-select">
+            <option value="">Unspecified</option>
+            <option value="MANUFACTURER">Manufacturer</option>
+            <option value="DEALER">Shop / dealer</option>
+            <option value="BOTH">Manufacturer and shop</option>
+        </select>
+        <label for="coverage-reason" class="form-label">Reason</label>
+        <input id="coverage-reason" class="form-control mb-2" maxlength="1000" required />
+        <button class="btn btn-primary">Save warranty details</button>
+    </form>
+</details>
+<form permission-module="WARRANTY_CLAIMS" permission-action="EDIT" data-approve="@Access.Can("WARRANTY_CLAIMS","APPROVE").ToString().ToLowerInvariant()" id="resolve-form" class="my-4" hidden>
+    <h2 id="resolve-title">Update warranty request</h2>
+    <label for="claim-status" class="form-label">Update status to</label>
+    <select id="claim-status" class="form-select">
+    </select>
+    <label for="resolution-type" class="form-label">How was the problem handled?</label>
+    <select id="resolution-type" class="form-select">
+        <option value="">Choose when closing</option>
+        <option value="REPAIR">Repair</option>
+        <option value="NO_FAULT_FOUND">No fault found</option>
+        <option value="MANUFACTURER_REFERRED">Sent to manufacturer</option>
+    </select>
+    <div id="replacement-fields" hidden>
+        <label for="unit-search" class="form-label">Replacement serial search</label>
+        <input id="unit-search" class="form-control" />
+        <button type="button" id="find-units" class="btn btn-secondary my-2">Find available units</button>
+        <label for="replacement-unit" class="form-label">Available unit (same product)</label>
+        <select id="replacement-unit" class="form-select">
+        </select>
+        <label for="replacement-rule" class="form-label">Warranty agreed for the replacement</label>
+        <select id="replacement-rule" class="form-select">
+            <option value="">Choose a rule</option>
+            <option value="CONTINUE_ORIGINAL">Continue original dates</option>
+            <option value="NEW_FULL_WARRANTY">New full warranty</option>
+            <option value="CUSTOM">Custom end date</option>
+        </select>
+        <label for="custom-end" class="form-label">Custom end date (custom rule only)</label>
+        <input id="custom-end" type="date" class="form-control" />
+    </div>
+    <label for="resolution-notes" class="form-label">Update / resolution notes</label><textarea id="resolution-notes" class="form-control mb-2" maxlength="2000" required></textarea>
+    <button class="btn btn-primary">Save warranty update</button>
+</form>
+}
+<h2>Warranty requests</h2>
+<div data-view="@Access.Can("WARRANTY_CLAIMS").ToString().ToLowerInvariant()" id="claim-results">
+</div>
+<button id="more-claims" class="btn btn-secondary mb-4" hidden>Load more claims</button>
+@if(Access.Can("WARRANTY_CLAIMS","UPDATE")){<section class="card card-body my-3">
+<h2 class="h5">Manufacturer repair / return</h2>
+<form id="warranty-rma-form" class="row g-2">
+    <div class="col-md-4">
+        <label class="form-label">Claim</label>
+        <select id="warranty-rma-claim" class="form-select" required>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Brand / repair centre reference</label>
+        <input id="warranty-rma-reference" class="form-control" maxlength="100" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select id="warranty-rma-status" class="form-select">
+            <option value="READY_TO_SEND">Ready to send</option>
+            <option value="SENT_TO_PROVIDER">Sent for repair</option>
+            <option value="PROVIDER_RECEIVED">Received by repair provider</option>
+            <option value="REPAIRED">Repaired</option>
+            <option value="REPLACED">Replaced</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="RETURNED_TO_CUSTOMER">Returned to customer</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Charge</label>
+        <input id="warranty-rma-charge" type="number" min="0" step="0.01" value="0" class="form-control" />
+    </div>
+    <div class="col-md-5">
+        <label class="form-label">Notes</label>
+        <input id="warranty-rma-notes" class="form-control" maxlength="2000" />
+    </div>
+    <div class="col-md-2 align-self-end">
+        <button class="btn btn-primary">Save manufacturer update</button>
+    </div>
+</form>
+<div id="warranty-rma-history" class="mt-2">
+</div>
+</section>}
+<h2>History</h2>
+<div id="history-results">
+</div>
+<button id="more-history" class="btn btn-secondary" hidden>Load more history</button>
+@section Scripts {
+    <script src="~/js/warranty-common.js" asp-append-version="true"></script>
+    <script src="~/js/warranty-details.js" asp-append-version="true"></script>
+    <script src="~/js/shop-operations.js" asp-append-version="true"></script>
+}

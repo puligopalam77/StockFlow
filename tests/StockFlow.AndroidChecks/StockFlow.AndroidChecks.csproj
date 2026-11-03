@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup><Compile Include="../../src/StockFlow.Android/ServerAddress.cs" Link="ServerAddress.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../src/StockFlow.Android/DevicePolicy.cs" Link="DevicePolicy.cs" /></ItemGroup>
+</Project>

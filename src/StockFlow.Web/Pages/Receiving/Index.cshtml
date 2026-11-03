@@ -1,0 +1,241 @@
+@page "/Receiving"
+@inject StockFlow.Application.Common.BusinessScope BusinessScope
+@{ ViewData["Title"]="Receive Stock"; }
+<header class="sf-page-heading">
+    <div>
+        <h1>Receive Stock</h1>
+        <p>Scan or find items, enter the goods received, then save them to your store.</p>
+    </div>
+</header>
+<div id="receiving-workspace" data-tenant-id="@BusinessScope.TenantId" data-storage-key="stockflow.intake.@BusinessScope.TenantId.@BusinessScope.UserId.@BusinessScope.LocationId@BusinessScope.DraftProfileSuffix" data-can-register="@Access.Can("PRODUCTS","CREATE").ToString().ToLowerInvariant()" data-can-variant="@Access.Can("PRODUCT_VARIANTS","CREATE").ToString().ToLowerInvariant()" data-can-purchases="@Access.Can("PURCHASES").ToString().ToLowerInvariant()">
+    <div id="receiving-message" class="alert alert-danger" role="alert" hidden>
+    </div>
+    <div id="receiving-pending" class="alert alert-warning" hidden>A receipt has an unconfirmed result. Retry the saved receipt to check it safely. <button id="receiving-retry" class="btn btn-outline-primary" type="button">Retry saved receipt</button>
+    </div>
+@if(BusinessScope.Consolidated){<p class="alert alert-info">Select one stock location in the top bar to receive goods.</p>}
+    <form id="receiving-form">
+        <fieldset id="receiving-fields" disabled>
+            <ol class="receiving-steps" aria-label="Receiving steps">
+                <li data-step-label="1" aria-current="step">1. Receipt details</li>
+                <li data-step-label="2">2. Add items</li>
+                <li data-step-label="3">3. Review &amp; save</li>
+            </ol>
+            <section id="receiving-step-1" class="card card-body mb-3">
+                <h2>Receipt details</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="intake-kind" class="form-label">What are you recording?</label>
+                        <select id="intake-kind" class="form-select">
+@if(Access.Can("STOCK_INFLOW","RECEIVE")){<option value="RECEIPT">Goods received from supplier</option>}
+@if(Access.Can("STOCK_ADJUSTMENT","ADJUST")){<option value="OPENING_STOCK">Opening stock already in the shop</option>}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="intake-date" class="form-label">Received / opening stock date</label>
+                        <input id="intake-date" type="date" class="form-control" required />
+                    </div>
+                    <div id="intake-supplier-fields" class="col-md-6">
+                        <label for="intake-supplier" class="form-label">Supplier</label>
+                        <select id="intake-supplier" class="form-select">
+                            <option value="">Choose supplier</option>
+                        </select>
+                        @if (Access.Can("SUPPLIERS") && Access.Can("SUPPLIERS", "CREATE")) {
+                        <button id="add-record" type="button" class="btn btn-outline-primary btn-sm mt-2" disabled>+ Add Supplier</button>
+                        }
+                    </div>
+                    <div id="intake-invoice-fields" class="col-md-6">
+                        <label for="intake-invoice" class="form-label">Supplier invoice (optional)</label>
+                        <input id="intake-invoice" class="form-control" maxlength="100" />
+                    </div>
+                    <div class="col-12">
+                        <label for="intake-notes" class="form-label">Notes (optional)</label><textarea id="intake-notes" class="form-control" maxlength="2000" rows="2"></textarea></div>
+                </div>
+                <p id="opening-help" class="small text-muted mt-3" hidden>Use this once for existing goods when starting StockFlow. This adds stock without creating a supplier purchase; do not enter goods already recorded.</p>
+            </section>
+            <section id="receiving-step-2" hidden>
+                <div class="card card-body mb-3">
+                    <h2>Add items</h2>
+                    @if(BusinessScope.CatalogRegistrationEnhancementsAvailable && Access.Can("STOCK_ADJUSTMENT","ADJUST")){
+                    <details class="border rounded p-2 mb-3"><summary>Import opening stock CSV for this shop</summary>
+                        <p class="small text-muted">Import SKU, locationId, quantity, purchasePrice, taxPercentage and serialNumbers. Quantities are stock units. Register products first. This prepares the review; stock is posted only when you confirm. Import existing goods once for each shop.</p>
+                        <button id="opening-csv-template" type="button" class="btn btn-outline-secondary btn-sm">Download opening stock template</button>
+                        <label for="opening-csv-file" class="form-label d-block mt-2">Opening stock CSV (up to 200 items)</label><input id="opening-csv-file" type="file" accept=".csv,text/csv" class="form-control" />
+                        <button id="opening-csv-load" type="button" class="btn btn-outline-primary mt-2">Validate &amp; add to review</button><p id="opening-csv-message" role="status" class="small mt-2"></p>
+                    </details>}
+                    <label for="intake-scan" class="form-label">Scan product to receive stock</label>
+                    <div class="receiving-lookup-row">
+                        <input id="intake-scan" class="form-control" maxlength="200" autocomplete="off" aria-describedby="intake-scan-help" placeholder="Click here, then scan" />
+                        <button id="intake-lookup" class="btn btn-primary" type="button">Find product</button>
+                    </div>
+                    <p id="intake-scan-help" class="small text-muted mt-2">Click the box, then scan the product barcode. You can also type the code and press Enter. Scan the same product again to add one more. Enter individual serial numbers on the item below.</p>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <input id="intake-search" class="form-control" style="max-width:320px" placeholder="@(BusinessScope.BusinessProfileCode == "BIKE_ACCESSORIES" ? "Part number, bike model, size or barcode" : "Product, capacity, model or shop code")" aria-label="Search receiving products" />
+                        <button id="intake-find" type="button" class="btn btn-outline-primary">Find items</button>
+                    </div>
+                    <label for="intake-product" class="form-label mt-3">Product / size / model</label>
+                    <select id="intake-product" class="form-select">
+                        <option value="">Find or scan a product</option>
+                    </select>
+                    <div id="intake-variant-filters" class="row g-3 mt-1" hidden>
+                        <div class="col-md-6">
+                            <label for="intake-size-filter" class="form-label">Size</label>
+                            <select id="intake-size-filter" class="form-select">
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="intake-color-filter" class="form-label">Color</label>
+                            <select id="intake-color-filter" class="form-select">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button id="intake-add" type="button" class="btn btn-outline-primary">Add selected item</button>
+@if(Access.Can("PRODUCTS","CREATE")){<button id="intake-register" type="button" class="btn btn-outline-secondary">Add new product</button>}
+@if(Access.Can("PRODUCT_VARIANTS","CREATE")){<button id="intake-add-variant" type="button" class="btn btn-outline-secondary">Add another size / color</button>}
+                    </div>
+                </div>
+                <div id="intake-lines">
+                </div>
+            </section>
+            <section id="receiving-step-3" class="card card-body mb-3" hidden>
+                <h2>Review received goods</h2>
+                <p id="intake-review-source">
+                </p>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Cost per item</th>
+                                <th>Serial numbers</th>
+                                <th>Total including tax</th>
+                            </tr>
+                        </thead>
+                        <tbody id="intake-review-lines">
+                        </tbody>
+                    </table>
+                </div>
+                <p id="intake-total" class="fw-bold">
+                </p>
+                <p class="small text-muted">Check the quantities against the goods you received. Saving adds these items to stock.</p>
+            </section>
+            <div class="d-flex gap-2">
+                <button id="intake-back" type="button" class="btn btn-outline-secondary" hidden>Back</button>
+                <button id="intake-next" type="button" class="btn btn-primary">Add items</button>
+                <button id="intake-save" type="submit" class="btn btn-primary" hidden>Save &amp; add to stock</button>
+            </div>
+        </fieldset>
+    </form>
+    <section id="intake-success" class="alert alert-success" role="status" hidden>
+        <h2 class="h5">Stock saved</h2>
+        <p id="intake-result">
+        </p>
+        <p class="small">Use existing labels immediately. Print new labels only if needed.</p>
+        <div class="d-flex flex-wrap gap-2">
+            <button id="intake-another" type="button" class="btn btn-primary">Receive more stock</button>@if(Access.Can("BARCODES")){<a id="intake-label-link" class="btn btn-outline-secondary" hidden>Barcode labels (optional)</a>}<a id="intake-purchase-link" class="btn btn-outline-secondary" hidden>View purchase receipt</a>@if(Access.Can("INVENTORY")){<a href="/Inventory" class="btn btn-outline-secondary">View inventory</a>}</div>
+    </section>
+@if(Access.Can("PURCHASES")){<details class="mt-4">
+    <summary>Advanced: orders and partial deliveries</summary>
+    <p class="mt-2">Keep a purchase order open and record each delivery separately.</p>
+    <div class="d-flex gap-2">
+        <a href="/Purchases" class="btn btn-outline-secondary">Purchase orders &amp; deliveries</a>@if(Access.Can("PURCHASES","CREATE")){<a href="/Purchases/Create?mode=order" class="btn btn-outline-secondary">Create purchase order</a>}</div>
+</details>}
+</div>
+<dialog id="intake-registration" class="receiving-dialog" aria-labelledby="intake-registration-title">
+    <h2 id="intake-registration-title">Add new product</h2>
+    <p class="small text-muted">Enter the product details, then add it to this receipt. Stock is added only when you save the receipt.</p>
+    <div id="intake-registration-message" class="alert alert-danger" role="alert" hidden>
+    </div>
+    <form id="intake-registration-form">
+        <fieldset id="intake-registration-fields">
+            <div class="row g-3">
+                <div id="intake-base-product-field" class="col-12" hidden>
+                    <label for="intake-base-product" class="form-label">Existing product</label>
+                    <select id="intake-base-product" class="form-select">
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label id="intake-name-label" for="intake-new-name" class="form-label">Product name</label>
+                    <input id="intake-new-name" class="form-control" required minlength="2" maxlength="150" />
+                </div>
+                <div id="intake-category-field" class="col-md-6">
+                    <label for="intake-category" class="form-label">Category</label>
+                    <select id="intake-category" class="form-select">
+                    </select>
+                </div>
+                <div id="intake-has-variants-field" class="col-md-6">
+                    <label class="form-label">
+                        <input id="intake-has-variants" type="checkbox" /> This product has size / color variants</label>
+                </div>
+                <div class="col-md-6">
+                    <label for="intake-tracking" class="form-label">How do you count this stock?</label>
+                    <select id="intake-tracking" class="form-select">
+                        <option value="QUANTITY">Quantity (clothes and other goods)</option>
+                        <option value="SERIAL">Individual serial numbers (batteries)</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="intake-code-type" class="form-label">What does this barcode identify?</label>
+                    <select id="intake-code-type" class="form-select">
+                        <option value="MODEL">Product / model (same code on every item)</option>
+                        <option value="SERIAL">One physical item's serial number</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <p class="small text-muted mt-1">Scanned manufacturer barcodes are saved automatically. After saving stock, open Barcode labels to generate unique labels for items without barcodes.</p>
+                </div>
+                <div class="col-md-6">
+                    <label for="intake-new-code" class="form-label">Barcode / serial (optional)</label>
+                    <input id="intake-new-code" class="form-control" maxlength="100" />
+                </div>
+                <div class="col-md-6">
+                    <label for="intake-new-sku" class="form-label">Item code / SKU (optional for new product)</label>
+                    <input id="intake-new-sku" class="form-control" maxlength="100" />
+                </div>
+                <div class="col-md-6">
+                    <label for="intake-new-cost" class="form-label">Purchase cost per item</label>
+                    <input id="intake-new-cost" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" required value="0" />
+                </div>
+                <div class="col-md-6">
+                    <label for="intake-new-price" class="form-label">Selling price per item</label>
+                    <input id="intake-new-price" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" required value="0" />
+                </div>
+                <div class="col-md-6">
+                    <label for="intake-new-tax" class="form-label">Tax %</label>
+                    <input id="intake-new-tax" class="form-control" type="number" min="0" max="100" step="0.01" required value="0" />
+                </div>
+                <div class="col-md-6">
+                    <label for="intake-new-warranty" class="form-label">Warranty months</label>
+                    <input id="intake-new-warranty" class="form-control" type="number" min="0" max="240" step="1" required value="0" />
+                </div>
+                <div id="intake-variant-attributes" class="col-12" hidden>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="intake-size" class="form-label">Size (optional)</label>
+                            <input id="intake-size" class="form-control" maxlength="100" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="intake-color" class="form-label">Color (optional)</label>
+                            <input id="intake-color" class="form-control" maxlength="100" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">Save and add to receipt</button>
+                <button id="intake-register-cancel" type="button" class="btn btn-outline-secondary">Cancel</button>
+            </div>
+        </fieldset>
+    </form>
+</dialog>
+<partial name="_QuickAddSupplier" />
+@section Styles {<link rel="stylesheet" href="~/css/receiving.css" asp-append-version="true" />
+@if (Access.Can("SUPPLIERS") && Access.Can("SUPPLIERS", "CREATE")) {<link rel="stylesheet" href="~/css/configuration.css" asp-append-version="true" />}
+}
+@section Scripts {<script src="~/js/common/csv.js" asp-append-version="true"></script><script src="~/js/common/scanner.js" asp-append-version="true"></script><script src="~/js/receiving.js" asp-append-version="true"></script>
+@if (Access.Can("SUPPLIERS") && Access.Can("SUPPLIERS", "CREATE")) {
+<script src="~/js/master-data.js" asp-append-version="true"></script>
+<script src="~/js/supplier.js" asp-append-version="true"></script>
+}
+}

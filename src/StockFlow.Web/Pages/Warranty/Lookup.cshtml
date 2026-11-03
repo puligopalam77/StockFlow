@@ -1,0 +1,41 @@
+@page
+@model StockFlow.Web.Pages.Warranty.LookupModel
+@{ ViewData["Title"] = "Check warranty"; }
+<h1>Check warranty</h1>
+<div id="warranty-message" class="alert alert-danger" role="alert" hidden>
+</div>
+<form id="lookup-form" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label for="lookup-kind" class="form-label">Search by</label>
+        <select id="lookup-kind" class="form-select">
+            <option value="serial">Serial number</option>
+            <option value="invoice">Invoice number</option>
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label for="warrantyScanInput" class="form-label">Scan / enter number</label>
+        <input id="warrantyScanInput" class="form-control" maxlength="200" required autofocus />
+    </div>
+    <div class="col-md-3 align-self-end">
+        <button class="btn btn-primary">Search</button>
+    </div>
+</form>
+<div id="warranty-results" aria-live="polite">
+</div>
+@if (Access.Can("WARRANTY_LOOKUP","CREATE"))
+{
+<details class="mt-4">
+    <summary>Register an older warranty (owner)</summary>
+    <p>New customer bills save warranties automatically. For an older item, ask the owner to check its original bill and enter the bill item reference below. The original sale date and warranty period are used.</p>
+    <form id="register-form" class="d-flex gap-2">
+        <label for="sale-item-id">Sale item ID</label>
+        <input id="sale-item-id" type="number" min="1" required class="form-control" />
+        <button class="btn btn-secondary">Save warranty</button>
+    </form>
+</details>
+}
+@section Scripts {
+    <script src="~/js/common/scanner.js" asp-append-version="true"></script>
+    <script src="~/js/warranty-common.js" asp-append-version="true"></script>
+    <script src="~/js/warranty-lookup.js" asp-append-version="true"></script>
+}

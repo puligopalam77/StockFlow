@@ -1,0 +1,141 @@
+@page
+@{ ViewData["Title"]="Admin & Security"; }
+<div data-grants="@System.Text.Json.JsonSerializer.Serialize(Access.User!.Permissions.ToDictionary(p=>p.ModuleCode,p=>p.SupportedActions.Where(p.Allows).ToArray()))" data-stores="@Access.Can("STORES","MANAGE_ACCESS").ToString().ToLowerInvariant()" data-reset="@Access.Can("USER_MANAGEMENT","RESET_PASSWORD").ToString().ToLowerInvariant()" data-reset-auth="@Access.Can("USER_MANAGEMENT","RESET_AUTHENTICATOR").ToString().ToLowerInvariant()" id="admin-users" data-create="@Access.Can("USER_MANAGEMENT","CREATE").ToString().ToLowerInvariant()" data-edit="@Access.Can("USER_MANAGEMENT","EDIT").ToString().ToLowerInvariant()" data-status="@Access.Can("USER_MANAGEMENT","DELETE").ToString().ToLowerInvariant()" data-security="@Access.Can("USER_MANAGEMENT","MANAGE_PERMISSIONS").ToString().ToLowerInvariant()">
+    <div class="admin-heading">
+        <h1 id="admin-page-title">Staff accounts & access</h1>
+        <div id="admin-list-actions" class="admin-heading-actions">
+@if(Access.Can("USER_MANAGEMENT","CREATE") && Access.Can("USER_MANAGEMENT","MANAGE_PERMISSIONS") && Access.Can("STORES","MANAGE_ACCESS")){<button id="new-user" type="button" class="btn btn-primary">New User</button>}
+        </div>
+    </div>
+    <div id="admin-message" role="status" aria-live="polite">
+    </div>
+    <div hidden aria-hidden="true">
+        <span id="users-total">
+        </span>
+        <span id="users-active">
+        </span>
+        <span id="users-roles">
+        </span>
+        <span id="users-inactive">
+        </span>
+    </div>
+    <section id="user-list-view">
+        <div class="admin-list-card">
+            <form id="user-search" class="admin-filters">
+                <input id="search-term" class="form-control" aria-label="Search users" placeholder="Search name or username" maxlength="100"/>
+                <button class="btn admin-dark">Search</button>
+                <button id="clear-users" type="button" class="btn admin-dark">Clear</button>
+            </form>
+            <p id="user-count" class="admin-record-count" aria-live="polite">Loading users…</p>
+            <div class="table-responsive">
+                <table class="table admin-user-table">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>User name</th>
+                            <th>Full name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Email</th>
+                            <th>Mobile</th>
+                            <th>Assigned stores</th>
+                            <th>Sign-in verification</th>
+                            <th>Last login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-rows">
+                    </tbody>
+                </table>
+            </div>
+            <div class="admin-pagination">
+                <button id="previous-users" class="btn btn-outline-secondary" type="button">Previous</button>
+                <button id="next-users" class="btn btn-outline-secondary" type="button">Next</button>
+            </div>
+        </div>
+    </section>
+    <form id="user-editor" class="card card-body admin-editor" hidden>
+        <h2 id="editor-title" class="admin-form-title">Add staff account</h2>
+        <p>Enter account details, choose a role template and assign the shop. Access comes from the selected role template.</p>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="full-name">Full name *</label>
+                <input id="full-name" class="form-control" required minlength="2" maxlength="100" />
+            </div>
+            <div class="col-md-4">
+                <label for="username">Username *</label>
+                <input id="username" class="form-control" required minlength="3" maxlength="50" pattern="[\p{L}\p{N}_.\-]+" autocomplete="off" />
+            </div>
+            <div class="col-md-4">
+                <label for="mobile">Mobile *</label>
+                <input id="mobile" required type="tel" inputmode="numeric" pattern="[0-9]{10}" class="form-control" maxlength="10" />
+            </div>
+            <div class="col-md-4">
+                <label for="email">Email *</label>
+                <input id="email" required type="email" class="form-control" maxlength="150" />
+            </div>
+            <div class="col-md-4">
+                <label for="role">Role template *</label>
+                <select id="role" class="form-select" required>
+                </select>
+                <p id="selected-role-help" class="small mt-2">
+                </p>
+            </div>
+            <div class="col-md-4">
+                <label>
+                    <input id="active" type="checkbox" checked /> Active</label> <label>
+                    <input id="must-change" type="checkbox" checked /> Require password change at next login</label>
+            </div>
+        </div>
+        <fieldset id="initial-password" class="mt-3">
+            <legend>Initial password</legend>
+            <p>8–128 characters; spaces and passphrases allowed. Your business may require a longer minimum.</p>
+            <label for="password">Password *</label>
+            <input id="password" type="password" autocomplete="new-password" class="form-control" minlength="8" maxlength="128" />
+            <label for="confirm-password">Confirm password *</label>
+            <input id="confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" class="form-control" />
+        </fieldset>
+        <section class="admin-permissions">
+            <h3>Assigned shop</h3>
+            <label for="primary-store">Assigned store</label>
+            <select id="primary-store" class="form-select">
+            </select>
+            <p id="store-assignment-help">Staff sign in to this store automatically. Role permissions control what they can do.</p>
+            <details id="advanced-store-access">
+                <summary>Additional stores / warehouse access</summary>
+                <div id="assigned-stores" class="row g-2 mt-2">
+                </div>
+                <label for="default-store">Default store for staff login</label>
+                <select id="default-store" class="form-select">
+                </select>
+                <h3>Central warehouses</h3>
+                <div id="assigned-warehouses" class="row g-2">
+                </div>
+                <p>Additional stores support authorized admin reviews. Staff remain pinned to the default store. Owners retain business-wide access.</p>
+            </details>
+        </section>
+        <p>Saving security changes ends affected sessions. Changes to your own account require signing in again.</p>
+        <div class="admin-form-footer">
+            <button type="button" id="cancel-user" class="btn admin-dark">Cancel</button>
+            <button class="btn btn-primary" id="save-user">Create User</button>
+        </div>
+    </form>
+    <form id="reset-form" class="card card-body admin-editor" hidden>
+        <h2 id="reset-title">Reset password</h2>
+        <p>8–128 characters; spaces and passphrases allowed. Your business may require a longer minimum.</p>
+        <label for="reset-password">New password</label>
+        <input id="reset-password" type="password" class="form-control" autocomplete="new-password" minlength="8" maxlength="128" required />
+        <label for="reset-confirm">Confirm password</label>
+        <input id="reset-confirm" type="password" class="form-control" autocomplete="new-password" minlength="8" maxlength="128" required />
+        <label class="my-3">
+            <input id="reset-change" type="checkbox" checked disabled /> Require password change at next login</label>
+        <div>
+            <button class="btn btn-primary">Reset password</button> <button id="cancel-reset" type="button" class="btn btn-outline-secondary">Cancel</button>
+        </div>
+    </form>
+</div>
+@section Scripts {<script src="~/js/common/permission-editor.js" asp-append-version="true"></script><script src="~/js/admin-security.js" asp-append-version="true"></script>}
+
+@section Styles {<link rel="stylesheet" href="~/css/admin-security.css" asp-append-version="true" />}
+
+

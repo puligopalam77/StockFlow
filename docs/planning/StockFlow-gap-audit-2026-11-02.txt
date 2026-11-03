@@ -1,0 +1,333 @@
+STOCKFLOW: CODE-BACKED GAP AUDIT AND IMPLEMENTATION ORDER
+Audit date: 2 November 2026. Workspace: E:\StockFlow.
+
+Current evidence overlay: use StockFlow-feature-evidence-register-2026-11-02.csv
+for 62 current status rows, deployment/pilot limits and recorded tests. Q01, F06,
+G10, A09 and A16 have later implementation/evidence updates. F04 now has a source
+implementation in 086; A03 has private ownership/sharing/quarantine controls in 085,
+with tenant-wide active-profile selection and actual legacy mapping still limited.
+See StockFlow-private-shops-expenses-implementation-2026-11-02.txt for the follow-up.
+Counts and original
+audit-only assertions below describe the initial baseline, not production readiness.
+Earlier acceptance candidates remain archived unchanged. The follow-up report links
+the current candidate and automated results; operational reviews still block release.
+Help/documentation edits alone never establish a new release pass.
+
+Implementation update: Q01 has since been implemented and tested in source. Its
+row in the CSV is updated; original audit findings/counts below remain the dated
+baseline. See docs/quotations.txt and StockFlow-implementation-2026-11-02.txt for
+the new workflow, manual migration 083, verification and outstanding release gates.
+
+Decision
+Retain the existing transaction engines and extend them in tested vertical slices.
+Start with Quotations, then Expenses, then authoritative costing and corrected
+financial reporting. Do not rebuild GST setup, tax mapping, billing approvals,
+purchasing, transfers, returns, CRM or service/warranty merely because an older
+planning document or menu inventory omits them. Verified GST correctness failures
+take precedence over the feature sequence whenever reproduced.
+
+This deliverable is an audit. No application feature code or migration was changed
+or applied. The configured application database was inspected inside an explicit
+REPEATABLE READ, READ ONLY transaction. Write-based integration checks ran in
+disposable copies of a separate test database. No external messages were sent.
+
+Deliverables and how to read them
+- StockFlow-gap-audit-2026-11-02-matrix.csv: 62 workflow rows. Each records status,
+  actual frontend route, API, entities, implementation, behavior, remaining gaps,
+  permissions/scope, financial/inventory effects, migrations and priority, with
+  file:line evidence and verification limits. Open in Excel or another CSV reader.
+- StockFlow-gap-audit-2026-11-02-source-index.txt: source anchor index.
+- StockFlow-gap-audit-2026-11-02-readonly.sql: repeatable metadata inspection and
+  synthetic counterexamples; contains no data-changing SQL or credentials.
+- StockFlow-gap-audit-2026-11-02-database-evidence.txt: actual local query output.
+- StockFlow-gap-audit-2026-11-02-verification.txt: executed checks and outcomes.
+- StockFlow-gap-audit-2026-11-02-inventory.txt: controller attributes, screens,
+  repositories, services, migrations, check files and workers inventoried.
+
+The matrix counts are 34 Implemented, 18 Partial, 8 Missing, 1 Defective and 1
+Deferred. These count audit workflow rows, not independently sellable features.
+Implemented means an end-to-end code/database path exists for the stated behavior;
+it does NOT mean every role, historic record, physical device or deployment has
+passed acceptance. The Verification column separates executed checks from source
+inspection. Partial means useful real functionality exists but the requested
+workflow has material gaps. Missing means no corresponding business workflow was
+found across the inspected source routes, domain/repository code and local schema.
+Defective identifies a concrete incorrect result, even if the surrounding feature
+is useful. Deferred is an explicitly separate design scope. P1 is the next work or
+release gate; P2 follows the initial slices; P3 requires separate feasibility or
+accounting design. No new GST correctness incident was reproduced by this audit;
+that is limited to the executed cases, not a GST certification.
+
+In the matrix, T/L/P means tenant/location/business-profile scope. A scope or
+permission requirement describes the relevant control, not a blanket security
+certification. Proposed migrations are descriptions; no new number is reserved.
+
+Evidence and deployment boundary
+The application is ASP.NET Core/Razor Pages with JavaScript, Application/Domain/
+Infrastructure projects and Dapper/Npgsql/PostgreSQL. The Android project is a
+WebView client of the same server. Financial mutations live mainly in repositories
+and guarded database functions; auditing only service classes or visible screens
+would miss important behavior. Global unsafe-MVC antiforgery, business-context and
+permission middleware, runtime role scope, RLS, source locks and request identities
+are existing infrastructure, not new work to duplicate.
+
+The connection in local appsettings.Development.json resolved to StockFlow_DB.
+Environment/user-secret overrides of a running host were not independently resolved.
+The inspected database contains 126 public
+tables; migration 081's TAX_OVERRIDE action and migration 082's policy function
+were detected. Presence checks do not constitute a complete migration checksum
+audit. The output records table/column metadata and relevant policies, not customer
+details, prices, balances or secrets. Nine tables have no RLS: six protected
+identifier/reservation/backup tables deny ordinary runtime CRUD, while three
+module metadata tables are runtime-readable and not runtime-writable.
+Lack of RLS on those tables alone is not evidence of a data leak.
+
+Only tenant 1, active store 1 and the tenant's BIKE_ACCESSORIES profile were present
+in the inspected database. The brief's two-shop production arrangement was not
+available here. Do not claim to have validated its balances, settings, independent
+catalogs or live provider connections. The test suites create synthetic additional
+shops/tenants for selected isolation cases; they do not establish the real deployed
+configuration. The workspace has no Git metadata, so no commit baseline or Git diff
+can be supplied; source references describe the files as inspected today.
+
+Critical findings
+1. Master-data independence is narrower than transaction isolation (A02-A03).
+   DbConnectionFactory supplies tenant, actor, store, location and profile to the
+   stockflow_runtime role. Sales, purchases and inventory use tenant/location and
+   profile restrictions. Products/categories and customers/suppliers instead use
+   tenant/profile visibility; they do not all carry store ownership. Migration 051
+   intentionally shares contacts used across catalogs. Business profile selection
+   is stored on the tenant, not as an independent profile per store.
+   Consequence: separate same-profile stores in one tenant can share master data
+   by design. This does not prove unauthorized cross-tenant access, but it does not
+   satisfy universally independent shop catalogs/contacts. New quotation/expense
+   records must be explicitly shop scoped. Before offering strict same-tenant shop
+   independence, design additive ownership/link tables and profile configuration,
+   preserve all IDs/history, and test same-profile as well as different-profile
+   shops. Do not automatically partition or copy existing masters in this audit.
+
+2. Product profit is an estimate with reproducible defects (F05-F06).
+   OperationsRepository.cs, ProductSalesAsync, currently calculates registered
+   cost as net sold quantity times the weighted average of ALL received purchase
+   prices in the current visible history. There is no receipt-date cutoff in that
+   cost CTE. The UI already describes this as a management estimate rather than
+   accounting valuation; retain that honesty.
+   a) A registered SKU without purchase history gets coalesce(unit_cost,0), so its
+      entire sales value can appear as estimated profit. Manual items correctly
+      remain NULL/unknown. Extend unknown handling consistently to catalog stock.
+   b) A January receipt at 50 and a March receipt at 150, ten units each, make the
+      report use 100 for a January sale. The original January available cost was
+      50. This is an estimate limitation, not historical movement-cost COGS.
+   c) The registered branch starts FROM sold and LEFT JOINs period returns. A SKU
+      returned this period but sold only earlier is omitted. The period report's
+      top-products query uses a FULL JOIN; the two reports can disagree.
+   d) sum(sale_items.line_total) includes GST (SaleRules sets LineTotal to subtotal
+      plus tax). Subtracting cost from 118 received including 18 tax, with cost 80,
+      produces 38; tax-exclusive gross margin would be 20. This is a reporting
+      classification problem, not evidence that invoice GST arithmetic is wrong.
+   e) Historical nonallocated invoice discounts are header amounts, so a line-only
+      report can omit them. New allocated-discount invoices need separate fixtures.
+   Reproduction in the read-only SQL uses synthetic VALUES to demonstrate these
+   expressions. It is not a claim that all counterexamples were posted and run
+   through the repository. Next corrections should add real repository fixtures
+   covering old-sale returns, unknown opening costs, changing receipts and taxes.
+   No reliable historical valuation/COGS ledger was found. Never backfill unknown
+   cost as zero or infer it from selling price. Do not call gross margin net profit
+   while expenses and other operating costs are absent.
+
+3. Quotations and Expenses are new workflows (Q01, F04).
+   POST /api/sales/quote calculates a provisional bill; it is not a saved customer
+   quotation. CRM enquiries and held bills are not quotation revisions/lifecycle.
+   Supplier payments, freight and other landed costs are not operating expenses.
+   Neither dedicated quotation nor expense entities/endpoints were found in the
+   inspected database and code inventory. Build these using existing foundations.
+
+4. GST foundations are substantial; advanced preparation remains missing.
+   Legal entities/registrations, effective shop mappings, setup readiness, reviewed
+   tax rules, bulk catalog mapping, source tax snapshots, purchase working documents,
+   original-linked credit/debit notes, reviews, HSN/register reports and working CSV
+   already exist (G01-G06). Executed checks cover selected snapshot, discount, tax
+   classification, note identity, unknown classification and isolation behavior.
+   The GST screen explicitly says GSTR-1/GSTR-3B preparation, GSTR-2B import/
+   reconciliation, eligible ITC and filing are unavailable. No verified IRN/e-way
+   bill/portal submission lifecycle was found. Build on the existing documents and
+   mapping pipeline. Recorded purchase tax is not automatically eligible credit.
+   Operational returns/refunds and statutory notes are separate; a reconciled source
+   adjustment queue and complete correction tests are still needed (G07).
+   This audit prescribes no current rates, thresholds, filing deadlines or legal
+   eligibility rules. Verify current official requirements during implementation.
+
+5. Receipt fields and barcode groups are not inventory lots (I08).
+   Purchase/receipt lines store batch/manufacturing/expiry fields. CategoryService
+   explicitly rejects enabling expiry tracking. Barcode lots group receipt-label
+   operations, not available batch stock. No lot movement/allocation balance was
+   found. Lot-aware sale, return, count, transfer, expiry blocking and FEFO remain.
+
+6. Migration, industry and hardware claims need narrower wording.
+   General catalog CSV preview/commit exists but accepts at most 100 products per
+   file and can stop after successfully committing preceding products. It lacks a
+   general durable resumable batch ledger. The separate GST mapping pipeline
+   successfully processed 2,000 rows in a disposable test; that does not establish
+   a 1,000-product master migration workflow. Opening stock CSV exists with canonical
+   retry identity and a 200-line intake limit. Opening receivable/payable and broad
+   customer/supplier migration workflows were not found.
+   Supported profiles are Electrical, Bike Accessories, Clothing and Footwear.
+   Quantity contracts use integers and category units PIECE/PAIR/SET/BOX. Fractional
+   weighted stock/scale integration and explicit grocery/supermarket/hardware/general
+   retail profiles are not implemented just because arbitrary products can be named.
+   Browser/Android print and scanner flows exist. Physical 58/80mm/A4/label printers,
+   USB/Bluetooth/camera scanners, cash drawers and scales were not tested here.
+
+7. Offline recovery and settlement recording are useful but incomplete.
+   Browser local drafts, IndexedDB receiving drafts and retry identities protect
+   interrupted work. No fully disconnected sale-finalization/synchronization engine
+   was found. The Android shell depends on the live server. Offline drafts cannot be
+   marketed as offline final bills. Similarly, staff-confirmed UPI/card/bank receipts
+   and optional references are not external provider/bank settlement proof. No bank
+   statement import, fee/reversal matching or reconciliation lifecycle was found.
+
+Implementation roadmap and acceptance gates
+Common gate for EVERY slice: additive/manual reviewed migration where needed;
+existing IDs/snapshots/history preserved; permissions enforced at endpoint and
+database boundary; no consolidated writes; positive and negative role tests;
+same-profile/different-profile shops and another tenant; retries, competing writes
+and changed payload; rollback on failure; exact amounts and source traceability;
+compact existing UI; focused browser checks; documented operational limitations.
+Use the existing billing policy as the sole discount authority. No parallel rules.
+
+0. Safety and baseline
+   Retain the matrix as a backlog. Add regression fixtures for the verified report
+   issues, and resolve shop-ownership design before releasing new scoped workflows.
+   Promote any newly reproduced GST correctness failure to an immediate isolated
+   fix with invoice/register/export regression checks; do not wait for feature work.
+   Confirm production topology and current backup/restore capability before rollout.
+
+1. Quotations (Q01): first complete vertical slice
+   Add scoped header, immutable commercial revision/lines, reference sequence,
+   lifecycle events and conversion linkage using existing identifier conventions.
+   Support Draft/Sent/Accepted/Rejected/Expired/Converted/Cancelled and revision-aware
+   PDF output. Sending status must reflect an authorized actual send or clearly
+   recorded manual action; this audit sends nothing. Reuse customer, catalog, GST,
+   discount policy and CRM. Quotes post no sale, inventory, collection or tax invoice.
+   Conversion must invoke the current authoritative checkout, recheck price/stock/
+   serials/tax/approval/customer/payment, handle stale/expired quotes and retries,
+   and mark Converted only after the finalized sale exists. Do not introduce a
+   hidden reservation or new-credit policy. Trace quote revision to resulting sale.
+   Acceptance: all states, edit/version conflict, cross-shop access, tax/price changes,
+   unavailable stock, permission denial, failed posting, duplicate conversion,
+   existing checkout/draft regression, A4/PDF and authorized sharing behavior.
+
+2. Expenses (F04): second complete vertical slice
+   Add scoped categories, incurred expense, payment allocations, authorized receipt
+   attachments and auditable correction/reversal. Keep incurred date and paid date
+   distinct; support unpaid/part-paid/paid without conflating liability and cash.
+   Reuse current retry/permission/audit and document-access patterns. Do not create
+   inventory purchase/receipt movements. GST evidence/classification is optional
+   and reviewable; it must not silently approve ITC. Extend cash closing and expense
+   reports with genuine expense cash movements once these records exist.
+   Acceptance: unpaid and partial/full payments, all supported methods, duplicate
+   retry, concurrent payment, correction/refund, upload/type/size/access controls,
+   date cutoffs, cross-shop/tenant access and proof inventory was unchanged.
+
+3. Costing (F05-F06): verified policy before historical migration
+   First correct unknown cost, tax basis, returns and discount reporting; continue
+   marking any estimate incomplete. Select a consistent auditable valuation policy
+   with the business/accountant. Specify all inventory movements, opening cost
+   evidence/unknown state, freight/landed allocations, serials/lots, supplier/customer
+   returns at original cost, damage/adjustments, service parts and transfer carry.
+   Add immutable movement-cost allocations and cost adjustment postings. Any history
+   backfill needs explicit cutoff/evidence and reconciliation; never rewrite invoices
+   or quantity history. Acceptance: old report stable after later purchases, unknown
+   never zero, return restores original cost, no cost creation on internal transfer,
+   inventory quantity reconciliation, rounding and before/after value reconciliation.
+
+4. Accountant reporting (F02-F03, F07-F08)
+   Extend existing period queries, not a second balance calculator. Provide clear
+   sale-date vs collection-date reports, customer/supplier statements and aging,
+   tax-exclusive gross margin, expense-aware operating result, stock valuation and
+   cash/bank movement views only as their source facts become reliable. Export
+   CSV/XLSX with IDs, scope, period/cutoff, filters, statuses, tax components and
+   opening/movement/closing reconciliation; include unknown/partial coverage.
+   Acceptance: earlier sale/later payment, prior-sale return, credit/refund balance,
+   multiple locations/authorized consolidation, partial payments, unknown costs,
+   restricted roles and export-to-screen reconciliations. Do not label as full books.
+
+5. GST extensions (G07-G10)
+   Verify source correction/note coverage first; extend reviewed period preparation
+   over immutable GST documents for GSTR-1/GSTR-3B, then actual 2B import/matching and
+   reviewed eligibility. Check current official formats and business applicability
+   at implementation time. Portal/IRN/e-way bill integration needs real authorized
+   provider requests/responses, retry/unknown-outcome handling and cancellation.
+   No generated filed/accepted statuses or invented acknowledgements.
+
+6. Lots/expiry (I08)
+   Add genuine lot identities, source quantities and movement allocations; explicit
+   expiry and FEFO policy, original-lot returns and transfer trace. Require complete
+   sale/return/count/transfer/recall tests, including expired stock and unknown lots,
+   before enabling this capability or expanding into expiry-sensitive retail.
+
+7. Bank/provider reconciliation (F09)
+   Add account/statement and settlement batch evidence, import deduplication, explicit
+   matching/unmatching, fees, reversals and unmatched queues. Keep recorded customer
+   payment separate from provider settlement and bank credit. Acceptance covers
+   duplicate files, net-of-fee batches, delayed settlement, refunds/chargebacks,
+   partial/multiple matches, scoped access and audit. No automated money movement.
+
+8. Explainable replenishment (I09)
+   Extend current minimum-based suggestions with sales/return velocity, stock cover,
+   lead time, safety stock, pending receipts and clear data/period assumptions. Start
+   with explainable proposals; a reviewed proposal may later use existing PO creation.
+   No AI-first prediction or automatic supplier order. Test zero/seasonal/unknown
+   history, existing POs, returns, profile/location changes and serial inconsistency.
+
+9. Migration/hardware (A06-A09, I07, I10-I11)
+   Reuse validators/templates but add durable preview/confirm/job/row errors and
+   resumable idempotency for 1,000 products. Model opening balances with cutoff and
+   evidence separately from stock import. Preserve identifiers; no overwrite of
+   posted history. Test interruption, duplicate input/retry, partial results and
+   trial reconciliation. Add new profiles/fractional units only after all quantity
+   consumers are compatible. Pilot real scanner/label/A4/58/80mm devices; record
+   unsupported drawer/scale/direct-driver requirements. Verify backup schedule and
+   run restore into an isolated environment before production acceptance.
+
+10. Offline feasibility (A15)
+    Produce architecture/threat model and go/no-go first: authenticated trusted
+    device, secure local data, authorization expiry/revocation, invoice numbering,
+    stock/serial/lot conflicts, payment evidence, repeated/out-of-order events and
+    deterministic reconciliation. Device draft recovery remains useful meanwhile.
+    Full offline posting is not authorized as part of this audit deliverable.
+
+11. Full accounting (F10)
+    Separate future design acceptance for COA, balanced journals, reversals, GL,
+    trial balance, balance sheet and period close. Operational reports remain useful
+    without pretending to be a double-entry system. No ledger retrofit by silently
+    reinterpreting historic sales, supplier orders or payment records.
+
+Validation and limitations
+The isolated .NET build passed with zero warnings/errors. Six selected suites passed:
+billing application rules, fast-billing real DB, GST setup real DB, GST catalog real
+DB, GST spreadsheet safety, and actual Razor/JavaScript browser billing with mocked
+HTTP across ten viewports. See verification file for exact commands and scope.
+GST catalog test measured 2,000 mapping rows in 20 chunks, about 40.57 seconds on
+this test machine; this is not a production performance guarantee. Metadata audit
+and synthetic SQL examples ran read-only on the configured local application DB.
+The test cluster was started solely for these disposable suites and stopped after.
+
+Not verified: every module endpoint/role, all legacy balances, all movement/correction
+permutations, production topology, statutory accuracy for every transaction type,
+provider sends/settlement, physical hardware, actual backup restoration or a full
+penetration test. Existing tests were inventoried but not all rerun. No current
+competitor edition/platform/pricing claims were independently researched here; the
+brief is treated as desired scope, not proof of competitor feature parity.
+
+Implementation update - e-way preparation, 2026-11-02:
+G10 is Partial following the source-linked preparation increment. Official provider
+API generation/lifecycle and e-invoice/IRN remain unavailable. See docs/eway-bills.txt
+and docs/eway-verification-2026-11-02.txt; original audit findings remain historical.
+
+Implementation update - specialist workflows, 2026-11-02:
+F06 is Partial after verified report-query/UI corrections; authoritative F05 costing
+remains separate. Transaction/variant/recovery checks and compact scanner/keyboard
+refinements delivered. Serial history and stock explanations remain next increments.
+See StockFlow-specialist-workflows-2026-11-02.txt for actual verification and limits.
+Benchmark/pilot artifacts are prepared, not executed competitor or live-shop results.

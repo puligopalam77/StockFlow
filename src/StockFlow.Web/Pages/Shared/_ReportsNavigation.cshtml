@@ -1,0 +1,41 @@
+@inject StockFlow.Application.Common.BusinessScope Scope
+@{
+    var reportLinks = new[] {
+        ("Business Summary", "/Reports/Activity", "REPORTS", true),
+        ("Sales & Invoices", "/Sales", "SALES", true),
+        ("Inventory Overview", "/Inventory", "INVENTORY", true),
+        ("Low Stock Alerts", "/Inventory/LowStock", "INVENTORY", true),
+        ("Product Performance", "/Reports/ProductSales", "REPORTS", true),
+        ("Daily Cash Closing", "/CashClosing", "REPORTS", true),
+        ("Operating Expenses", "/Expenses/Report", "EXPENSES", true),
+        ("GST & Tax Reports", "/Reports/Gst", "GST_REPORTS", true),
+        ("Received Stock History", "/StockInflow", "STOCK_INFLOW", false),
+        ("Stock Out History", "/StockOutflow", "STOCK_OUTFLOW", false),
+        ("Warranty Expiry", "/Warranty/Expiring", "EXPIRING_WARRANTIES", false),
+        ("Warranty Claims", "/Warranty/Claims", "WARRANTY_CLAIMS", false),
+        ("Open Repairs", "/Service/Pending", "PENDING_SERVICES", false),
+        ("Completed Repairs", "/Service?status=DELIVERED", "SERVICE", false)
+    }.Where(r => Access.Can(r.Item3) && (r.Item2 != "/CashClosing" || Scope.CanReviewStores)).ToArray();
+    var path = Context.Request.Path.Value?.TrimEnd('/') ?? "";
+    var reportContext = path.StartsWith("/Reports", StringComparison.OrdinalIgnoreCase) || Context.Request.Query["fromReports"] == "1";
+    var active = reportContext ? reportLinks.FirstOrDefault(r => path.Equals(r.Item2.Split('?')[0], StringComparison.OrdinalIgnoreCase)).Item2 : null;
+    string Link(string route) => route + (route.Contains('?') ? "&" : "?") + "fromReports=1";
+}
+<details class="sf-nav-group" open="@reportContext" data-nav-group="Reports">
+    <summary class="sf-nav-link @(reportContext ? "sf-nav-group-active" : "")">
+        <svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#chart" /></svg><span>Reports</span><span class="sf-nav-chevron" aria-hidden="true">&#8250;</span>
+    </summary>
+    <div class="sf-nav-children">
+        @foreach(var report in reportLinks.Where(r => r.Item4)) {
+            <a class="sf-nav-child @(report.Item2 == active ? "active" : "")" href="@Link(report.Item2)" aria-current="@(report.Item2 == active ? "page" : null)">@report.Item1</a>
+        }
+        @if(reportLinks.Any(r => !r.Item4)) {
+            <details class="sf-report-more" open="@reportLinks.Any(r => !r.Item4 && r.Item2 == active)">
+                <summary class="sf-nav-child">More Reports</summary>
+                @foreach(var report in reportLinks.Where(r => !r.Item4)) {
+                    <a class="sf-nav-child @(report.Item2 == active ? "active" : "")" href="@Link(report.Item2)" aria-current="@(report.Item2 == active ? "page" : null)">@report.Item1</a>
+                }
+            </details>
+        }
+    </div>
+</details>

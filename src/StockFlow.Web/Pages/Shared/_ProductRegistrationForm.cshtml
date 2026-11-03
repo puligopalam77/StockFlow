@@ -1,0 +1,185 @@
+@inject StockFlow.Application.Common.BusinessScope RegistrationScope
+@inject StockFlow.Application.Interfaces.ICompanySettingsRepository RegistrationCompany
+@{ var catalogOnly = ViewData["ProductRegistrationCatalogOnly"] is true; var enhanced = RegistrationScope.CatalogRegistrationEnhancementsAvailable; }
+<dialog data-catalog-tax-inclusive="@(((await RegistrationCompany.GetAsync()).DefaultTaxMode=="INCLUSIVE").ToString().ToLowerInvariant())" data-can-generate="@Access.Can("BARCODES","GENERATE").ToString().ToLowerInvariant()" data-can-category-create="@Access.Can("CATEGORIES","CREATE").ToString().ToLowerInvariant()" data-can-brand-create="@Access.Can("BRANDS","CREATE").ToString().ToLowerInvariant()" data-can-supplier-create="@Access.Can("SUPPLIERS","CREATE").ToString().ToLowerInvariant()" id="purchase-registration" class="purchase-registration registration-tabs-dialog" aria-labelledby="purchase-registration-title">
+    <header class="registration-heading">
+        <span class="registration-heading-icon"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#box" /></svg></span><div class="registration-heading-copy"><h2 id="purchase-registration-title" class="h5">Add New Product</h2><p class="small text-muted mb-0">Add product details for your inventory.</p></div>
+        <button id="purchase-registration-close" type="button" class="btn btn-outline-secondary" aria-label="Close product registration">&#215;</button>
+    </header>
+    <p id="quick-catalog-source" class="alert alert-info" hidden></p>
+    <form id="purchase-registration-form" novalidate data-inline-validation data-validation-owner="product-registration">
+        <nav class="registration-tabs" role="tablist" aria-label="Product registration sections">
+            <button type="button" id="registration-tab-basic" role="tab" aria-controls="registration-panel-basic" aria-selected="true" tabindex="0" data-registration-tab="basic"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#document" /></svg><span class="registration-tab-label">Basic Details</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+            <button type="button" id="registration-tab-variants" role="tab" aria-controls="registration-panel-variants" aria-selected="false" tabindex="-1" data-registration-tab="variants"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#grid" /></svg><span class="registration-tab-label">Variants & Attributes</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+            <button type="button" id="registration-tab-compatibility" hidden role="tab" aria-controls="registration-panel-compatibility" aria-selected="false" tabindex="-1" data-registration-tab="compatibility"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#tools" /></svg><span class="registration-tab-label">Compatibility</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+            <button type="button" id="registration-tab-pricing" role="tab" aria-controls="registration-panel-pricing" aria-selected="false" tabindex="-1" data-registration-tab="pricing"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#tag" /></svg><span class="registration-tab-label">Pricing & Stock</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+            <button type="button" id="registration-tab-media" role="tab" aria-controls="registration-panel-media" aria-selected="false" tabindex="-1" data-registration-tab="media"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#eye" /></svg><span class="registration-tab-label">Product Details &amp; Review</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+        </nav>
+        <div class="registration-content">
+        <div id="purchase-registration-message" class="alert registration-alert" hidden></div>
+        <fieldset id="purchase-registration-fields">
+            <section id="registration-panel-basic" role="tabpanel" aria-labelledby="registration-tab-basic" tabindex="0" >
+                <div class="registration-information">
+                <h3 class="h6 registration-section-title"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#document" /></svg>Product Information</h3>
+                <div class="row g-3">
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-product-name" class="form-label">Product name *</label>
+                    <input id="quick-product-name" class="form-control" required minlength="2" maxlength="150" placeholder="Battery, inverter or geyser model" />
+                    <small id="quick-duplicates-message" class="text-warning d-block" role="status"></small>
+                </div>
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-category" class="form-label">Category *</label>
+                    <details id="quick-category-dropdown" class="registration-category-dropdown">
+                    <summary id="quick-category-toggle" class="form-select">Choose category</summary>
+                    <div class="registration-category-options">
+                    @if(enhanced){<input id="quick-category-search" type="search" class="form-control mb-2" placeholder="Find category" aria-label="Filter product categories" />}
+                    <select id="quick-category" class="form-select" required size="6" aria-label="Category">
+                    </select>
+                    </div>
+                    </details>
+                </div>
+@if(Access.Can("BRANDS")){<div class="col-md-6 col-lg-4">
+                    <label for="quick-brand" class="form-label">Brand</label>
+                    <select id="quick-brand" class="form-select">
+                    </select>
+                </div>}
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-model" class="form-label">Model</label>
+                    <input id="quick-model" class="form-control" maxlength="100" />
+                </div>
+
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-unit" class="form-label">@(enhanced ? "Stock unit *" : "Unit *")</label>
+                    <select id="quick-unit" class="form-select" required>
+                        <option value="PIECE">Piece</option>
+                        <option value="BOX">Box</option>
+                        <option value="PAIR">Pair</option>
+                        <option value="SET">Set</option>
+                    </select>
+                </div>
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-tracking" class="form-label">Tracking method *</label>
+                    <select id="quick-tracking" class="form-select" required>
+                        <option value="SERIAL">Serial Tracking</option>
+                        <option value="QUANTITY">Standard (quantity tracking)</option>
+                    </select>
+                </div>
+                </div>
+
+            </div><section class="registration-additional" aria-labelledby="registration-additional-title"><h3 id="registration-additional-title" class="h6 registration-section-title"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#box" /></svg>Additional Details</h3><div class="row g-3">@if(enhanced){<div class="col-md-6 col-lg-4"><label for="quick-part-number" class="form-label">Manufacturer part number</label><input id="quick-part-number" class="form-control" maxlength="100" placeholder="e.g. VG-FF-01" /></div>}<div class="col-md-6 col-lg-4">
+                    <label for="quick-hsn" class="form-label">HSN code</label>
+                    <input id="quick-hsn" class="form-control" maxlength="20" placeholder="e.g. 6506" />
+                    @if(Access.Can("GST_SETTINGS")){<small class="text-muted">GST-mapped shops use the reviewed, effective-dated classification in <a href="/Admin/Gst" target="_blank" rel="noopener">GST Settings</a>.</small>}
+                </div><div class="col-md-6 col-lg-4"><label for="quick-new-status" class="form-label">Product status</label><select id="quick-new-status" class="form-select" ><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive (draft)</option></select></div><div class="col-12">
+                    <label for="quick-description" class="form-label">Product Description</label><textarea id="quick-description" class="form-control" maxlength="2000" rows="2"></textarea></div></div></section></section>
+
+            <section id="registration-panel-variants" role="tabpanel" aria-labelledby="registration-tab-variants" tabindex="0" hidden>
+                <h3 class="h6 registration-section-title">Variants & Attributes</h3>
+                <div class="row g-3">
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-sku" class="form-label">Product Code *</label>
+                    <div class="registration-inline"><input id="quick-sku" class="form-control" required minlength="3" maxlength="40" pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,39}" />@if(enhanced){<button id="quick-generate-sku" type="button" class="btn btn-outline-secondary" title="Generate Product Code" aria-label="Generate Product Code">Generate</button>}</div><small class="text-muted">Automatically generated using the selected product category.</small>
+                </div>
+<div class="col-12 registration-variant-toggle">
+                    <label class="registration-variant-switch">
+                        <input id="quick-has-variants" type="checkbox" role="switch" /> This product has variants</label>
+                    <p class="small text-muted">Enable when this product is sold in different sizes, colors, specifications, or other separately stocked versions.</p>
+                    <div id="quick-variant-fields" hidden>
+                        <label for="quick-variant-name" class="form-label">Size / model name *</label>
+                        <input id="quick-variant-name" class="form-control" maxlength="150" placeholder="150 Ah / 12 V or 25 L" />
+                    </div>
+                </div>
+
+<details id="registration-panel-compatibility" class="registration-compatibility"><summary>Vehicle Compatibility (optional)</summary><div id="quick-compatibility-fields"></div></details>
+<section class="col-12" aria-label="Category attributes"><div id="quick-specifications"></div></section><section id="quick-combinations" class="col-12" hidden></section><div class="registration-barcode" hidden><input type="hidden" id="quick-barcode-mode" value="" /><input type="hidden" id="quick-manufacturer-barcode" value="" /></div>
+<div id="quick-default-identity" class="col-md-6 col-lg-4"><label for="quick-default-sku" class="form-label">Default SKU *</label><input id="quick-default-sku" class="form-control" required minlength="3" maxlength="40" pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,39}" /><small class="text-muted">Unique identifier used for purchasing, stock tracking, and billing.</small><label for="quick-default-barcode" class="form-label mt-2">Manufacturer barcode (optional)</label><input id="quick-default-barcode" class="form-control" maxlength="150" /></div>
+<p id="quick-variants-empty" class="small text-muted col-12">Enable variants to add sizes, colors or models. Category attributes appear here when configured.</p>
+                </div>
+            </section>
+            <section id="registration-panel-pricing" role="tabpanel" aria-labelledby="registration-tab-pricing" tabindex="0" hidden>
+                <h3 class="h6 registration-section-title">Pricing & Stock</h3>
+                <div class="row g-3"><h4 class="col-12 h6 registration-subheading">Pricing Information</h4>
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-purchase" class="form-label">@(enhanced ? "Default purchase cost *" : "Purchase Price *")</label>
+                    <input id="quick-purchase" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="0" required />
+                    @if(enhanced){<small class="text-muted">Set the actual cost when receiving each delivery.</small>}
+                </div>
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-sale" class="form-label">Selling Price *</label>
+                    <input id="quick-sale" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="0" required />
+                </div>
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-mrp" class="form-label">MRP</label>
+                    <input id="quick-mrp" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="0" />
+                </div>
+
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-tax" class="form-label">GST rate (%) *</label>
+                    <input id="quick-tax" class="form-control" type="number" min="0" max="100" step="0.01" value="0" required />
+                    @if(Access.Can("GST_SETTINGS","VIEW") && Access.Can("GST_SETTINGS","EDIT"))
+                    {
+                        <div id="registration-gst-rule" hidden class="mt-2">
+                            <label for="quick-gst-rule-search" class="form-label">Find reviewed tax rule (optional)</label>
+                            <input id="quick-gst-rule-search" type="search" class="form-control" maxlength="150" placeholder="Rule name or HSN..." />
+                            <select id="quick-gst-rule" class="form-select mt-1" aria-label="Reviewed tax rule"><option value="">No reviewed rule selected</option></select>
+                            <small id="quick-gst-rule-info" class="text-muted">Without a saved GST mapping, this product requires classification review before mapped GST billing.</small>
+                        </div>
+                    }
+                    <label class="small mt-2"><input id="quick-tax-inclusive" type="checkbox" /> Entered prices include GST</label>
+                </div>
+<h4 class="col-12 h6 registration-subheading">Inventory Settings</h4><div class="col-md-6 col-lg-4"><label for="quick-stock-unit-summary" class="form-label">Stock unit</label><input id="quick-stock-unit-summary" class="form-control" value="Piece" readonly /><small class="text-muted">Set in Basic Details.</small></div><div class="col-md-6 col-lg-4">
+                    <label for="quick-pack" class="form-label">@(enhanced ? "Stock units per purchase pack *" : "Pack Size *")</label>
+                    <input id="quick-pack" class="form-control" type="number" min="1" max="10000" value="1" required />
+                    @if(enhanced){<small class="text-muted">1 purchase pack contains this many stock units. Receipt quantities use stock units: for 3 boxes of 10 pieces, receive 30 pieces. Registration adds no stock.</small>}
+                </div>
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-reorder" class="form-label">Reorder Level</label>
+                    <input id="quick-reorder" class="form-control" type="number" min="0" max="999999999" value="0" />
+                    @if(enhanced){<label class="small d-block mt-1"><input id="quick-reorder-location" type="checkbox" /> Set a different level for this shop</label><div id="quick-branch-reorder-fields" hidden><label for="quick-branch-reorder" class="form-label mt-2">Current shop reorder level</label><input id="quick-branch-reorder" class="form-control" type="number" min="0" max="999999999" value="0" /></div>}
+                </div>
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-supplier-code" class="form-label">Supplier SKU</label>
+                    <input id="quick-supplier-code" class="form-control" maxlength="100" />
+                </div>
+
+<details class="col-12 registration-warranty"><summary>Warranty (optional)</summary><div class="row g-3"><div class="col-md-6 col-lg-4">
+                    <label for="quick-warranty" class="form-label">Warranty months *</label>
+                    <input id="quick-warranty" class="form-control" type="number" min="0" max="240" step="1" value="0" required />
+                </div>
+<div class="col-md-6 col-lg-4">
+                    <label for="quick-provider" class="form-label">Warranty provider</label>
+                    <select id="quick-provider" class="form-select">
+                        <option value="MANUFACTURER">Manufacturer</option>
+                        <option value="DEALER">Dealer</option>
+                        <option value="BOTH">Both</option>
+                    </select>
+                </div>
+</div></details>
+@if(enhanced && Access.Can("SUPPLIERS")){<h4 class="col-12 h6 registration-subheading">Supplier Information</h4><section id="quick-supplier-identifiers" class="col-12"></section>}
+                </div>
+            </section>
+            <section id="registration-panel-media" role="tabpanel" aria-labelledby="registration-tab-media" tabindex="0" hidden>
+                <h3 class="h6 registration-section-title">Product Details &amp; Review</h3>
+                <div class="row g-3">
+
+<section class="col-12 registration-media-image"><h4 class="h6">Product Photos</h4>
+                    <p class="small text-muted">Add photos to help identify this product during purchasing, stock management, and billing.</p>
+                    <label for="quick-image" class="form-label">Product image</label>
+                    <input id="quick-image" class="form-control" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="quick-image-help" />
+                    <small id="quick-image-help" class="text-muted">JPG, PNG or WebP up to 3 MB.</small>
+                    <details class="product-photo-url mt-2"><summary>Add Image by URL</summary><label for="quick-image-url" class="form-label mt-2">Image URL</label><input id="quick-image-url" class="form-control" type="url" maxlength="500" placeholder="https://..." /></details>
+                </section>
+                <div class="col-12"><label for="quick-media-description" class="form-label">Detailed Description (Optional)</label><textarea id="quick-media-description" class="form-control" maxlength="6000" rows="3" placeholder="Describe the product, its important features, and any useful information for your staff."></textarea></div>
+                <section id="quick-product-details" class="col-12" aria-label="Product Specifications"></section>
+                </div>
+            </section>
+        </fieldset>
+        </div>
+        <footer class="registration-footer">
+            <button id="purchase-registration-cancel" type="button" class="btn btn-outline-secondary" hidden>Cancel</button>
+            <button id="registration-back" type="button" class="btn btn-outline-secondary">Back</button>
+            <button id="registration-next" type="button" class="btn btn-primary">Next</button>
+            <button id="purchase-registration-save" type="submit" class="btn btn-primary" hidden>Save Product</button>
+        </footer>
+    </form>
+</dialog>

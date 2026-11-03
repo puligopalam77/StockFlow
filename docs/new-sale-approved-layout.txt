@@ -1,0 +1,94 @@
+﻿StockFlow approved New Sale layout
+31 October 2026
+
+Implemented from the latest supplied desktop image and written specification.
+This supersedes the previous fixed-height New Sale checkout layout.
+
+Files changed
+src/StockFlow.Web/Pages/Sales/Create.cshtml
+src/StockFlow.Web/wwwroot/js/billing-layout.js
+src/StockFlow.Web/wwwroot/js/sales-create.js
+src/StockFlow.Web/wwwroot/css/billing.css
+tests/StockFlow.UiChecks/billing-offline.cjs
+docs/new-sale-approved-layout.txt
+
+Presentation
+- Separate customer/search card and cart card on the left.
+- Separate Bill Summary and payment cards on the right, aligned at the top.
+- Approximately 62/38 columns when actual available content width is at least
+  980 CSS pixels. The sidebar is accounted for by a container query, so a narrow
+  desktop workspace stacks instead of squeezing payment controls.
+- Natural content heights: no viewport-height cards, matching column heights,
+  bottom-pinned footer, duplicate options button or artificial spacer.
+- Compact pink-tinted card headings; white cards, navy text and soft-gray inputs.
+  Secondary actions remain charcoal with pink hover. Final action is pink.
+- One More Billing Options disclosure contains existing discount/approval,
+  split-payment, trade-in and owner billing-policy controls. Contextual credit
+  controls remain available. Required/pending messages remain outside the fold;
+  ordinary policy guidance is shown when options are expanded.
+- Notes use the existing 2000-character limit and appear immediately before the
+  completion action. Values are never cleared by collapsing options or resizing.
+- Empty cart shows a package icon and instructions, with no empty table.
+  Empty summary amounts show rupee zero rather than a misleading dash.
+- Desktop table: Product/Variant, SKU, Stock, Qty, Price, Total, Action. Item
+  Details preserves authorized price/discount editors, tax and serial/warranty
+  information. Quote responses update displayed stock, price and line totals.
+- Mobile uses the same rows as stacked item cards, not a squeezed seven-column
+  table. Quantity and removal targets are enlarged; no parallel mobile state.
+- Search results use thumbnails or neutral package placeholders, exact SKU,
+  metadata/brand, price, stock and explicit Add buttons. Results are bounded and
+  scroll only when long. No full-catalog download or fake demonstration data.
+- Mobile header has an accessible Bill actions toggle for existing actions.
+  The existing StockBot launcher is moved into header actions on this page;
+  its dialog/events remain intact and cannot cover billing buttons.
+
+Integration preserved
+The existing product/variant lookup, exact barcode/physical-unit resolution,
+quote, customer creation, payment confirmation, draft, approval, sale finalization
+and invoice endpoints are reused. No schema, repository, controller, SKU/barcode
+allocation, receipt posting, costing, historical invoice or report changes.
+All totals remain authoritative server quotes; no new UI financial calculator.
+Cash change, payment collections and unpaid credit remain distinct.
+Stable request IDs, pending-result recovery, final stock checks and transaction
+posting remain in the existing sales engine. Draft keys retain tenant, user,
+location and business-profile isolation. Resizing only changes presentation.
+
+Executed validation
+- Check-project build: passed with zero warnings/errors.
+- Release Web build: passed with zero warnings/errors.
+- --billing-checks: passed (Razor, search bounds/permissions, customer permissions,
+  cash/credit and due-date validation, recovery, duplicate unit rejection).
+- --new-sale-integration-checks: passed on a temporary clone of the disposable
+  sku_correction_test fixture on port 55439. It checks exact variant/barcode/unit
+  identity; one invoice and one stock movement on concurrent duplicate requests;
+  two cashiers competing for the last unit; selected-variant stock deduction;
+  collections versus change versus dues; invoice SKU snapshots; serialized sale
+  and idempotent return; bounded SQL search; tenant/location/stale-shop isolation.
+  Clone dropped; owned test server stopped. Business database not accessed.
+- Browser checks: passed, including the 1366 x 768 and 390px requirements,
+  header menu/StockBot dialog, empty cart/zero totals, zoom-equivalent layout,
+  resizing and final-action reachability. Uses actual Razor output,
+  CSS and page scripts with intercepted API responses. Exercises functional
+  billing, draft/held bills, confirmations/retries, discounts, split/credit,
+  customer creation, scan ambiguity, stale search, serial units and final stock
+  checks, plus notes and unsaved-change confirmation.
+
+Responsive previews
+ tests/bin/billing-ui-fixtures/approved-pos-1366.png (1366 x 768)
+ tests/bin/billing-ui-fixtures/approved-pos-390.png (390 CSS pixels wide)
+Additional widths: 1920, 1440, 1280, 1024, 768, 375 and 320.
+The 125-percent-equivalent check uses a 1093 x 614 CSS viewport at 1.25 device
+scale via Chromium emulation. This verifies the effective layout/density of a
+1366 x 768 display at 125 percent; it is not a manual browser-toolbar zoom test.
+Preview: tests/bin/billing-ui-fixtures/approved-pos-125percent.png.
+
+Limits
+Long bills, expanded advanced options and smaller/zoomed screens may require
+normal page scrolling. Controls remain in the document and can be reached;
+there is no clipped fixed-height checkout panel. The ordinary-sale API has no
+standalone fitting/service-charge line, so this UI does not invent a fake SKU or
+charge. Live camera hardware, bank/UPI settlement and a complete reporting/refund
+UI audit were not performed. Electronic confirmation still requires staff
+verification, not merely a typed transaction reference.
+
+No SQL migration or manual SQL execution is required.

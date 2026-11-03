@@ -1,0 +1,47 @@
+@page
+@inject StockFlow.Application.Common.BusinessScope Scope
+@{ ViewData["Title"]="Shop summary"; }
+@section PageHeader {
+<header class="sf-page-heading shop-summary-heading">
+ <div><h1>Shop summary</h1><p>See stock, sales, money received and unpaid customer bills for the dates you choose.</p></div>
+ <form id="activity-filter" class="shop-summary-filters">
+  @if(Scope.CanReviewStores){<select id="report-location" class="form-select" aria-label="Report store and location" disabled><option>@Scope.LocationName</option></select>}
+  else {<span class="shop-summary-location">@Scope.LocationName</span>}
+  <details class="summary-date-picker"><summary><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#report-calendar" /></svg><span id="summary-date-label">Select dates</span></summary>
+   <div class="summary-date-fields"><label>Period<select id="activity-period" class="form-select"><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option><option value="custom">Custom dates</option></select></label><label>From<input id="activity-from" type="date" class="form-control" required /></label><label>To<input id="activity-to" type="date" class="form-control" required /></label></div>
+  </details>
+  <button id="activity-load" class="btn btn-primary">Apply</button>
+ </form>
+</header>
+}
+<div id="shop-summary" data-can-receipts="@Access.Can("STOCK_INFLOW").ToString().ToLowerInvariant()" data-can-sales="@Access.Can("SALES").ToString().ToLowerInvariant()">
+ <div id="activity-error" class="alert alert-danger" role="alert" hidden></div>
+ <div class="summary-context"><p id="activity-status" class="small text-muted" role="status" aria-live="polite"></p>
+ <details class="summary-definitions"><summary>What these figures mean</summary>
+  <dl class="mb-0">
+   <dt>Sales</dt><dd>Completed invoice totals by sale date, less returns by return date in the selected period. Includes invoiced tax; this is not tax-exclusive revenue or profit.</dd>
+   <dt>Collections</dt><dd>Recorded non-credit sale payments by payment date, less refunds by return date in the period. Includes collections of earlier invoices; excludes service receipts and supplier payments. Recorded receipt is separate from provider settlement.</dd>
+   <dt>Customer outstanding</dt><dd>Completed invoices before the day after the end date, less returns and non-credit payments before that cutoff, plus refunds. Each invoice balance is floored at zero. General imported opening debt is not included.</dd>
+   <dt>Stock and low stock</dt><dd>Current active SKU stock, rather than historical stock at the selected end date. Low stock means current quantity at or below the configured minimum; stockouts count active SKUs with quantity at or below zero. Negative balances require reconciliation. This is a quantity view, not inventory valuation. Use View stock or the low-stock report to investigate.</dd>
+   <dt>Scope and dates</dt><dd>The selected authorized shop/location and current business profile apply to the source report. Dates include the selected end day. Consolidated scope includes only authorized locations.</dd>
+   <dt>Unavailable figures</dt><dd>Operating expenses, a complete supplier liability balance, verified gross profit and unmatched settlements are not available in this overview. Their absence does not mean zero. These operational figures are not audited financial statements.</dd>
+  </dl>
+ </details></div>
+ <div id="activity-results" hidden>
+  <div class="summary-kpis" permission-module="SALES">
+   @foreach(var tile in new[]{("sales","Total Sales","pink","chart"),("collections","Total Collections","green","box"),("credit","Outstanding Credit","purple","document"),("invoices","Total Invoices","amber","document"),("quantity","Items Sold","blue","box")}) {
+    <section class="summary-kpi @tile.Item3"><span class="summary-icon"><svg class="sf-icon" aria-hidden="true"><use href="@($"/images/icons.svg#{tile.Item4}")" /></svg></span><div><h2>@tile.Item2</h2><strong id="summary-@tile.Item1">&#8212;</strong><small id="compare-@tile.Item1"></small><span>vs previous period</span></div></section>
+   }
+  </div>
+  <div class="shop-summary-grid">
+   <section class="summary-panel" permission-module="SALES"><header><span class="summary-icon pink"><svg class="sf-icon"><use href="/images/icons.svg#chart" /></svg></span><div><h2>Sales trend</h2><p>Sales and collections for the selected period.</p></div><div class="summary-legend"><span>Sales</span><span>Collections</span></div></header><div id="summary-trend" aria-label="Sales and collections trend"></div></section>
+   <section class="summary-panel" permission-module="SALES"><header><span class="summary-icon purple"><svg class="sf-icon"><use href="/images/icons.svg#box" /></svg></span><div><h2>Sales by product (Top 5)</h2><p>Net item sales before bill discounts.</p></div><a data-summary-link href="/Reports/ProductSales?fromReports=1">View all &#8594;</a></header><div id="summary-products"></div></section>
+   <section id="stock-report" class="summary-panel" permission-module="INVENTORY"><header><span class="summary-icon green"><svg class="sf-icon"><use href="/images/icons.svg#box" /></svg></span><div><h2>Stock summary</h2><p>Current stock position in your shop.</p></div><a href="/Inventory?fromReports=1">View stock &#8594;</a></header><div class="summary-stock-stats"><div class="blue"><span>Total Items</span><strong id="summary-stock-items">&#8212;</strong></div><div class="purple"><span>Total Stock Qty</span><strong id="summary-stock-qty">&#8212;</strong></div><div class="amber"><span>Low Stock Items</span><strong id="summary-stock-low">&#8212;</strong><small>Stockouts: <span id="summary-stockouts">&#8212;</span></small></div></div></section>
+   <section class="summary-panel"><header><span class="summary-icon pink"><svg class="sf-icon"><use href="/images/icons.svg#clock" /></svg></span><div><h2>Recent activity</h2><p>Latest 5 sales and receipts in this period.</p></div></header><div class="table-responsive"><table class="table summary-recent"><tbody id="summary-recent"></tbody></table></div></section>
+   <section class="summary-panel" permission-module="INVENTORY"><header><span class="summary-icon amber"><svg class="sf-icon"><use href="/images/icons.svg#report-warning" /></svg></span><div><h2>Low stock items</h2><p>Products at or below their minimum stock level.</p></div><a href="/Inventory/LowStock?fromReports=1">View all &#8594;</a></header><div class="table-responsive"><table class="table"><thead><tr><th>Product</th><th>Current stock</th><th>Minimum stock</th></tr></thead><tbody id="summary-low-stock"></tbody></table></div></section>
+   <section id="financial-report" class="summary-panel" permission-module="SALES"><header><span class="summary-icon blue"><svg class="sf-icon"><use href="/images/icons.svg#document" /></svg></span><div><h2>Sales and collections</h2><p>Sales and payment summary for the selected period.</p></div></header><div class="table-responsive"><table class="table"><thead><tr><th>Store / location</th><th>Invoices</th><th>Sales value</th><th>Payments received</th><th>Outstanding</th></tr></thead><tbody id="activity-financial"></tbody></table></div></section>
+  </div>
+ </div>
+</div>
+@section Styles {<link rel="stylesheet" href="~/css/shop-summary.css" asp-append-version="true" />}
+@section Scripts {<script src="~/js/common/report-dates.js" asp-append-version="true"></script><script src="~/js/activity-report.js" asp-append-version="true"></script>}

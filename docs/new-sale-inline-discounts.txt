@@ -1,0 +1,87 @@
+﻿StockFlow - Inline New Sale bill editors
+31 October 2026
+
+Scope
+Only Items in This Bill was refined. Customer, search, payment selection,
+Bill Summary, invoice generation and other application pages retain their
+existing layout and workflows. No SQL, migration, repository or API changes.
+
+Files changed
+src/StockFlow.Web/Pages/Sales/Create.cshtml
+src/StockFlow.Web/wwwroot/js/sales-create.js
+src/StockFlow.Web/wwwroot/css/billing.css (cart-scoped rules only)
+tests/StockFlow.UiChecks/billing-offline.cjs
+tests/StockFlow.MasterDataChecks/BillingChecks.cs
+docs/new-sale-inline-discounts.txt
+
+Table
+Product/Variant | Available Stock | Qty | Unit Price | Item Discount | Tax (%) |
+Line Total | Actions.
+Unit price and line discount now remain directly visible; tax is a read-only
+server quote value. Numeric editors have consistent sizing and right alignment.
+The same editors and cart state are used at every screen size. Desktop/tablet
+use a compact table with controlled horizontal scrolling if space is limited.
+Mobile uses stacked item cards with directly accessible price, discount, stock,
+quantity, tax, total and removal controls; the page does not scroll sideways.
+Images use the existing registered-image endpoint or neutral package fallback.
+The product cell shows the first two identifying attribute values and a separate
+muted SKU. Full attributes, serial/unit identifiers, model and warranty context
+remain available in a compact More Details disclosure when relevant. These
+fields do not automatically expand when More Billing Options opens.
+Remove retains its existing handler and has a Remove Item tooltip.
+
+Behavior and safeguards
+- Price editing follows the existing canOverridePrice permission immediately;
+  it no longer requires opening a separate options panel.
+- Discount editing follows the existing canDiscount permission.
+- A discount is one amount for the entire line, never multiplied by quantity.
+- The existing quote endpoint remains the pricing/tax/rounding authority.
+  No new UI calculator, pricing state or tax selector was introduced.
+- Invalid negative/over-value discounts show inline feedback and disable
+  completion; backend SaleRules independently enforces the same value boundary.
+- Adjusted rows show a compact reason/approval notice. The existing reason field,
+  policy thresholds, approval request/status and server fingerprint checks remain.
+  This notice does not claim that a bill has already received approval.
+- Quantity rules, repeated scanning, unit duplication checks, stock checks,
+  physical-unit quantity locks, final stock revalidation and idempotent posting
+  remain in the existing sale workflow.
+- Draft edits/removal only update local/server drafts and quotes. They do not
+  call sale finalization or change product catalog selling prices/history.
+
+Executed validation
+- Debug checks build and Release Web build: passed, zero warnings/errors.
+- --billing-checks: passed, including direct SaleRules checks that quantity 2 x
+  price 4000 minus line discount 100 gives subtotal 7900 and tax-exclusive total
+  9322 at the fixture's configured 18 percent; invoice discount 50 gives 9272;
+  tax-inclusive pricing totals 7900 with tax extracted instead of added twice.
+  Tax rates in production still come from the existing quote configuration.
+- billing-offline.cjs: passed with real Razor output and page scripts, mocked
+  APIs. Covers inline visibility, role read-only restrictions, recalculation on
+  price/discount/quantity changes, negative and excessive discounts, mandatory
+  reasons, unchanged submitted line-discount value and quantity, removal,
+  serial handling, stock changes, draft/hold/retry, approvals, payments/credit/
+  split allocation, customer creation, notes, invoice receipt and resize state.
+- Dedicated visual/browser checks passed at 1366, 1024, 768, 390 and 320 pixels
+  after the final compact column-width adjustment; no horizontal page overflow.
+- --new-sale-integration-checks: passed against a temporary clone of the
+  disposable sku_correction_test fixture on port 55439. Exact variant/barcode/
+  serial identity; server price authorization; duplicate completion creates one
+  invoice and one stock movement; last-unit cashier race; variant-specific stock;
+  separate collection/change/dues; serialized sale and idempotent return;
+  tenant/location/stale-shop isolation. Clone dropped; test cluster stopped.
+  No live business database accessed.
+
+Previews (test fixture products and amounts)
+tests/bin/billing-ui-fixtures/inline-discounts-1366.png
+tests/bin/billing-ui-fixtures/inline-discounts-1024.png
+tests/bin/billing-ui-fixtures/inline-discounts-768.png
+tests/bin/billing-ui-fixtures/inline-discounts-390.png
+tests/bin/billing-ui-fixtures/inline-discounts-320.png
+
+Limits
+Narrow laptop/tablet cart tables may require a short horizontal scroll to retain
+readable product/editor widths. Mobile cards keep all fields directly available.
+Live camera hardware, actual bank settlement and a complete reporting/refund UI
+audit were not repeated for this cart-only refinement.
+
+No SQL script needs to be run.

@@ -1,0 +1,14 @@
+@page
+@model StockFlow.Web.Pages.SearchModel
+@{ ViewData["Title"]="Search StockFlow"; }
+<h1>Search StockFlow</h1>
+<form id="global-search" class="d-flex gap-2 mb-3">
+    <label for="global-term" class="visually-hidden">Search</label>
+    <input id="global-term" class="form-control" minlength="2" maxlength="200" required placeholder="Product, SKU, barcode, serial, customer, invoice or service number" />
+    <button class="btn btn-primary">Search</button>
+</form>
+<div id="dashboard-message" class="alert alert-danger" role="alert" hidden>
+</div>
+<div id="dashboard-results" aria-live="polite">
+</div>
+@section Scripts { <script src="~/js/dashboard-lists.js" asp-append-version="true"></script> }

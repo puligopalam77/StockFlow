@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#080e18" />
+    <meta name="stockflow-location" content="1" />
+    <script src="/js/branch-context.th296axgxu.js"></script>
+ <meta name="csrf-token" content="CfDJ8AAAAAAAAAAAAAAAAAAAAABOjtZ2C6F6-UnAf1sW2IJ7UIR4BqX6IVIvhpMup8EUguBnnc7mULR6uVeyYDb53OJnai6Z4kGFN_kfXYM9SP3o6T8HwbwKWp4uiCYVzSHhtfmwL6Aq-RdmUYvWXoL43kc" />     <title>Products - StockFlow</title>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.46ein0sx1k.css" />
+    <link rel="stylesheet" href="/css/stockflow.lmk9onxs79.css" />
+    <link rel="stylesheet" href="/css/shop-navigation.602charsbv.css" />
+    <link rel="stylesheet" href="/css/profile.p61bhlnp9r.css" />
+    <link rel="stylesheet" href="/css/breadcrumbs.m1lyuacejh.css" />
+ <link rel="stylesheet" href="/css/configuration.6yifzpug9f.css" />     <link rel="stylesheet" href="/css/purchase-receiving.qzoiqevx3f.css" />
+</head>
+<body class="sf-app">
+    <a href="#main-content" class="sf-skip-link">Skip to main content</a>
+    <button b-pr8211qeak class="sf-sidebar-backdrop" id="sidebar-backdrop" aria-label="Close navigation" tabindex="-1" hidden></button>
+    <aside b-pr8211qeak class="sf-sidebar" id="app-sidebar" aria-label="Main navigation">
+        <div b-pr8211qeak class="sf-sidebar-brand"><a class="sf-brand" href="/"><span class="sf-brand-mark"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#box" /></svg></span>
+<span class="sf-brand-copy"><span class="sf-wordmark">Stock<strong>Flow</strong></span><span class="sf-brand-caption">Inventory Inflow &amp; Outflow Tracking</span></span>
+</a><button b-pr8211qeak class="sf-sidebar-close sf-icon-button" id="sidebar-close" aria-label="Close navigation"><svg b-pr8211qeak class="sf-icon"><use b-pr8211qeak href="/images/icons.svg#close" /></svg></button></div>
+        <nav class="sf-nav sf-shop-nav" aria-label="Shop tasks">
+        <a class="sf-nav-link " href="/"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#home" /></svg><span>Dashboard</span></a>
+        <details class="sf-nav-group" data-nav-group="Receive Stock">
+            <summary class="sf-nav-link "><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#in" /></svg><span>Receive Stock</span><span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
+            <div class="sf-nav-children">
+                <a class="sf-nav-child " href="/Purchases">Purchase orders &amp; deliveries</a>
+                <a class="sf-nav-child " href="/Purchases/Create">New stock receipt</a>
+                <a class="sf-nav-child " href="/StockInflow">Stock receipt history</a>
+            </div>
+        </details>
+        <details class="sf-nav-group" data-nav-group="Sell / Billing">
+            <summary class="sf-nav-link "><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#document" /></svg><span>Sell / Billing</span><span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
+            <div class="sf-nav-children">
+                <a class="sf-nav-child " href="/Sales">Sales &amp; invoices</a>
+                <a class="sf-nav-child " href="/Sales/Create">New sale</a>
+            </div>
+        </details>
+        <details class="sf-nav-group" data-nav-group="Inventory">
+            <summary class="sf-nav-link "><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#box" /></svg><span>Inventory</span><span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
+            <div class="sf-nav-children">
+                <a class="sf-nav-child " href="/Inventory">Current stock</a>
+                <a class="sf-nav-child " href="/Inventory/LowStock">Low stock</a>
+                <a class="sf-nav-child " href="/Transfers">Stock transfers</a>
+                <a class="sf-nav-child " href="/StockOutflow">Outflow history</a>
+                <a class="sf-nav-child " href="/Scan">Scan product / serial</a>
+                <a class="sf-nav-child " href="/Search">Search records</a>
+            </div>
+        </details>
+        <a class="sf-nav-link " href="/Reports"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#chart" /></svg><span>Reports</span></a>
+        <details class="sf-nav-group" data-nav-group="Service &amp; Warranty">
+            <summary class="sf-nav-link "><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#tools" /></svg><span>Service &amp; Warranty</span><span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
+            <div class="sf-nav-children">
+                <a class="sf-nav-child " href="/Service">Service history</a>
+                <a class="sf-nav-child " href="/Service/Create">New service request</a>
+                <a class="sf-nav-child " href="/Service/Pending">Pending services</a>
+                <a class="sf-nav-child " href="/Warranty/Lookup">Warranty lookup</a>
+                <a class="sf-nav-child " href="/Warranty/Claims">Warranty claims</a>
+                <a class="sf-nav-child " href="/Warranty/Expiring">Expiring warranties</a>
+            </div>
+        </details>
+        <details class="sf-nav-group" open="open" data-nav-group="Setup">
+            <summary class="sf-nav-link sf-nav-group-active"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#settings" /></svg><span>Setup</span><span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
+            <div class="sf-nav-children">
+                <a class="sf-nav-child active" href="/Configuration" aria-current="page">Configuration</a>
+                <a class="sf-nav-child " href="/Admin/Users">Users</a>
+                <a class="sf-nav-child " href="/Admin/Roles">Roles &amp; permissions</a>
+                <a class="sf-nav-child " href="/Admin/Stores">Stores</a>
+                <a class="sf-nav-child " href="/Admin/Security">Security settings</a>
+                <a class="sf-nav-child " href="/Admin/AuditLogs">Audit logs</a>
+                <a class="sf-nav-child " href="/Settings/Company">Company settings</a>
+            </div>
+        </details>
+</nav>
+
+        <div b-pr8211qeak class="sf-sidebar-bottom"><span b-pr8211qeak class="sf-status-dot"></span> Your inventory, connected.</div>
+    </aside>
+    <div b-pr8211qeak class="sf-workspace">
+        <header b-pr8211qeak class="sf-topbar">
+            <button b-pr8211qeak type="button" class="sf-icon-button sf-menu-toggle" id="sidebar-toggle" aria-label="Toggle navigation" aria-controls="app-sidebar" aria-expanded="false"><svg b-pr8211qeak class="sf-icon"><use b-pr8211qeak href="/images/icons.svg#menu" /></svg></button>
+            <form class="sf-search" action="/Search" method="get" role="search">
+                <svg b-pr8211qeak class="sf-icon" aria-hidden="true"><use b-pr8211qeak href="/images/icons.svg#search" /></svg>
+                <input b-pr8211qeak name="term" type="search" minlength="2" maxlength="200" aria-label="Search StockFlow" placeholder="Search product, barcode, serial, customer, invoice..." />
+            </form>
+            <div b-pr8211qeak class="sf-topbar-actions">
+ <select b-pr8211qeak id="business-location" class="form-select form-select-sm" style="max-width:260px" aria-label="Active store and stock location"><option>Main store / Main stock</option></select>                 <a class="sf-icon-button sf-activity-link" href="/#recent-activity" aria-label="View recent stock activity"><svg b-pr8211qeak class="sf-icon"><use b-pr8211qeak href="/images/icons.svg#bell" /></svg></a>
+                    <details b-pr8211qeak class="sf-profile" id="profile-menu">
+                        <summary b-pr8211qeak class="sf-profile-trigger" aria-label="My profile" title="My profile">
+                            <span b-pr8211qeak class="sf-avatar" aria-hidden="true">EA</span><span b-pr8211qeak class="sf-username">Example Admin</span><span b-pr8211qeak class="sf-profile-chevron" aria-hidden="true">⌄</span>
+                        </summary>
+                        <section b-pr8211qeak class="sf-profile-panel" aria-label="Personal profile">
+                            <div b-pr8211qeak class="sf-profile-heading"><strong b-pr8211qeak>My profile</strong></div>
+                            <button b-pr8211qeak type="button" id="open-profile-details" class="sf-profile-password sf-profile-logout"><svg b-pr8211qeak class="sf-icon" aria-hidden="true"><use b-pr8211qeak href="/images/icons.svg#users" /></svg><span b-pr8211qeak>Profile Details</span><span b-pr8211qeak aria-hidden="true">›</span></button>
+                            <button b-pr8211qeak type="button" id="open-change-password" class="sf-profile-password sf-profile-logout"><svg b-pr8211qeak class="sf-icon" aria-hidden="true"><use b-pr8211qeak href="/images/icons.svg#settings" /></svg><span b-pr8211qeak>Change password</span><span b-pr8211qeak aria-hidden="true">›</span></button>                            <a href="/Account/TwoFactor" class="sf-profile-password sf-profile-logout">My authenticator</a><button b-pr8211qeak type="button" id="profile-logout" class="sf-profile-password sf-profile-logout"><svg b-pr8211qeak class="sf-icon" aria-hidden="true"><use b-pr8211qeak href="/images/icons.svg#out" /></svg><span b-pr8211qeak>Logout</span><span b-pr8211qeak aria-hidden="true">›</span></button>
+                        </section>
+                    </details>
+            </div>
+        </header>
+        <main b-pr8211qeak id="main-content" class="sf-main sf-module-main  ">
+                <div b-pr8211qeak class="configuration-layout">
+                    <aside b-pr8211qeak class="configuration-sidebar"><h1 b-pr8211qeak>Configuration</h1><nav id="app-breadcrumb" class="sf-breadcrumb no-print" aria-label="Breadcrumb">
+        <a id="breadcrumb-back" class="sf-breadcrumb-back" href="/" aria-label="Back to parent page" title="Back to parent page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" /></svg></a>
+    <ol>
+            <li><a href="/">Home</a></li>
+            <li><span id="breadcrumb-current" aria-current="page">Products</span></li>
+    </ol>
+</nav>
+
+<nav class="configuration-menu" aria-label="Configuration">
+            <a href="/Products" class="active" aria-current="page">Products</a>
+            <a href="/Categories" class="">Categories</a>
+            <a href="/Brands" class="">Brands</a>
+            <a href="/Suppliers" class="">Suppliers</a>
+            <a href="/Customers" class="">Customers</a>
+</nav>
+</aside>
+                    <div b-pr8211qeak class="configuration-content"><div id="master-data" data-module="products" data-can-edit="true" data-can-disable="true">
+    <div class="configuration-heading">
+        <h2>Product Registration</h2>
+            <button id="add-record" class="btn btn-dark" type="button" aria-haspopup="dialog" aria-controls="purchase-registration">+ Add Product Registration</button>
+    </div>
+        <p class="configuration-help">Register appliances, batteries and other products with pricing, specifications and optional variants in one form. Record stock quantities and individual serial numbers when receiving a purchase.</p>
+    <div id="master-message" class="alert d-none" role="status" aria-live="polite"></div>
+    <section id="master-list" aria-label="Products list">
+        <h3>Configured Products</h3>
+        <div class="row g-3 mb-3">
+            <div class="col-md-8"><label for="master-search" class="form-label">Search products</label><input id="master-search" type="search" class="form-control" placeholder="Search products" /></div>
+            <div class="col-md-4"><label for="status-filter" class="form-label">Status</label><select id="status-filter" class="form-select"><option value="false">All records</option><option value="true">Active only</option></select></div>
+        </div>
+        <div class="table-responsive"><table class="table table-hover"><thead id="master-head"></thead><tbody id="master-rows"></tbody></table></div>
+    </section>
+    <dialog id="editor" class="configuration-dialog configuration-dialog-wide " aria-labelledby="editor-title" aria-describedby="editor-help">
+        <button id="close-editor" class="configuration-close" type="button" aria-label="Close registration">&times;</button>
+        <h2 id="editor-title">Add Product Registration</h2>
+        <p id="editor-help">Enter the product details for your business.</p>
+        <div id="editor-message" class="alert d-none" role="alert"></div>
+        <form id="master-form">
+            <div id="form-fields" class="row g-3"></div>
+            <div class="configuration-dialog-actions"><button type="button" id="cancel-edit" class="btn btn-dark">Cancel</button><button type="submit" class="btn btn-primary">Save Product</button></div>
+        </form>
+    </dialog>
+    <dialog id="deactivate-dialog" class="configuration-dialog" aria-labelledby="deactivate-title">
+        <h2 id="deactivate-title">Deactivate Product?</h2>
+        <p>This record will become inactive. Its history will be retained.</p>
+        <div class="configuration-dialog-actions"><button type="button" id="cancel-deactivate" class="btn btn-dark">Cancel</button><button type="button" id="confirm-deactivate" class="btn btn-primary">Deactivate</button></div>
+    </dialog>
+</div>
+
+<div id="product-registration-access" hidden data-view="true" data-create="true" data-edit="true"></div>
+<dialog id="purchase-registration" class="purchase-registration" aria-labelledby="purchase-registration-title">
+ <h2 id="purchase-registration-title" class="h5">Register product</h2>
+ <p class="small text-muted">Register once to make the product available in Setup → Configuration → Products and New Stock. Stock is added when you save a receipt.</p>
+ <p id="quick-catalog-source" class="alert alert-info" hidden></p>
+ <div id="purchase-registration-message" class="alert alert-danger" role="alert" hidden></div>
+ <form id="purchase-registration-form" novalidate><fieldset id="purchase-registration-fields"><div class="row g-3">
+  <div class="col-md-6 col-lg-4"><label for="quick-product-name" class="form-label">Product name *</label><input id="quick-product-name" class="form-control" required minlength="2" maxlength="150" placeholder="Battery, inverter or geyser model" /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-category" class="form-label">Category *</label><select id="quick-category" class="form-select" required></select></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-code" class="form-label">Scanned / existing code</label><input id="quick-code" class="form-control" maxlength="150" /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-code-kind" class="form-label">This code identifies</label><select id="quick-code-kind" class="form-select"><option value="MODEL">Product / model barcode</option><option value="SERIAL">Individual unit serial number</option></select></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-purchase" class="form-label">Purchase cost *</label><input id="quick-purchase" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="0" required /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-sale" class="form-label">Selling price *</label><input id="quick-sale" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="0" required /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-mrp" class="form-label">MRP</label><input id="quick-mrp" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" value="0" /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-unit" class="form-label">Unit of measure *</label><select id="quick-unit" class="form-select" required><option value="PIECE">Piece</option><option value="BOX">Box</option><option value="PAIR">Pair</option><option value="SET">Set</option></select></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-tracking" class="form-label">Tracking *</label><select id="quick-tracking" class="form-select" required><option value="SERIAL">Individual serial numbers</option><option value="QUANTITY">Quantity only</option></select></div>
+  <div class="col-md-6 col-lg-4"><label><input id="quick-has-variants" type="checkbox" /> Has variants</label><div id="quick-variant-fields" hidden><label for="quick-variant-name" class="form-label">Variant name *</label><input id="quick-variant-name" class="form-control" maxlength="150" placeholder="150 Ah / 12 V or 25 L" /></div></div>
+ </div><p id="quick-serial-help" class="small text-muted mt-2" hidden>If this serial belongs to a model already registered, cancel and select that model in the receipt, then enter the serial there.</p>
+ <section class="mt-3" aria-labelledby="quick-details-title"><h3 id="quick-details-title" class="h6">More product details</h3><div class="row g-3 mt-1">
+<div class="col-md-6 col-lg-4"><label for="quick-brand" class="form-label">Brand</label><select id="quick-brand" class="form-select"></select></div>  <div class="col-md-6 col-lg-4"><label for="quick-model" class="form-label">Model</label><input id="quick-model" class="form-control" maxlength="100" /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-sku" class="form-label">SKU / item code *</label><input id="quick-sku" class="form-control" required minlength="3" maxlength="100" /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-hsn" class="form-label">HSN code</label><input id="quick-hsn" class="form-control" maxlength="20" /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-tax" class="form-label">GST rate (%) *</label><input id="quick-tax" class="form-control" type="number" min="0" max="100" step="0.01" value="0" required /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-warranty" class="form-label">Warranty months *</label><input id="quick-warranty" class="form-control" type="number" min="0" max="240" step="1" value="0" required /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-provider" class="form-label">Warranty provider</label><select id="quick-provider" class="form-select"><option value="MANUFACTURER">Manufacturer</option><option value="DEALER">Dealer</option><option value="BOTH">Both</option></select></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-reorder" class="form-label">Reorder level</label><input id="quick-reorder" class="form-control" type="number" min="0" max="999999999" value="0" /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-pack" class="form-label">Pack quantity</label><input id="quick-pack" class="form-control" type="number" min="1" max="10000" value="1" /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-supplier-code" class="form-label">Supplier product code</label><input id="quick-supplier-code" class="form-control" maxlength="100" /></div>
+  <div class="col-md-6 col-lg-4"><label for="quick-aliases" class="form-label">Other barcodes</label><input id="quick-aliases" class="form-control" maxlength="1000" placeholder="Comma separated aliases" /></div>
+  <div class="col-12"><label for="quick-description" class="form-label">Description</label><textarea id="quick-description" class="form-control" maxlength="2000" rows="2"></textarea></div>
+  <div class="col-md-6"><label for="quick-image" class="form-label">Product image</label><input id="quick-image" class="form-control" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="quick-image-help" /><small id="quick-image-help" class="text-muted">JPG, PNG or WebP up to 3 MB.</small></div>
+  <div class="col-md-6"><label for="quick-image-url" class="form-label">External image URL (optional)</label><input id="quick-image-url" class="form-control" type="url" maxlength="500" placeholder="https://..." /></div>
+  <section class="col-12" aria-labelledby="quick-specifications-title"><h4 id="quick-specifications-title" class="h6">Specifications</h4><div id="quick-specifications"></div></section>
+ </div></section></fieldset>
+ <div class="d-flex flex-wrap justify-content-end gap-2 mt-3"><button id="purchase-registration-cancel" type="button" class="btn btn-outline-secondary">Cancel</button><button id="purchase-registration-save" type="submit" class="btn btn-primary">Register product</button></div></form>
+</dialog>
+</div>
+                </div>
+        </main>
+        <footer b-pr8211qeak class="sf-app-footer">© 2026 StockFlow <span b-pr8211qeak>Smart inventory. Better business.</span></footer>
+    </div>
+        <dialog b-pr8211qeak id="profile-details-dialog" class="sf-account-dialog" aria-labelledby="profile-details-title">
+            <button b-pr8211qeak class="sf-dialog-close" type="button" data-close-account aria-label="Close profile details">×</button>
+            <h2 b-pr8211qeak id="profile-details-title">Profile Details</h2><div b-pr8211qeak class="sf-profile-identity"><span b-pr8211qeak class="sf-profile-avatar" aria-hidden="true">EA</span><div b-pr8211qeak><strong b-pr8211qeak>Example Admin</strong><span b-pr8211qeak>person@example.test</span></div></div>
+                            <dl b-pr8211qeak class="sf-profile-details">
+                                <div b-pr8211qeak><dt b-pr8211qeak>Username</dt><dd b-pr8211qeak>Admin</dd></div>
+                                <div b-pr8211qeak><dt b-pr8211qeak>Role</dt><dd b-pr8211qeak>Admin</dd></div>
+                                <div b-pr8211qeak><dt b-pr8211qeak>Mobile</dt><dd b-pr8211qeak>9876543210</dd></div>
+<div b-pr8211qeak><dt b-pr8211qeak>Account status</dt><dd b-pr8211qeak><span b-pr8211qeak class="sf-profile-status">Active</span></dd></div>                            </dl>            <div b-pr8211qeak class="sf-account-actions"><button b-pr8211qeak type="button" class="btn btn-dark" data-close-account>Close</button></div>
+        </dialog>
+        <dialog b-pr8211qeak id="change-password-dialog" class="sf-account-dialog" aria-labelledby="change-password-title" aria-describedby="change-password-help">
+            <button b-pr8211qeak class="sf-dialog-close" type="button" data-close-account aria-label="Close change password">×</button>
+            <h2 b-pr8211qeak id="change-password-title">Change Password</h2>
+            <p b-pr8211qeak id="change-password-help">Use 12–128 characters. Spaces and passphrases are allowed; your business may require a longer minimum. Sign in again after saving.</p>
+            <form id="profile-password-form" method="post" action="/Account/ChangePassword?handler=Popup">
+                <div b-pr8211qeak id="profile-password-message" class="alert alert-danger" role="alert" hidden></div>
+                <label b-pr8211qeak for="profile-current-password">Current password</label><input b-pr8211qeak id="profile-current-password" name="Input.CurrentPassword" type="password" class="form-control" autocomplete="current-password" required />
+                <label b-pr8211qeak for="profile-new-password">New password</label><input b-pr8211qeak id="profile-new-password" name="Input.Password" type="password" class="form-control" autocomplete="new-password" minlength="12" maxlength="128" required />
+                <label b-pr8211qeak for="profile-confirm-password">Confirm new password</label><input b-pr8211qeak id="profile-confirm-password" name="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" minlength="12" maxlength="128" required />
+                <div b-pr8211qeak class="sf-account-actions"><button b-pr8211qeak type="button" class="btn btn-dark" data-close-account>Cancel</button><button b-pr8211qeak type="submit" class="btn btn-primary">Save Password</button></div>
+            <input name="__RequestVerificationToken" type="hidden" value="CfDJ8AAAAAAAAAAAAAAAAAAAAABOjtZ2C6F6-UnAf1sW2IJ7UIR4BqX6IVIvhpMup8EUguBnnc7mULR6uVeyYDb53OJnai6Z4kGFN_kfXYM9SP3o6T8HwbwKWp4uiCYVzSHhtfmwL6Aq-RdmUYvWXoL43kc" /></form>
+        </dialog>        <dialog b-pr8211qeak id="logout-confirmation" class="sf-logout-dialog" aria-labelledby="logout-title" aria-describedby="logout-description">
+            <button b-pr8211qeak id="logout-close" class="sf-dialog-close" type="button" aria-label="Close logout confirmation">×</button>
+            <div b-pr8211qeak class="sf-dialog-symbol" aria-hidden="true">!</div>
+            <h2 b-pr8211qeak id="logout-title">Are you sure?</h2>
+            <p b-pr8211qeak id="logout-description">Are you sure that you want to logout?</p>
+            <div b-pr8211qeak class="sf-dialog-actions">
+                <button b-pr8211qeak id="logout-cancel" class="sf-dialog-cancel" type="button" autofocus>Cancel</button>
+                <form method="post" action="/Account/Logout"><button b-pr8211qeak class="sf-dialog-confirm" type="submit">Confirm</button><input name="__RequestVerificationToken" type="hidden" value="CfDJ8AAAAAAAAAAAAAAAAAAAAABOjtZ2C6F6-UnAf1sW2IJ7UIR4BqX6IVIvhpMup8EUguBnnc7mULR6uVeyYDb53OJnai6Z4kGFN_kfXYM9SP3o6T8HwbwKWp4uiCYVzSHhtfmwL6Aq-RdmUYvWXoL43kc" /></form>
+            </div>
+        </dialog>
+    <script src="/lib/jquery/dist/jquery.min.o1o13a6vjx.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.493y06b0oq.js"></script>
+    <script src="/js/stockflow-shell.cpbyzxyo54.js"></script>
+        <div id="idle-session" hidden data-session="538a1e8fa60246fe967d98c9cf44a4aa" data-remaining="900000"></div>
+    <div id="idle-session-warning" class="alert alert-warning position-fixed bottom-0 start-50 translate-middle-x mb-3" role="alert" style="z-index:1100;width:min(560px,calc(100% - 24px))" hidden>
+        <span id="idle-session-warning-text"></span> <button id="idle-session-continue" class="btn btn-sm btn-dark" type="button">Stay signed in</button>
+    </div>
+    <script src="/js/idle-session.g2phrejese.js"></script>
+
+    
+    <script src="/js/brand-categories.3yaidm80rb.js"></script>
+    <script src="/js/master-data.dw5ahl95rh.js"></script>
+    <script src="/js/product-specifications.pfc86dbkul.js"></script>
+    <script src="/js/product-registration.qbpm3au4il.js"></script>
+    <script src="/js/product-registration-form.qr3kea6tg9.js"></script>
+    <script src="/js/product.ooftbofv9r.js"></script>
+
+</body>
+</html>
+
+
+

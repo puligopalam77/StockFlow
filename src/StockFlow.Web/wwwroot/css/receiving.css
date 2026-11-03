@@ -1,0 +1,13 @@
+.receiving-steps{display:flex;gap:12px;list-style:none;padding:0;margin:0 0 24px;flex-wrap:wrap}
+.receiving-steps li{padding:10px 16px;border:1px solid var(--sf-border);border-radius:8px;color:var(--sf-muted);background:#fff;font-size:14px}
+.receiving-steps [aria-current=step]{background:#fff1f7;color:#a7004c;border-color:#ff9dc7;font-weight:650}
+.receiving-dialog{width:min(680px,calc(100vw - 32px));max-height:90vh;overflow:auto;border:1px solid var(--sf-border);border-radius:14px;padding:24px;color:var(--sf-ink)}
+.receiving-dialog::backdrop{background:#080e1880}
+.receiving-dialog .form-label{font-weight:600;font-size:13px}
+.receiving-dialog .form-control,.receiving-dialog .form-select{min-height:42px}
+.receiving-line-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.receiving-line-heading h3{font-size:1rem;margin:0;overflow-wrap:anywhere}
+.receiving-line-heading .btn{flex-shrink:0}
+.receiving-lookup-row{display:flex;gap:8px}
+.receiving-lookup-row .form-control{flex:1;min-width:0}
+.receiving-lookup-row .btn{flex-shrink:0;white-space:nowrap}

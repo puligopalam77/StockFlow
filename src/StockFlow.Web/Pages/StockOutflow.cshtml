@@ -1,0 +1,15 @@
+﻿@page
+@model StockFlow.Web.Pages.StockOutflowModel
+@{ ViewData["Title"]="Stock leaving the shop"; }
+@section PageHeader {
+<header class="sf-page-heading">
+    <div>
+        <h1>Stock leaving the shop</h1>
+    </div>
+</header>
+}
+<partial name="_MovementList" />
+@section Scripts {
+    <script src="~/js/dashboard-lists.js" asp-append-version="true"></script>
+}
+

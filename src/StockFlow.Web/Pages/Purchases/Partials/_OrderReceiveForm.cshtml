@@ -1,0 +1,19 @@
+@if (Access.Can("STOCK_INFLOW", "RECEIVE")) {
+<dialog id="purchase-receive-dialog" class="pd-dialog pd-dialog-wide" aria-label="Receive purchase order stock"><div class="pd-dialog-heading"><h2>Receive Stock</h2><button class="pd-dialog-close" data-pd-close="purchase-receive-dialog" type="button" aria-label="Close receiving">&times;</button></div><div id="purchase-receive-message" class="alert alert-danger" role="alert" hidden></div><form id="receipt-form" hidden class="pd-receive-form">
+    <h2 class="h5">Receive all or part of this order</h2>
+    <p>Enter only the quantities arriving now. Saving adds these quantities to stock. Prices and discounts come from the saved order.</p>
+    <div class="order-receipt-grid">
+    <div><label for="receipt-date">Received date *</label>
+    <input id="receipt-date" type="date" class="form-control" required />
+    </div><div><label for="receipt-invoice">Supplier invoice</label>
+    <input id="receipt-invoice" class="form-control" maxlength="100" />
+    </div><div><label for="receipt-invoice-date">Supplier invoice date</label>
+    <input id="receipt-invoice-date" type="date" class="form-control" />
+    </div><div><label for="receipt-notes">Notes</label>
+    <input id="receipt-notes" class="form-control" maxlength="2000" />
+    </div></div>
+    <div id="receipt-lines" class="my-3">
+    </div>
+    <button id="receipt-submit" class="btn btn-primary" type="submit">Save &amp; add to stock</button>
+</form></dialog>
+}

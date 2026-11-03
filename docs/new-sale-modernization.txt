@@ -1,0 +1,147 @@
+HISTORICAL DELIVERY RECORD. Current policy supersedes earlier walk-in/credit/split instructions. Use docs/help/billing.md, the current feature/evidence register and the release acceptance report. This file records its original implementation/test context; it is not the current checkout specification.
+
+StockFlow New Sale modernization — 2026-10-31
+
+Scope
+Modernizes the existing Sales/Create page and its orchestration. Product
+Registration, Edit Product, identifier allocation, purchasing, receipt posting,
+invoice history, inventory costing, tax rates and shared navigation are unchanged.
+No database migration or business-database update is required.
+
+Existing functionality audit
+1. Product lookup: /api/products/variants resolves saved variants through the
+   current tenant/profile/location context. Existing search covers name, parent
+   code, SKU, brand, category, model, attributes, supplier references, active
+   barcode mappings, structured vehicle fitments and corrected legacy SKUs.
+   HSN remains a nonunique search term, never an automatic product identity.
+2. Exact scans: /api/scan uses ScanService and ScanRepository. It resolves a saved
+   SKU, legacy alias, manufacturer barcode, stock label or physical unit. Multiple
+   identities are rejected rather than choosing the first. Unit eligibility is
+   calculated by ScanService; the repository alone does not set IsAvailable.
+3. Camera/hardware: the existing StockFlowScanner queue and StockFlowCamera
+   implementation are reused. Enter submits an exact lookup without submitting
+   the sale form. Camera Use code enters that same queue. No timing heuristic
+   treats fast typing as a barcode. Camera access still requires SCAN permission.
+4. Pricing: POST /api/sales/quote uses SaleRules for authoritative inclusive or
+   exclusive GST, per-line tax, discounts and total. Configured taxes are read-only
+   in billing. Quantities are whole numbers, 1–10,000; serialized lines have one
+   physical unit. The existing quote can refresh unmodified catalog prices with
+   a visible review message; authorized negotiated overrides remain separate.
+5. Permissions: server-set flags control price overrides, discounts, approval
+   thresholds and trade-ins. Discount/price changes need reasons. Existing
+   financial-fingerprint approval requests and review controls remain available.
+6. Customer: existing search and POST /api/customers are reused. Walk-in is the
+   default. Credit requires an active registered customer and passes the existing
+   outstanding-balance/credit-limit check. Address/GST/mobile fields are retained.
+7. Payments: CASH, UPI, CARD, BANK_TRANSFER and CREDIT are the existing methods.
+   References are optional, maximum 100 characters. UPI/card/bank payments require
+   manual confirmation of receipt; entering a reference does not verify a payment
+   externally. No gateway or terminal integration was introduced.
+8. Partial payment: existing policy requires explicit CREDIT allocation for the
+   unpaid amount. All allocations, including credit, must equal the quote total.
+   Credit is excluded from collected-payment reporting and invoice AmountReceived.
+   Cash tendered and change are recorded separately from the cash payment amount.
+9. Holds: device/server drafts retain items, exact IDs, customer, prices, tax mode,
+   notes and payment fields. Holding does not reserve or deduct stock. Restore
+   runs the existing quote validation. Holds are marked clean before reloading.
+10. Completion: SalesRepository revalidates within a transaction, locks the
+    business profile and products in ID order, checks aggregate product/variant
+    stock, validates/locks physical units and checks permissions and credit.
+    A request-ID advisory lock returns the same completed sale for identical
+    retries and rejects mismatched retries. Invoice, item snapshots, stock
+    movements, unit status, payments, warranty and audit writes commit together.
+    An uncertain browser response keeps the original immutable request for retry.
+11. Downstream: existing invoice rendering, sales history, payments, customer
+    balance functions, returns/refunds and reports keep their current sources.
+    No finalized invoice or historical price/tax/serial snapshot is rewritten.
+12. Fitting services: ordinary CreateSaleRequest has product/unit lines only.
+    There is no supported standalone fitting/service billing line in this path.
+    No fake SKU, inventory movement or repair job was created to simulate one.
+    Standalone service lines require a separate supported posting feature.
+    Repair/service workflows and the existing electrical trade-in remain intact.
+
+Implemented UI and lookup changes
+- One scan/search input. Debounced server search returns at most 30 variants,
+  includes inactive/out-of-stock states, and rejects stale responses. Exact Enter
+  scans add only an unambiguous eligible SKU/unit. Unresolved or ambiguous inputs
+  show explicit choices when catalog matches exist. Arrow keys highlight results;
+  Enter selects a highlighted result; Escape closes results. Partial typing never
+  adds the first match automatically. No catalog is preloaded into browser memory.
+- Four sections on one page: Scan/Search, Items, Customer, Payment/Billing.
+  Desktop has a right-side bill summary; smaller screens keep items near search
+  and put the summary before payment. Cart scrolling is confined to its table.
+- Cart displays SKU/attributes/serial identity, actual variant stock, editable
+  quantity with +/- controls, authorized price, discount, configured tax and
+  server line total. Repeat standard-SKU scans merge only compatible unchanged
+  price/discount lines. Distinct units stay separate; duplicate units are rejected.
+  Aggregate quantity is checked against refreshed variant stock before completion.
+- Clear Bill uses the shared centered confirmation. Cancel preserves the draft;
+  Clear resets draft items/payment fields and never deletes a finalized invoice.
+- One Bill To disclosure contains customer search and a native keyboard-enabled
+  selector. Search preserves selection; selecting a customer updates the collapsed
+  label. Quick-add uses the existing fields/API in an application dialog and
+  selects the created customer without reloading or losing the cart/payment draft.
+- Summary shows server subtotal/GST/invoice discount/total and labels line
+  discounts as already included. Payment allocation and credit/balance due are
+  separate. These are draft values until server completion, not claimed revenue.
+- Cash/change and electronic reference fields remain contextual. Credit due-date
+  fields show only for credit allocations; switching to immediate payment excludes
+  a dormant credit date from the payload. Split validation opens advanced options
+  so its invalid entries can be corrected. Mandatory approval guidance stays visible.
+- Shared flag notifications and field validation remain in place. Charcoal/pink
+  buttons follow the existing theme; no unrelated global CSS was changed.
+
+API/database compatibility
+GET /api/products/variants accepts an optional billing=true query flag. That mode
+requires a selected location, a nonempty term of at most 200 characters and the
+existing PRODUCT_VARIANTS permission. It reuses VariantRepository's existing
+search with SQL LIMIT 30. Other callers retain the existing unlimited behavior.
+IVariantRepository adds SearchForSaleAsync with a default implementation for
+compatibility. No sale/quote/payment/invoice request contracts or schemas changed.
+
+Files modified
+src/StockFlow.Web/Pages/Sales/Create.cshtml
+src/StockFlow.Web/wwwroot/js/billing-layout.js
+src/StockFlow.Web/wwwroot/js/sales-create.js
+src/StockFlow.Web/wwwroot/css/billing.css
+src/StockFlow.Web/Controllers/VariantController.cs
+src/StockFlow.Application/Interfaces/IVariantRepository.cs
+src/StockFlow.Infrastructure/Repositories/VariantRepository.cs
+tests/StockFlow.MasterDataChecks/BillingChecks.cs
+tests/StockFlow.MasterDataChecks/NewSaleIntegrationChecks.cs
+tests/StockFlow.MasterDataChecks/Program.cs
+tests/StockFlow.UiChecks/billing-offline.cjs
+docs/new-sale-modernization.txt
+
+Validation
+BillingChecks (--billing-checks): rendered Razor/API checks, permission gating,
+bounded search input, cash/credit rules, due dates and duplicate unit validation.
+NewSaleIntegrationChecks (--new-sale-integration-checks): real PostgreSQL on a
+temporary clone of the existing disposable 069 fixture, automatically dropped.
+Checks exact SKU/manufacturer barcode/unit identity, parent-code variant results,
+unauthorized price overrides, concurrent identical completion, last-unit races,
+one stock posting, invoice SKU snapshot, distinct total/collection/change/credit,
+customer due, serialized status and idempotent accepted returns, SQL result cap,
+location isolation, tenant isolation and stale-profile rejection.
+Production application database was not accessed by these tests.
+
+billing-offline.cjs: real page scripts with mocked APIs exercise scanner quantity,
+serial selection/duplicates, customer quick-add, discounts/approvals, trade-in,
+cash tender/change, credit/split/electronic payments, manual verification/cancel,
+double-click protection, failure/lost-response recovery, device/server hold/resume,
+receipt PDF, unified search/keyboard selection/stale results, availability states,
+summary separation, clear/cancel, and layouts at 1440/768/390/320 pixels.
+Screenshots and receipt PDF: tests/bin/billing-ui-fixtures/.
+
+Executed results: BillingChecks PASS; NewSaleIntegrationChecks PASS;
+billing-offline.cjs PASS, including ambiguous/manual Enter and changed-stock
+finalization. Product Edit browser regression (product-details-offline.cjs) PASS.
+Release application build PASS: zero warnings, zero errors. Disposable PostgreSQL
+cluster stopped after testing; temporary integration databases were dropped.
+
+Limits of validation
+Browser APIs are mocked; PostgreSQL repository/posting checks run separately.
+Physical scanner hardware, camera capture permissions and real bank/card/UPI
+settlement require a device/operator check. No external payment provider is called.
+This change does not claim to add fitting-service lines, external payment
+verification, decimal quantities, or a new stock reservation policy.

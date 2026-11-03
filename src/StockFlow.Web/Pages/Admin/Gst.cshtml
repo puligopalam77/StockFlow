@@ -1,0 +1,15 @@
+@page
+@inject StockFlow.Application.Common.BusinessScope Scope
+@{ ViewData["Title"]="GST Settings"; }
+<link rel="stylesheet" href="~/css/gst.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/gst-settings.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/gst-catalog.css" asp-append-version="true" />
+<div class="gst-workspace" id="gst-settings" data-edit="@Access.Can("GST_SETTINGS","EDIT").ToString().ToLowerInvariant()" data-profile="@Scope.BusinessProfileCode" data-store="@Scope.StoreId" data-billing-edit="@Access.Can("COMPANY_SETTINGS","EDIT").ToString().ToLowerInvariant()">
+    <p permission-module="EWAY_BILLS" permission-action="CONFIGURE_PROVIDER"><a href="/EWayBills/Provider" class="btn btn-sm btn-outline-secondary">Integrations: E-Way Bill provider readiness</a></p>
+    <header class="gst-setup-heading"><div><h1 id="gst-title">GST Settings</h1><p id="gst-subtitle">Loading your saved configuration…</p></div><div id="gst-page-actions" class="gst-actions"></div></header>
+    <div id="gst-message" role="alert" hidden></div>
+    <nav id="gst-stepper" aria-label="GST setup steps" hidden></nav>
+    <section class="gst-card" id="gst-panel" aria-live="polite"><p>Loading GST configuration…</p></section>
+    <dialog id="gst-preview" aria-labelledby="gst-preview-title"><header><h2 id="gst-preview-title">Review proposed changes</h2><button type="button" id="gst-preview-close" aria-label="Close preview">×</button></header><div id="gst-preview-body"></div><footer class="gst-actions"><button type="button" id="gst-preview-cancel" class="gst-button">Cancel</button><button type="button" id="gst-preview-confirm" class="gst-button">Confirm</button></footer></dialog>
+</div>
+@section Scripts { <script src="~/js/gst-catalog.js" asp-append-version="true"></script><script src="~/js/gst-setup.js" asp-append-version="true"></script> }

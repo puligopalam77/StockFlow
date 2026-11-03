@@ -1,0 +1,11 @@
+@model string
+<div class="invoice-brand">
+    <svg class="invoice-brand-mark" viewBox="0 0 64 76" aria-hidden="true"><path d="M51 9 12 29v14l23 12M13 67l39-20V33L29 21" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    <div>
+        @if(string.Equals(Model,"StockFlow",StringComparison.OrdinalIgnoreCase)){<h1>Stock<span>Flow</span>
+    </h1>}
+        else{<h1>@Model</h1>}
+    <p class="invoice-brand-tagline">INVENTORY · SALES · GROWTH</p>
+</div>
+</div>

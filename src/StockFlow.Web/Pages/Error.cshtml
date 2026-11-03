@@ -1,0 +1,17 @@
+﻿@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">We could not finish this action</h1>
+<p>Go back and try again. If you were saving a bill or stock receipt, check its history first to see whether it was saved. If the problem continues, contact the shop owner or administrator.</p>
+
+@if (Model.ShowRequestId)
+{
+<p>
+    <strong>Support reference:</strong> <code>@Model.RequestId</code>
+</p>
+}
+
+<a href="/Account/Home" class="btn btn-primary">Go to my account</a>

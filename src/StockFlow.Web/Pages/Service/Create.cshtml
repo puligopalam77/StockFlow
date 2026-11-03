@@ -1,0 +1,64 @@
+@page
+@model StockFlow.Web.Pages.Service.CreateModel
+@{ ViewData["Title"] = "New repair request"; }
+<h1>New repair request</h1>
+<p>Scan the serial number or barcode on the item the customer bought. Repairs can be paid for even after the warranty ends.</p>
+<div id="service-message" class="alert alert-danger" role="alert" hidden>
+</div>
+<form id="scan-form" class="d-flex gap-2 mb-3">
+    <label for="service-scan" class="form-label">Serial / barcode</label>
+    <input id="service-scan" class="form-control" maxlength="200" autofocus />
+    <button class="btn btn-secondary">Find item</button>
+</form>
+<div id="scan-context" class="alert alert-info" aria-live="polite">Scan an item with a serial number, or choose a product without serial numbers below.</div>
+<button id="clear-scan" class="btn btn-outline-secondary mb-3" type="button">Clear selection</button>
+<form id="service-create">
+    <fieldset id="create-fields" disabled>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="product-search" class="form-label">Find a product without serial numbers</label>
+                <div class="d-flex gap-2">
+                    <input id="product-search" class="form-control" maxlength="200" />
+                    <button type="button" id="find-products" class="btn btn-secondary">Find</button>
+                </div>
+                <label for="product" class="form-label">Product</label>
+                <select id="product" class="form-select" required>
+                    <option value="">Select product</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="customer-search" class="form-label">Customer name / mobile</label>
+                <div class="d-flex gap-2">
+                    <input id="customer-search" class="form-control" maxlength="200" />
+                    <button type="button" id="find-customers" class="btn btn-secondary">Find</button>
+                </div>
+                <label for="customer" class="form-label">Customer</label>
+                <select id="customer" class="form-select" required>
+                    <option value="">Select customer</option>
+                </select>
+                <small>For a new customer, add their name and mobile in Customers first.</small>
+            </div>
+            <div class="col-12">
+                <label for="complaint" class="form-label">What problem does the customer report?</label><textarea id="complaint" placeholder="For example: battery has no backup, geyser does not heat, or water is leaking" maxlength="1000" class="form-control" required></textarea></div>
+            <div class="col-md-6">
+                <label for="technician" class="form-label">Who will repair it?</label>
+                <select id="technician" class="form-select">
+                    <option value="">Unassigned</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="expected" class="form-label">When can the customer collect it?</label>
+                <input id="expected" type="date" class="form-control" />
+            </div>
+            <div class="col-12">
+                <label for="notes" class="form-label">Notes</label><textarea id="notes" class="form-control" maxlength="2000"></textarea></div>
+        </div>
+        <p class="mt-3">Received date is recorded automatically when the request is created.</p>
+        <button class="btn btn-primary">Save repair request</button>
+    </fieldset>
+</form>
+@section Scripts {
+    <script src="~/js/common/scanner.js" asp-append-version="true"></script>
+    <script src="~/js/service-common.js" asp-append-version="true"></script>
+    <script src="~/js/service-create.js" asp-append-version="true"></script>
+}

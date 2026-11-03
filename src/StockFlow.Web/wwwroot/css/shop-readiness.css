@@ -1,0 +1,86 @@
+#language-settings {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.configuration-sidebar {
+    min-width: 0;
+}
+.configuration-sidebar .sf-breadcrumb ol {
+    flex-wrap: wrap;
+}
+.configuration-sidebar .sf-breadcrumb li {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.cash-totals {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem 1rem;
+}
+.cash-totals dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+#cash-workspace fieldset {
+    min-width: 0;
+}
+#cash-workspace .card,
+#pilot-workspace .pilot-check {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+#cash-workspace button,
+#pilot-workspace button {
+    white-space: normal;
+    max-width: 100%;
+}
+.pilot-check {
+    border-bottom: 1px solid #dce2eb;
+    padding: 1rem 0;
+}
+.pilot-check:last-child {
+    border-bottom: 0;
+}
+.pilot-check label {
+    display: block;
+}
+.sf-language {
+    width: auto;
+    width: 140px;
+    font-size: 12px;
+}
+.sf-language-control { max-width: 180px; }
+#language-message { display: block; white-space: normal; }
+@media (max-width: 575px) {
+    .sf-language {
+        width: 115px;
+        font-size: 11px;
+        padding: 4px;
+    }
+    .sf-topbar-actions {
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
+    .cash-totals {
+        font-size: 14px;
+    }
+}
+@media print {
+    #cash-refresh,
+    #cash-retry,
+    #cash-save,
+    #cash-print,
+    #pilot-export,
+    #pilot-print,
+    .sf-validation-summary {
+        display: none !important;
+    }
+    #cash-workspace input,
+    #cash-workspace textarea {
+        border: 0;
+    }
+    .pilot-check {
+        break-inside: avoid;
+    }
+}

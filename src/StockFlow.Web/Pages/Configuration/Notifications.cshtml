@@ -1,0 +1,85 @@
+@page
+@model StockFlow.Web.Pages.Configuration.NotificationsModel
+@{ ViewData["Title"]="Notification settings";
+ var names=new[]{"Invoice completed","Receipt generated","Repair received","Repair ready","Warranty updated"};
+ var descriptions=new[]{"Sale successfully completed","Stock receipt completed","Service request created","Service marked ready","Warranty claim status changed"};
+}
+@section PageHeader {
+<header class="sf-page-heading"><div><h1>Notification settings</h1><p>Configure who receives notifications, delivery channels and message templates for this shop.</p></div>
+<form method="post" asp-page-handler="Test"><button class="btn btn-outline-primary" disabled="@(!Access.Can("COMPANY_SETTINGS","EDIT"))">Test notifications</button></form></header>
+}
+<div class="sf-notification-console">
+@if(Model.Message is not null){<div class="alert alert-info" role="status">@Model.Message</div>}
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+@if(!Model.Ready){<div class="alert alert-info">Apply database migration 039, then restart StockFlow to configure notifications.</div>}
+else {
+<div class="sf-notice">To enable email, complete server configuration and verify a sender. Configure WhatsApp from Administration > WhatsApp Settings. SMS is not connected. Background delivery is @(Model.WorkerEnabled ? "enabled" : "disabled").</div>
+<nav class="sf-notification-tabs" aria-label="Notification sections">
+<a href="#event-templates" class="active">Event templates</a><a href="#channel-settings">Channel settings</a><a href="#staff-recipients">Recipients</a><a href="#notification-preferences">Preferences</a><a href="#delivery-history">Delivery history</a></nav>
+<section id="event-templates" class="sf-notification-settings">
+<header class="sf-notification-section-heading"><div><h2>Event templates</h2><p>Enable events and customize their messages. Supported placeholders: {reference} and {status}.</p></div>
+<div class="sf-preview-controls"><label for="notification-preview-event">Preview for</label><select id="notification-preview-event" class="form-select">@for(var i=0;i<Model.Input.Rules.Count;i++){<option value="@i">@names[i]</option>}</select><button type="button" id="notification-preview-button" class="btn btn-outline-primary">Preview message</button></div></header>
+<form method="post" id="notification-events-form"><fieldset disabled="@(!Access.Can("COMPANY_SETTINGS","EDIT"))">
+<div class="table-responsive"><table class="table sf-notification-template-table"><thead><tr><th>Event</th><th>Description</th><th>Channels</th><th>Title</th><th>Message template</th><th>Actions</th></tr></thead><tbody>
+@for(var i=0;i<Model.Input.Rules.Count;i++){
+ var emailField=i==0 ? "InvoiceEmails" : i==2 ? "RepairEmails" : i==4 ? "WarrantyEmails" : null;
+ var emailChecked=i==0 ? Model.Delivery.InvoiceEmails : i is 2 or 3 ? Model.Delivery.RepairEmails : i==4 && Model.Delivery.WarrantyEmails;
+<tr><td><input asp-for="Input.Rules[i].Event" type="hidden" /><label class="sf-event-toggle"><input asp-for="Input.Rules[i].Enabled" role="switch" /> @names[i]</label></td><td>@descriptions[i]</td>
+<td><div class="sf-channel-options"><label><input type="checkbox" checked="@Model.Input.Rules[i].Enabled" disabled /> In-app</label><label><input type="checkbox" name="@(emailField is null ? null : "Delivery."+emailField)" form="notification-delivery-form" checked="@emailChecked" disabled="@(emailField is null || !Model.DeliveryReady || !Access.Can("COMPANY_SETTINGS","EDIT"))" /> Email</label><label><input type="checkbox" disabled /> WhatsApp</label><label><input type="checkbox" disabled /> SMS</label></div></td>
+<td><input asp-for="Input.Rules[i].Title" class="form-control" maxlength="100" required aria-label="@($"{names[i]} title")" /><small class="sf-template-counter"></small></td><td><input asp-for="Input.Rules[i].Body" class="form-control" maxlength="500" required aria-label="@($"{names[i]} message")" /><small class="sf-template-counter"></small></td><td><button type="button" class="btn btn-outline-primary" data-edit-template="@i">Edit</button></td></tr>
+}
+<tr><td>Low / out of stock</td><td>Daily combined stock digest</td><td>In-app / optional administrator email</td><td>Daily stock alert</td><td>Location, items at/below limit and zero-stock counts</td><td><a href="#notification-preferences">Configure</a></td></tr>
+<tr><td>Subscription renewal</td><td colspan="4">Available after subscription records and renewal dates are implemented.</td><td>Pending</td></tr>
+<tr><td>Operational failure</td><td>Actual backup / delivery job failure</td><td>In-app / optional administrator email</td><td>Operational job failed</td><td>Job name and instruction to review server logs</td><td><a href="#notification-preferences">Configure</a></td></tr>
+</tbody></table></div><div class="sf-notification-actions"><button class="btn btn-primary">Save event templates and recipients</button></div></fieldset></form></section>
+<div class="sf-notification-bottom-grid">
+<section id="channel-settings" class="sf-notification-settings"><h2>Channel settings</h2><p>Sender details and channel availability.</p>
+<div class="sf-channel-card"><span class="sf-channel-icon">✉</span><div><strong>Email</strong><span class="sf-channel-status">@(Model.EmailServerEnabled && Model.Delivery.SenderVerified ? "Configured (Brevo)" : "Configuration required")</span><small>Sender: @(string.IsNullOrEmpty(Model.Delivery.SenderEmail)?"Not configured":Model.Delivery.SenderEmail)</small></div><a class="btn btn-outline-primary" href="#notification-preferences">Configure</a></div>
+<div class="sf-channel-card"><span class="sf-channel-icon" aria-hidden="true">W</span><div><strong>WhatsApp</strong><span class="sf-channel-status">Business account settings</span><small>Connect your own number and manage approved customer notifications.</small></div>@if(Model.CanManageWhatsApp){<a class="btn btn-outline-primary" asp-page="/Configuration/WhatsApp">Configure</a>}else{<span class="small">Tenant owner setup required</span>}</div>
+<div class="sf-channel-card"><span class="sf-channel-icon">▤</span><div><strong>SMS</strong><span class="sf-channel-status">Not connected</span><small>Provider integration is required.</small></div><button class="btn btn-outline-secondary" disabled>Configure</button></div>
+<p class="small mt-2">Save email channel choices using the preferences form below. Repair ready shares the repair email setting. Receipt email is not implemented.</p>
+</section>
+<section id="staff-recipients" class="sf-notification-settings"><h2>Staff recipients</h2><p>Choose staff who should receive in-app business alerts.</p><input id="notification-staff-search" class="form-control mb-2" placeholder="Search staff..." aria-label="Search staff" />
+<div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Role</th><th>Receive alerts</th><th>Channels</th></tr></thead><tbody>
+@foreach(var person in Model.Staff){<tr data-staff-name="@person.Name"><td>@person.Name</td><td>@person.Role</td><td><input type="checkbox" name="Input.RecipientIds" form="notification-events-form" value="@person.UserId" checked="@(Model.Input.RecipientIds.Contains(person.UserId))" role="switch" aria-label="@($"Alerts for {person.Name}")" disabled="@(!Access.Can("COMPANY_SETTINGS","EDIT"))" /></td><td>In-app</td></tr>}
+</tbody></table></div><div class="sf-notice small">Staff only receive alerts for modules and locations they have permission to access. Email business digests use configured administrator addresses.</div>
+<label class="mt-2"><input asp-for="Input.Enabled" form="notification-events-form" disabled="@(!Access.Can("COMPANY_SETTINGS","EDIT"))" /> Enable staff notifications</label></section></div>
+@if(Model.DeliveryReady){
+<section id="notification-preferences" class="sf-notification-settings mt-3"><h2>Preferences</h2><p>Delivery schedule and email sender.</p>
+<form method="post" asp-page-handler="Delivery" id="notification-delivery-form"><fieldset disabled="@(!Access.Can("COMPANY_SETTINGS","EDIT"))"><div class="row g-2">
+<div class="col-md-4"><label><input asp-for="Delivery.DigestEnabled" /> Daily low / out-of-stock digest</label></div><div class="col-md-4"><label asp-for="Delivery.DigestHour">Digest hour (0–23)</label><input asp-for="Delivery.DigestHour" class="form-control" min="0" max="23" /></div><div class="col-md-4"><label asp-for="Delivery.TimeZone">Time zone</label><input asp-for="Delivery.TimeZone" class="form-control" maxlength="100" /></div>
+<div class="col-12"><label><input asp-for="Delivery.EmailEnabled" /> Enable email</label></div>
+<div class="col-md-4"><label asp-for="Delivery.SenderEmail">Sender email</label><input asp-for="Delivery.SenderEmail" class="form-control" type="email" maxlength="150" /></div><div class="col-md-4"><label asp-for="Delivery.SenderName">Sender name</label><input asp-for="Delivery.SenderName" class="form-control" maxlength="100" /></div><div class="col-md-4"><label asp-for="Delivery.DailyLimit">Daily send-attempt limit</label><input asp-for="Delivery.DailyLimit" class="form-control" min="1" max="300" /></div>
+<div class="col-12"><label asp-for="Delivery.AdministratorEmails">Administrator alert emails (optional, up to five)</label><input asp-for="Delivery.AdministratorEmails" class="form-control" maxlength="1000" /><small>For administrator alerts and test notifications only.</small></div>
+<div class="col-md-6"><label><input asp-for="Delivery.FailureAlerts" /> Actual backup / job failure alerts</label></div>
+</div><button class="btn btn-primary">Save channel settings and preferences</button></fieldset></form>
+<form method="post" asp-page-handler="VerifySender" class="mt-2"><span>Saved sender: @(Model.Delivery.SenderVerified?"verified":"verification required") </span><button class="btn btn-outline-primary" disabled="@(!Access.Can("COMPANY_SETTINGS","EDIT"))">Verify saved sender with Brevo</button></form></section>
+}else{<div id="notification-preferences" class="sf-notice mt-3">Apply migration 040 for daily digest and email settings.</div>}
+ @if(Access.Can("CUSTOMERS")) {
+ <section id="customer-consent" class="sf-notification-settings mt-3"><h2>Customer consent</h2><p class="small">Record explicit permission or withdrawal for each channel. Consent does not enable automatic sending.</p>
+ <form method="get" class="d-flex gap-2"><input asp-for="Term" class="form-control" placeholder="Customer name or mobile" maxlength="100" aria-label="Find customer" /><button class="btn btn-outline-primary">Find</button></form>
+ @if(Model.Customers.Count>0) {
+ <form method="post" asp-page-handler="Consent" class="mt-3"><fieldset disabled="@(!Access.Can("COMPANY_SETTINGS","EDIT"))">
+ <input asp-for="Term" type="hidden" />
+ <label asp-for="Consent.CustomerId">Customer</label><select asp-for="Consent.CustomerId" class="form-select">@foreach(var customer in Model.Customers.DistinctBy(x=>x.CustomerId)) { <option value="@customer.CustomerId">@customer.Name</option> }</select>
+ <label asp-for="Consent.Channel">Channel</label><select asp-for="Consent.Channel" class="form-select"><option value="email">Email</option><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option></select>
+ <label class="my-2"><input asp-for="Consent.Allowed" /> Customer explicitly agreed (clear for withdrawal)</label>
+ <label asp-for="Consent.Evidence">How and when was consent obtained or withdrawn?</label><input asp-for="Consent.Evidence" class="form-control" minlength="5" maxlength="250" required />
+ <button class="btn btn-primary mt-2">Save consent</button></fieldset></form>
+ <div class="table-responsive mt-3"><table class="table"><thead><tr><th>Customer</th><th>Channel</th><th>Consent</th><th>Evidence</th></tr></thead><tbody>@foreach(var c in Model.Customers) { <tr><td>@c.Name</td><td>@c.Channel</td><td>@(c.Allowed ? "Agreed" : "Not permitted")</td><td>@c.Evidence</td></tr> }</tbody></table></div>
+ } else if(!string.IsNullOrWhiteSpace(Model.Term)) { <p class="mt-2">No matching customers.</p> }
+ </section>
+ }
+
+<section id="delivery-history"> <section class="sf-notification-settings mt-3"><h2>Delivery history</h2><p class="small">Latest 50 events you have permission to view. Failed deliveries stop after five attempts. Skipped events had no eligible recipient or were disabled.</p>
+ <div class="table-responsive"><table class="table"><thead><tr><th>Event</th><th>Reference</th><th>Status</th><th>Attempts</th><th>Recipients</th><th>Created (UTC)</th><th>Diagnostic</th></tr></thead><tbody>
+ @foreach(var job in Model.Jobs) { <tr><td>@job.Event</td><td>@job.Reference</td><td>@job.Status</td><td>@job.Attempts</td><td>@job.Delivered</td><td>@job.CreatedAt.ToString("dd MMM yyyy HH:mm")</td><td>@job.LastError</td></tr> }
+ @if(Model.Jobs.Count==0) { <tr><td colspan="7">No notification events yet.</td></tr> }
+ </tbody></table></div></section>
+
+@if(Model.DeliveryReady){<section class="sf-notification-settings mt-3"><h2>Email delivery history</h2><p>Accepted means provider acceptance. Check the provider before resending Unknown deliveries.</p><div class="table-responsive"><table class="table"><thead><tr><th>Reference</th><th>Recipient</th><th>Status</th><th>Attempts</th><th>Provider ID</th><th>Diagnostic</th></tr></thead><tbody>@foreach(var email in Model.Emails){<tr><td>@email.Reference</td><td>@email.Recipient</td><td>@email.Status</td><td>@email.Attempts</td><td>@email.ProviderId</td><td>@email.Diagnostic</td></tr>}</tbody></table></div></section>}
+</section>
+}
+<dialog id="notification-preview-dialog" class="sf-notification-settings"><h2>Message preview</h2><h3 id="notification-preview-title"></h3><p id="notification-preview-body"></p><p class="small">Sample values only; this preview does not send a message.</p><button type="button" class="btn btn-outline-primary" id="notification-preview-close">Close</button></dialog>
+</div>
+@section Scripts {<script src="~/js/notification-settings.js" asp-append-version="true"></script>}

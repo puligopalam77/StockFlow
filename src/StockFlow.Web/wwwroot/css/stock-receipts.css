@@ -1,0 +1,58 @@
+#stock-receipt-history,#stock-receipt-detail{max-width:1440px}.receipt-page-heading{align-items:flex-start}.receipt-filter{display:grid;grid-template-columns:minmax(260px,2fr) repeat(3,minmax(150px,1fr));gap:14px;background:#fff;border:1px solid var(--sf-border);border-radius:12px;padding:18px;margin-bottom:18px}.receipt-filter .receipt-search{grid-column:span 2}.receipt-filter-actions{display:flex;align-items:end;gap:8px}.receipt-summary{display:flex;align-items:center;gap:24px;border-block:1px solid var(--sf-border);padding:13px 4px;margin:4px 0 18px}.receipt-summary h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--sf-muted);margin:0}.receipt-summary>div{display:flex;flex-wrap:wrap;gap:10px 28px}.receipt-summary span{color:var(--sf-muted)}.receipt-summary strong{color:var(--sf-ink);margin-right:5px}.receipt-tabs{display:flex;gap:24px;border-bottom:1px solid var(--sf-border);margin-bottom:0}.receipt-tab{border:0;background:transparent;padding:11px 2px;font-weight:700;color:var(--sf-muted);border-bottom:3px solid transparent}.receipt-tab.active{color:var(--sf-primary);border-bottom-color:var(--sf-primary)}#receipts-panel,#items-panel{background:#fff;border:1px solid var(--sf-border);border-top:0;border-radius:0 0 12px 12px;min-height:180px}.receipt-table{margin:0}.receipt-table th{white-space:nowrap}.receipt-table td{vertical-align:middle}.receipt-number{font-weight:700}.receipt-type{display:inline-flex;padding:3px 8px;border-radius:999px;background:#eef2f7;font-size:12px;font-weight:600}.receipt-status{display:inline-flex;padding:3px 8px;border-radius:999px;background:#e8f8ef;color:#147a45;font-size:12px;font-weight:700}.receipt-status.reversed{background:#fdecec;color:#b42318}.receipt-pagination:not(.sf-pagination){display:flex;align-items:center;gap:14px;margin-top:14px}.receipt-pagination:not(.sf-pagination) p{margin:0;margin-right:auto;color:var(--sf-muted)}.receipt-pagination:not(.sf-pagination) label{white-space:nowrap}.receipt-pagination:not(.sf-pagination) select{width:82px}.receipt-pages{display:flex;gap:5px}.receipt-pages button{min-width:36px}.receipt-empty{padding:42px 20px;text-align:center;color:var(--sf-muted)}.receipt-detail-header,.receipt-detail-items{background:#fff;border:1px solid var(--sf-border);border-radius:12px;padding:20px;margin-bottom:16px}.receipt-detail-header dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 24px;margin:0}.receipt-detail-header dt{font-size:12px;color:var(--sf-muted);margin-bottom:3px}.receipt-detail-header dd{font-weight:600;margin:0}.receipt-detail-items h2{font-size:18px;margin-bottom:14px}.receipt-detail-totals{margin-left:auto;width:min(420px,100%);background:#fff;border:1px solid var(--sf-border);border-radius:12px;padding:16px}.receipt-total-row{display:flex;justify-content:space-between;padding:5px 0}.receipt-total-row.grand{font-size:17px;font-weight:700;border-top:1px solid var(--sf-border);margin-top:6px;padding-top:10px}
+.sf-operational-main .receipt-filter-actions .btn{min-height:34px;padding:5px 12px;font-size:13px}
+@media(min-width:1101px){.receipt-filter{grid-template-columns:minmax(280px,2fr) repeat(4,minmax(135px,1fr)) auto;align-items:end}.receipt-filter .receipt-search{grid-column:auto}.receipt-filter-actions{white-space:nowrap}}
+@media(max-width:1100px){.receipt-filter{grid-template-columns:repeat(2,minmax(0,1fr))}.receipt-filter .receipt-search{grid-column:span 2}.receipt-detail-header dl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.receipt-filter{grid-template-columns:1fr}.receipt-filter .receipt-search{grid-column:auto}.receipt-summary{align-items:flex-start;flex-direction:column;gap:8px}.receipt-summary>div{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}.receipt-pagination:not(.sf-pagination){flex-wrap:wrap}.receipt-pagination:not(.sf-pagination) p,.receipt-pages{width:100%;margin-right:0}.receipt-pages{flex-wrap:wrap}.receipt-detail-header dl{grid-template-columns:1fr}.receipt-page-heading{gap:12px}.receipt-table{min-width:820px}}
+@media print{.sf-sidebar,.sf-topbar,.receipt-page-heading p,#receipt-print,.btn,.sf-footer{display:none!important}#stock-receipt-detail{max-width:none}.receipt-detail-header,.receipt-detail-items,.receipt-detail-totals{border-color:#bbb;break-inside:avoid}}
+
+/* Receipt history uses the same light cards and accents as receipt entry. */
+#stock-receipt-history { max-width:none; min-width:0; }
+.sf-operational-main > .receipt-page-heading:has(.receipt-heading-icon) { max-width:none; display:flex; align-items:center; flex-wrap:nowrap; gap:16px; }
+.receipt-heading-icon { display:grid; place-items:center; width:56px; height:56px; flex-shrink:0; border:1px solid #ffb9d9; border-radius:16px; background:#fff0f7; color:#ff0085; font-size:30px; }
+.receipt-page-heading:has(.receipt-heading-icon) > div { flex:1; min-width:0; }
+.receipt-page-heading:has(.receipt-heading-icon) p { max-width:none; }
+.receipt-page-heading:has(.receipt-heading-icon) > .btn { flex-shrink:0; }
+.sf-operational-main .receipt-page-heading:has(.receipt-heading-icon) > .btn { min-height:40px; padding:9px 18px; font-weight:700; }
+#stock-receipt-history .receipt-filter { background:linear-gradient(180deg,#fff8fc,#fff); border-color:#f7dfe9; gap:8px 12px; padding:12px 14px; margin-bottom:12px; }
+#stock-receipt-history .receipt-summary { display:block; border:0; padding:0; margin:0 0 12px; }
+#stock-receipt-history .receipt-summary > div { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+#stock-receipt-history .receipt-metric { display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid; border-radius:10px; min-width:0; }
+#stock-receipt-history .receipt-metric.pink { background:#fff6fb; border-color:#ffdaeb; --receipt-accent:#ff0085; --receipt-icon:#ffdfef; }
+#stock-receipt-history .receipt-metric.blue { background:#f2f9ff; border-color:#d5eaff; --receipt-accent:#009aff; --receipt-icon:#dcf0ff; }
+#stock-receipt-history .receipt-metric.green { background:#f2fcf7; border-color:#dcf1e5; --receipt-accent:#00ad62; --receipt-icon:#dcf9e8; }
+#stock-receipt-history .receipt-metric.orange { background:#fff8f2; border-color:#f8e6d7; --receipt-accent:#ff7b00; --receipt-icon:#ffebdb; }
+#stock-receipt-history .receipt-metric-icon { display:grid; place-items:center; width:38px; height:38px; flex-shrink:0; border-radius:9px; font-size:24px; color:var(--receipt-accent); background:var(--receipt-icon); }
+#stock-receipt-history .receipt-metric > div { min-width:0; }
+#stock-receipt-history .receipt-metric > div > span { font-size:12px; display:block; margin-bottom:3px; }
+#stock-receipt-history .receipt-metric strong { display:block; font-size:20px; line-height:1.2; font-weight:750; overflow-wrap:anywhere; }
+#stock-receipt-history .receipt-list-card { background:white; border:1px solid var(--sf-border); border-radius:14px; overflow:hidden; box-shadow:0 3px 16px #17203308; }
+#stock-receipt-history .receipt-tabs { gap:0; padding:0 12px; }
+#stock-receipt-history .receipt-tab { padding:10px 14px; }
+#stock-receipt-history .receipt-tab.active { color:#ff0085; border-bottom-color:#ff0085; }
+#stock-receipt-history :is(#receipts-panel,#items-panel) { border:0; border-radius:0; min-height:0; padding:10px 10px 0; }
+#stock-receipt-history .table-responsive { margin-bottom:0; border:0; border-radius:9px; }
+#stock-receipt-history .receipt-table th { background:#f3f5fa; font-size:12px; padding:10px 10px; }
+#stock-receipt-history .receipt-table td { padding:10px; font-size:13px; }
+#stock-receipt-history .receipt-number { color:#ff0085; font-weight:750; text-decoration:underline; }
+#stock-receipt-history .receipt-type { border:1px solid #ffcde4; background:#fff0f7; color:#db006b; border-radius:6px; white-space:nowrap; }
+#stock-receipt-history .receipt-status { border-radius:6px; }
+#stock-receipt-history .receipt-clickable-row { cursor:pointer; }
+#stock-receipt-history .receipt-pagination:not(.sf-pagination) { margin:0; padding:10px 14px; gap:10px; }
+#stock-receipt-history .receipt-pages[hidden] { display:none !important; }
+#stock-receipt-history .receipt-pagination:not(.sf-pagination) p { font-size:13px; }
+#stock-receipt-history .receipt-pages .btn { min-height:34px; padding:5px 10px; }
+#stock-receipt-history .receipt-pagination:not(.sf-pagination) select { min-height:34px; font-size:13px; }
+@media(max-width:1100px) {
+ #stock-receipt-history .receipt-summary > div { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:700px) {
+ .sf-operational-main > .receipt-page-heading:has(.receipt-heading-icon) { flex-wrap:wrap; gap:12px; }
+ .receipt-page-heading:has(.receipt-heading-icon) > div { flex-basis:calc(100% - 72px); }
+ .receipt-page-heading:has(.receipt-heading-icon) > .btn { margin-left:68px; }
+ #stock-receipt-history .receipt-filter { padding:14px; }
+ #stock-receipt-history .receipt-metric { padding:12px; gap:9px; }
+ #stock-receipt-history .receipt-metric-icon { width:34px; height:34px; font-size:22px; }
+ #stock-receipt-history .receipt-metric strong { font-size:18px; }
+ #stock-receipt-history .receipt-metric > div > span { font-size:11px; }
+ #stock-receipt-history .receipt-pagination:not(.sf-pagination) { padding:12px; }
+}

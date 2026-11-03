@@ -1,0 +1,83 @@
+New Sale cart presentation refinement - 2026-11-02
+
+Scope
+Only Items in This Bill and its existing line-adjustment dialog were refined.
+The supplied picture is a layout reference. Its products, prices, quantities,
+rates and inconsistent illustrative totals were not imported into StockFlow.
+No SQL migration, database write, stock posting or costing-policy change.
+
+Delivered
+- Pink heading with live line/unit counts and existing confirmed Clear Bill.
+- Ten-column navy-header table; compact centered rows and 36px product images.
+- Product names wrap to two lines; variant attributes and serial identities use
+  compact text with full-value tooltips. SKU appears in its own column once.
+- Removed More Details and expanded ordinary metadata. Underlying item identity,
+  unit selection and request data remain intact; manual-item editing is retained.
+- White editable price/discount/quantity inputs and a 96px desktop stepper.
+  Read-only controls are visually distinct. Touch removal has a 44px target.
+- Stock displays the current response value. Green/amber uses a supplied minimum
+  threshold only; missing thresholds stay neutral. Manual items show Non-stock.
+  Scan responses without a minimum threshold deliberately do not imply healthy
+  stock just because quantity is positive.
+- Ordinary row tax is read-only. Authorized ordinary-bill correction uses the
+  existing adjustment dialog via a contextual pencil. Existing tax permission,
+  reason requirements and mapped-GST classification restrictions still apply.
+- Line totals use existing en-IN money formatting and server quote values.
+  Pending/invalid input retains the last confirmed amount, marks it provisional
+  and relies on existing quote validity to prevent premature checkout.
+- Table scrolling is contained within the cart. Sticky headers and a scroll hint
+  keep all ten columns accessible on narrow screens; no page-wide overflow.
+
+Implementation
+src/StockFlow.Web/Pages/Sales/Create.cshtml
+src/StockFlow.Web/wwwroot/css/billing-cart.css
+src/StockFlow.Web/wwwroot/js/sales-create.js
+tests/StockFlow.UiChecks/billing-cart-offline.cjs
+tests/StockFlow.UiChecks/fast-billing-offline.cjs
+
+Existing sales calculation, controller/repository, payment validation, discount
+policy, customer selection, bill summary and permission services were reused.
+No new financial calculation engine or backend endpoint was introduced.
+
+Actual verification
+PASS dotnet build tests/StockFlow.MasterDataChecks --artifacts-path
+     E:/StockFlow/.artifacts/cart-ui -v quiet
+     0 warnings, 0 errors.
+PASS dotnet .artifacts/cart-ui/bin/StockFlow.MasterDataChecks/debug/
+     StockFlow.MasterDataChecks.dll --billing-checks
+     Actual Razor rendering, SaleRules arithmetic and application permission/
+     payment checks with test services; no application database accessed.
+PASS tests/StockFlow.UiChecks/billing-cart-offline.cjs in headless Edge.
+     Synthetic HTTP responses with actual Razor/scripts/styles. Empty and
+     1/5/10/20-line carts; long names; centered rows; white editable controls;
+     read-only tax; exact SKU; threshold/unknown/out-of-stock states; serialized
+     quantity restrictions; last-confirmed totals during edits; customer/payment/
+     notes/draft preservation; removal; cancelled and confirmed Clear Bill;
+     touch remove target; zero sale-finalization requests; no JavaScript errors.
+     Sizes: 1920x1080, 1366x768, 1280x720, 1280x650, 1280x600, 1024x768,
+     768x1024, 390x844, 375x667 and 320x640.
+PASS tests/StockFlow.UiChecks/fast-billing-offline.cjs in headless Edge.
+     Existing customer/manual-item/scan-repeat/hold-resume/payment/quotation
+     lineage/lost-response scenarios; reason reuse; routine/exception discount
+     policy; pending/approved/stale approval; cashier tax denial; mapped GST;
+     invalid input and delayed/failed quote handling; ten viewports including
+     the existing 1280x600 simulated 150-percent workspace. No JavaScript errors.
+
+Evidence
+tests/bin/cart-ui-fixtures/cart-1-items.png
+tests/bin/cart-ui-fixtures/cart-5-items.png
+tests/bin/cart-ui-fixtures/cart-10-items.png
+tests/bin/cart-ui-fixtures/cart-20-items.png
+tests/bin/cart-ui-fixtures/cart-20-1366.png
+tests/bin/cart-ui-fixtures/cart-20-390.png
+tests/bin/cart-ui-fixtures/cart-20-320.png
+
+Limits
+Browser values and roles are synthetic fixtures, not a live-shop transaction or
+new database isolation verification. This presentation change does not certify
+production two-shop master isolation. Electrical serial and non-serial/manual
+paths were exercised; a full live lifecycle in each of Electrical, Bike
+Accessories, Clothing and Footwear was not rerun. Profile capability logic was
+not changed. Physical scanners, touch hardware, printers and actual OS/browser
+150-percent scaling still require device acceptance. Mocked stock/quote data is
+test evidence only and never a production data source.

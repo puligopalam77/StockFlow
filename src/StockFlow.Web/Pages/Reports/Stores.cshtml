@@ -1,0 +1,47 @@
+@page
+@inject StockFlow.Application.Common.BusinessScope BusinessScope
+@{ViewData["Title"]="Stock by store";}
+<h1>Stock by store and location</h1>
+<h2>All-time location summary</h2>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Store</th>
+                <th>Location</th>
+                <th>Current stock</th>
+                <th>Stock received (excluding transfers)</th>
+                <th>Stock removed (excluding transfers)</th>
+                <th>Transfer in</th>
+                <th>Transfer out</th>
+                <th>Sales total</th>
+            </tr>
+        </thead>
+        <tbody id="store-summary">
+        </tbody>
+    </table>
+</div>
+<h2>Stock by size / model</h2>
+<form id="comparison-form" class="d-flex gap-2">
+    <input id="comparison-term" class="form-control" placeholder="Product, size or model" aria-label="Product, size or model" />
+    <button class="btn btn-primary">Search</button>
+</form>
+<p id="comparison-message" role="status">
+</p>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Size / model</th>
+                <th>Store</th>
+                <th>Location</th>
+                <th>Type</th>
+                <th>Stock</th>
+            </tr>
+        </thead>
+        <tbody id="comparison-rows">
+        </tbody>
+    </table>
+</div>
+@section Scripts {<script src="~/js/store-comparison.js" asp-append-version="true"></script>}

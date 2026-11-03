@@ -1,0 +1,29 @@
+@page
+@{ ViewData["Title"]="Product sales & profit"; }
+@section PageHeader {
+<header class="sf-page-heading"><div><h1>Product sales &amp; profit</h1></div></header>
+}
+<div id="product-profit-report">
+<form id="product-sales-filter" class="sf-filter-bar profit-filter">
+ <label>Period<select id="product-sales-period" class="form-select"><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option><option value="custom">Custom dates</option></select></label>
+ <label>From<input id="product-sales-from" type="date" class="form-control" required /></label>
+ <label>To<input id="product-sales-to" type="date" class="form-control" required /></label>
+ <button id="product-sales-load" class="btn btn-primary"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#chart" /></svg> Show report</button>
+</form>
+<div id="product-sales-message" class="alert alert-danger" role="alert" hidden></div>
+<p id="product-sales-status" role="status" aria-live="polite"></p>
+<div id="product-sales-results" hidden>
+ <div id="product-sales-summary" class="profit-summary">
+ @foreach(var tile in new[]{("sales","Net sales (excl. tax)","Invoices less returns in this period","green","chart"),("cost","Estimated cost","Receipt-price evidence before each sale","pink","cart"),("profit","Estimated gross profit","Known-cost rows only; excludes operating expenses","pink","report-up"),("margin","Estimated margin","Incomplete when any cost is unknown","purple","percent")}){
+ <section class="profit-summary-card"><span class="profit-icon @tile.Item4"><svg class="sf-icon" aria-hidden="true"><use href="@($"/images/icons.svg#{tile.Item5}")" /></svg></span><div><h2>@tile.Item2</h2><strong id="profit-total-@tile.Item1">&#8212;</strong><small>@tile.Item3</small></div></section>
+ }
+ </div>
+ <p id="profit-cost-coverage" class="small text-muted" role="status"></p>
+ <section class="profit-chart-panel"><header><h2>Sales vs estimated cost by product</h2><div class="profit-chart-legend"><span>Net sales</span><span>Estimated cost</span></div></header><p id="profit-chart-note" class="small text-muted" hidden>Chart shows the top 5 products by net sales. The table includes all products.</p><div id="profit-chart"></div></section>
+ <div class="table-responsive profit-table"><table class="table"><thead><tr><th>Product / size / model</th><th>Sold</th><th>Returned</th><th>Quantity after returns</th><th>Net sales (excl. tax)</th><th>Estimated cost</th><th>Estimated gross profit</th><th>Margin %</th></tr></thead><tbody id="product-sales-rows"></tbody></table></div>
+ <p class="profit-estimate-note">Sales use invoice dates; returns use return dates, including returns against older invoices. Collections and refunds do not create sales here. Saved invoice tax is excluded and saved after-tax allowances are allocated across invoice lines. Returned value excludes its original line-tax proportion. These operational return values can differ from statutory credit notes.</p>
+ <p class="profit-estimate-note">Cost retains the existing received-price average as a management estimate, using completed receipt snapshots in the same location recorded before the original sale. Later receipts do not reprice older sales. Missing or zero-price evidence and manual-item costs remain unknown. Known totals exclude all rows with incomplete cost evidence. This is not COGS, inventory valuation or audited profit; landed costs, opening-stock costs and transfer-cost evidence need the separately agreed costing work.</p>
+</div>
+</div>
+@section Styles {<link rel="stylesheet" href="~/css/product-profit.css" asp-append-version="true" />}
+@section Scripts {<script src="~/js/common/report-dates.js" asp-append-version="true"></script><script src="~/js/product-sales-report.js" asp-append-version="true"></script>}

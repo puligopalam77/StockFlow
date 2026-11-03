@@ -1,0 +1,11 @@
+.sale-detail-screen{min-width:0;max-width:100%}
+.sale-detail-screen .card{min-width:0}
+.sale-detail-screen .table-responsive{max-width:100%;min-width:0;overflow-x:auto}
+.sale-detail-screen :is(dt,dd){overflow-wrap:anywhere}
+.sale-detail-screen #sale-operation-history{min-width:0}
+.sale-detail-screen .retail-guide-prompt{white-space:normal;min-width:0}
+.sale-detail-screen .retail-screen-guide summary{flex-wrap:wrap}
+.sale-detail-screen .retail-screen-guide summary>span:nth-child(2){flex:1;min-width:0;overflow-wrap:anywhere}
+.sale-detail-screen details>summary{cursor:pointer;font-weight:600;color:#182b45}
+.sale-detail-screen #customer-payment-form{padding-top:8px}
+.sale-detail-screen #customer-payment-form .form-control,.sale-detail-screen #customer-payment-form .form-select{width:100%;min-width:0}

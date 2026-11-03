@@ -1,0 +1,90 @@
+StockFlow invoice print refinement — 2026-11-02
+
+Delivered
+- Existing A4 and 80mm formats share the same saved invoice model. No financial
+  posting, inventory posting, GST rule or invoice-numbering change. No SQL migration.
+- 80mm now uses compact header/customer spacing and Qty x Rate on one line rather
+  than stacking every A4 cell. Empty serials, zero line discounts/taxes, zero total
+  discounts/allowances, empty warranty sections and paid-sale credit-zero text are
+  omitted. A mixed receipt still retains real serials and warranty information.
+- Navy/pink branding, saved business particulars, existing shop-logo behavior,
+  pink Grand Total, company footer/terms and brand footer remain available.
+- A4 serial column appears only when a captured serial exists; quantity centered,
+  amounts right aligned/tabular, numeric cells do not wrap. Repeated table headings
+  and row break protection remain in print CSS. No fixed roll-page height.
+- Compact toolbar groups navigation/format on the left and print/PDF/new bill on
+  the right; browser help is expandable. Checkout is unchanged.
+- Captured entered prices and item discounts are read from the original posted
+  request for modern allocated-discount invoices. Saved normalized line values
+  still supply taxable amounts, tax and line totals; allocation is never deducted
+  again. Tax-inclusive prices are labeled. GST component totals and line cess use
+  the existing issued GST snapshot.
+- Blank references disappear when no payment has one. Original credit entries,
+  later collection dates and current outstanding/returns/refunds remain separate
+  from original invoice totals, reusing DocumentOperations settlement semantics.
+- General sales.notes are unclassified, so they remain in authorized sale details
+  and are excluded from customer invoices. Product descriptions and saved company
+  terms/footer still print. No new customer-note visibility system was invented.
+- Missing original customer/product/company fields no longer fall back to mutable
+  current master details. Original GST document snapshots can supply captured
+  legacy particulars. Missing data is omitted/identified. Existing InvoiceService
+  policy allowing the shop's current saved logo on older invoices is retained.
+- E-way preparation's EXTERNAL_UNVERIFIED references are not printed as official
+  EBNs. No provider-generated EBN workflow was added by this print change.
+
+Source files changed
+src/StockFlow.Web/Pages/Sales/Invoice.cshtml
+src/StockFlow.Web/wwwroot/css/invoice.css
+src/StockFlow.Infrastructure/Repositories/InvoiceRepository.cs
+src/StockFlow.Application/DTOs/Invoices/InvoiceResponse.cs
+src/StockFlow.Application/DTOs/Invoices/InvoiceItemResponse.cs
+tests/StockFlow.MasterDataChecks/InvoiceChecks.cs
+tests/StockFlow.MasterDataChecks/FastBillingChecks.cs
+tests/StockFlow.UiChecks/invoice-print-offline.cjs
+
+Actual verification
+PASS dotnet build tests/StockFlow.MasterDataChecks --artifacts-path
+     E:/StockFlow/.artifacts/invoice-refinement -v quiet
+     0 warnings, 0 errors.
+PASS StockFlow.MasterDataChecks.dll --invoice-checks
+     Real Razor rendering; Admin/Sales/Service and anonymous access; no-store,
+     HTML encoding, missing/cancelled invoices; simple/mixed/manual/serial/warranty/
+     credit/refund fixtures; shared invoice view in all four supported profiles.
+PASS StockFlow.MasterDataChecks.dll --fast-billing-checks
+     Disposable PostgreSQL clone only. Original vs allocated price/discount values,
+     saved invoice/payment/GST agreement; inclusive/exclusive calculations; all
+     current payment methods and blank references; manual/catalog lines, returns,
+     idempotency and policy controls. Added actual repository checks prove current
+     catalog/customer edits do not change printed saved names or amounts, invoice
+     reads do not rewrite issued headers/lines, and tenant/shop/other-profile
+     contexts cannot read the invoice. Clone dropped by test finally block.
+PASS StockFlow.MasterDataChecks.dll --company-profile-checks
+     Existing business/logo/terms behavior and tax calculations retained.
+PASS company-document-logo-offline.cjs
+     Saved logo remains visible in A4/80mm browser PDFs and mobile previews;
+     printed receipt/report branding regression also passes.
+PASS invoice-print-offline.cjs
+     Actual Razor fixtures in headless Edge; ten viewport sizes: 1920x1080,
+     1366x768, 1280x720/650/600, 1024x768, 768x1024, 390x844, 375x667, 320x640.
+     No page overflow or clipped monetary cells; saved totals unchanged between
+     formats; print chrome/assistant hidden. Simple receipt content measures
+     474 CSS pixels / approximately 125.3mm in this fixture, including branding.
+     Simple receipt PDF is one measured-length page; 70-line A4 PDF is multi-page.
+     Browser zoom 150%/device-scale simulation checked, not actual Windows DPI.
+
+Generated review artifacts (tests/bin/invoice-design-fixtures)
+receipt-80mm.png, invoice-a4.png
+invoice-5-thermal.pdf (simple), invoice-6-thermal.pdf (mixed)
+invoice-7-thermal.pdf (credit/returns)
+invoice-5-a4.pdf through invoice-8-a4.pdf (including 70-line example)
+
+Limits
+- 58mm is not an implemented format in the current selector; no untested option
+  added. Browser PDF output does not prove physical print alignment/cutting.
+- Real A4/80mm printers, drivers, margins, paper feed/cutter, scanner hardware and
+  actual Windows 150% display scaling require device acceptance.
+- Master snapshots missing from old records cannot be reconstructed reliably;
+  the print view does not substitute today's customer/catalog values.
+- No application/production migration or data modification performed. Production
+  two-shop topology and master-isolation release gates remain as recorded in the
+  existing audit; these tests do not certify that deployment.

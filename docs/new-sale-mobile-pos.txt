@@ -1,0 +1,106 @@
+HISTORICAL DELIVERY RECORD. Current policy supersedes earlier walk-in/credit/split instructions. Use docs/help/billing.md, the current feature/evidence register and the release acceptance report. This file records its original implementation/test context; it is not the current checkout specification.
+
+StockFlow New Sale POS redesign
+Superseded by docs/new-sale-approved-layout.txt for the current UI.
+Date: 31 October 2026
+
+Scope and reference
+The supplied attachment specifies a mobile POS design. Its referenced first,
+second and third screenshots were not present in the attachment directory or
+latest message. Implementation follows the attachment's written hierarchy,
+component requirements, colors and responsive rules; an exact screenshot match
+could not be verified.
+
+Files changed
+src/StockFlow.Web/Pages/Sales/Create.cshtml
+src/StockFlow.Web/wwwroot/js/billing-layout.js
+src/StockFlow.Web/wwwroot/js/sales-create.js
+src/StockFlow.Web/wwwroot/css/billing.css
+tests/StockFlow.UiChecks/billing-offline.cjs
+docs/new-sale-mobile-pos.txt (this report)
+
+UI
+The logical and visual order is Customer, Scan/Search, Bill Items, Bill Totals,
+Payment Method, completion, then Notes. Numbered section banners are removed.
+The existing controls use the available content width in a white, rounded POS
+workspace. Desktop (1000px and above) places customer/search/cart on the left
+and totals/payment on the right. Checkout height adapts to viewport height and
+updates on resize and heading changes, without shrinking the whole page.
+The completion action and notes remain outside the scrolling checkout details;
+a pinned More Billing Options action opens the existing options panel. Long item
+lists and checkout details scroll independently. Below 1000px the same controls
+return to their single-column reading order. Only this POS page hides the desktop
+application footer to reserve working space.
+The header shows a pink Draft pill and the existing draft UUID's short reference.
+It never reserves a final invoice number. Completed sales change the status.
+Hold, Saved Bills and Back to Sales remain available.
+Customer opens a single search/selection disclosure. Add Customer uses the
+existing registration dialog from within the picker and preserves the bill.
+One search field has barcode/search icons and a compact camera action.
+Bill rows have Product | Qty | Total, registered images or a neutral package,
+exact SKU/variant/unit information, available stock, quantity stepper and trash.
+Authorized price and discount fields plus tax remain in expandable Item Details.
+More Billing Options preserves invoice discounts, reasons, approvals and split
+payments. Existing credit, trade-in and owner policy controls remain available.
+Totals come from the server quote, with a pink Total Payable row. Included line
+discounts are labeled to avoid implying that they should be subtracted again.
+Zero discount/due rows are hidden. Allocated payments are not labeled collected.
+Cash/UPI/Card tiles use pink selected states; Bank Transfer and Credit remain.
+Tiles use the existing payment select/events. Cash amount/change, electronic
+reference/confirmation, credit due dates, eligibility and split allocations keep
+their existing rules. Tiles disappear while split allocation is in use.
+The pink receipt action has disabled/focus/loading states. Notes follow it and
+are included in existing draft and sale payloads. CSS is scoped to New Sale.
+
+Integration boundaries
+No repository, API contract, SQL, migration or posting code changed.
+Product search still uses bounded shop-specific /api/products/variants?billing=true.
+Manual ambiguous matches require explicit selection. Exact scans still use
+/api/scan and preserve the variant ID or physical unit ID. Search and draft edits
+do not deduct stock. Product images use the existing authorized image endpoint.
+All amounts still come from /api/sales/quote, including GST/pricing mode, discounts,
+rounding and authorized changes. No duplicate UI pricing calculator was added.
+Existing finalization validates again, uses stable request IDs and preserves
+uncertain requests for exact retry. Invoice snapshots/history are untouched.
+The existing sale transaction remains responsible for invoice, stock, physical
+unit, payment, receivable and audit writes. Product registration, receipt posting,
+SKU allocation, barcode allocation, returns and reports were not redesigned.
+
+Executed checks
+- Debug check-project build: passed, zero warnings/errors.
+- Release Web build: passed, zero warnings/errors.
+- --billing-checks: passed. Razor/permission checks, bounded lookup, cash/credit
+  API validation, due-date rules, legacy recovery and duplicate unit validation.
+- --new-sale-integration-checks: passed on a temporary clone of the disposable
+  sku_correction_test fixture on port 55439; clone dropped and test server stopped.
+  Exact variant/manufacturer barcode/serial resolution; parent SKU choices;
+  unauthorized price rejection; concurrent duplicate completion -> one invoice,
+  one stock movement; variant-specific deduction; last-unit concurrency;
+  invoice total vs collection vs change vs receivable; serialized sale and
+  idempotent return; bounded SQL search; tenant/location/stale-shop isolation.
+- billing-offline.cjs: passed. Real page scripts with mocked API responses.
+  Verified POS section order and three-column items; actual payment tile clicks;
+  customer search/create; exact and ambiguous lookup; stale results; serial units;
+  stock/quantity checks; authorized expandable price editing; discounts/approval;
+  cash/change, UPI/Card/Bank confirmation and cancellation; credit/split payments;
+  duplicate confirmation, uncertain failure/reload/retry; notes persistence;
+  Continue Editing preservation; draft hold/resume; trade-in; invoice receipt PDF;
+  1920x1080, 1440x900, 1366x768, 1280x600, 1024x768, 768x1000,
+  390x844 and 320x720 layouts without horizontal overflow. Desktop completion
+  remains visible, normal laptop cash entry fits in checkout, and resizing keeps
+  the active bill. The pinned options action opens the existing panel.
+
+Browser previews
+ tests/bin/billing-ui-fixtures/mobile-pos-1440.png
+ tests/bin/billing-ui-fixtures/mobile-pos-768.png
+ tests/bin/billing-ui-fixtures/mobile-pos-390.png
+ tests/bin/billing-ui-fixtures/mobile-pos-320.png
+
+Limits
+The existing ordinary-sale API has no standalone fitting/service-charge line.
+No fake product or unsupported charge was introduced in this UI-only redesign.
+Camera hardware and live bank/UPI settlement were not tested. Electronic payment
+confirmation still requires staff verification; a reference is not payment proof.
+The integration suite exercises returns and underlying invoice/payment records;
+a full live refund, cash-closing and reporting UI audit was not performed.
+No application business database was modified and no SQL needs to be run.

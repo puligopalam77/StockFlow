@@ -1,0 +1,73 @@
+@inject StockFlow.Application.Common.BusinessScope BusinessScope
+@{
+    var canRegister = Access.Can("PRODUCTS", "CREATE") && Access.Can("PRODUCT_VARIANTS", "CREATE");
+    var canManage = Access.Can("PRODUCTS", "EDIT");
+    var canScan = Access.Can("SCAN") && Access.Can("SCAN", "SCAN");
+}
+<div id="purchase-workspace" class="goods-workspace" data-storage-key="stockflow.goods.@BusinessScope.TenantId.@BusinessScope.UserId.@BusinessScope.LocationId@BusinessScope.DraftProfileSuffix" data-business-profile="@BusinessScope.BusinessProfileCode" data-location-id="@BusinessScope.LocationId" data-location-name="@BusinessScope.LocationName" data-can-complete="@Access.Can("PURCHASES", "APPROVE").ToString().ToLowerInvariant()" data-can-register="@canRegister.ToString().ToLowerInvariant()" data-can-scan="@canScan.ToString().ToLowerInvariant()" data-can-manage="@canManage.ToString().ToLowerInvariant()">
+    <div id="purchase-message" class="alert alert-danger" role="alert" hidden></div>
+    <div id="goods-status" class="goods-status" role="status" aria-live="polite"></div>
+    <div id="goods-recovery" class="alert alert-warning" hidden>
+        <span id="goods-recovery-text"></span>
+        <button id="goods-retry" type="button" class="btn btn-outline-primary">Retry this receipt</button>
+    </div>
+    <form id="goods-form" data-inline-validation>
+        <fieldset id="goods-fields" disabled>
+            <section class="card card-body goods-section">
+                <div class="goods-section-caption"><h2 class="goods-section-title"><span class="goods-step" aria-hidden="true">1</span><span>Supplier &amp; Receipt Info</span></h2><p>Enter supplier and receipt information before adding products.</p></div>
+                <div class="goods-details-grid">
+                    <div><label for="goods-supplier" class="form-label">Supplier *</label><details id="goods-supplier-picker" class="goods-supplier-picker"><summary id="goods-supplier-label">Choose supplier</summary><input id="goods-supplier-search" class="form-control" placeholder="Search supplier name, code, GSTIN or phone" aria-label="Search suppliers" autocomplete="off" /><select id="goods-supplier" class="form-select" size="5" required><option value="">Choose supplier</option></select></details><small id="goods-supplier-info"></small></div>
+                    <fieldset class="goods-receive-against"><legend>Receive against</legend><label><input type="radio" name="goods-kind" value="direct" checked /> Direct Receipt</label><label><input type="radio" name="goods-kind" value="order" /> Purchase Order</label></fieldset>
+                    <div id="goods-order-field" hidden><label for="goods-order" class="form-label">Purchase Order *</label><select id="goods-order" class="form-select"><option value="">Choose open purchase order</option></select><small id="goods-order-help"></small></div>
+                    <div><label for="goods-date" class="form-label">Goods received date *</label><input id="goods-date" type="date" class="form-control" required /></div>
+                    <div><label for="goods-location" class="form-label">Stock Location *</label><select id="goods-location" class="form-select" required></select><small id="goods-location-help"></small></div>
+                    <div><label for="goods-invoice" class="form-label">Invoice Number</label><input id="goods-invoice" class="form-control" maxlength="100" /><small id="goods-invoice-warning" class="goods-warning" hidden></small></div>
+                    <div><label for="goods-invoice-date" class="form-label">Invoice Date</label><input id="goods-invoice-date" type="date" class="form-control" /></div>
+                    <div><label for="goods-notes" class="form-label">Notes</label><textarea id="goods-notes" class="form-control" maxlength="2000" rows="2" placeholder="Add any notes (optional)…"></textarea></div>
+                </div>
+            </section>
+            <section class="card card-body goods-section goods-add-products">
+                <div class="goods-section-caption"><h2 class="goods-section-title"><span class="goods-step" aria-hidden="true">2</span><span>Find or Add Products</span></h2><p>Scan a barcode or search for an existing product. Add a new product only when needed.</p></div>
+                <div class="goods-search-toolbar">
+                    <div class="goods-search-wrap"><label class="visually-hidden" for="goods-search">Scan Barcode or Search Product</label><input id="goods-search" class="form-control" autocomplete="off" maxlength="150" placeholder="Search by barcode, product name, SKU, code or model..." aria-controls="goods-suggestions" aria-expanded="false" /></div>
+                    <div class="goods-scan-actions"><button id="goods-lookup" type="button" class="btn btn-primary">Search</button>
+                    @if (canRegister) { <a id="goods-register" href="/Products/Create" target="_blank" rel="noopener" class="btn btn-dark">+ Add New Product</a> }
+                    </div>
+                </div>
+                <div id="goods-context" class="goods-context" hidden><span id="goods-context-message"></span> <button id="goods-context-focus" type="button" class="btn btn-sm">Complete receipt information</button></div>
+                <p id="goods-scan-status" role="status" aria-live="polite"></p>
+                <div id="goods-suggestions" aria-label="Matching products" hidden></div>
+                <p id="goods-registration-status" class="small text-muted" hidden>Product registration opens in a new tab. Return here after saving, then <button id="goods-refresh" class="goods-text-button" type="button">Refresh Products</button>.</p>
+            </section>
+            <section class="card card-body goods-section">
+                <div class="goods-section-heading"><div class="goods-section-caption"><h2 id="goods-items-title" class="goods-section-title"><span class="goods-step" aria-hidden="true">3</span><span>Items in This Receipt (0)</span></h2><p>Enter the quantities, buying prices and tax details of the products received.</p></div><button id="goods-clear" type="button" class="btn btn-dark" disabled>Clear All Items</button></div>
+                <div id="goods-empty" class="goods-empty"><strong>No items added yet</strong><p>Search or scan a product above to add it to this receipt.</p></div>
+                <div id="goods-list" class="goods-list" hidden>
+                    <div class="goods-row goods-column-headings" aria-hidden="true"><span>#</span><span>Product</span><span>Variant / SKU</span><span>Stock</span><span>Received Qty *</span><span>Damaged Qty</span><span>Accepted Qty</span><span>Purchase Price (₹) *</span><span>MRP (₹)</span><span>Discount (₹)</span><span>Tax (%)</span><span>Line total (₹)</span><span>Actions</span></div>
+                    <div id="goods-items"></div>
+                </div>
+                <button id="goods-add-item" type="button" class="btn btn-outline-primary align-self-start mt-2" hidden>Add More Items</button>
+                <p id="goods-damage-warning" class="goods-warning mt-2" hidden></p>
+            </section>
+            <section id="purchase-options" class="card card-body goods-section goods-invoice-section">
+                <div class="goods-section-caption"><h2 class="goods-section-title"><span class="goods-step" aria-hidden="true">4</span><span>Invoice Charges &amp; Attachment</span></h2><p>Record additional purchase charges, discounts and invoice documents.</p></div>
+                <div class="goods-invoice-grid">
+                    <div><label for="goods-credit" class="form-label">Credit Days</label><input id="goods-credit" type="number" min="0" max="365" step="1" class="form-control" value="0" /><small id="goods-due-date"></small></div>
+                    <div><label for="goods-freight" class="form-label">Freight (₹)</label><input id="goods-freight" type="number" min="0" max="9999999999.99" step="0.01" class="form-control" value="0" /></div>
+                    <div><label for="goods-charges" class="form-label">Other Charges (₹)</label><input id="goods-charges" type="number" min="0" max="9999999999.99" step="0.01" class="form-control" value="0" /></div>
+                    <div><label for="goods-discount" class="form-label">Invoice Discount (₹)</label><input id="goods-discount" type="number" min="0" max="9999999999.99" step="0.01" class="form-control" value="0" /></div>
+                    <div><label for="goods-file" class="form-label">Invoice Attachment (Optional)</label><input id="goods-file" type="file" accept="application/pdf,image/jpeg,image/png" class="form-control" /><small>One PDF, JPG or PNG up to 5 MB.</small><a id="goods-file-preview" target="_blank" rel="noopener" hidden>Preview invoice</a><button id="goods-file-remove" type="button" class="goods-text-button" hidden>Remove attachment</button></div>
+                </div>
+                <p id="goods-order-invoice-note" class="small text-muted mt-2 mb-0" hidden>Prices, discounts and charges come from the purchase order. This receipt records the delivery without changing the order invoice.</p>
+            </section>
+            <section class="goods-summary card card-body"><div class="goods-section-caption"><h2 class="goods-section-title"><span class="goods-step" aria-hidden="true">5</span><span>Receipt Summary &amp; Actions</span></h2><p>Review the receipt totals before confirming and updating stock.</p></div>
+                <div id="goods-totals" class="goods-totals" aria-live="polite"></div>
+                <div class="goods-summary-actions"><a href="/Purchases" class="btn btn-outline-secondary">Cancel</a><button id="goods-draft" type="button" class="btn btn-outline-secondary">Save Draft</button><button id="purchase-save" type="submit" class="btn btn-primary" disabled="@(!Access.Can("PURCHASES", "APPROVE"))">Review Receipt</button></div>
+            </section>
+            <p id="goods-draft-state" class="goods-draft-state" role="status"></p>
+        </fieldset>
+    </form>
+    <dialog id="goods-item-dialog" class="goods-dialog" aria-labelledby="goods-item-title"><div class="goods-dialog-heading"><h2 id="goods-item-title">Product Item — Details</h2><button type="button" class="goods-close" data-close="goods-item-dialog" aria-label="Close product details">×</button></div><div id="goods-item-details"></div><div class="goods-dialog-actions"><button type="button" class="btn btn-primary" data-close="goods-item-dialog">Done</button></div></dialog>
+    <dialog id="receipt-confirm" class="goods-dialog goods-review" aria-labelledby="goods-review-title" aria-describedby="goods-review-notice"><div class="goods-review-symbol" aria-hidden="true">!</div><div class="goods-dialog-heading"><h2 id="goods-review-title">Review Receipt</h2><button type="button" class="goods-close" data-close="receipt-confirm" aria-label="Close review">×</button></div><div id="goods-review-content"></div><div id="goods-review-notice" class="goods-review-notice">Confirming this receipt will add the accepted quantities to inventory and record the corresponding stock movements. Damaged quantities are recorded separately.</div><div class="goods-dialog-actions"><button type="button" class="btn btn-outline-secondary" data-close="receipt-confirm">Cancel</button><button id="goods-confirm" type="button" class="btn btn-primary">Confirm &amp; Receive Stock</button></div></dialog>
+    <section id="receipt-success" class="card card-body goods-success" hidden role="status" tabindex="-1"><div class="goods-success-heading"><span aria-hidden="true">✓</span><div><h2>Stock received successfully!</h2><p id="goods-success-number"></p><p id="goods-success-date"></p></div></div><p id="goods-success-stock" class="goods-success-stock"></p><div class="goods-success-actions"><a id="receipt-view" class="btn btn-outline-primary">View Receipt</a><a href="/Purchases/Create" class="btn btn-primary">Receive More Stock</a></div><h3>Receipt Summary</h3><dl id="goods-success-summary"></dl></section>
+</div>

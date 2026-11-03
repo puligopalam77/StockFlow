@@ -1,0 +1,1 @@
+document.getElementById('quotation-print-document')?.addEventListener('click',async()=>{await Promise.all([...document.querySelectorAll('.quotation-paper img')].map(img=>img.decode().catch(()=>{})));window.print();});

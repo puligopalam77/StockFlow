@@ -1,0 +1,48 @@
+/* Shared quick customer form for New Sale and CRM. */
+@keyframes billing-busy{to{transform:rotate(360deg)}}
+.billing-customer-dialog{box-sizing:border-box;width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin:auto;padding:0;border:1px solid #e1e6ee;border-radius:14px;background:#fff;color:#172842;box-shadow:0 20px 65px #10243933;overflow:auto}
+.billing-customer-dialog::backdrop{background:#14263d66}
+.billing-customer-dialog .billing-customer-header{display:grid;grid-template-columns:42px minmax(0,1fr) 36px;align-items:start;gap:12px;padding:22px 24px 18px;border-bottom:1px solid #e8edf3}
+.billing-customer-dialog .billing-customer-icon{display:grid;place-items:center;width:42px;height:42px;background:#fff0f7;border-radius:10px;color:#ff007f}
+.billing-customer-dialog .billing-customer-header h2{margin:0 0 5px;font-size:20px;font-weight:750;line-height:1.3;color:#142740}
+.billing-customer-dialog .billing-customer-header p{font-size:12px;line-height:1.45;color:#718098;margin:0}
+.billing-customer-dialog .billing-customer-x{display:grid;place-items:center;min-height:36px;width:36px;padding:0;border:0;border-radius:7px;background:#f5f7fa;color:#52637b;transition:background-color 180ms,color 180ms}
+.billing-customer-dialog .billing-customer-x:hover{background:#fff0f7;color:#dc006b}
+.billing-customer-dialog .billing-customer-body{padding:20px 24px}
+.billing-customer-dialog .billing-customer-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin:0}
+.billing-customer-dialog .billing-customer-field{min-width:0}.billing-customer-dialog .billing-customer-wide{grid-column:1/-1}
+.billing-customer-dialog .form-label{display:block;font-size:12px;font-weight:600;color:#20334e;margin:0 0 6px}
+.billing-customer-dialog :is(input,textarea){box-sizing:border-box;width:100%;min-height:42px;font-size:13px;border-radius:7px;background:#fff;color:#172842}
+.billing-customer-dialog :is(input,textarea):not(.is-invalid){border-color:#dce3ed}
+.billing-customer-dialog textarea{min-height:76px;resize:vertical}
+.billing-customer-dialog .is-invalid{border-color:#bd2441}
+.billing-customer-dialog .sf-field-validation{display:block;color:#b42340;font-size:11px;line-height:1.4;margin-top:5px}
+.billing-customer-dialog .sf-field-validation[hidden]{display:none}
+.billing-customer-dialog .billing-customer-footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px 20px;border-top:1px solid #e8edf3}
+.billing-customer-dialog .billing-customer-footer>.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:9px 14px;margin:0;font-size:12px;font-weight:650;border-radius:7px;--sf-action-bg:#191d23;--sf-action-hover:#ff007f}
+.billing-customer-dialog .billing-customer-footer>.btn:disabled{opacity:.55;cursor:not-allowed}
+.billing-customer-dialog .billing-customer-alert{padding:10px 12px;margin:16px 24px 0;border:1px solid #f1b9c5;border-radius:7px;background:#fff1f3;color:#a8203a;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.billing-customer-dialog .billing-customer-alert .btn{display:block;margin-top:8px}
+.billing-customer-dialog .billing-customer-matches{margin:16px 24px 0;padding:12px;background:#fff9eb;border:1px solid #f0d8a2;border-radius:7px;font-size:12px;line-height:1.5}
+.billing-customer-dialog .billing-customer-matches>p{margin:0 0 8px;color:#775410}
+.billing-customer-dialog .billing-customer-matches>div{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-top:8px}
+.billing-customer-dialog .billing-customer-matches span{min-width:0;overflow-wrap:anywhere}
+.billing-customer-dialog .billing-customer-matches button{flex-shrink:0}
+.billing-customer-dialog #customer-quick-add-form[aria-busy=true] #create-customer:after{content:'';width:14px;height:14px;border:2px solid #ffffff66;border-top-color:#fff;border-radius:50%;animation:billing-busy .7s linear infinite}
+@media(max-width:480px){.billing-customer-dialog .billing-customer-header{padding:18px 16px;gap:10px}.billing-customer-dialog .billing-customer-header h2{font-size:19px}.billing-customer-dialog .billing-customer-body{padding:18px 16px}.billing-customer-dialog .billing-customer-fields{grid-template-columns:minmax(0,1fr);gap:14px}.billing-customer-dialog .billing-customer-footer{padding:14px 16px 18px;flex-wrap:wrap}.billing-customer-dialog .billing-customer-footer>.btn{flex:1 1 150px}.billing-customer-dialog .billing-customer-alert,.billing-customer-dialog .billing-customer-matches{margin-left:16px;margin-right:16px}.billing-customer-dialog .billing-customer-matches>div{flex-direction:column;align-items:stretch}}
+@media(prefers-reduced-motion:reduce){.billing-customer-dialog #customer-quick-add-form[aria-busy=true] #create-customer:after{animation:none}}
+
+
+/* Keep the fast path to two equally sized fields. */
+.billing-customer-dialog .billing-customer-help{font-size:11px;line-height:1.4;color:#687b93;margin:6px 0 0}
+.billing-customer-dialog .billing-customer-additional>summary{display:list-item;cursor:pointer;font-size:12px;font-weight:650;color:#243951;padding:8px 0;list-style-position:inside}
+.billing-customer-dialog .billing-customer-additional>summary:focus-visible{outline:2px solid #ff007f;outline-offset:2px;border-radius:4px}
+.billing-customer-dialog .billing-customer-optional-fields{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-top:10px}
+.billing-customer-dialog .billing-customer-footer{position:sticky;bottom:0;background:#fff;z-index:2}
+.billing-customer-dialog .billing-customer-x{--sf-action-bg:#191d23;--sf-action-hover:#ff007f;background:#191d23;color:#fff}
+#billing-workspace .billing-customer-dialog :is(input,textarea):enabled{background:#fff;color:#172842;cursor:text}
+#billing-workspace .billing-customer-dialog :is(input,textarea):enabled:not(.is-invalid){border-color:#9baec6}
+#billing-workspace .billing-customer-dialog :is(input,textarea):enabled::placeholder{color:#526780;opacity:1}
+#billing-workspace .billing-customer-dialog :is(input,textarea):enabled:not(.is-invalid):hover{border-color:#ff007f}
+#billing-workspace .billing-customer-dialog :is(input,textarea):enabled:not(.is-invalid):focus{border-color:#ff007f;box-shadow:0 0 0 3px #ff007f1a}
+#billing-workspace .billing-customer-dialog .is-invalid{border-color:#bd2441}

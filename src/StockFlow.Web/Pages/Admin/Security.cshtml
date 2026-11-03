@@ -1,0 +1,22 @@
+@page
+@{ViewData["Title"]="Security";}
+<h1>Security settings</h1>
+<div id="security-message" role="status">
+</div>
+<p>
+    <a href="/Account/TwoFactor">Enroll or verify my authenticator</a> · <a href="/Admin/Roles">Role permission templates</a>
+</p>
+<form id="security-policy" class="card card-body" style="max-width:600px">
+    <label for="policy-length">Minimum password length</label>
+    <input id="policy-length" type="number" min="8" max="128" required class="form-control"/>
+    <p>Passwords can have up to 128 characters and may include spaces. Some common passwords are blocked; this does not check every password exposed in a data breach.</p>
+    <label>
+        <input id="policy-2fa" type="checkbox"/> Require authenticator for all users</label>
+    <label for="policy-attempts">Wrong passwords allowed before blocking sign-in</label>
+    <input id="policy-attempts" type="number" min="3" max="10" required class="form-control"/>
+    <label for="policy-lockout">Block sign-in for this many minutes</label>
+    <input id="policy-lockout" type="number" min="5" max="60" required class="form-control"/>
+    <p>Role and user requirements can strengthen the business policy. Saving ends all business sessions, including yours. Password resets always require a password change.</p>
+@if(Access.Can("SECURITY","MANAGE")){<button class="btn btn-primary">Save security settings</button>}
+</form>
+@section Scripts{<script src="~/js/security-policy.js" asp-append-version="true"></script>}

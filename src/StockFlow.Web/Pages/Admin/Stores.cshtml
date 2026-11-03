@@ -1,0 +1,75 @@
+@page
+@{ ViewData["Title"]="Stores and locations"; }
+<h1>Stores and locations</h1>
+<div id="branch-message" role="status">
+</div>
+<div class="row g-4">
+    <section class="col-lg-6">
+        <h2>Create store</h2>
+        <form id="store-form" class="d-grid gap-2">
+            <label>Store code<input name="storeCode" class="form-control" required maxlength="50" />
+            </label>
+            <label>Store name<input name="storeName" class="form-control" required maxlength="150" />
+            </label>
+            <label>Address<input name="address" class="form-control" maxlength="1000" />
+            </label>
+            <label>City<input name="city" class="form-control" maxlength="100" />
+            </label>
+            <label>State<input name="state" class="form-control" maxlength="100" />
+            </label>
+            <label>Phone<input name="mobileNumber" type="tel" inputmode="numeric" pattern="[0-9]{10}" class="form-control" maxlength="10" />
+            </label>
+            <label>GST number<input name="gstNumber" class="form-control" maxlength="15" />
+            </label>
+            <button class="btn btn-primary">Create store and main stock location</button>
+        </form>
+    </section>
+    <section class="col-lg-6">
+        <h2>Add stock location</h2>
+        <form id="location-form" class="d-grid gap-2">
+            <label>Store<select name="storeId" id="location-store" class="form-select">
+                </select>
+            </label>
+            <label>Name<input name="locationName" class="form-control" required maxlength="150" />
+            </label>
+            <label>Type<select name="locationType" class="form-select">
+                    <option value="WAREHOUSE">Warehouse</option>
+                    <option value="STOCKROOM">Stock room</option>
+                    <option value="SALES_FLOOR">Shop floor</option>
+                    <option value="BACKROOM">Back room</option>
+                    <option value="SERVICE_CENTER">Repair centre</option>
+                </select>
+            </label>
+            <button class="btn btn-primary">Add location</button>
+        </form>
+        <h2 class="mt-4">Assign user access</h2>
+        <label>Find user<input id="access-search" class="form-control" placeholder="Name or username" />
+        </label>
+        <button id="find-access-users" class="btn btn-secondary">Find users</button>
+        <label>User<select id="access-user" class="form-select">
+            </select>
+        </label>
+        <a href="/Admin/Users">Create or edit users</a>
+        <button id="load-access" class="btn btn-secondary">Load access</button>
+        <form id="access-form" class="d-grid gap-2" hidden>
+            <fieldset>
+                <legend>Assigned stores</legend>
+                <div id="access-stores">
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Central warehouses</legend>
+                <div id="access-warehouses">
+                </div>
+            </fieldset>
+            <label>Default store<select id="default-store" class="form-select">
+                </select>
+            </label>
+            <button class="btn btn-primary">Save access</button>
+        </form>
+    </section>
+</div>
+<h2 class="mt-4">Current locations</h2>
+<div id="branch-locations">
+</div>
+@section Scripts {<script src="~/js/branches.js" asp-append-version="true"></script>}

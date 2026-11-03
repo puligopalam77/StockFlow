@@ -1,0 +1,119 @@
+STOCKFLOW TWO-LEVEL CATEGORY IMPLEMENTATION - 30 OCTOBER 2026
+
+Architecture and screens
+Parent Category -> optional Subcategory -> Products -> Variants -> Inventory.
+Category IDs and codes remain the identity used by existing modules.
+/Categories: expandable two-level list, direct/subtree product counts, search,
+parent/status filters, 25-parent pagination, empty states and More Actions menu.
+/Categories/Create?kind=parent: create a top-level category.
+/Categories/Create?kind=subcategory&parentId=<id>: create under an active root.
+/Categories/Edit?id=<id> and /Categories/View?id=<id>: existing registration
+routes retain identities; parent relationships are read-only during editing.
+Product registration exposes required Parent Category and optional Subcategory;
+the selected existing ID is stored. No third selector or replacement categories.
+Existing charcoal/pink action styling and responsive grids are retained.
+
+Backend
+Create/update/import database paths reject third-level categories, invalid parents,
+cross-shop relationships and normalized duplicate sibling/root names.
+Existing parent relationships cannot be silently moved through ordinary edits.
+POST /api/categories/{id}/status uses the existing DEACTIVATE permission.
+Parent deactivation preserves independent child flags, while preventing new
+assignments to the parent or its children. Reactivation preserves inactive children.
+Existing product assignments can still be edited without changing their category.
+Brand deactivation safeguards remain in place. Retired wrappers remain available
+for direct historical lookup but are excluded from normal category lists.
+
+Read-only snapshot and promotion plan
+34 category rows; 5 product rows; no normalized duplicate, orphan or depth conflicts.
+Tenant 1 / BIKE_ACCESSORIES: promote these existing records from parent 37 to roots:
+  ID 8  CAT0008 Bike Spare Parts
+  ID 11 CAT0011 Mirrors
+  ID 43 CAT0043 Lights & Electrical
+  ID 47 CAT0047 Guards & Protection
+  ID 50 CAT0050 Riding Accessories
+Existing children retain their IDs, codes and immediate parent IDs.
+ID 37 CAT0037 Bike Parts & Accessories is retained, marked inactive/retired.
+It has no direct products, brand/supplier mappings, category schema references,
+inherited fields or inventory defaults in the inspected snapshot.
+Other already-two-level category groups and archived business profiles stay intact.
+Expected result: all 34 rows retained, 33 ordinary categories and 1 retired grouping.
+No product is reassigned, and no category is deleted, merged or duplicated.
+
+Migration status and recovery
+Application/live database: NOT migrated; inspection and backup only.
+065 was applied successfully to isolated restores of the complete application
+backup. A repeat application also passed without repeating promotions.
+Duplicate-name and wrapper-dependency test cases aborted and rolled back safely.
+Migration verifies category metadata, IDs/codes, product references and fingerprints
+of all other public application tables (excluding append-only migration audit).
+Stock, barcode, receipt, payment, purchase, sales and historical rows stayed intact
+in the isolated migration. Category migration entries append to the audit history.
+Tenant RLS/cross-tenant rejection checks passed; permissions are preserved.
+
+Run 065_category_two_level_preview.sql again before deployment and review the
+before_after mapping for every tenant/profile. Unknown foreign keys, wrapper
+dependencies, name conflicts and invalid hierarchies abort the migration.
+Check external integrations without database foreign keys separately.
+Stop application/workers, take and verify a fresh complete backup, then apply
+../migrations/065_two_level_categories.sql after 064 with ON_ERROR_STOP.
+Deploy the matching app at the same time. Detailed recovery instructions are in
+065_category_two_level_recovery.txt. A destructive automatic down migration is
+intentionally omitted; restore to a separate database and verify before switching.
+
+Validation
+Debug test-host build: passed, zero warnings/errors.
+Release StockFlow.Web build: passed, zero warnings/errors.
+Automated service/API suites passed:
+  --two-level-category-checks
+  --category-hierarchy-checks (includes catalog validation checks)
+  --product-review-checks
+  --master-screen-checks
+  --retail-phase56-checks
+Playwright checks passed with real rendered Razor fixtures and mocked APIs:
+  category-creation-offline.cjs
+  category-two-level-offline.cjs
+  product-review-offline.cjs
+These cover creation/edit/view, status confirmations, permissions, bounded
+1000-category options/pagination, counts/search/collapse, product selection,
+variant registration and mobile overflow/layout.
+PostgreSQL checks passed against the isolated restored database, including IDs,
+codes, preserved children, profile seed idempotency, uniqueness, third-level
+rejection, retired guards, independent status flags, historical product updates
+and tenant RLS. Synthetic test changes were rolled back.
+Browser tests use mock APIs; a live authenticated browser end-to-end run after
+deployment remains necessary. Production migration has not been executed.
+
+Files changed for this task (paths relative to workspace)
+database/migrations/065_two_level_categories.sql
+database/tools/065_category_two_level_preview.sql
+database/tools/065_category_two_level_recovery.txt
+database/tools/065_category_two_level_implementation.txt
+src/StockFlow.Application/DTOs/Categories/CategoryResponse.cs
+src/StockFlow.Application/Interfaces/ICategoryService.cs
+src/StockFlow.Application/Services/CategoryService.cs
+src/StockFlow.Application/Services/ProductService.cs
+src/StockFlow.Infrastructure/Repositories/CategoryRepository.cs
+src/StockFlow.Web/Controllers/CategoryController.cs
+src/StockFlow.Web/Security/PermissionMiddleware.cs
+src/StockFlow.Web/Pages/Shared/_ConfigurationMaster.cshtml
+src/StockFlow.Web/wwwroot/css/configuration.css
+src/StockFlow.Web/wwwroot/js/master-data.js
+src/StockFlow.Web/wwwroot/js/category.js
+src/StockFlow.Web/wwwroot/js/category-cascades.js
+src/StockFlow.Web/wwwroot/js/category-registration.js
+src/StockFlow.Web/wwwroot/js/product-registration-form.js
+tests/StockFlow.MasterDataChecks/Program.cs
+tests/StockFlow.MasterDataChecks/TwoLevelCategoryChecks.cs
+tests/StockFlow.MasterDataChecks/CatalogRegistrationChecks.cs
+tests/StockFlow.MasterDataChecks/CategoryHierarchyChecks.cs
+tests/StockFlow.UiChecks/category-creation-offline.cjs
+tests/StockFlow.UiChecks/category-two-level-offline.cjs
+tests/StockFlow.UiChecks/product-review-offline.cjs
+tests/category-two-level-database.sql
+
+Private local test artifacts (not deployment files)
+tests/bin/category-two-level/before-065.dump: complete backup, restore verified.
+tests/bin/category-two-level/live-preview.json: read-only before/after mapping.
+tests/bin/category-two-level/*checks.log and *run.log: isolated verification logs.
+Do not publish the database backup or its data with application artifacts.

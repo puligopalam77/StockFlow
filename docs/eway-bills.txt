@@ -1,0 +1,248 @@
+StockFlow E-Way Bill preparation and provider boundary - 2026-11-02
+
+DELIVERY STATUS
+Implemented and tested: independently useful persisted preparation, register,
+revision/action history, actual source links, worksheet export/print, explicitly
+unverified external references, existing authorization/RLS, local usage monitoring
+and a provider adapter contract with a fail-closed production implementation.
+
+Blocked by authorized integration access: a real NIC/GSP adapter, sandbox and
+production verification. No provider contract, approved endpoints, keys or taxpayer
+API credentials were supplied. No production connection or external submission was
+attempted. The application does not collect credentials for an unspecified provider.
+
+Not implemented: official generation/refresh/cancellation/vehicle/transporter/
+validity/rejection/consolidation operations, authenticated official-response imports,
+durable provider transmission/reconciliation queues, provider fees/rate scheduling,
+commercial entitlement wiring, portal-upload JSON or automatic statutory applicability.
+These are not exposed as working controls. An externally typed EBN never becomes
+Generated, Cancelled, Expired or provider-verified within this implementation.
+This is a preparation release, not a complete or production-certified live integration.
+
+EXISTING SERVICES REUSED
+The module consumes persisted gst_documents snapshots, registrations, legal-business
+snapshots, effective shop mappings and actual stock transfers/items. It does not
+calculate invoice GST again, read current catalog prices into historical invoices,
+rebuild GST setup or change SalesRepository finalization. Current BusinessScope,
+BusinessProfiles, PermissionCatalog/middleware, runtime role, CSRF, error handling,
+HTTPS deployment pipeline, Razor layout and CSV/browser-print patterns are reused.
+
+SOURCE SEMANTICS
+GST sources are invoice-kind records in the selected tenant/shop/location/profile.
+Sales require an actual linked COMPLETED sale and SALES VIEW; purchases require
+PURCHASES VIEW and the separately recorded supplier invoice. A purchase order or
+receipt alone is not offered as a supplier tax invoice. The source selector supports
+the contextual saleId/purchaseId filters and server pagination. No arbitrary source
+JSON, client-computed invoice values or replacement GST goods are accepted.
+
+Approved/dispatched/partially received/received transfers can be prepared only from
+the selected authorized outward location and mapped registration. The real transfer
+reference and quantity identities are captured; no sale, source value or delivery
+challan number is invented. Actual challan identity, date, goods/value evidence and
+monetary lines must be supplied by the authorized operator. Effective registration
+mapping is checked again against a supplied movement date. The module does not
+issue statutory delivery challans or automatically allocate partial dispatches.
+Unknown value remains unknown; original inventory quantities remain unchanged.
+
+Ordinary/legacy sales without an issued GST document, independent delivery challans,
+imports/exports, overseas/SEZ PIN cases and other unsupported legal documents require
+separate source/portal review. They are not silently synthesized into invoices.
+Do not infer that a missing selectable source means no e-way bill is required.
+
+PREPARATION AND VALIDATION
+The guided screen captures actual movement identity, bill-from, dispatch-from,
+bill-to, ship-to, transaction arrangement, goods, transport mode, transporter,
+vehicle/document/date/distance and applicability review. Missing physical addresses
+are left blank. An explicit URP entry can identify an unregistered counterparty;
+known source GSTIN and own source registration identity must still agree.
+Part A preparation hides vehicle/document controls and requires transporter data.
+Transfer monetary fields copy actual challan evidence, never catalog selling price.
+
+Versioned rules are EWayPreparationRules.Version, currently
+preparation-2026-11-02-nic-v1.03-review. These are basic preparation checks, not the
+complete official schema/HSN master/state-PIN mapping/exemption or applicability
+engine. They check missing data, syntax, known registration identity, GST source
+identity, goods classification/HSN/UQC, distance and mode-dependent information.
+Applicability always remains Review Required; there is no universal 50,000 rule,
+local statutory validity calculation or Ready-for-government clearance claim.
+Record applicability/exemption/state decisions with the authorized review evidence.
+Final government/provider validation and contemporary GST-practitioner review remain
+necessary. No legal decision is inferred solely from a source invoice amount.
+
+REVISIONS, EXTERNAL REFERENCES AND INTEGRITY
+eway_documents stores scoped current state and a server-captured source snapshot.
+eway_events retains immutable source/body revisions and action receipts, including
+actor, operation UUID, expected version and timestamp. Writer functions enforce
+scope, original-source authority, permission, identity, payload replay and locking.
+Same operation/value retries return the saved result; changed payloads conflict.
+Concurrent independent saves cannot overwrite a newer version. Data collection,
+validation/export/reference recording never posts sales, stock, tax or payments.
+
+Statuses implemented: DRAFT and EXTERNAL_UNVERIFIED. Manual EBN entry requires its
+own action, a 12-digit value, evidence/reviewer/date reference, no preparation issues
+and unchanged current source snapshot. It remains unverified and freezes that
+preparation. EBN uniqueness is tenant-scoped. No official time/validity is fabricated.
+Correction of an external reference is intentionally not implemented as an overwrite;
+retain the audit and use an agreed reconciliation/correction workflow before rollout.
+
+CSV exports are preparation worksheets, not a current official bulk-upload format.
+They include source values, transport/parties and review issues, with spreadsheet
+formula protection. Browser printing/Save as PDF prints the saved readable worksheet
+and a NOT OFFICIAL warning. It does not print a government-supplied document or prove
+submission. Opening the official portal performs no login automation or submission.
+The operator must use the actual portal and keep actual evidence separately.
+
+The browser keeps unresolved save/action identity in memory and freezes its payload
+for same-tab retry. Pending requests are not an offline synchronization queue.
+Reloading before resolution requires finding the saved preparation in the register;
+do not blindly create another movement or claim cross-device recovery is implemented.
+
+SCREENS AND ENDPOINTS
+ /EWayBills - scoped register, source/status/registration/search/created-date filters,
+   server pagination, no-invented-EBN/validity display and authorized usage panel.
+ /EWayBills/Prepare - guided source-backed editor, saved validation, worksheet
+   download/print, manually recorded unverified portal reference and history.
+ /EWayBills/Provider - truthful authorized integration readiness; no credential form.
+Links are in Reports/Gst, Administration/Gst integrations, sales/purchase details
+and the transfers screen. Normal New Sale has no transport or monitoring controls.
+
+ GET /api/ewaybills/options; GET /sources; GET /source
+ GET /api/ewaybills (including sourceType/registrationId filters); GET /{id}
+ POST /api/ewaybills (create); PUT /api/ewaybills (revision)
+ POST /api/ewaybills/{id}/validate; POST /{id}/external; POST /{id}/export
+ GET /api/ewaybills/{id}/history; GET /usage; GET /provider
+No generate/cancel/update/extension endpoint exists until an actual adapter and
+durable operation coordinator have been implemented and verified.
+
+PROVIDER AND UNLIMITED USAGE
+IEWayProvider separates adapter capabilities and operation outcome from preparation.
+Its command includes a stable attempt identity and source-registration reference.
+The outcome distinguishes confirmed, rejected, not transmitted and unknown after
+transmission; it reserves real evidence/reference/dates/fee fields. The test-only
+adapter exercises an unknown outcome without fabricating an EBN. It is not registered
+in the production container. UnavailableEWayProvider exposes no supported operation
+and fails before transmission. There is no endpoint through which to bypass this.
+
+No monthly StockFlow numeric allowance/counter check is implemented. More than ten
+preparations were actually persisted and paged in tests. Usage counts authorized
+scoped local operations; external reference/export is not counted as API generation.
+Provider requests and verified official generations are zero because no real adapter
+is installed. Provider charges remain null/unknown, not zero. Failed HTTP preparation
+requests are not misrepresented as transmitted provider attempts.
+The API applies a temporary 120-requests/minute/tenant+actor abuse throttle (429 with
+Retry-After); this is not a monthly quota or a provider-capacity bypass. A multi-node
+provider rollout still needs coordinated per-provider throttles and reconciliation.
+
+No existing plan entitlement/provider agreement has been verified. The UI therefore
+does not claim an unlimited government or provider entitlement. Before marketing
+unlimited automatic generation, wire the actual commercial plan entitlement into
+the verified connection. Keep no StockFlow monthly count limit, but respect provider
+contractual capacity, quotas, fees and technical limits.
+
+SECURITY
+EWAY_BILLS actions: VIEW, PREPARE, EDIT, VALIDATE, RECORD_EXTERNAL, EXPORT,
+VIEW_USAGE, CONFIGURE_PROVIDER. Only existing tenant owners are granted by migration;
+other assignments use the existing permission system. Source viewing rights and GST
+report access remain necessary. Role view dependencies are not bypassed. Runtime
+has SELECT only on the two new tables; guarded functions are the sole runtime write
+boundary. FORCE RLS protects headers and history. Explicit scope/source checks also
+run inside the definer writer, including when the source reader executes under it.
+Shared registration does not grant another shop's source records. Lists/options
+avoid returning full GSTIN/party snapshots; source/detail/export are separately
+authorized. Registration filter labels mask identity. No arbitrary tenant/path or
+registration-wide visibility override is accepted.
+
+HTTPS/HSTS and trusted forwarded-header configuration reuse the existing deployment
+pipeline. Unsafe methods use existing global CSRF protection. Responses are no-store;
+payload size, pagination and temporary request rate are bounded. E-way query/body
+data is omitted from generic error logs. Database error details and provider secrets
+are not returned. No taxpayer credentials/tokens/crypto implementation were added.
+Historic party/transport evidence is sensitive: authorize history/export carefully,
+retain it under the deployment data-retention policy and secure backups/exports.
+
+MANUAL MIGRATION AND ROLLOUT
+database/migrations/084_eway_preparation.sql, after 083. It adds only the EWAY_BILLS
+module/actions, preparation/history tables, indexes, RLS and guarded functions.
+It also narrowly fixes a reproduced pre-existing 051 transfer-action profile guard:
+the SQL alias h collided with the function's h row variable. The alias is changed
+without removing the profile check. The real transfer request/approval path passes
+in the new tests. The migration rejects an unrecognized changed guard definition
+for manual review rather than guessing. Older migration files were not rewritten.
+
+No configured application/production migration was applied by this task. Before
+manual application, verify actual deployment, isolated-restored backups including
+assets/keys, writers stopped, and current schema; run the entire transaction as
+postgres. Deploy matching code and explicitly assign actions. Retain source history
+on rollback; do not drop used preparation/audit tables or overwrite newer invoices.
+The existing A03 actual shop-master ownership/topology release gate still applies.
+
+FILES
+ database/migrations/084_eway_preparation.sql
+ src/StockFlow.Application/DTOs/Gst/EWayModels.cs
+ src/StockFlow.Application/Common/EWayPreparationRules.cs
+ src/StockFlow.Application/Interfaces/IEWayRepository.cs; IEWayProvider.cs
+ src/StockFlow.Infrastructure/Repositories/EWayRepository.cs; UnavailableEWayProvider.cs
+ src/StockFlow.Web/Controllers/EWayBillsController.cs
+ src/StockFlow.Web/Filters/EWayExceptionFilter.cs
+ src/StockFlow.Web/Pages/EWayBills/Index.cshtml; Prepare.cshtml; Provider.cshtml
+ src/StockFlow.Web/wwwroot/js/ewaybills.js; css/ewaybills.css
+Existing Program, PermissionCatalog, PermissionMiddleware, ErrorLogMiddleware and
+GST/admin/sales/purchase/transfer pages are extended; no posting engine is replaced.
+Tests: EWayChecks.cs, eway-preparation.cjs, Program test dispatch, FakeSecurityRepository
+and the e-way body/query omission assertion in ErrorLogChecks.cs.
+
+OFFICIAL REFERENCES CHECKED ON 2026-11-02
+ https://docs.ewaybillgst.gov.in/apidocs/
+ https://docs.ewaybillgst.gov.in/apidocs/on-boarding-process.html
+ https://docs.ewaybillgst.gov.in/apidocs/pre-requisites.html
+ https://docs.ewaybillgst.gov.in/apidocs/version1.03/authenticationV1.03.html
+ https://docs.ewaybillgst.gov.in/apidocs/version1.03/generate-eway-bill.html
+ https://docs.ewaybillgst.gov.in/apidocs/master-codes-list.html
+ https://docs.ewaybillgst.gov.in/apidocs/version1.03/cancel-eway-bill.html
+ https://docs.ewaybillgst.gov.in/apidocs/version1.03/update-transporter.html
+ https://www.nic.gov.in/project/gst-e-way-bill-system/
+The API index labels v1.03 current and reports held-back enhancements; this is not
+permission to implement withdrawn changes. Authentication documentation specifies
+provider-issued credentials and encryption/session exchange. Onboarding describes
+sandbox testing and production authorization. No cryptography/endpoints are guessed
+from samples. Generation documentation includes data/transport/distance validation;
+master codes distinguish document/movement/transaction arrangements. Cancellation
+and transporter update have authority/status/timing restrictions; no local operation
+pretends to satisfy them without official confirmation.
+
+The public portal timed out in research; release-notes, subtype mapping and vehicle/
+extension pages returned 403. State-specific exemptions/applicability, current portal
+bulk-upload format, full latest validation changes, exact authorized lifecycle contract
+and business applicability are not comprehensively verified. Obtain the authorized
+documentation package and accountant review before live adapter/schema implementation.
+
+REQUIRED NEXT LIVE-INTEGRATION GATES
+1. Identify actual NIC eligibility or authorized GSP, exact version/endpoints, sandbox
+   credentials, registration authority, static-IP/network requirements and agreement.
+2. Implement its approved auth/encryption/token rotation with approved libraries and
+   server-side secret storage. Never collect or log credentials in browser code.
+3. Add durable provider connections, attempts/responses, scope/registration capability
+   checks, source/movement duplicate protection and immutable official evidence.
+4. Before transmission persist identity; reconcile timeout/unknown outcomes by that
+   identity. Do not blindly generate again. Add official status/cancel/update/extension
+   using actual supported operations, not local status edits or invented validity.
+5. Verify approved portal JSON separately from the current worksheet export. Finish
+   source/partial-dispatch/challan coverage, current state rules and exception review.
+6. Test positive/negative authority, same-GSTIN shops, source changes, unknown outcomes,
+   provider limits/fees, sandbox fixtures and genuine production responses. Only then
+   expose automatic controls or market provider-backed unlimited service.
+
+VERIFICATION COMMANDS
+ dotnet build tests/StockFlow.MasterDataChecks --artifacts-path E:\StockFlow\.artifacts\eway -v quiet
+ dotnet .artifacts/eway/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --eway-checks
+ dotnet .artifacts/eway/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --quotation-checks
+ dotnet .artifacts/eway/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --fast-billing-checks
+ dotnet .artifacts/eway/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --error-log-checks
+ Playwright Node: tests/StockFlow.UiChecks/eway-preparation.cjs
+The DB suites use disposable clones on the dedicated test cluster, not application
+configuration. Browser HTTP/provider is mocked; Razor and source snapshots are real.
+Positive movement fixtures use the existing Electrical test database; other supported
+profiles are explicitly tested for denial of another profile's records. Full positive
+industry pilots and deployed two-shop topology remain unverified. Physical printing,
+real portal submission, sandbox and production provider lifecycle were not tested.
+Final captured results are in docs/eway-verification-2026-11-02.txt.

@@ -1,0 +1,31 @@
+body.master-form-page #master-data>:not(#editor):not(#master-message):not(#deactivate-dialog){display:none!important}
+body.master-form-page #master-list,body.master-form-page #catalog-tools,body.master-form-page #add-record,body.master-form-page .configuration-help{display:none!important}
+body.master-form-page .master-screen-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 16px}
+body.master-form-page .master-screen-heading h1{font-size:23px;margin:0;font-weight:700}
+body.master-form-page .master-screen-form{position:static!important;inset:auto!important;transform:none!important;float:none!important;margin:0!important;width:100%!important;max-width:none!important;height:auto!important;max-height:none!important;border:1px solid #e0e7f1;border-radius:9px;box-shadow:none!important;background:white;overflow:visible!important;color:inherit}
+body.master-form-page .master-screen-form[open]{display:block!important}
+body.master-form-page .master-screen-form:not([open]):is(dialog){display:none!important}
+body.master-form-page .master-screen-form .registration-content,body.master-form-page .master-screen-form .category-registration-content,body.master-form-page .master-screen-form .brand-registration-content{height:auto!important;max-height:none!important;overflow:visible!important;min-height:0!important}
+body.master-form-page #purchase-registration-form{max-height:none!important;height:auto!important;display:block}
+body.master-form-page #purchase-registration .registration-tabs{position:static}
+body.master-form-page #purchase-registration .registration-footer,body.master-form-page .category-registration-footer,body.master-form-page .brand-registration-footer{position:sticky;bottom:0;z-index:5;background:white;border-top:1px solid #e4eaf4;margin-top:18px}
+body.master-form-page #purchase-registration-close,body.master-form-page #close-editor{display:none!important}
+body.master-form-page #master-data>#editor:not(.master-screen-form){display:none!important}
+body.master-form-page[data-master-screen=products][data-master-screen-mode=create] #editor{display:none!important}
+/* Full-page editors grow with their fields; only real modal popups need an inner scroller. */
+body.master-form-page .master-screen-form #master-form,
+body.master-form-page .master-screen-form #form-fields,
+body.master-form-page .master-screen-form .supplier-registration-content{height:auto!important;max-height:none!important;overflow:visible!important;min-height:0}
+body.master-form-page #master-message.d-none{display:none!important}
+@media(max-width:600px){body.master-form-page .master-screen-heading{align-items:flex-start;flex-direction:column;gap:10px}body.master-form-page .master-screen-heading h1{font-size:20px}body.master-form-page .master-screen-form{padding:14px!important}body.master-form-page .registration-tabs{overflow-x:auto}}
+
+body.master-form-page .master-screen-form #editor-title,body.master-form-page #purchase-registration .registration-heading{display:none!important}
+
+/* The same category form can be embedded in Add Product without page navigation. */
+body.category-popup-page{background:#fff}
+body.category-popup-page :is(.sf-sidebar,.sf-topbar,.sf-app-footer,.master-screen-heading,.sf-breadcrumbs,.sf-help-panel,.sf-help-launcher,.sf-help-open,.sf-skip-link){display:none!important}
+body.category-popup-page .sf-workspace{margin:0;min-height:0}
+body.category-popup-page .sf-main{padding:0;max-width:none}
+body.category-popup-page .master-screen-form{border:0;border-radius:0}
+body.category-popup-page #editor .category-registration-heading{display:block;padding:8px 20px 12px}
+body.category-popup-page .category-registration-footer{margin-top:12px;padding:12px 20px}

@@ -1,0 +1,12 @@
+@inject StockFlow.Web.Security.IdleSessionService IdleSessions
+@if (User.Identity?.IsAuthenticated == true && User.FindFirst(StockFlow.Web.Security.IdleSessionService.ClaimType) is { } sessionClaim)
+{
+    var status=Context.Items["StockFlow.SessionStatus"] as StockFlow.Web.Security.SessionStatus ?? await IdleSessions.ValidateAsync(User);
+<div id="idle-session" hidden data-session="@sessionClaim.Value" data-remaining="@status.RemainingMilliseconds" data-absolute-remaining="@status.AbsoluteRemainingMilliseconds" data-timeout="@IdleSessions.IdleTimeout.TotalMilliseconds">
+</div>
+<div id="idle-session-warning" class="alert alert-warning position-fixed bottom-0 start-50 translate-middle-x mb-3" role="alert" style="z-index:1100;width:min(560px,calc(100% - 24px))" hidden>
+    <span id="idle-session-warning-text">
+    </span> <button id="idle-session-continue" class="btn btn-sm btn-dark" type="button">Stay signed in</button>
+</div>
+    <script src="~/js/idle-session.js" asp-append-version="true"></script>
+}

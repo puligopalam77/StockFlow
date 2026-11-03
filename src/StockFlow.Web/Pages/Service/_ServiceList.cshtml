@@ -1,0 +1,36 @@
+<div id="service-message" class="alert alert-danger" role="alert" hidden>
+</div>
+<form id="service-search" class="row g-3 mb-3">
+    <div class="col-md-4">
+        <label for="term" class="form-label">Service number / customer / mobile / serial / product</label>
+        <input id="term" class="form-control" maxlength="200" />
+    </div>
+    <div class="col-md-2">
+        <label for="status" class="form-label">Status</label>
+        <select id="status" class="form-select">
+            <option value="">All</option>
+            <option value="RECEIVED">Received</option>
+            <option value="INSPECTION">Being checked</option>
+            <option value="REPAIRING">Being repaired</option>
+            <option value="WAITING_FOR_PART">Waiting for a part</option>
+            <option value="READY">Ready for collection</option>
+            <option value="DELIVERED">Delivered</option>
+            <option value="CANCELLED">Cancelled</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label for="from" class="form-label">Received from</label>
+        <input id="from" type="date" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label for="to" class="form-label">Received through</label>
+        <input id="to" type="date" class="form-control" />
+    </div>
+    <div class="col-md-2 align-self-end">
+        <button class="btn btn-primary">Search</button>
+    </div>
+</form>
+<div id="service-results" aria-live="polite">
+</div>
+<button id="previous" class="btn btn-secondary" disabled>Previous</button>
+<button id="next" class="btn btn-secondary" disabled>Next</button>

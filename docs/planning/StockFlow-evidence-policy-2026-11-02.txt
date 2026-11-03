@@ -1,0 +1,171 @@
+StockFlow evidence, documentation and competitive claims policy
+Reviewed 2 November 2026. Scope: documentation/evidence, no deployment authority.
+
+Order of authority
+1. Actual current source and actual schema for the environment being described.
+2. Executed automated tests and verified runtime behavior, with their precise scope.
+3. Actual deployment, recovery and physical-device evidence.
+4. The 2 November 62-workflow code-backed audit.
+5. Earlier plans, feature wishlists and competitive reviews.
+Investigate disagreements; do not choose the more optimistic statement. Source
+or a migration file proves a defined implementation, not an applied production
+schema. A test fixture proves its exercised cases, not every deployment/history.
+
+Current maintained register
+StockFlow-feature-evidence-register-2026-11-02.csv: 62 workflow IDs, original
+route/API/entities and audit evidence, plus current source-path references,
+recorded executed tests, limits, deployment status and pilot status.
+Current counts after the private-shop/Expenses implementation follow-up:
+36 Implemented, 20 Partial, 5 Missing, 0 Defective, 1 Deferred.
+These are workflow status counts, not sellable feature counts or readiness scores.
+Defective has no current row because the reproduced F06 defects were corrected;
+its remaining estimate/COGS limitations are Partial. This is not proof of no bugs.
+
+Status definitions
+Implemented: end-to-end source workflow exists for the described scope. Deployment,
+hardware and pilot acceptance remain independent evidence fields.
+Partial: useful implemented subset exists with material workflow/coverage gaps.
+Missing: no corresponding business workflow found in the reviewed code/schema
+evidence. A similarly named field is insufficient proof of the requested feature.
+Defective: a reproducible incorrect result exists, with source/fixture evidence.
+Deferred: explicit separate design/approval scope, not a silently promised feature.
+No newly reproduced transaction defect was found during this documentation review.
+New defects must be recorded and handled under the approved development task.
+
+When reporting development work
+- Name the feature and audit ID, route/API/entities and actual implementation files.
+- Separate source inspection, fake-service HTTP, real PostgreSQL fixtures, mocked
+  browser HTTP, real device/deployment tests and customer sign-off.
+- Record exact command, date, candidate/source identity, environment/scope, actual
+  result and artifact; do not mark an inventoried suite as executed.
+- Give unresolved limits, manual migrations, deployed status and pilot status.
+- Keep dated test results immutable. Documentation/help changes do not upgrade
+  an older acceptance result to a new source fingerprint or production pass.
+- Link the existing release runner and pilot records. A build is one gate only.
+  Do not create another feature project or duplicate permission/profile engine.
+
+Corrections to use in help, demos and support
+- Profiles: Electrical, Bike Accessories, Clothing and Footwear. Serial/warranty/
+  repair capabilities currently Electrical. No general grocery/fractional/expiry
+  readiness claim. Profiles restrict capabilities and never grant permissions.
+- GST: legal businesses, effective registrations/shop mappings, reviewed catalog
+  rules, issued tax snapshots, working registers/notes and accountant CSV exist.
+  GSTR period preparation, GSTR-2B eligibility reconciliation and filing remain
+  unavailable. Recorded input GST is not automatically approved eligible ITC.
+- New Sale: registered customer, one fully paid Cash/UPI/Debit Card/Credit Card/
+  Bank Transfer method. Electronic reference optional, receipt confirmation
+  mandatory. Cash change is optional; enabling it with short cash blocks checkout.
+  Credit Card means collected money, not customer credit. No new credit/split UI.
+- Historical credit/split/walk-in invoices and authorized later collections remain
+  supported. Later collections and refunds have their own dates; they are not new
+  invoice revenue. Payment reference/confirmation is not provider settlement proof.
+- Q01: persisted quotations, immutable revisions/lifecycle/expiry/print/manual PDF
+  sharing and checkout conversion exist; no stock/payment/invoice until successful
+  final checkout. Automatic quotation WhatsApp/PDF delivery is not claimed.
+- F04: operating expense drafts/posting, categories/payees, corrections, signed
+  payments/refunds/reversals, private attachments, reports/export and Cash Closing
+  integration are implemented in 086. Purchase charges remain separate. Reports
+  distinguish incurred dates from paid dates and use current corrected amounts,
+  not historical as-recorded accrual accounts. No eligible ITC or net-profit claim.
+- F06: tax-exclusive saved-value management estimate, unknown costs remain unknown,
+  pre-sale receipt evidence, returns and discounts corrected. Not authoritative
+  cost layers, inventory valuation, selected FIFO/weighted-average COGS or net profit.
+- I08/I10: receipt batch/date text and barcode label grouping are not lot balances,
+  FEFO, expiry enforcement, recall or fractional quantity support.
+- A15: browser/server drafts and retry recovery exist; disconnected final invoices,
+  offline authorization/numbering and deterministic synchronization do not.
+- A09: real synthetic fresh-cluster restore/application reads passed. Actual
+  scheduled/offsite recovery, assets/secrets/login and production RPO/RTO are open.
+  A checksum/file alone is not recoverability. No production recovery guarantee.
+- A08: scanner input/camera and browser/Android printing exist. Physical device
+  acceptance remains open; PDF/print dialog is not USB/Bluetooth driver integration.
+- G10: persisted e-way preparation/worksheet and unverified external EBN exist.
+  Official generation/updates/cancellation/provider credentials are unavailable.
+  No numeric StockFlow monthly cap is imposed by this preparation module; genuine
+  provider limits/fees/entitlement and live integration remain unverified. Do not
+  market unlimited officially generated bills on that basis.
+
+Official GST source checked for this task
+GST Portal guide, accessed 2 November 2026:
+https://tutorial.gst.gov.in/userguide/returns/Creation_of_Outward_Supplies_Return_in_GSTR-1.htm
+The guide separates entry, summary/preview and filing with DSC/EVC. StockFlow's
+working CSV is not a filed return. Actual portal filing/official provider results
+need real acknowledgements and their real status. No statutory rate, threshold,
+deadline or business-specific applicability was selected in this task. Historical
+rules compilations and product advertisements are not current legal authority;
+verify contemporary official requirements and authorized API versions before any
+new statutory implementation. Accountant acceptance remains required.
+
+Competitive evidence
+Section 7 of the 1 November review already qualifies websites as advertisements.
+Its Section 2 omitted existing GST setup/registers and predates Q01/084; those
+status claims are corrected in the HTML addendum and current register. No actual
+Vyapar defect or StockFlow speed/accuracy superiority is verified.
+Vendor feature descriptions were reopened for source attribution only:
+https://vyaparapp.in/blog/vyapar-app-features/
+https://vyaparapp.in/business-management-software
+https://vyaparapp.in/free/inventory-management-software/cloud
+These advertise billing/reporting/inventory/offline capabilities. Exact installed
+version, edition/plan entitlements, platform behavior, cost and correctness were
+not hands-on tested. No customer-count/accuracy/performance advertising claim is
+adopted as an independently verified fact.
+StockFlow-workflow-benchmark-results.csv remains NOT RUN for both products. It now
+has explicit test date, reproduction steps and observed-result fields, in addition
+to version/build, edition, platform, configuration, scope and timing/results. Future
+claims require a reproducible hands-on record, authorized test account, matched
+tasks, final balances and observed outcome. Different plan availability is not a
+verified software defect. No comparison is inferred from UI appearance.
+
+Historical formats
+The 1 November HTML has a visible 2 November addendum and corrected Q01/GST/split
+claims. Original 1 November PDF/DOCX exports are archived unchanged, identified by
+SHA256 in StockFlow-archived-review-formats.csv. They were not regenerated and
+must not be distributed as current feature/readiness material. Earlier phase and
+delivery notes retain dated test context, with superseding notices/corrected policy.
+
+Outstanding production/hardware checklist (all unverified without actual evidence)
+The owner has selected private shops within one tenant, with explicitly authorized
+sharing. Migration 085 now implements private ownership, forced RLS, guarded
+references and owner-authorized audited sharing/resolution. Multi-store legacy
+masters remain quarantined until an explicit mapping; no usage-based allocation.
+See StockFlow-private-shops-expenses-implementation-2026-11-02.txt. The read-only
+triage tool still cannot apply mappings. Independent simultaneous per-store active
+profile selection is not implemented; the existing profile engine is retained.
+[ ] Confirm target build/schema/applied migrations, including manual 083/084 where
+    used; preserve historical documents and a compatible rollback/forward-fix plan.
+[ ] Resolve approved same-profile shop master ownership and real two-shop topology;
+    verify tenant/location/profile/role/search/export isolation in that deployment.
+[ ] Complete broader receiving corrections and after-sales warranty/repair coverage.
+[ ] Verify actual five-method collection and tax/discount scenarios with shop staff
+    and accountant; reports/dues/cutoffs must agree with source documents.
+[ ] Review GST setup/classifications/POS/notes/register coverage. No filing/eligible
+    ITC/provider acknowledgement without the corresponding real workflow/evidence.
+[ ] Exercise real USB/camera scanners, labels and supported A4/80mm/58mm printers;
+    verify actual scale/width, decoding, totals, paper length and permission errors.
+[ ] Prove backup schedule/failure alerts, encrypted offsite retention, roles/assets/
+    configuration/secrets recovery, clean restore plus app/login and records.
+    Agree RPO/RTO and measure them on the actual deployment and offsite backup.
+[ ] Verify HTTPS, restart/sleep/power/network behavior, private storage and logs;
+    a running tunnel process is not proof of hosted availability.
+[ ] Obtain owner/accountant sign-off on the exact shop/profile/version/environment
+    using StockFlow-pilot-acceptance.csv and /Admin/Pilot. No automatic completion.
+[ ] Perform documented competitor tasks before publishing comparative claims.
+
+Remaining uncertainties
+Current deployed build/schema and customer usage were not inspected in this task.
+The local single-store audit observation is dated, not proof of today's production
+topology. Original audit line numbers can drift; current register lists checked
+source paths. Not all 62 workflows were re-audited or rerun. Native-language help
+translations, physical devices, external providers, production recovery and pilot
+sign-off are not newly verified. The earlier documentation-only update changed no
+posting or ownership. The later implementation adds 085/086, private-shop controls
+and expense/Cash Closing services in isolated environments, with no production
+migration or deployment. Dated acceptance reports retain their original scope.
+
+Client-demo wording
+StockFlow has source-backed billing, inventory, customer, purchasing and
+after-sales foundations, with selected automated transaction/recovery tests.
+Quotations and GST working records are implemented; additional financial,
+compliance and operational capabilities remain limited or under development.
+Production/hardware/pilot verification is separate. No comparative superiority,
+complete accounting, official filing or universal industry readiness is claimed.

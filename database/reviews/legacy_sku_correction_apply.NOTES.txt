@@ -1,0 +1,72 @@
+Reviewed SKU correction for the supplied SKU.CSV
+
+Entry point: database/reviews/legacy_sku_correction_apply.sql
+This is a one-time, committing business-data correction, not a normal startup migration.
+
+Deployment:
+1. Back up the complete StockFlow_DB database using pgAdmin Backup.
+2. Stop every StockFlow application/worker writer. Keep the updated application code
+   with ProductRepository, VariantRepository and ScanRepository alias support.
+3. Open a NEW pgAdmin Query Tool connected to StockFlow_DB as postgres.
+4. Paste/run the ENTIRE legacy_sku_correction_apply.sql file, including BEGIN,
+   COMMIT and the last SELECT. It commits the correction and then displays the mapping.
+5. If any statement fails, execute ROLLBACK; do not run fragments after the error.
+6. Restart/rebuild the UPDATED application. Check Products in both shops and scan an
+   old SKU and its replacement. Keep the returned mapping with the database backup.
+
+Scope from the actual CSV:
+Tenant 1, Electrical: product/variant 1 LEGACY-1; 2 LEGACY-2; 3 ITEM-9E75E95966AD4955.
+Tenant 1, Bike: product/variant 4 SF-273B51B805D91943; product 5 variants 5..8
+SF-87CE9957065EE43C-01 through -04.
+Product 6 HLM-0001 and all other products are outside the update scope.
+All five corrected product families have history in the CSV, so none is treated as unused.
+The script checks exact source SKUs, product/variant/category names, ownership,
+variant membership, current null Product Code and expected prefix before modifying data.
+
+Expected format if there have been no newer reservations than the CSV counters:
+Product 1: CTC-0001; product 2: CTC-0002; product 3: BAT-0001;
+product 4: HEL-0001; product 5: HLM-0002-01 through HLM-0002-04,
+with family code HLM-0002. These are examples, not hardcoded allocation targets.
+Actual numbers use the LIVE counter and all issued/reserved/current numeric identifiers.
+A test clone already had HLM numbers through 7, so the test correctly allocated HLM-0008.
+No namespace is assumed to begin at 0001. Barcode/serial collisions cancel the correction.
+
+Preservation:
+The guarded transaction updates catalog SKU/Product Code strings and relevant counters.
+Product/variant IDs, commercial settings, attributes, categories and stock do not change.
+It verifies fingerprints of inventory, purchase, receipt, sale, unit, stock count/transfer,
+label, barcode, supplier identifier and existing variant reservation tables before commit.
+It verifies unchanged metadata and complete unrelated product/variant rows.
+Old identifier ledger rows remain unchanged; new identifiers are permanently recorded.
+Exact existing user-trigger states are restored under exclusive maintenance locks.
+Foreign keys, check/unique constraints remain active; no session_replication_role bypass.
+The runtime role has only SELECT access to the durable correction/alias audit table.
+Alias rows have tenant and current-business-profile RLS.
+Old SKU scans and product/variant searches resolve the original variant with its NEW SKU.
+Barcode aliases and serial provenance are not repurposed or inferred.
+Physical labels can retain old printed SKU text; their existing barcode remains unchanged.
+Historical stored document rows remain unchanged; no bulk text replacement is performed.
+
+Executed verification:
+- SQL correction committed successfully on isolated sku_correction_test clone only.
+- Internal metadata, protected-table, old-ledger and trigger-state assertions passed.
+- Mismatched source rejected before correction.
+- Deliberately injected exception after writes rolled back the correction table and SKU
+  updates, with normal guards still enabled.
+- --legacy-sku-correction-checks passed against the isolated clone: all eight old/new
+  scans resolve the same IDs/current SKU and stock, product + variant alias search,
+  both-shop and cross-tenant isolation, denied runtime alias writes, continuing suffix
+  allocation and permanent SKU update rejection.
+- --product-list-sku-checks passed against a separate uncorrected isolated database,
+  covering operation before the optional correction table exists.
+- Release Web build and checks build passed, zero warnings/errors.
+No live database was modified. Full application tests and production-size performance
+benchmarks were not run. The local isolated PostgreSQL cluster was stopped afterward.
+
+Changed files:
+database/reviews/legacy_sku_correction_apply.sql
+src/StockFlow.Infrastructure/Repositories/ProductRepository.cs
+src/StockFlow.Infrastructure/Repositories/VariantRepository.cs
+src/StockFlow.Infrastructure/Repositories/ScanRepository.cs
+tests/StockFlow.MasterDataChecks/LegacySkuCorrectionChecks.cs
+tests/StockFlow.MasterDataChecks/Program.cs

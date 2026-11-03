@@ -1,0 +1,76 @@
+    <main id="stock-receipt-history">
+
+        <div id="receipt-history-message" class="alert alert-danger" role="alert" hidden>
+        </div>
+        <form id="receipt-history-filter" class="receipt-filter" autocomplete="off">
+            <div class="receipt-search">
+                <label for="receipt-term" class="form-label">Search</label>
+                <input id="receipt-term" class="form-control" maxlength="200" placeholder="Exact receipt no., or invoice, supplier or product" />
+            </div>
+            <div>
+                <label for="receipt-type" class="form-label">Movement type</label>
+                <select id="receipt-type" class="form-select">
+                    <option value="">All</option>
+                    <option value="PURCHASE">Purchase receipt</option>
+                    <option value="CUSTOMER_RETURN">Customer return</option>
+                    <option value="ADJUSTMENT_IN">Adjustment in</option>
+                    <option value="OPENING_STOCK">Opening stock</option>
+                </select>
+            </div>
+            <div>
+                <label for="receipt-from" class="form-label">From date</label>
+                <input id="receipt-from" type="date" class="form-control" />
+            </div>
+            <div>
+                <label for="receipt-to" class="form-label">To date</label>
+                <input id="receipt-to" type="date" class="form-control" />
+            </div>
+            <div>
+                <label for="receipt-supplier" class="form-label">Supplier</label>
+                <select id="receipt-supplier" class="form-select">
+                    <option value="">All suppliers</option>
+                </select>
+            </div>
+            <div class="receipt-filter-actions">
+                <button class="btn btn-primary" type="submit">Apply</button>
+                <button id="receipt-reset" class="btn btn-outline-secondary" type="button">Reset</button>
+            </div>
+        </form>
+
+        <section class="receipt-summary" aria-label="Receipt summary">
+            <h2 class="visually-hidden">Summary</h2>
+            <div>
+                <article class="receipt-metric pink"><span class="receipt-metric-icon" aria-hidden="true">&#9636;</span><div><span>Receipts</span><strong id="summary-receipts">0</strong></div></article>
+                <article class="receipt-metric blue"><span class="receipt-metric-icon" aria-hidden="true">&#11041;</span><div><span>Units received</span><strong id="summary-units">0</strong></div></article>
+                <article class="receipt-metric green"><span class="receipt-metric-icon" aria-hidden="true">&#8377;</span><div><span>Purchase value</span><strong id="summary-value">&#8377;0.00</strong></div></article>
+                <article class="receipt-metric orange"><span class="receipt-metric-icon" aria-hidden="true">&#8644;</span><div><span>Adjustments</span><strong id="summary-adjustments">0</strong></div></article>
+            </div>
+        </section>
+        <div class="receipt-list-card">
+        <div class="receipt-tabs" role="tablist" aria-label="Stock receipt views">
+            <button id="receipts-tab" class="receipt-tab active" type="button" role="tab" aria-selected="true" aria-controls="receipts-panel">Receipts</button>
+            <button id="items-tab" class="receipt-tab" type="button" role="tab" aria-selected="false" aria-controls="items-panel">Item movements</button>
+        </div>
+        <section id="receipts-panel" role="tabpanel" aria-labelledby="receipts-tab">
+            <div id="receipt-results" aria-live="polite">
+            </div>
+        </section>
+        <section id="items-panel" role="tabpanel" aria-labelledby="items-tab" hidden>
+            <div id="receipt-item-results" aria-live="polite">
+            </div>
+        </section>
+
+        <nav class="receipt-pagination" aria-label="Stock receipt pages">
+            <p id="receipt-range">Showing 0 records</p>
+            <div id="receipt-pages" class="receipt-pages">
+            </div>
+            <label for="receipt-page-size">Rows:</label>
+            <select id="receipt-page-size" class="form-select">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+                <option>100</option>
+            </select>
+        </nav>
+        </div>
+    </main>

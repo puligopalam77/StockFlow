@@ -1,0 +1,73 @@
+Category Management compact list — 1 November 2026
+
+Result at 1280x650 CSS pixels
+Same synthetic records, expanded sidebar, browser settings and 12px row font:
+                       Before       After
+Table begins at        315px        234px
+Normal row height       49px         42px
+Complete visible rows    6            8
+This is 33% more complete rows without reducing the row font size. Row height
+may grow naturally for wrapped names or touch-device controls.
+
+Changes
+- Removed global Expand All/Collapse All controls, handlers and empty toolbar.
+- Preserved individual parent chevrons, accessible expanded state and keyboard
+  operation. Re-rendering a toggled row now restores focus to its chevron.
+- Parents initially stay collapsed. Existing matching-child search expansion
+  remains; clearing search returns to a predictable collapsed parent list.
+- Tightened heading/breadcrumb/filter spacing using a category-list-only class.
+- Search/Parent Category/Status use 42:33:25 desktop columns, wrap on tablets,
+  and stack on narrow phones. Kept the searchable parent selector.
+- Retained all five columns and every authorized action. Existing charcoal,
+  white-icon, pink-hover actions stay compact. Tables scroll within their
+  wrapper on mobile; no columns are hidden.
+- Combined actual record count and existing Previous/Next/page controls into
+  one wrapping footer. Kept page size 25 and existing filtering/page semantics.
+- Existing status dialog retains its API/validation/dismissal behavior and now
+  has a centered status icon/title/description using category-scoped styling.
+
+Application files changed
+src/StockFlow.Web/Pages/Categories/Index.cshtml
+src/StockFlow.Web/wwwroot/css/category-management.css (new, list-scoped)
+src/StockFlow.Web/wwwroot/css/configuration.css (unused toolbar rule removed)
+src/StockFlow.Web/wwwroot/js/category.js
+
+Tests changed/added
+tests/StockFlow.UiChecks/category-compact-offline.cjs
+tests/StockFlow.UiChecks/category-two-level-offline.cjs
+tests/StockFlow.MasterDataChecks/TwoLevelCategoryChecks.cs
+
+Validation performed
+- Debug test-project and Release web builds: zero warnings/errors.
+- Current master-screen route/permission checks passed and regenerated fixtures.
+- Compact browser suite passed: before/after density; parent/child expansion;
+  default collapse; name/code/description search; search clearing; parent and
+  status filters; counts; 25-row pagination; readonly permissions; Add Parent,
+  Add Subcategory and Edit navigation; status cancel/success/failure; no duplicate
+  actions; all row actions reachable through mobile horizontal scrolling.
+- Existing current two-level browser suite passed after replacing its removed
+  global-button interactions with individual parent expansion. Tooltip position,
+  colors, status behavior and large-list pagination checks remain included.
+- Two-level API checks passed: duplicate/third-level rejection, stable IDs/codes,
+  status permissions, preserved child flags and assignment restrictions.
+- Synthetic profile-isolation checks passed: another profile cannot list/open/
+  change the original category or attach a child; switching back retains code.
+- Viewports: 1920x1080, 1536x864, 1366x768, 1280x720, 1280x650, 1280x600,
+  1024x768, 768x1024, 390x844, 375x667 and 320x640. No page-level overflow.
+
+Screenshots and measurements
+tests/bin/category-compact/before-1280x650.png
+tests/bin/category-compact/after-1280x650.png
+tests/bin/category-compact/mobile-390.png
+tests/bin/category-compact/before-1280x650.json
+tests/bin/category-compact/after-1280x650.json
+
+Scope and limitations
+No SQL, schema, backend category API, code generation, product count calculation,
+category relationship, product registration, sidebar or topbar changes were
+made in this task. Backend scope/ownership rules remain unchanged. Tests use
+in-memory repositories and browser API mocks; they do not certify live database
+row-level isolation, physical HP hardware or native mobile dropdown behavior.
+No real customer/shop data was modified and no cloud deployment was performed.
+The older three-level category-list browser fixture was not used; current
+two-level behavior is covered by the suites above.

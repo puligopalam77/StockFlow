@@ -1,0 +1,139 @@
+Evidence/documentation correction report - 2 November 2026
+
+Delivered
+1. StockFlow-feature-evidence-register-2026-11-02.csv: 62 unique workflow rows,
+   35 Implemented / 20 Partial / 6 Missing / 0 Defective / 1 Deferred. Contains
+   feature/audit ID/status/route/API/entities/current source paths, recorded
+   tests, limitations, deployment status and customer-pilot status.
+2. StockFlow-evidence-policy-2026-11-02.txt: hierarchy, implementation-reporting
+   rules, corrected feature boundaries, official/vendor sources, outstanding
+   production/hardware checklist, uncertainties and safe client-demo wording.
+3. Updated embedded staff help, technical instructions, competitive HTML addendum,
+   audit overlay and benchmark schema. No new feature-development project.
+
+Discrepancies investigated and corrected
+- Billing help still instructed walk-in selection/new credit/split payments and
+  always-tax-exclusive prices. SaleRules.ValidateNewCheckout and current Razor/JS
+  require registered-customer single-method full payment and configurable pricing.
+- Fast billing documentation required electronic references, while current rules
+  allow blanks but require explicit collection confirmation. Corrected the guide.
+- Help promised seven-day saved-bill availability; current 079 lifecycle uses
+  persisted states, editor leases and revisions. Removed the blanket promise.
+- Old Phase 5/9/admin/AI notes described due dates or new credit/split flows as
+  current, or said historical collections were missing. Superseding/current
+  wording now preserves legacy collections without re-enabling new credit.
+- Products help treated a supplier bill's GST rate as sufficient classification.
+  It now directs applicable GST invoicing to reviewed effective rules; the earlier
+  GST baseline section is explicitly historical. Later audit found migrations
+  070/071 locally, so original 'not applied' text is no longer a current global claim.
+- The 1 November competitive Section 2 omitted GST registrations/mappings/registers
+  already implemented, and predates Q01/083 and e-way preparation/084. HTML now
+  corrects those assessments and links the register. No claim of official filing
+  or provider generation was introduced. Expenses remains Missing.
+- F06 reproduced report defects were fixed earlier, not still classified Defective.
+  Register keeps Partial for authoritative costing/valuation limitations; it
+  describes unknown costs and pre-sale evidence without choosing a costing policy.
+- Old backup audit evidence said no restore was executed. A09/A16 now identify
+  the later real synthetic 135-table restore and application-read evidence, while
+  keeping production recovery, assets/secrets/offsite/RPO/RTO unverified.
+- Same-profile master sharing, whole quantities, Electrical serial/warranty/repair
+  capability, unsupported lots/expiry/FEFO/fractional stock, draft-only offline
+  recovery and unverified physical devices are now explicit in staff guidance.
+- Competitor protocol/result fields now explicitly include test date,
+  reproduction steps and observed result. All 24 product/task rows remain NOT RUN.
+  No competitor defect, plan entitlement, performance advantage or accuracy ranking
+  was invented from a website, screenshot or StockFlow's tests.
+
+Verified implementation anchors (current targeted inspection)
+Profiles: src/StockFlow.Application/Common/BusinessProfiles.cs:12 (four codes),
+          :36/:37 (Electrical-only serial/warranty capabilities).
+Checkout: src/StockFlow.Application/Common/SaleRules.cs:12 (customer), :17
+          (electronic confirmation); entire validator preserves current policy.
+GST: src/StockFlow.Infrastructure/Repositories/GstSetup.cs, GstCatalog.cs,
+     GstDocuments.cs; src/StockFlow.Web/Pages/Reports/Gst.cshtml explicitly says
+     working records, no filed returns/approved eligible ITC.
+Quotes: database/migrations/083_quotations.sql:33 and QuotationRepository.cs;
+        existing sale transaction controls conversion, not quotation creation.
+Profit: src/StockFlow.Infrastructure/Repositories/OperationsRepository.cs:923,
+        :956 excludes later-recorded/future receipt evidence for prior sales.
+E-way: database/migrations/084_eway_preparation.sql:70 and EWayRepository.cs;
+       unavailable provider contract, preparation not official generation.
+Recovery: database/maintenance/Test-StockFlowRestore.ps1,
+          tests/P0CleanRestoreChecks.ps1 and ReliabilityChecks.RestoredApplication.
+The remaining register paths were checked for existence; this was not a fresh
+62-workflow code/schema audit. Historical line anchors are not blindly reused as
+current exact lines; the register additionally lists current file paths.
+
+Validation actually executed during this documentation task
+PASS dotnet build tests/StockFlow.MasterDataChecks --artifacts-path
+     E:/StockFlow/.artifacts/evidence-docs -v quiet (0 warnings, 0 errors).
+PASS dotnet .artifacts/evidence-docs/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --help-panel-checks
+     Actual embedded Razor help, permitted/denied links, receipt-history selection,
+     scoped guidance, local serving of 22 help language packs. Language-pack serving
+     is not native translation certification of the updated text.
+PASS same assembly --help-ai-checks
+     60 controlled-provider questions, approved excerpts, permission filtering,
+     unsupported answers, CSRF/authentication, limits and failure behavior.
+     No live model accuracy, external message or provider delivery measured.
+PASS same assembly --billing-checks
+     Application/rules/Razor checks, registered customer/full payment, no new
+     credit/split, original invoice recovery and permission constraints.
+     No application database accessed; no business transaction posted.
+PASS register validation: 62 unique IDs, allowed statuses, required fields and
+     every listed current source path exists. 24 benchmark rows remain NOT RUN.
+PASS HTML correction check: visible dated addendum; obsolete Q01/GST omission
+     statements removed; original PDF/DOCX archive hashes recorded.
+
+Two documentation/testing mismatches were reproduced, corrected and rerun:
+- HelpPanelChecks initially failed because the receipt-history article heading
+  did not match its existing LocalHelpSearch/HelpAiService section key. Aligned
+  the documentation heading with that existing mapping; test passed.
+- BillingChecks initially failed after removing stale help. Its old raw-HTML
+  assertion relied on 'Walk-in customer' appearing in embedded help, not on the
+  actual checkout control. It now asserts the real Select customer option plus
+  denied controls. No application checkout permission or payment rule changed.
+The Add a customer heading was renamed with its matching HelpAiService title key;
+the SALES CREATE/CUSTOMERS CREATE checks remain exactly the same.
+
+Earlier execution evidence retained, not rerun or inflated
+tests/bin/release-acceptance/e21fa9661f7d4409b79bce6ee33986d6/release-report.json
+Recorded prior candidate: 22 automated gates passed, zero failed, nine review
+gates unverified, BLOCKED; source DC4D367B... . Its raw report/logs were not edited.
+tests/bin/p0-clean-restore/8779303bf4684d02b1399e5b53a1b0af/result.json:
+135 matching public tables, app startup/runtime-role product/invoice reads,
+54.69-second synthetic drill, 16.518-second archive age. No assets or production
+verification. These values are not a production RPO/RTO promise.
+This help/source revision is a new candidate and does not inherit READY from any
+earlier run. No complete release reclassification or production sign-off occurred.
+
+External source verification
+Opened the official GST Portal GSTR-1 guide and the three vendor URLs listed in
+the policy. The guide distinguishes preparation/summary/filing. Vendor pages
+establish advertised descriptions only; no installed product version, plan,
+configuration, comparative task or final balance was tested. No legal threshold,
+rate, deadline, portal applicability or authorized API version was implemented.
+
+Scope and remaining uncertainties
+No current production database, deployment, actual hardware, offsite backup,
+customer pilot or provider credentials were accessed. Source migrations plus
+recorded disposable schemas do not prove the target's applied schema. The dated
+single-store development observation does not establish today's production shops.
+English changes may fall back to English; old translated wording still needs
+native review. Original 1 November PDF/DOCX remain archived unchanged, not current
+client material; hashes are in StockFlow-archived-review-formats.csv. Current HTML
+contains an explicit addendum and links the current register/policy.
+No financial posting, inventory, invoice, business permissions, shop ownership,
+SQL migration, external delivery or production deployment was changed. The only
+C# help edit is a section-title key; the test edit corrects an obsolete assertion.
+
+Updated staff/technical documents
+docs/help/{billing,common-problems,application-features,mobile-and-devices,products,
+receiving-stock,ai-setup,content-review,README}.md
+docs/new-sale-fast-billing.md; docs/gst-implementation.md
+docs/administration-security.md; docs/phase5-counter-billing.md
+docs/phase9-sales.md; docs/phase8-administration-rollout.md
+docs/new-sale-modernization.txt; docs/new-sale-mobile-pos.txt (historical notices)
+docs/planning/StockFlow-gap-audit-2026-11-02.txt and its matrix A09/A16 overlay
+docs/planning/StockFlow-Vyapar-Competitive-Review-and-Roadmap-2026-11-01.html
+docs/planning/StockFlow-workflow-benchmark-results.csv
+New current register, policy, archive-hash index and this correction report.

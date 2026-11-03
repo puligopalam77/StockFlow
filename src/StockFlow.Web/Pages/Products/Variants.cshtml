@@ -1,0 +1,209 @@
+﻿@page
+@{ ViewData["Title"] = "Sizes, models & labels"; }
+<div data-can-generate="@Access.Can("BARCODES","GENERATE").ToString().ToLowerInvariant()" data-can-reprint="@Access.Can("BARCODES","REPRINT").ToString().ToLowerInvariant()" data-can-label="@Access.Can("BARCODES","PRINT").ToString().ToLowerInvariant()" id="variant-workspace" data-can-create="@Access.Can("PRODUCT_VARIANTS", "CREATE").ToString().ToLowerInvariant()" data-can-edit="@Access.Can("PRODUCT_VARIANTS", "EDIT").ToString().ToLowerInvariant()" data-can-disable="@Access.Can("PRODUCT_VARIANTS", "DELETE").ToString().ToLowerInvariant()">
+    <div class="configuration-heading">
+        <h2>Sizes, models &amp; barcode labels</h2>
+        <div class="d-flex gap-2">
+        @if (Access.Can("BARCODES", "GENERATE") && Access.Can("BARCODES","PRINT")) { <button id="unit-label-open" type="button" class="btn btn-dark">Label for one item</button> }
+        @if (Access.Can("PRODUCT_VARIANTS", "CREATE")) { <button type="button" id="variant-new" class="btn btn-dark" disabled>+ Add size / model</button> }
+        </div>
+    </div>
+    <div id="variant-message" role="status" class="text-danger mb-3">
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label for="variant-product" class="form-label">Product</label>
+            <select id="variant-product" class="form-select">
+                <option value="">Select a product</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="variant-search" class="form-label">Find a size / model</label>
+            <input id="variant-search" class="form-control" type="search" placeholder="Name, SKU, barcode or attribute" />
+        </div>
+        <div class="col-md-2">
+            <label for="variant-status" class="form-label">Status</label>
+            <select id="variant-status" class="form-select">
+                <option value="all">All records</option>
+                <option value="active">Active only</option>
+            </select>
+        </div>
+    </div>
+    <p hidden id="variant-product-help" class="configuration-help">
+    </p>
+    <h3>Saved sizes / models</h3>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Variant</th>
+                    <th>SKU</th>
+                    <th>Primary Barcode</th>
+                    <th>Source</th>
+                    <th>Attributes</th>
+                    <th>Tracking</th>
+                    <th>Purchase Price</th>
+                    <th>Selling Price</th>
+                    <th>Tax %</th>
+                    <th>Warranty Months</th>
+                    <th>Minimum Stock</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="variant-rows">
+            </tbody>
+        </table>
+    </div>
+@if (Access.Can("PRODUCT_VARIANTS", "CREATE") || Access.Can("PRODUCT_VARIANTS", "EDIT")) {
+    <dialog id="variant-editor" class="configuration-dialog configuration-dialog-wide" aria-labelledby="variant-editor-title">
+        <button id="variant-close" class="configuration-close" type="button" aria-label="Close variant registration">&times;</button>
+        <h2 id="variant-editor-title">Add size / model</h2>
+        <p id="variant-editor-product">
+        </p>
+        <div id="variant-editor-message" class="text-danger mb-3" role="alert">
+        </div>
+        <form id="variant-form" data-can-edit="@Access.Can("PRODUCT_VARIANTS", "EDIT").ToString().ToLowerInvariant()">
+            <input id="variant-id" type="hidden" />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="variant-name" class="form-label">Size / model name *</label>
+                    <input id="variant-name" class="form-control" required maxlength="150" placeholder="Black / M" />
+                </div>
+                <div class="col-md-6">
+                    <label for="variant-sku" class="form-label">Item code / SKU *</label>
+                    <input id="variant-sku" class="form-control" required minlength="3" maxlength="100" placeholder="SH-BLK-M" />
+                </div>
+                <div class="col-md-6">
+                    <label for="variant-tracking" class="form-label">How stock is counted</label>
+                    <select id="variant-tracking" class="form-select" disabled>
+                        <option value="false">By quantity</option>
+                        <option value="true">By serial number</option>
+                    </select>
+                    <small>Set in Product Registration.</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="variant-source" class="form-label">Barcode Source *</label>
+                    <select id="variant-source" class="form-select">
+                        <option value="INTERNAL">Create StockFlow barcode</option>
+                        <option value="MANUFACTURER">Use barcode already on the product</option>
+                    </select>
+                </div>
+                <div id="variant-primary-group" class="col-12" hidden>
+                    <label for="variant-primary" class="form-label">Primary Manufacturer Barcode *</label>
+                    <input id="variant-primary" class="form-control" maxlength="150" />
+                    <small>Leading zeros are preserved. Existing identifiers remain available for scanning.</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="variant-purchase" class="form-label">Default Purchase Price *</label>
+                    <input id="variant-purchase" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" required />
+                </div>
+                <div class="col-md-6">
+                    <label for="variant-sale" class="form-label">Default Selling Price *</label>
+                    <input id="variant-sale" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" required />
+                </div>
+                <div class="col-md-6">
+                    <label for="variant-tax" class="form-label">Tax Percentage *</label>
+                    <input id="variant-tax" class="form-control" type="number" min="0" max="100" step="0.01" required />
+                </div>
+                <div class="col-md-6">
+                    <label for="variant-warranty" class="form-label">Warranty Months *</label>
+                    <input id="variant-warranty" class="form-control" type="number" min="0" max="240" step="1" required />
+                </div>
+                <div class="col-md-6">
+                    <label for="variant-minimum" class="form-label">Default Minimum Stock</label>
+                    <input id="variant-minimum" class="form-control" type="number" min="0" max="999999999" step="1" required />
+                </div>
+                <div class="col-md-6">
+                    <label for="variant-location-minimum" class="form-label">Current Location Minimum Stock</label>
+                    <input id="variant-location-minimum" class="form-control" type="number" min="0" max="999999999" step="1" placeholder="Use variant default" />
+                    <small id="variant-location-help">Blank uses the default. Select one location to set an override.</small>
+                </div>
+                <div class="col-12">
+                    <h3>Size / model details</h3>
+                    <div id="variant-attributes">
+                    </div>
+                    <button id="attribute-add" type="button" class="btn btn-dark mt-2">+ Add detail</button>
+                </div>
+                <div class="col-12">
+                    <label for="variant-barcodes" class="form-label">Additional Manufacturer Barcodes</label><textarea id="variant-barcodes" class="form-control" rows="2" placeholder="One barcode per line"></textarea><small id="variant-existing-barcodes">
+                    </small>
+                </div>
+                <div class="col-12">
+                    <label>
+                        <input id="variant-active" type="checkbox" checked /> Active</label>
+                </div>
+            </div>
+            <div class="configuration-dialog-actions">
+                <button id="variant-cancel" type="button" class="btn btn-dark">Cancel</button>
+                <button class="btn btn-primary" type="submit">Save Variant</button>
+            </div>
+        </form>
+    </dialog>
+}
+    <dialog id="label-dialog" class="configuration-dialog configuration-dialog-wide" aria-labelledby="label-title">
+        <button type="button" class="configuration-close" data-close-label aria-label="Close labels">&times;</button>
+        <h2 id="label-title">Print or Reprint Labels</h2>
+        <p id="label-help">
+        </p>
+        <div id="label-source-controls" class="mb-3" hidden>
+            <label for="label-source" class="form-label">Barcode to print</label>
+            <select id="label-source" class="form-select">
+                <option value="existing">Use existing manufacturer barcode</option>
+                <option value="unique">Unique item barcodes</option>
+            </select>
+        </div>
+        <button id="label-generate" type="button" class="btn btn-outline-primary mb-3" hidden>Generate unique barcodes for stock</button>
+        <div id="label-copy-controls" class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label for="label-count" class="form-label">Number of Copies</label>
+                <input id="label-count" class="form-control" type="number" min="1" max="500" step="1" value="1" />
+            </div>
+            <div class="col-md-6">
+                <button id="label-refresh" type="button" class="btn btn-dark mt-4">Update preview</button>
+            </div>
+        </div>
+        <div id="label-message" class="text-danger" role="alert">
+        </div>
+        <div id="label-item-controls" hidden>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                <button id="label-select-all" type="button" class="btn btn-outline-secondary">Select all</button>
+                <button id="label-select-none" type="button" class="btn btn-outline-secondary">Clear selection</button>
+            </div>
+            <p id="label-selection-count" role="status"></p>
+            <div id="label-item-list" class="mb-3" style="max-height:220px;overflow:auto"></div>
+        </div>
+        <div id="variant-labels">
+        </div>
+        <div class="configuration-dialog-actions">
+            <button type="button" class="btn btn-dark" data-close-label>Close</button>
+            <button id="label-print" type="button" class="btn btn-primary" hidden>Print Labels</button>
+        </div>
+    </dialog>
+@if (Access.Can("PRODUCT_VARIANTS", "EDIT")) {
+    <dialog id="unit-label-dialog" class="configuration-dialog" aria-labelledby="unit-label-title">
+        <button id="unit-label-close" type="button" class="configuration-close" aria-label="Close unit label">&times;</button>
+        <h2 id="unit-label-title">Barcode for one item</h2>
+        <p>Receive serialized stock first. Scan an existing serial to record a unique manufacturer unit barcode or print an internal unit label.</p>
+        <div id="unit-label-message" class="text-danger mb-3" role="alert">
+        </div>
+        <form id="unit-label-form">
+            <label for="unit-serial" class="form-label">Existing Serial Number *</label>
+            <input id="unit-serial" class="form-control mb-3" required maxlength="150" />
+            <label for="unit-manufacturer" class="form-label">Unique Manufacturer Unit Barcode</label>
+            <input id="unit-manufacturer" class="form-control" maxlength="150" />
+            <label class="my-3">
+                <input id="unit-generate" type="checkbox" checked /> Generate or reprint internal unit barcode</label>
+            <div class="configuration-dialog-actions">
+                <button id="unit-label-cancel" type="button" class="btn btn-dark">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save &amp; Preview</button>
+            </div>
+        </form>
+    </dialog>
+}
+</div>
+@section Styles { <link rel="stylesheet" href="~/css/variants.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/variants.js" asp-append-version="true"></script> }
+
+

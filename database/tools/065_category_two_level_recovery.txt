@@ -1,0 +1,47 @@
+065 TWO-LEVEL CATEGORIES: DEPLOYMENT AND RECOVERY
+
+Deployment is manual. The development/application database was inspected read-only;
+065 was applied only to an isolated restored copy on 127.0.0.1:55439.
+
+1. Stop the application and all workers. Prevent other writers during migration.
+2. Take a fresh COMPLETE custom-format pg_dump backup of the intended database.
+   Keep this private backup outside the deployment bundle. Verify it by restoring
+   to a separate database before proceeding. Do not put passwords in commands.
+3. Run 065_category_two_level_preview.sql as an authorized administrator.
+   Review every tenant/profile, before_after mapping and foreign key.
+   Conflicting normalized names, root products/brand/supplier mappings, inherited
+   fields, root inventory defaults, and inactive roots with active children require
+   explicit resolution first. Never merge or rename records automatically.
+   Also check any integrations that reference category IDs without database FKs.
+4. Apply migrations/065_two_level_categories.sql after 064 using PostgreSQL
+   superuser and ON_ERROR_STOP. Deploy the matching application build together.
+   The transaction aborts on dependencies, unknown category FKs, invalid hierarchy,
+   duplicate names, or altered IDs/codes/product links/protected table fingerprints.
+5. Verify 34 categories remain for the inspected snapshot (33 selectable/ordinary,
+   one retained retired grouping); adapt counts to the fresh preview if data changed.
+   IDs 8,11,43,47,50 should be roots; ID 37 stays stored, inactive and retired.
+   All original product category IDs and child parent IDs remain unchanged.
+6. Verify category/product selections, status permissions and stock/report totals,
+   then restart the application/workers. Do not run the old application with the new
+   schema/status semantics. Rerunning 065 is supported; it does not promote twice.
+
+Recovery:
+- Any failed migration transaction rolls back schema and data automatically.
+- After a successful migration, keep the application/workers stopped if recovery
+  is required. Restore the complete pre-065 custom backup into a SEPARATE database:
+    createdb -h <host> -U <administrator> StockFlow_recovered_065
+    pg_restore -h <host> -U <administrator> -d StockFlow_recovered_065 <backup.dump>
+  Ensure required non-login application/worker roles exist before restoring grants.
+- Verify category IDs/codes/parents, product references, inventory, barcodes and
+  historical totals against the backup, deploy the previous application version,
+  then switch its connection to the verified recovered database.
+- If any post-migration transactions were accepted, do not overwrite them or switch
+  databases blindly. Reconcile those transactions first with the owner/administrator.
+  There is intentionally no automatic destructive down-migration.
+- category_hierarchy_065_backup retains original category JSON, the promotion plan,
+  and original function definitions for administrator investigation. It is denied
+  to stockflow_runtime. It is not a substitute for the complete database backup.
+
+Independent child status flags are preserved on parent deactivation/reactivation.
+Retired grouping rows cannot be edited/reactivated through normal write paths.
+No stock movement is created by classification changes.

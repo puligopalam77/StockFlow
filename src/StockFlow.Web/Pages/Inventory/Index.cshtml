@@ -1,0 +1,193 @@
+@page
+@model StockFlow.Web.Pages.Inventory.IndexModel
+@inject StockFlow.Application.Common.BusinessScope Scope
+@{ ViewData["Title"] = "Stock on hand"; }
+@section PageHeader {
+<header class="sf-page-heading">
+    <div>
+        <h1>Stock on hand</h1>
+    </div>
+    @if(Scope.CanReviewStores){<select id="report-location" class="form-select stock-location" aria-label="Stock store and location" disabled><option>@Scope.LocationName</option></select>}
+    else {<span class="stock-location">@Scope.LocationName</span>}
+</header>
+}
+<div id="inventory-workspace" data-storage-key="stockflow.adjustment.@Scope.TenantId.@Scope.UserId.@Scope.LocationId@Scope.DraftProfileSuffix" data-can-transfers="@Access.Can("STOCK_TRANSFER").ToString().ToLowerInvariant()">
+    <div class="stock-overview">
+    @foreach(var tile in new[]{("items","Total items","products / sizes / models","blue","box"),("units","Current stock units","units available","green","box"),("low","Low stock items","items at or below limit","amber","report-warning"),("out","Out of stock","items with 0 stock","pink","close")}){
+        <section class="stock-overview-card @tile.Item4"><span class="stock-overview-icon"><svg class="sf-icon" aria-hidden="true"><use href="@($"/images/icons.svg#{tile.Item5}")" /></svg></span><div><h2>@tile.Item2</h2><strong id="stock-total-@tile.Item1">&#8212;</strong><small>@tile.Item3</small></div></section>
+    }
+    </div>
+    <div id="inventory-message" class="alert alert-danger" role="status" aria-live="polite">
+    </div>
+    <section class="card card-body mb-3 stock-current">
+        <header class="stock-section-heading"><h2 class="h5">Current stock</h2><p id="inventory-summary" class="small" role="status"></p><button id="show-history" type="button" class="btn btn-outline-secondary">Show all stock changes</button></header>
+        <form id="balance-filter" class="stock-search-toolbar">
+            <input id="inventory-search" class="form-control" aria-label="Search inventory" placeholder="@(Scope.BusinessProfileCode == "BIKE_ACCESSORIES" ? "Part number, bike model, helmet size, brand or barcode..." : "Product, capacity, model, shop code or serial...")" />
+            <label>
+                <input id="low-stock" type="checkbox" /> Low stock only</label>
+            <label>
+                <input id="inactive" type="checkbox" /> Include inactive products</label>
+            <button class="btn btn-primary">Search</button>
+        </form>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Product group / brand</th>
+                        <th>Item code / barcode</th>
+                        <th>Available stock</th>
+                        <th>Alert when stock reaches</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="balances">
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <section class="card card-body mb-3" id="inventory-details" hidden>
+        <h2 class="h5" id="detail-title">Stock change history</h2>
+        <form id="history-filter" class="d-flex flex-wrap gap-3 align-items-end mb-3">
+            <label>From<input id="history-from" class="form-control" type="date" />
+            </label>
+            <label>To<input id="history-to" class="form-control" type="date" />
+            </label>
+            <button class="btn btn-primary">Filter history</button>
+            <button id="all-products" type="button" class="btn btn-outline-secondary">All products</button>
+        </form>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Product / serial</th>
+                        <th>Stock change</th>
+                        <th>Quantity</th>
+                        <th>Reference</th>
+                        <th>Reason / user</th>
+                    </tr>
+                </thead>
+                <tbody id="history">
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="history-prev" class="btn btn-outline-secondary" type="button">Previous</button>
+            <button id="history-next" class="btn btn-outline-secondary" type="button">Next 100</button>
+        </div>
+        <div id="inventory-unit-section">
+            <h2 class="h5 mt-4">Items with serial numbers</h2>
+            <form id="unit-filter" class="d-flex flex-wrap gap-3 align-items-center mb-3">
+                <input id="unit-search" class="form-control" style="max-width:320px" aria-label="Search serial or unit barcode" placeholder="Serial number or unit barcode" />
+                <label>
+                    <input id="available-only" type="checkbox" checked /> Available only</label>
+                <button class="btn btn-primary">Find items</button>
+            </form>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Item ID</th>
+                            <th>Product</th>
+                            <th>Serial</th>
+                            <th>Barcode</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="units">
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex gap-2">
+                <button id="units-prev" class="btn btn-outline-secondary" type="button">Previous</button>
+                <button id="units-next" class="btn btn-outline-secondary" type="button">Next 100</button>
+            </div>
+        </div>
+    </section>
+<div class="stock-tools">
+@if (Access.Can("STOCK_ADJUSTMENT","ADJUST"))
+{
+    <section class="card card-body" id="adjustment">
+        <h2 class="h5 stock-tool-title"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#edit" /></svg>Correct stock quantity</h2>
+        <p>Use Receive Stock for new goods from a supplier. Use this section to correct a stock count or record damaged items. Every change stays in stock history.</p>
+        <div id="adjustment-pending" class="alert alert-warning" hidden>An adjustment has an unconfirmed result. <button id="adjustment-retry" type="button" class="btn btn-outline-primary">Retry saved adjustment</button>
+        </div>
+        <form id="adjustment-form">
+            <fieldset id="adjustment-editor" class="row g-3">
+                <div class="col-md-6">
+                    <label for="adjust-product" class="form-label">Product</label>
+                    <select id="adjust-product" class="form-select" required>
+                        <option value="">Choose a product</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="adjust-type" class="form-label">What changed?</label>
+                    <select id="adjust-type" class="form-select">
+                        <option value="ADJUSTMENT_IN">Add stock after a correction</option>
+                        <option value="ADJUSTMENT_OUT">Remove stock after a correction</option>
+                        <option value="DAMAGED">Damaged</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="adjust-quantity" class="form-label">Quantity</label>
+                    <input id="adjust-quantity" type="number" min="1" max="10000" value="1" class="form-control" required />
+                </div>
+                <div class="col-12" id="serial-fields" hidden>
+                    <label for="adjust-serials" class="form-label">New serial numbers (one per line)</label><textarea id="adjust-serials" class="form-control" rows="4"></textarea></div>
+                <div class="col-12" id="unit-fields" hidden>
+                    <label for="adjust-unit-scan" class="form-label">Scan a unit barcode / serial to select</label>
+                    <input id="adjust-unit-scan" class="form-control mb-2" autocomplete="off" />
+                    <div id="adjust-units" class="inventory-unit-choices">
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label for="adjust-reason" class="form-label">Reason</label>
+                    <input id="adjust-reason" class="form-control" maxlength="1000" placeholder="e.g. Stock count correction, damaged item" required />
+                </div>
+                <div class="col-12">
+                    <button id="post-adjustment" class="btn btn-primary">Save stock correction</button>
+                </div>
+            </fieldset>
+        </form>
+        <div id="adjustment-message" class="mt-3" role="status" aria-live="polite">
+        </div>
+    </section>
+}
+@if (Access.Can("STOCK_ADJUSTMENT","ADJUST"))
+{
+    <section class="card card-body" id="stock-count-section">
+        <h2 class="h5 stock-tool-title"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#box" /></svg>Count stock in the shop</h2>
+        <p>Count the items on your shelves and enter that quantity. Saving changes the stock quantity to match your count and records the difference. For items with serial numbers, check each serial number first.</p>
+        <form id="stock-count-form" class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label">Product / size / model</label>
+                <select id="stock-count-variant" class="form-select" required>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Quantity shown in StockFlow</label>
+                <input id="stock-count-expected" class="form-control" readonly />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Quantity you counted</label>
+                <input id="stock-count-quantity" type="number" min="0" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Count notes</label>
+                <input id="stock-count-notes" class="form-control" maxlength="2000" placeholder="e.g. Physical count, shelf check" required />
+            </div>
+            <div class="col-12">
+                <button class="btn btn-primary">Save count &amp; correct stock</button>
+            </div>
+        </form>
+        <div id="stock-count-result" class="mt-2">
+        </div>
+    </section>
+}
+</div>
+</div>
+@section Styles {<link rel="stylesheet" href="~/css/inventory-control.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/stock-on-hand.css" asp-append-version="true" />}
+@section Scripts { <script src="~/js/common/scanner.js" asp-append-version="true"></script><script src="~/js/inventory.js" asp-append-version="true"></script><script src="~/js/shop-operations.js" asp-append-version="true"></script> }
+

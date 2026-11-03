@@ -1,0 +1,41 @@
+/* Category list only. Registration/editor and other master screens keep their styles. */
+@media screen {
+    .sf-category-list .sf-main { padding-top:12px; }
+    .sf-category-list .configuration-heading { padding-bottom:8px; margin-bottom:0; flex-wrap:wrap; gap:10px; }
+    .sf-category-list .sf-main .sf-breadcrumb { margin:6px 0 12px; }
+    .sf-category-list .category-create-actions { display:flex; flex-wrap:wrap; gap:6px; }
+    .sf-category-list #master-list > .row {
+        display:grid; grid-template-columns:42fr 33fr 25fr;
+        gap:12px; margin:0 0 12px!important; padding:0;
+        --bs-gutter-x:0; --bs-gutter-y:0;
+    }
+    .sf-category-list #master-list > .row > div { width:auto; min-width:0; padding:0; margin:0; }
+    .sf-category-list #master-list > .row .form-label { margin-bottom:5px; }
+    .sf-category-list #master-list > .row :is(.form-control,.form-select) { min-height:36px; }
+    .sf-category-list .category-list-table { margin-bottom:0; }
+    .sf-app.sf-category-list #master-list .category-list-table :is(th,td) { padding:5px 10px!important; }
+    .sf-category-list .category-list-table thead tr { height:38px!important; }
+    .sf-category-list .category-list-table tbody tr { height:42px!important; }
+    .sf-category-list #master-list .category-list-table .category-icon-action { height:28px; min-height:28px!important; }
+    .sf-category-list #master-list .category-list-table .category-group-toggle { min-height:28px!important; }
+    .sf-category-list .category-child-count { white-space:normal; }
+    .sf-category-list .category-list-footer:not(.sf-pagination) { padding:8px 0 0; gap:8px; }
+    .sf-category-list .category-pagination:not(.sf-pagination) { margin-top:0; flex-wrap:wrap; gap:6px; }
+    .sf-category-list .category-pagination:not(.sf-pagination) .btn { min-height:30px; }
+    .sf-category-list #deactivate-dialog { width:min(520px,calc(100vw - 24px)); text-align:center; }
+    .sf-category-list .category-status-symbol { width:64px; height:64px; margin:0 auto 16px; display:grid; place-items:center; border-radius:50%; background:#fff4db; color:#b77909; }
+    .sf-category-list .category-status-symbol svg { width:30px; height:30px; }
+    .sf-category-list #deactivate-dialog .configuration-dialog-actions { justify-content:center; flex-wrap:wrap; }
+    @media (max-width:767px) {
+        .sf-category-list #master-list > .row { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .sf-category-list #master-list > .row > div:first-child { grid-column:1 / -1; }
+    }
+    @media (max-width:480px) {
+        .sf-category-list #master-list > .row { grid-template-columns:minmax(0,1fr); gap:10px; }
+        .sf-category-list .category-list-footer:not(.sf-pagination) { align-items:flex-start; }
+        .sf-category-list .category-pagination:not(.sf-pagination) { justify-content:flex-start; }
+    }
+    @media (pointer:coarse) {
+        .sf-category-list #master-list .category-list-table .category-icon-action { height:34px; min-height:34px!important; }
+    }
+}

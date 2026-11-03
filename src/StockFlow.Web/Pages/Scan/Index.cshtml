@@ -1,0 +1,39 @@
+@page
+@model StockFlow.Web.Pages.Scan.IndexModel
+@{ ViewData["Title"] = "Scan product / serial"; }
+<header class="sf-page-heading">
+    <div>
+        <h1>Scan product / serial</h1>
+    </div>
+</header>
+<div class="card card-body">
+    <label for="scanInput" class="form-label">Barcode / serial number</label>
+    <div class="d-flex gap-2">
+        <input id="scanInput" class="form-control form-control-lg" maxlength="200" autocomplete="off" autofocus placeholder="Scan or enter code" />
+        <button id="scanButton" type="button" class="btn btn-primary">Find item</button>
+    </div>
+    <div id="scanMessage" class="mt-3" role="status" aria-live="polite">
+    </div>
+</div>
+<section id="resultCard" class="card card-body mt-3" hidden aria-label="Scan result">
+    <h2 id="productName" class="h4">
+    </h2>
+    <dl class="row mb-0" style="overflow-wrap:anywhere">
+        @foreach (var field in new[] { ("matchType", "Match"), ("productCode", "Product Code"), ("sku", "SKU"), ("categoryName", "Category"), ("brandName", "Brand"), ("model", "Model"), ("productBarcode", "Product barcode"), ("serialNumber", "Serial / Unit ID"), ("serialSource", "Identifier source"), ("unitBarcode", "Barcode for this item"), ("unitStatus", "Item status"), ("currentStock", "Current stock"), ("sellingPrice", "Selling price"), ("isSerialTracked", "Each item has a serial number") })
+        { <dt class="col-sm-4">@field.Item2</dt>
+        <dd class="col-sm-8" id="@field.Item1">
+        </dd> }
+    </dl>
+    <a id="scan-invoice" class="btn btn-outline-primary mt-3" hidden>View sale invoice / warranty</a>
+    <p id="scan-warranty-status" class="mt-3" role="status">
+    </p>
+    <a id="scan-warranty" class="btn btn-outline-primary" hidden>View warranty / claims</a>
+    @if (Access.Can("SERVICE","CREATE"))
+    {
+    <a id="scan-service" class="btn btn-outline-primary mt-2" hidden>Create repair request</a>
+    }
+</section>
+@section Scripts {
+    <script src="~/js/common/scanner.js" asp-append-version="true"></script>
+    <script src="~/js/scan.js" asp-append-version="true"></script>
+}

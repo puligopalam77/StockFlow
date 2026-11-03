@@ -1,0 +1,63 @@
+@page "/Configuration/Notifications/WhatsApp"
+@model StockFlow.Web.Pages.Configuration.WhatsAppModel
+@{ViewData["Title"]="WhatsApp Business";}
+@section PageHeader {
+<header class="sf-page-heading"><div><h1>WhatsApp Business</h1><p>Send customer notifications from this shop's own business number.</p></div><a class="btn btn-outline-primary" asp-page="/Configuration/Notifications">Notification settings</a></header>
+}
+<div class="sf-notification-console" id="whatsapp-settings" data-app-id="@(Model.Ready && Model.Configured?Model.AppId:"")" data-graph-version="@Model.GraphVersion">
+@Html.AntiForgeryToken()
+@if(Model.Message is not null){<div class="alert alert-info" role="status">@Model.Message</div>}
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<p id="whatsapp-signup-status" role="status" aria-live="polite"></p>
+@if(!Model.Ready){<div class="sf-notice">Database setup is pending. Apply migration 076 manually, then return here.</div>}
+else {
+ @if(!Model.Configured){<div class="sf-notice">Your administrator needs to complete StockFlow's Meta app configuration before account connection is available.</div>}
+ @if(!Model.DeliveryEnabled){<div class="sf-notice">Background WhatsApp delivery is paused on the server. Account and template setup can be completed first.</div>}
+ <section class="sf-notification-settings"><h2>1. Connect your business</h2>
+ @if(Model.Connection is {DisconnectedAt:null} connection){
+  <p><strong>@connection.BusinessName</strong> · @connection.DisplayNumber</p><p>Account connected. Notifications are @(connection.Enabled?"enabled":"paused").</p>
+  <p class="small">WhatsApp account: @connection.WabaId · Phone number ID: @connection.PhoneId</p>
+  <form method="post" asp-page-handler="Disconnect"><button class="btn btn-outline-secondary">Disconnect in StockFlow</button></form>
+ }else{<p>Authorize your own WhatsApp Business account using Meta's secure signup.</p>}
+ <details class="my-3"><summary>Registering a new Cloud API number?</summary><p class="small">Enter the six-digit registration PIN you want to use. Keep it safely. Leave this blank for an already registered Cloud API number or existing Business App onboarding. StockFlow does not retain this PIN.</p><label for="whatsapp-registration-pin">Registration PIN</label><input id="whatsapp-registration-pin" type="password" class="form-control" inputmode="numeric" autocomplete="new-password" minlength="6" maxlength="6" pattern="[0-9]{6}"/></details>
+ <div class="sf-notification-actions">
+ <button type="button" id="whatsapp-connect" class="btn btn-primary" disabled="@(!Model.Configured)">@(Model.Connection is {DisconnectedAt:null}?"Reconnect WhatsApp":"Connect WhatsApp Business")</button>
+ @if(Model.CoexistenceEnabled){<button type="button" id="whatsapp-coexistence" class="btn btn-outline-primary" disabled="@(!Model.Configured)">Connect existing Business App</button>}
+ </div>
+ <p class="small mt-2">Existing Business App onboarding depends on Meta eligibility. Only use that option when Meta offers coexistence for your number. Reconnecting pauses notifications and requires billing and templates to be confirmed again.</p>
+ </section>
+ @if(Model.Connection is {DisconnectedAt:null}){
+ <section class="sf-notification-settings mt-3"><h2>2. Prepare message templates</h2>
+ <p>Submit the standard English templates once, then refresh their approval status. Each template must be approved in this WhatsApp account.</p>
+ @foreach(var kind in new[]{"invoice.completed","payment.recorded"}){
+ var template=Model.Templates.FirstOrDefault(t=>t.Event==kind);
+ <div class="sf-channel-card"><div><strong>@(kind=="invoice.completed"?"Invoice notification":"Payment confirmation")</strong><span class="sf-channel-status">@(template?.Status??"Not submitted")</span><p>@StockFlow.Web.Notifications.MetaWhatsAppClient.TemplateBody(kind)</p></div>
+ @if(template is null || template.Status!="APPROVED"){
+ <form method="post" asp-page-handler="Submit"><input type="hidden" name="kind" value="@kind"/><button class="btn btn-outline-primary">Submit template</button></form>}
+ </div>
+ }
+ <form method="post" asp-page-handler="Sync"><button class="btn btn-outline-primary">Refresh template status</button></form>
+ </section>
+ <section class="sf-notification-settings mt-3"><h2>3. Billing and notification preferences</h2>
+ <p>WhatsApp messaging charges are paid by your business to Meta, separately from your StockFlow subscription. Add an eligible payment method in your own WhatsApp account before enabling delivery.</p>
+ <p><a href="https://business.facebook.com/wa/manage/" target="_blank" rel="noopener noreferrer">Open WhatsApp Manager</a></p>
+ <form method="post" asp-page-handler="Save">
+ <div class="mb-3"><label><input asp-for="Input.BillingConfirmed"/> I have completed and confirmed my business's direct billing setup with Meta.</label><p class="small">This records your confirmation; StockFlow does not independently verify the payer or payment method.</p></div>
+ <div class="mb-3"><label><input asp-for="Input.InvoiceEnabled"/> Send invoice notifications for new completed sales</label></div>
+ <div class="mb-3"><label><input asp-for="Input.PaymentEnabled"/> Send payment confirmations for new recorded sale payments</label></div>
+ <div class="mb-3"><label asp-for="Input.DailyLimit">Daily send attempt limit (UTC)</label><input asp-for="Input.DailyLimit" class="form-control" type="number" min="1" max="10000"/><span asp-validation-for="Input.DailyLimit"></span></div>
+ <div class="mb-3"><label><input asp-for="Input.Enabled"/> Enable WhatsApp notifications for this shop and business setup</label></div>
+ <button class="btn btn-primary">Save WhatsApp preferences</button>
+ </form>
+ <p class="small mt-3">Customer WhatsApp consent must be recorded in <a asp-page="/Configuration/Notifications" asp-fragment="customer-consent">Notification settings</a>. Contact preferences do not count as consent. STOP, UNSUBSCRIBE and CANCEL replies block future queued notifications; record fresh consent only after the customer agrees again.</p>
+ <p class="small">Use a 10-digit Indian mobile number or a number with + and its country code. These notifications contain an invoice summary, without PDF attachments. Enabling WhatsApp is independent of staff in-app notification preferences.</p>
+ </section>
+ }
+ @if(Model.Deliveries.Count>0){
+ <section class="sf-notification-settings mt-3"><h2>Recent WhatsApp deliveries</h2><p>Accepted means Meta accepted the request. Unknown sends require investigation before any resend. Times are UTC.</p>
+ <div class="table-responsive"><table class="table"><thead><tr><th>Event</th><th>Reference</th><th>Customer number</th><th>Status</th><th>Attempts</th><th>Details</th><th>Created (UTC)</th></tr></thead><tbody>
+ @foreach(var job in Model.Deliveries){<tr><td>@job.Event</td><td>@job.Reference</td><td>@job.Recipient</td><td>@job.Status</td><td>@job.Attempts</td><td>@job.Diagnostic</td><td>@job.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td></tr>}
+ </tbody></table></div></section>}
+}
+</div>
+@section Scripts {<script src="~/js/whatsapp-settings.js" asp-append-version="true"></script>}

@@ -1,0 +1,56 @@
+Login responsiveness correction
+
+Root cause and observations
+The existing layout used width-based padding, generous heading/form/footer
+margins and a 100px bottom margin below the hero text, without short-height
+media queries. A scaled or non-maximized laptop therefore put Sign In and the
+bottom cards below the initial viewport. The wrappers also used overflow:hidden
+to contain decorative shapes. The main layout had min-height:100svh, not a fixed
+100vh height; on the current source baseline, document scrolling could already
+reach the content. This correction reduces the excess height and makes natural
+document scrolling explicit rather than trying to force everything into one
+screen. For example, the baseline at 1067x465 required a 718px-tall document.
+
+Changes
+- Pages/Account/Login.cshtml loads a login-only responsive stylesheet.
+- wwwroot/css/login-responsive.css adds 100dvh sizing with 100vh fallback,
+  natural content height, visible overflow on the main layout, non-shrinking
+  form/card content, wrapped options and width/height breakpoints.
+- Short screens compact spacing first, retain controls at least 48px tall,
+  and scroll naturally when needed. No transform scaling or fixed-height form.
+- Panel overflow:clip remains solely to contain existing decorative circles;
+  panels grow with the form and hero content and are not scroll containers.
+  Browser checks verify all required content lies inside its panel boundaries.
+- Mobile preserves form-first stacking, safe-area padding, the warehouse image,
+  motivational text and all three feature cards; narrow cards use readable rows.
+- Added tests/StockFlow.UiChecks/login-responsive-offline.cjs.
+
+Preserved
+Existing branding, warehouse image, colors, icons, text, authentication APIs,
+field validation, password toggle, Remember Me, recovery navigation, login
+submission, localization and session/security behavior. No other page loads
+the new stylesheet. No SQL changes.
+
+Verification
+- Debug check-project build and Release web build: zero warnings/errors.
+- Login application checks: required fields, invalid/inactive credentials,
+  CSRF, password non-redisplay and existing password-login behavior passed.
+- Existing login browser validation suite passed.
+- New browser suite passed at 1920x1080, 1366x768, 1280x720, 1024x768,
+  1536x792, 1280x600, 1093x546, 911x455, 1067x465, 800x500, 768x1024,
+  390x844, 320x568 and a 390x360 reduced-height viewport.
+- Checks cover document width, visible/reachable controls and every hero card,
+  panel boundaries, heading/card separation, required and server errors,
+  password visibility, existing autofill policy, Enter submission, keyboard
+  access and Forgot Password navigation. Tall desktop fits without scrolling.
+
+Screenshots (tests/bin/login-responsive)
+desktop.png, laptop.png, 1080p-scale150.png, hp-short-window.png, mobile.png,
+short-required-errors.png.
+
+Limits
+Browser tests ran in headless Microsoft Edge using effective CSS viewports
+representative of display scaling, zoom and browser/taskbar space. Windows
+display settings, physical HP hardware and an actual mobile virtual keyboard
+were not controlled or changed. Smaller screens deliberately allow document
+scrolling; they do not require changing zoom or hiding the taskbar.

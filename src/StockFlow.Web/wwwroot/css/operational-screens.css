@@ -1,0 +1,40 @@
+/* Only loaded outside Configuration, Products, Categories, Brands and Suppliers. */
+.sf-operational-main{--sf-control-radius:8px}
+.sf-operational-main.sf-caption-first{padding-top:12px}
+.sf-operational-main.sf-caption-first>.sf-page-heading{margin-bottom:0}
+.sf-operational-main.sf-caption-first>.sf-page-heading+.sf-breadcrumb{margin-top:0;margin-bottom:12px}
+.sf-operational-main.sf-caption-first>.purchase-page-heading{max-width:1280px}
+.sf-operational-main.sf-caption-first>.receipt-page-heading{max-width:1440px}
+.sf-operational-main .sf-page-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px}
+.sf-operational-main .sf-page-heading h1{margin:0;font-size:1.65rem;line-height:1.3}
+.sf-operational-main .sf-page-heading p{color:var(--sf-muted);margin:6px 0 0;max-width:65ch;line-height:1.6}
+.sf-operational-main>.sf-page-heading+*{margin-top:0}
+.sf-operational-main .card{box-shadow:0 2px 8px #101d3804}
+.sf-operational-main .card-body{padding:24px}
+.sf-operational-main .card h2{margin-bottom:16px;font-size:1.1rem}
+.sf-operational-main .form-label{font-weight:600;font-size:13px;margin-bottom:6px}
+.sf-operational-main :is(.form-control,.form-select){min-height:42px;border-radius:var(--sf-control-radius);font-size:14px}
+.sf-operational-main .btn{border-radius:var(--sf-control-radius);font-size:14px;font-weight:600;min-height:42px;padding:9px 16px}
+.sf-operational-main .btn-sm{min-height:34px;padding:5px 10px;font-size:13px}
+.sf-operational-main .sf-filter-bar{display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;padding:18px;background:#fff;border:1px solid var(--sf-border);border-radius:12px;margin-bottom:20px}
+.sf-operational-main .sf-filter-bar label{font-size:13px;font-weight:600;display:grid;gap:6px;margin:0}
+.sf-operational-main .sf-filter-bar>.form-control{flex:1 1 180px}
+.sf-operational-main .table{margin-bottom:0;vertical-align:middle}
+.sf-operational-main .table :is(th,td){padding:14px 16px;line-height:1.5}
+.sf-operational-main .table th{font-size:12px;color:#51617a;white-space:nowrap;border-bottom:1px solid var(--sf-border)}
+.sf-operational-main .table-responsive{margin-bottom:16px}
+.sf-operational-main .alert{border-radius:10px;padding:14px 16px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.sf-operational-main :is(#inventory-message,#adjustment-message):empty{display:none}
+.sf-operational-main fieldset{min-width:0}
+.sf-operational-main details>summary{font-weight:600;cursor:pointer}
+.sf-operational-main :is(a,button,summary,input,select,textarea):focus-visible{outline-offset:3px}
+@media(max-width:575px){
+ .sf-operational-main .sf-page-heading{gap:12px;margin-bottom:18px}
+ .sf-operational-main .sf-page-heading h1{font-size:1.4rem}
+ .sf-operational-main .card-body{padding:16px}
+ .sf-operational-main .sf-filter-bar{padding:14px}
+ .sf-operational-main .sf-filter-bar>label{flex:1 1 120px;min-width:0}
+ .sf-operational-main .sf-filter-bar>.form-control{max-width:100%!important;min-width:0}
+ .sf-operational-main .table :is(th,td){padding:10px 12px}
+}
+@media print{.sf-operational-main .sf-filter-bar{display:none}.sf-operational-main .card{box-shadow:none}}

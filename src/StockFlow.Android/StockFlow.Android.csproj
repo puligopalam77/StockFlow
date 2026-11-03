@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>StockFlow.Mobile</RootNamespace>
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+    <ApplicationId>com.stockflow.mobile</ApplicationId>
+    <ApplicationVersion>2</ApplicationVersion>
+    <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
+    <AndroidPackageFormats>apk</AndroidPackageFormats>
+    <!-- A transferred APK must run without Visual Studio fast-deployment files. -->
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
+    <!-- Prevent desktop RID inference when the Release build enables trimming. -->
+    <PublishRuntimeIdentifier>android-arm64</PublishRuntimeIdentifier>
+    <AndroidManifest>Properties/AndroidManifest.xml</AndroidManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <AndroidAsset Include="../StockFlow.Web/wwwroot/js/common/device-client.js" LogicalName="device-client.js" />
+  </ItemGroup>
+</Project>

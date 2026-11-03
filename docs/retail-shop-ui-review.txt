@@ -1,0 +1,110 @@
+BATTERY AND GEYSER SHOP UI REVIEW
+
+Scope: 58 Razor screen sources and the shared product, navigation, form, stock,
+billing, repair and warranty components. This is a source and shared-component
+review; it is not a claim that all 58 workflows were exercised against a live shop database.
+
+Product entry
+- Battery and Geyser are the main choices; related spare parts remain available.
+- Battery: Ah, voltage and type. Geyser: litres, power and storage/instant type.
+- Less-used fitting and warranty-card details are behind an optional disclosure.
+- Brand, model, buying/selling price, GST and overall warranty remain editable.
+- Batteries/geysers start with serial tracking; spare parts start with quantity.
+- Shop item codes are generated, with manual editing available under More options.
+- Extra warranty periods are attributes/notes, not automatic extensions of coverage.
+- Existing attributes survive template changes. No product or category history is deleted.
+- Unrelated categories are hidden for new product registration, not removed from the database.
+
+Daily use
+- Home offers permission-aware shortcuts for bills, receipts, stock, repairs,
+  warranty lookup and cash counting.
+- Shared controls have larger touch targets, readable text, keyboard focus outlines
+  and numeric keyboards on phones. Invalid fields inside disclosures are revealed.
+- 52 operational/setup/account screens have a short purpose and three expandable steps.
+- Billing, customer/supplier payments, old-item exchanges, stock searches, repairs,
+  warranty and setup use simpler action labels and shop-specific examples.
+- Printed documents do not include the on-screen guides.
+- Language settings, language preferences and language files were not changed.
+
+Database
+- No schema changes. Product details use the existing variant attributes.
+- No database scripts or data-changing database checks were executed.
+- Optional manual script: StockFlow_Manual_Restore/07_battery_geyser_product_groups.sql
+  It adds missing Battery/Geyser root groups for tenant 1 in the provided restore.
+  Review target_tenant_id for another business. It does not change existing stock,
+  products, tax rates, prices, warranties, or brand-category permissions.
+- A brand must be allowed for the Geyser product group before it appears there.
+
+Validation
+- Web project compiled to .artifacts/retail-ui-build, isolated from the running app.
+- retail-shop-offline.cjs: new product forms, saved attributes, warranty notes,
+  generated codes, missing-group validation, mobile layouts, unchanged language.
+- retail-usability-offline.cjs: all screen-guide mappings, guide placement,
+  touch targets, keyboard input modes, hidden-field validation and print exclusions.
+- compact-receipt-offline.cjs: receipts with the shared readability styles,
+  picking/scanning, quantities, serials, confirmation and saved-receipt feedback.
+- product-registration-offline.cjs: existing registration/editing and failure retention.
+- billing-offline.cjs: existing billing, payments, saved bills, exchange totals,
+  approval flow and invoice print layouts.
+- Browser suites mock API responses. They do not replace live database integration
+  testing or testing the physical shop scanner and printer.
+
+SCREENS REVIEWED
+/Account/AccessDenied - screen-specific task guide + shared usability
+/Account/ChangePassword - screen-specific task guide + shared usability
+/Account/ForgotPassword - dedicated authentication, error, privacy or printed-document view
+/Account/Home - screen-specific task guide + shared usability
+/Account/Login - dedicated authentication, error, privacy or printed-document view
+/Account/Logout - dedicated authentication, error, privacy or printed-document view
+/Account/Sessions - screen-specific task guide + shared usability
+/Account/TwoFactor - screen-specific task guide + shared usability
+/Admin/AuditLogs - screen-specific task guide + shared usability
+/Admin/Pilot - screen-specific task guide + shared usability
+/Admin/Roles - screen-specific task guide + shared usability
+/Admin/Security - screen-specific task guide + shared usability
+/Admin/Stores - screen-specific task guide + shared usability
+/Admin/Users - screen-specific task guide + shared usability
+/Brands/Index - screen-specific task guide + shared usability
+/CashClosing/Index - screen-specific task guide + shared usability
+/Categories/Index - screen-specific task guide + shared usability
+/Configuration/Index - screen-specific task guide + shared usability
+/Configuration/Notifications - screen-specific task guide + shared usability
+/Customers/Index - screen-specific task guide + shared usability
+/Error - dedicated authentication, error, privacy or printed-document view
+/Index - screen-specific task guide + shared usability
+/Inventory/Index - screen-specific task guide + shared usability
+/Inventory/LowStock - screen-specific task guide + shared usability
+/Labels/Index - screen-specific task guide + shared usability
+/Notifications/Index - screen-specific task guide + shared usability
+/Privacy - dedicated authentication, error, privacy or printed-document view
+/Products/Index - screen-specific task guide + shared usability
+/Products/Variants - screen-specific task guide + shared usability
+/Purchases/Create - screen-specific task guide + shared usability
+/Purchases/Details - screen-specific task guide + shared usability
+/Purchases/Index - screen-specific task guide + shared usability
+/Receiving/Index - screen-specific task guide + shared usability
+/Reports/Activity - screen-specific task guide + shared usability
+/Reports/Index - screen-specific task guide + shared usability
+/Reports/ProductSales - screen-specific task guide + shared usability
+/Reports/Stores - screen-specific task guide + shared usability
+/Sales/Create - screen-specific task guide + shared usability
+/Sales/Details - screen-specific task guide + shared usability
+/Sales/Index - screen-specific task guide + shared usability
+/Sales/Invoice - dedicated authentication, error, privacy or printed-document view
+/Scan/Index - screen-specific task guide + shared usability
+/Search - screen-specific task guide + shared usability
+/Service/Create - screen-specific task guide + shared usability
+/Service/Details - screen-specific task guide + shared usability
+/Service/Index - screen-specific task guide + shared usability
+/Service/Pending - screen-specific task guide + shared usability
+/Settings/Company - screen-specific task guide + shared usability
+/StockInflow - screen-specific task guide + shared usability
+/StockInflow/Details - screen-specific task guide + shared usability
+/StockOutflow - screen-specific task guide + shared usability
+/Suppliers/Index - screen-specific task guide + shared usability
+/Transfers/Index - screen-specific task guide + shared usability
+/Users/Index - screen-specific task guide + shared usability
+/Warranty/Claims - screen-specific task guide + shared usability
+/Warranty/Details - screen-specific task guide + shared usability
+/Warranty/Expiring - screen-specific task guide + shared usability
+/Warranty/Lookup - screen-specific task guide + shared usability

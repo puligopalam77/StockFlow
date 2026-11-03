@@ -1,0 +1,106 @@
+@model StockFlow.Web.Pages.IndexModel
+@{
+    var b=Model.Data.Business;
+    var day=b.Today.ToString("yyyy-MM-dd");
+    var month=b.Today.ToString("yyyy-MM-01");
+}
+<section class="sf-kpi-grid sf-business-kpis" aria-label="Business summary">
+    @if (Access.Can("SALES"))
+    {
+    <a class="sf-kpi sf-kpi-link" href="/Sales?from=@day&to=@day&status=COMPLETED">
+        <span class="sf-kpi-icon green">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#document" />
+            </svg>
+        </span>
+        <div>
+            <h2>Today's Sales</h2>
+            <strong>@Model.Money(b.TodaySalesAmount)</strong>
+            <p>@Model.Count(b.TodayInvoiceCount) completed invoices</p>
+        </div>
+    </a>
+    <a class="sf-kpi sf-kpi-link" href="/Sales?from=@month&to=@day&status=COMPLETED">
+        <span class="sf-kpi-icon blue">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#chart" />
+            </svg>
+        </span>
+        <div>
+            <h2>Monthly Sales</h2>
+            <strong>@Model.Money(b.MonthSalesAmount)</strong>
+            <p>Completed sales this month</p>
+        </div>
+    </a>
+    }
+    @if (Access.Can("SALES") && Access.Can("CUSTOMERS"))
+    {
+    <a class="sf-kpi sf-kpi-link" href="/Sales?status=OUTSTANDING">
+        <span class="sf-kpi-icon orange"><svg class="sf-icon"><use href="/images/icons.svg#document" /></svg></span>
+        <div><h2>Customer Outstanding Dues</h2><strong>@Model.Money(b.CustomerOutstandingAmount)</strong><p>Unpaid balance after returns and payments</p></div>
+    </a>
+    <a class="sf-kpi sf-kpi-link" href="/Sales?status=OVERDUE">
+        <span class="sf-kpi-icon pink"><svg class="sf-icon"><use href="/images/icons.svg#document" /></svg></span>
+        <div><h2>Overdue Payments</h2><strong>@Model.Money(b.OverduePaymentAmount)</strong><p>@Model.Count(b.OverdueInvoiceCount) unpaid invoices past their due date</p></div>
+    </a>
+    }
+    @if (Access.Can("INVENTORY"))
+    {
+    <a class="sf-kpi sf-kpi-link" href="/Inventory/LowStock">
+        <span class="sf-kpi-icon orange">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#box" />
+            </svg>
+        </span>
+        <div>
+            <h2>Low Stock</h2>
+            <strong>@Model.Count(b.LowStockCount)</strong>
+            <p>At or below minimum</p>
+        </div>
+    </a>
+    }
+    @if (Access.Can("PENDING_SERVICES"))
+    {
+    <a class="sf-kpi sf-kpi-link" href="/Service/Pending">
+        <span class="sf-kpi-icon pink">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#settings" />
+            </svg>
+        </span>
+        <div>
+            <h2>Pending Repairs</h2>
+            <strong>@Model.Count(b.PendingServiceCount)</strong>
+            <p>Includes ready for collection</p>
+        </div>
+    </a>
+    }
+    @if (Access.Can("SERVICE"))
+    {
+    <a class="sf-kpi sf-kpi-link" href="/Service?status=READY">
+        <span class="sf-kpi-icon green">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#send" />
+            </svg>
+        </span>
+        <div>
+            <h2>Ready for Delivery</h2>
+            <strong>@Model.Count(b.ReadyServiceCount)</strong>
+            <p>Awaiting collection</p>
+        </div>
+    </a>
+    }
+    @if (Access.Can("EXPIRING_WARRANTIES"))
+    {
+    <a class="sf-kpi sf-kpi-link" href="/Warranty/Expiring">
+        <span class="sf-kpi-icon blue">
+            <svg class="sf-icon">
+                <use href="/images/icons.svg#document" />
+            </svg>
+        </span>
+        <div>
+            <h2>Warranty Expiring</h2>
+            <strong>@Model.Count(b.ExpiringWarrantyCount)</strong>
+            <p>Within 30 days, including today</p>
+        </div>
+    </a>
+    }
+</section>

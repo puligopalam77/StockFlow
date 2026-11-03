@@ -1,0 +1,46 @@
+@page
+@{ViewData["Title"]="Change history";}
+<div id="admin-audit">
+    <h1>Change history</h1>
+    <div id="admin-message" role="status" aria-live="polite">
+    </div>
+    <form id="audit-search" class="row g-2 mb-3">
+        <div class="col">
+            <label for="audit-action">Action</label>
+            <input id="audit-action" class="form-control" placeholder="USER_CREATE"/>
+        </div>
+        <div class="col">
+            <label for="audit-user">Staff account ID</label>
+            <input id="audit-user" type="number" min="1" class="form-control"/>
+        </div>
+        <div class="col">
+            <label for="audit-from">From</label>
+            <input id="audit-from" type="date" class="form-control"/>
+        </div>
+        <div class="col">
+            <label for="audit-to">Through</label>
+            <input id="audit-to" type="date" class="form-control"/>
+        </div>
+        <div class="col align-self-end">
+            <button class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Changed by</th>
+                    <th>Module / action</th>
+                    <th>Record</th>
+                    <th>Changes</th>
+                </tr>
+            </thead>
+            <tbody id="audit-rows">
+            </tbody>
+        </table>
+    </div>
+    <button id="previous-audit" type="button" class="btn btn-outline-secondary">Previous</button> <button id="next-audit" type="button" class="btn btn-outline-secondary">Next</button>
+</div>
+@section Scripts {<script src="~/js/admin-security.js" asp-append-version="true"></script>}
+@if(Access.Can("AUDIT_LOGS","EXPORT")){<a class="btn btn-outline-secondary mt-3" href="/api/admin/auditlogs/export">Export latest 1,000 audit events (JSON)</a>}

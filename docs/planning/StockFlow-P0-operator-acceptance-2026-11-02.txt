@@ -1,0 +1,85 @@
+P0 operator acceptance - pending actual target access and approval
+Use the existing tests/acceptance/signoff.template.json and pilot CSV.
+These instructions are not an executed result or deployment authorization.
+
+Evidence identity for every step
+Record target hostname/environment, build/source fingerprint, tenant/store/location/
+profile IDs, operator/reviewer authority, UTC time, expected and actual results,
+and a protected artifact with SHA256. Exclude passwords, customer contents, raw
+backups and secrets from public logs, screenshots and repository attachments.
+Use authorized test accounts and approved synthetic transactions on a staging
+copy. Production transactions/changes require their separate operator approval.
+
+1. migration-deployment
+Read actual applied schema with the database administrator; compare migration
+prerequisites and function/table/RLS definitions against the candidate. Use the
+adjacent migration applicability CSV. A file in database/migrations is insufficient.
+Record row counts/history/snapshot identities before and after any approved change.
+Review writer stop, backup, compatible app rollback and forward-fix plan. Do not
+reapply 083/084 blindly. No migration is introduced by this P0 test extension.
+
+2. shop-model
+Obtain the business decision in StockFlow-shop-ownership-design-2026-11-02.txt.
+Private shops within one tenant with explicit sharing have now been selected.
+Prepare ID-only usage triage on an approved isolated copy of the actual data:
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File database/maintenance/Export-StockFlowOwnershipReview.ps1 -DatabaseName <approved-copy-database> -TenantId <tenant-id> -OutputDirectory <new-private-directory> -ServerHost <isolated-host> -Port <isolated-port> -DatabaseUser <authorized-full-history-reader>
+Use a protected password file and review the generated limitations and checksums.
+The tool rejects existing output directories, public wwwroot paths and restricted
+readers. It leaves every ownership decision PENDING; it does not apply access
+links or analyze unposted draft/quotation JSON, configuration or ID conflicts.
+Complete those reviews before approving the historical mapping and cutover.
+Verify actual owner/staff memberships using authorized accounts in two stores,
+same/different profiles, two tenants and multiple locations. Try foreign IDs in
+details, search, reports, exports, attachments and mutation requests. Confirm denied
+requests change nothing. Do not certify private same-tenant masters under current
+shared semantics. A cross-profile denial alone does not prove independent shops.
+
+3. receiving-corrections and after-sales
+With shop staff, receive approved partial/damaged/serialized test goods and review
+the supported correction workflow. Record before/after quantity and source IDs.
+Return the original sold unit; verify one refund, warranty/repair source links,
+part consumption and supported reversal behavior. Retry request IDs; verify no
+duplicate postings. Mark unavailable corrections unsupported, not automatically
+passed. Keep owner/accountant approval separate from local repository fixtures.
+
+4. production-recovery
+Agree RPO and RTO with the owner before testing. Check the real scheduled task's
+last result and archive creation time; an installed task alone is insufficient.
+Demonstrate failure alerts reach the responsible administrator. Record encrypted
+offsite retention and access controls without exporting keys or credentials.
+Retrieve an actual approved offsite copy to a protected, isolated recovery host.
+Recover required PostgreSQL roles and a compatible PostgreSQL version first.
+On that isolated host only, invoke the existing script with actual approved values:
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File database/maintenance/Test-StockFlowRestore.ps1 -Archive <isolated-archive-path> -ServerHost <isolated-host> -Port <isolated-port> -DatabaseUser <authorized-restore-user> -KeepTestDatabase
+Use a protected PostgreSQL password file; never put passwords in arguments.
+The script creates a new stockflow_restore_test_GUID database. It does not recover
+uploads, keys, configuration, login or a complete server. Inspect its evidence and
+perform the remaining steps; a passed DatabaseOnly result is not full recovery.
+Restore approved assets/configuration/secrets and run the same candidate pointed
+only at the isolated restored database. Test real login/session/roles and invoice,
+inventory, dues, tax snapshots and attachments against recorded control totals.
+Record archive cutoff/age, lost-data window and full elapsed restore-to-usable time
+against agreed RPO/RTO. Protect/restrict and clean up the restored customer data
+under the operator's retention policy. No destructive production restore.
+
+5. production-hosting
+From outside the host, verify trusted HTTPS and redirect, login/secure cookies,
+authorized application access and safe anonymous /api/health output. Verify
+administrator-only readiness/operations diagnostics reject ordinary accounts.
+During an approved staging window, test app restart, server restart, network/power
+interruption, persistent uploads/data/keys, sanitized logs and alert delivery.
+Check service supervision and backup scheduling after restart. Record actual
+observations and timestamps; a tunnel process alone supplies no uptime evidence.
+
+6. physical-devices, pilot-acceptance and usability-issues
+Run docs/mobile-regression-testing.md on the actual scanners/printers, including
+one/large bills, A4/80mm and supported 58mm, decoded SKU identity and final totals.
+Use docs/phase8-pilot-signoff.md and StockFlow-pilot-acceptance.csv for named owner/
+accountant acceptance of the exact candidate and shop. Record unresolved issues;
+only noncritical issues can be explicitly accepted with mitigation and authority.
+No generated test result or browser-local checklist substitutes for this review.
+
+After evidence review, run tests/Run-ShopPilotChecks.ps1 -ReleaseAcceptance with
+the required database/browser/restore flags, exact version/environment/shop and
+the protected sign-off file. Critical or unverified gates stay BLOCKED. A READY
+classification still does not authorize a production deployment.

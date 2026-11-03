@@ -1,0 +1,321 @@
+BEGIN
+ inspected_database | postgres_version 
+--------------------+------------------
+ StockFlow_DB       | 18.6
+(1 row)
+
+ public_tables 
+---------------
+           126
+(1 row)
+
+             table_name             
+------------------------------------
+ audit_logs
+ auth_login_limits
+ auth_protection_keys
+ auth_sessions
+ barcode_print_requests
+ billing_approvals
+ billing_draft_counters
+ billing_draft_numbers
+ billing_drafts
+ billing_policy
+ brand_categories
+ brands
+ cash_closings
+ catalog_attribute_schemas
+ catalog_identifier_ledger
+ catalog_prefix_registry
+ catalog_sku_corrections
+ catalog_variant_reservations
+ categories
+ category_hierarchy_065_backup
+ company_settings
+ crm_activities
+ crm_customer_notes
+ crm_customers
+ crm_enquiries
+ crm_preference_history
+ crm_sale_links
+ customer_credit_limits
+ customers
+ gst_audit_history
+ gst_document_events
+ gst_document_reviews
+ gst_documents
+ gst_export_history
+ gst_legal_businesses
+ gst_registrations
+ gst_shop_mappings
+ gst_tax_configurations
+ gst_tax_operation_rows
+ gst_tax_operations
+ gst_tax_rules
+ inventory_transactions
+ login_email_challenges
+ module_actions
+ module_navigation_permissions
+ modules
+ notification_consent_history
+ notification_customer_consents
+ notification_delivery_settings
+ notification_digest_runs
+ notification_email_deliveries
+ notification_email_quota
+ notification_outbox
+ notification_recipients
+ notification_rules
+ notification_settings
+ notification_test_runs
+ notification_whatsapp_audit
+ notification_whatsapp_connections
+ notification_whatsapp_deliveries
+ notification_whatsapp_quota
+ notification_whatsapp_receipts
+ notification_whatsapp_signup
+ notification_whatsapp_suppressions
+ notification_whatsapp_templates
+ notifications
+ payments
+ product_units
+ product_variants
+ product_vehicle_fitments
+ products
+ purchase_changes
+ purchase_item_labels
+ purchase_items
+ purchase_receipt_items
+ purchase_receipts
+ purchase_return_items
+ purchase_returns
+ purchases
+ role_action_permissions
+ role_module_permissions
+ roles
+ sale_fulfilments
+ sale_items
+ sale_return_items
+ sale_returns
+ sales
+ screen_language_settings
+ service_history
+ service_operations
+ service_parts
+ service_payments
+ service_requests
+ stock_count_items
+ stock_counts
+ stock_intake_items
+ stock_intakes
+ stock_item_labels
+ stock_transfer_items
+ stock_transfer_operations
+ stock_transfer_units
+ stock_transfers
+ store_locations
+ stores
+ supplier_payments
+ supplier_product_catalog
+ suppliers
+ tenant_security_settings
+ tenants
+ trade_ins
+ two_factor_recovery_codes
+ unit_identifier_requests
+ unit_identifier_reservations
+ user_action_permissions
+ user_location_access
+ user_module_permissions
+ user_store_access
+ users
+ variant_barcodes
+ variant_location_settings
+ variant_supplier_identifiers
+ vehicle_models
+ vw_current_stock
+ vw_location_current_stock
+ vw_variant_current_stock
+ warranties
+ warranty_claims
+ warranty_events
+ warranty_rmas
+(129 rows)
+
+       table_name       |          column_name           |          data_type          
+------------------------+--------------------------------+-----------------------------
+ billing_policy         | tenant_id                      | bigint
+ billing_policy         | discount_limit_percent         | numeric
+ billing_policy         | store_id                       | bigint
+ billing_policy         | version                        | bigint
+ billing_policy         | fast_billing_enabled           | boolean
+ billing_policy         | allow_routine_discounts        | boolean
+ billing_policy         | require_routine_reason         | boolean
+ billing_policy         | require_exceptional_reason     | boolean
+ billing_policy         | require_approval_above_limit   | boolean
+ inventory_transactions | inventory_transaction_id       | bigint
+ inventory_transactions | product_id                     | integer
+ inventory_transactions | product_unit_id                | bigint
+ inventory_transactions | transaction_type               | character varying
+ inventory_transactions | quantity                       | integer
+ inventory_transactions | reference_type                 | character varying
+ inventory_transactions | reference_id                   | bigint
+ inventory_transactions | remarks                        | text
+ inventory_transactions | created_by                     | integer
+ inventory_transactions | created_at                     | timestamp without time zone
+ inventory_transactions | variant_id                     | bigint
+ inventory_transactions | receipt_id                     | bigint
+ inventory_transactions | tenant_id                      | bigint
+ inventory_transactions | location_id                    | bigint
+ inventory_transactions | transfer_id                    | bigint
+ inventory_transactions | serial_number_snapshot         | character varying
+ purchase_items         | purchase_item_id               | bigint
+ purchase_items         | purchase_id                    | bigint
+ purchase_items         | product_id                     | integer
+ purchase_items         | quantity                       | integer
+ purchase_items         | purchase_price                 | numeric
+ purchase_items         | tax_percentage                 | numeric
+ purchase_items         | line_total                     | numeric
+ purchase_items         | serial_numbers                 | ARRAY
+ purchase_items         | is_serial_tracked              | boolean
+ purchase_items         | variant_id                     | bigint
+ purchase_items         | variant_name_snapshot          | character varying
+ purchase_items         | discount_amount                | numeric
+ purchase_items         | received_quantity              | integer
+ purchase_items         | tenant_id                      | bigint
+ purchase_items         | location_id                    | bigint
+ purchase_items         | damaged_quantity               | integer
+ purchase_items         | damaged_serial_numbers         | ARRAY
+ purchase_items         | pending_received_quantity      | integer
+ purchase_items         | pending_damaged_quantity       | integer
+ purchase_items         | pending_serial_numbers         | ARRAY
+ purchase_items         | pending_damaged_serial_numbers | ARRAY
+ purchase_items         | unit_of_measure                | character varying
+ purchase_items         | pack_quantity                  | integer
+ purchase_items         | mrp                            | numeric
+ purchase_items         | supplier_product_code          | character varying
+ purchase_items         | batch_number                   | character varying
+ purchase_items         | manufacturing_date             | date
+ purchase_items         | expiry_date                    | date
+ purchase_items         | variant_attributes_snapshot    | jsonb
+ purchase_items         | sku_snapshot                   | character varying
+ purchase_items         | product_name_snapshot          | character varying
+ purchase_receipt_items | receipt_item_id                | bigint
+ purchase_receipt_items | receipt_id                     | bigint
+ purchase_receipt_items | purchase_item_id               | bigint
+ purchase_receipt_items | quantity                       | integer
+ purchase_receipt_items | serial_numbers                 | ARRAY
+ purchase_receipt_items | purchase_price                 | numeric
+ purchase_receipt_items | discount_amount                | numeric
+ purchase_receipt_items | tax_percentage                 | numeric
+ purchase_receipt_items | tenant_id                      | bigint
+ purchase_receipt_items | location_id                    | bigint
+ purchase_receipt_items | damaged_quantity               | integer
+ purchase_receipt_items | damaged_serial_numbers         | ARRAY
+ purchase_receipt_items | unit_of_measure                | character varying
+ purchase_receipt_items | pack_quantity                  | integer
+ purchase_receipt_items | mrp                            | numeric
+ purchase_receipt_items | supplier_product_code          | character varying
+ purchase_receipt_items | batch_number                   | character varying
+ purchase_receipt_items | manufacturing_date             | date
+ purchase_receipt_items | expiry_date                    | date
+ sale_items             | sale_item_id                   | bigint
+ sale_items             | sale_id                        | bigint
+ sale_items             | product_id                     | integer
+ sale_items             | product_unit_id                | bigint
+ sale_items             | quantity                       | integer
+ sale_items             | selling_price                  | numeric
+ sale_items             | discount_amount                | numeric
+ sale_items             | tax_percentage                 | numeric
+ sale_items             | line_total                     | numeric
+ sale_items             | product_name_snapshot          | character varying
+ sale_items             | serial_number_snapshot         | character varying
+ sale_items             | brand_name_snapshot            | character varying
+ sale_items             | model_snapshot                 | character varying
+ sale_items             | warranty_months_snapshot       | integer
+ sale_items             | variant_id                     | bigint
+ sale_items             | variant_name_snapshot          | character varying
+ sale_items             | tenant_id                      | bigint
+ sale_items             | location_id                    | bigint
+ sale_items             | variant_attributes_snapshot    | jsonb
+ sale_items             | sku_snapshot                   | character varying
+ sale_items             | unit_of_measure_snapshot       | character varying
+ sale_items             | is_manual                      | boolean
+ sale_items             | description_snapshot           | character varying
+ sale_items             | mrp_snapshot                   | numeric
+ sale_items             | discount_type                  | character varying
+ sale_items             | discount_percent               | numeric
+ sale_items             | manual_tax_snapshot            | jsonb
+(102 rows)
+
+       tablename        |        policyname         |        roles        | cmd |                                                                                  qual                                                                                  |                                                                               with_check                                                                               
+------------------------+---------------------------+---------------------+-----+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ billing_policy         | billing_policy_shop       | {public}            | ALL | ((store_id = 0) OR (store_id = sf_store()))                                                                                                                            | ((store_id > 0) AND (store_id = sf_store()) AND sf_transfer_permission('COMPANY_SETTINGS'::text, 'EDIT'::text))
+ billing_policy         | tenant_isolation          | {public}            | ALL | (tenant_id = sf_tenant())                                                                                                                                              | (tenant_id = sf_tenant())
+ categories             | selected_business_profile | {stockflow_runtime} | ALL | ((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile))                                                               | ((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile))
+ categories             | tenant_isolation          | {public}            | ALL | (tenant_id = sf_tenant())                                                                                                                                              | (tenant_id = sf_tenant())
+ customers              | selected_business_profile | {stockflow_runtime} | ALL | (((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile)) OR sf_shared_contact_profile('CUSTOMER'::text, customer_id)) | (((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile)) OR sf_shared_contact_profile('CUSTOMER'::text, customer_id))
+ customers              | tenant_isolation          | {public}            | ALL | (tenant_id = sf_tenant())                                                                                                                                              | (tenant_id = sf_tenant())
+ inventory_transactions | location_isolation        | {public}            | ALL | sf_visible_location(location_id)                                                                                                                                       | ((sf_location() > 0) AND sf_visible_location(location_id))
+ inventory_transactions | selected_business_profile | {stockflow_runtime} | ALL | (EXISTS ( SELECT 1                                                                                                                                                    +| (EXISTS ( SELECT 1                                                                                                                                                    +
+                        |                           |                     |     |    FROM products p                                                                                                                                                    +|    FROM products p                                                                                                                                                    +
+                        |                           |                     |     |   WHERE ((p.tenant_id = inventory_transactions.tenant_id) AND (p.product_id = inventory_transactions.product_id))))                                                    |   WHERE ((p.tenant_id = inventory_transactions.tenant_id) AND (p.product_id = inventory_transactions.product_id))))
+ inventory_transactions | tenant_isolation          | {public}            | ALL | (tenant_id = sf_tenant())                                                                                                                                              | (tenant_id = sf_tenant())
+ products               | selected_business_profile | {stockflow_runtime} | ALL | (EXISTS ( SELECT 1                                                                                                                                                    +| (EXISTS ( SELECT 1                                                                                                                                                    +
+                        |                           |                     |     |    FROM categories p                                                                                                                                                  +|    FROM categories p                                                                                                                                                  +
+                        |                           |                     |     |   WHERE ((p.tenant_id = products.tenant_id) AND (p.category_id = products.category_id))))                                                                              |   WHERE ((p.tenant_id = products.tenant_id) AND (p.category_id = products.category_id))))
+ products               | tenant_isolation          | {public}            | ALL | (tenant_id = sf_tenant())                                                                                                                                              | (tenant_id = sf_tenant())
+ purchases              | location_isolation        | {public}            | ALL | sf_visible_location(location_id)                                                                                                                                       | ((sf_location() > 0) AND sf_visible_location(location_id))
+ purchases              | selected_business_profile | {stockflow_runtime} | ALL | ((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile))                                                               | ((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile))
+ purchases              | tenant_isolation          | {public}            | ALL | (tenant_id = sf_tenant())                                                                                                                                              | (tenant_id = sf_tenant())
+ sales                  | location_isolation        | {public}            | ALL | sf_visible_location(location_id)                                                                                                                                       | ((sf_location() > 0) AND sf_visible_location(location_id))
+ sales                  | selected_business_profile | {stockflow_runtime} | ALL | ((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile))                                                               | ((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile))
+ sales                  | tenant_isolation          | {public}            | ALL | (tenant_id = sf_tenant())                                                                                                                                              | (tenant_id = sf_tenant())
+ suppliers              | selected_business_profile | {stockflow_runtime} | ALL | (((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile)) OR sf_shared_contact_profile('SUPPLIER'::text, supplier_id)) | (((business_profile_code)::text = ( SELECT sf_visible_business_profile() AS sf_visible_business_profile)) OR sf_shared_contact_profile('SUPPLIER'::text, supplier_id))
+ suppliers              | tenant_isolation          | {public}            | ALL | (tenant_id = sf_tenant())                                                                                                                                              | (tenant_id = sf_tenant())
+(19 rows)
+
+            relname            | relrowsecurity | relforcerowsecurity | runtime_select | runtime_insert | runtime_update | runtime_delete 
+-------------------------------+----------------+---------------------+----------------+----------------+----------------+----------------
+ catalog_identifier_ledger     | f              | f                   | f              | f              | f              | f
+ catalog_prefix_registry       | f              | f                   | f              | f              | f              | f
+ catalog_variant_reservations  | f              | f                   | f              | f              | f              | f
+ category_hierarchy_065_backup | f              | f                   | f              | f              | f              | f
+ module_actions                | f              | f                   | t              | f              | f              | f
+ module_navigation_permissions | f              | f                   | t              | f              | f              | f
+ modules                       | f              | f                   | t              | f              | f              | f
+ unit_identifier_requests      | f              | f                   | f              | f              | f              | f
+ unit_identifier_reservations  | f              | f                   | f              | f              | f              | f
+(9 rows)
+
+ store_id | tenant_id | is_active 
+----------+-----------+-----------
+        1 |         1 | t
+(1 row)
+
+ tenant_id | business_profile_code 
+-----------+-----------------------
+         1 | BIKE_ACCESSORIES
+(1 row)
+
+ policy_082_present | permission_081_present 
+--------------------+------------------------
+ t                  | t
+(1 row)
+
+ current_report_unit_cost | january_available_unit_cost 
+--------------------------+-----------------------------
+     100.0000000000000000 |         50.0000000000000000
+(1 row)
+
+ invoice_line_including_18_gst | purchase_cost | report_estimated_profit | tax_exclusive_gross_margin | report_margin_with_unknown_catalog_cost 
+-------------------------------+---------------+-------------------------+----------------------------+-----------------------------------------
+                           118 |            80 |                      38 |                         20 |                                     118
+(1 row)
+
+ report_row_count | return_only_variants_omitted 
+------------------+------------------------------
+                1 |                            1
+(1 row)
+
+COMMIT

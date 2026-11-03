@@ -1,0 +1,21 @@
+@page "{mode?}"
+@model StockFlow.Web.Pages.Products.IndexModel
+@inject StockFlow.Application.Common.BusinessScope CatalogScope
+@{ ViewData["Title"] = "Products"; }
+<partial name="_ConfigurationMaster" model='@("Products")' />
+<div id="product-registration-access" hidden data-profile-version="@CatalogScope.BusinessProfileVersion" data-status="@Access.Can("PRODUCT_VARIANTS","DELETE").ToString().ToLowerInvariant()" data-suppliers="@Access.Can("SUPPLIERS").ToString().ToLowerInvariant()" data-view="@Access.Can("PRODUCT_VARIANTS").ToString().ToLowerInvariant()" data-create="@Access.Can("PRODUCT_VARIANTS","CREATE").ToString().ToLowerInvariant()" data-edit="@Access.Can("PRODUCT_VARIANTS","EDIT").ToString().ToLowerInvariant()">
+</div>
+@{ ViewData["ProductRegistrationCatalogOnly"] = true; }
+@if(Access.Can("PRODUCTS","CREATE") && Access.Can("PRODUCT_VARIANTS","CREATE")) {<partial name="_ProductRegistrationForm" />}
+@section Styles {<link rel="stylesheet" href="~/css/purchase-receiving.css" asp-append-version="true" />}
+@section Scripts {
+    <script src="~/js/product-image-preview.js" asp-append-version="true"></script>
+    <script src="~/js/brand-categories.js" asp-append-version="true"></script>
+    <script src="~/js/master-data.js" asp-append-version="true"></script>
+    <script src="~/js/catalog-attributes.js" asp-append-version="true"></script>
+    <script src="~/js/product-specifications.js" asp-append-version="true"></script>
+    <script src="~/js/product-registration.js" asp-append-version="true"></script>
+    <script src="~/js/product-registration-form.js" asp-append-version="true"></script>
+    <script src="~/js/gst-product-rule.js" asp-append-version="true"></script>
+    <script src="~/js/product.js" asp-append-version="true"></script>
+}

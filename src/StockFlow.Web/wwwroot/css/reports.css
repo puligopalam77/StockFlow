@@ -1,0 +1,14 @@
+﻿.reports-page{max-width:1200px;color:#101c3c;padding-bottom:12px}
+.reports-header{margin-bottom:14px}.reports-header h1{font-size:26px;font-weight:750;margin:0 0 4px}.reports-header p{font-size:13px;color:var(--sf-muted);margin:0}
+.reports-filters{display:flex;align-items:end;flex-wrap:wrap;gap:12px;padding:12px 14px;border:1px solid var(--sf-border);border-radius:9px;background:#fff;margin-bottom:16px}
+.reports-filters label{min-width:155px;font-size:12px;margin:0}.reports-filters .form-control,.reports-filters .form-select{margin-top:4px;font-size:13px;min-height:32px}.reports-filters p{flex:1;min-width:220px;font-size:12px;color:var(--sf-muted);margin:0;padding-bottom:3px}
+.reports-page h2{font-size:15px;font-weight:700;margin:0 0 10px}
+.report-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.report-card{display:flex;align-items:center;gap:12px;min-width:0;min-height:82px;padding:12px;background:#fff;border:1px solid var(--sf-border);border-radius:9px;color:inherit;text-decoration:none}
+.report-card:hover,.report-card:focus-visible{color:inherit;border-color:#ff87be;box-shadow:0 3px 12px #cb1b7210}
+.report-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:9px;flex-shrink:0}.report-icon .sf-icon{width:23px;height:23px}
+.report-copy{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}.report-copy strong{font-size:13px;font-weight:700}.report-copy>span{font-size:12px;color:var(--sf-muted);line-height:1.4}.report-chevron{font-size:22px}
+.report-icon.pink{color:#ff087d;background:#ffe8f5}.report-icon.green{color:#00ac65;background:#dcfff0}.report-icon.amber{color:#ff9900;background:#fff5df}.report-icon.blue{color:#087cff;background:#e3f3ff}
+.reports-more{margin-top:16px;background:#fff;border:1px solid var(--sf-border);border-radius:9px;padding:12px}.reports-more summary{cursor:pointer;font-size:14px;font-weight:700}.reports-more summary span{font-size:12px;font-weight:400;color:var(--sf-muted);margin-left:10px}.reports-more[open] summary{margin-bottom:12px}.reports-more .report-card{min-height:65px}
+@media(max-width:950px){.report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:575px){.report-grid{grid-template-columns:1fr}.reports-filters label{flex:1;min-width:120px}.reports-filters p{flex-basis:100%;min-width:0}.reports-more summary span{display:block;margin:5px 0 0}.reports-header h1{font-size:24px}}

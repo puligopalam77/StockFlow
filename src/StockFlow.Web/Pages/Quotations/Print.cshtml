@@ -1,0 +1,21 @@
+@page
+@model StockFlow.Web.Pages.Quotations.PrintModel
+@using System.Text.Json
+@using System.Globalization
+@{
+ var d=Model.Document;var b=d.Selected.Body;var q=b.GetProperty("quote");var company=b.GetProperty("company");var customer=b.GetProperty("customer");ViewData["Title"]=d.Header.QuotationNumber+" revision "+d.Selected.Revision;
+ string Text(JsonElement o,string name)=>o.TryGetProperty(name,out var v)?v.ToString():"";
+ string Money(JsonElement o,string name)=>o.TryGetProperty(name,out var v)&&v.ValueKind==JsonValueKind.Number?v.GetDecimal().ToString("N2",CultureInfo.InvariantCulture):"—";
+}
+<div class="no-print invoice-actions"><a href="/Quotations/Details?id=@d.Header.QuotationId&amp;revision=@d.Selected.Revision" class="btn btn-dark">Back to Quotation</a><button id="quotation-print-document" class="btn btn-primary">Print / Download PDF</button><p>Choose Save as PDF in the browser print dialog. Share the saved revision using your authorized channel, then explicitly record Sent in Quotation Details.</p></div>
+<article class="invoice-paper quotation-paper">
+<p>@Text(b.GetProperty("shop"),"StoreName") · @Text(b.GetProperty("shop"),"LocationName")</p>
+@if(company.TryGetProperty("LogoDataUrl",out var logo)&&logo.ValueKind==JsonValueKind.String&&logo.GetString()!.StartsWith("data:image/",StringComparison.Ordinal)){<img src="@logo.GetString()" alt="Business logo" style="max-width:100px;max-height:70px" />}
+<header><h1>@Text(company,"CompanyName")</h1><p>@Text(company,"Address") · @Text(company,"MobileNumber")</p><h2>QUOTATION / ESTIMATE</h2><strong>@d.Header.QuotationNumber · Revision @d.Selected.Revision</strong><p>This is not a tax invoice. No stock reserved or payment recorded.</p></header>
+<p>Customer: <strong>@Text(customer,"CustomerName")</strong><br />@Text(customer,"Address")<br />@Text(customer,"MobileNumber")</p><p>Date: @Text(b,"documentDate") · Valid until: @Text(b,"validUntil")<br />Prepared by: @d.Selected.PreparedBy · Reference: @Text(b,"reference")</p>
+<p>@(b.GetProperty("request").GetProperty("PricesIncludeTax").GetBoolean()?"Prices include applicable GST.":"Prices exclude applicable GST.")</p>
+<table><thead><tr><th>Item / SKU</th><th>Qty / Unit</th><th>MRP</th><th>Price</th><th>Discount</th><th>Tax %</th><th>Amount</th></tr></thead><tbody>@foreach(var line in b.GetProperty("lines").EnumerateArray()){var calc=line.GetProperty("Calculation");<tr><td>@Text(line,"Name")<br />@Text(line,"Sku")</td><td>@Text(line,"Quantity") @Text(line,"Unit")</td><td>@Money(calc,"Mrp")</td><td>@Money(line,"SellingPrice")</td><td>@Money(calc,"DiscountAmount")</td><td>@Text(calc,"TaxPercentage")</td><td>@Money(calc,"LineTotal")</td></tr>}</tbody></table>
+<dl>@foreach(var entry in new[]{("ItemSubtotal","Item subtotal"),("ItemDiscountAmount","Item discounts"),("InvoiceDiscountAmount","Quotation discount"),("TaxableAmount","Taxable amount"),("TaxAmount","GST"),("TotalAmount","Estimated total")}){<dt>@entry.Item2</dt><dd>₹@Money(q,entry.Item1)</dd>}</dl><p class="quote-preserve">@Text(b.GetProperty("request"),"Notes")</p><p class="quote-preserve">@Text(b,"terms")</p><footer>Prices, availability, applicable tax and discount approvals will be revalidated at final checkout.</footer>
+</article>
+@section Styles {<link rel="stylesheet" href="~/css/invoice.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/quotations.css" asp-append-version="true" /><style>.quotation-paper table{width:100%;border-collapse:collapse}.quotation-paper td,.quotation-paper th{padding:8px;border-bottom:1px solid #ddd}.quotation-paper dl{display:grid;grid-template-columns:1fr auto;max-width:380px;margin:20px 0 20px auto}.quotation-paper dd{text-align:right}.quotation-paper footer{margin-top:24px}@@media print{@@page{size:A4;margin:12mm}.quotation-paper{width:auto;box-shadow:none;border:0}thead{display:table-header-group}tr{break-inside:avoid}}</style>}
+@section Scripts {<script src="~/js/quotation-print.js" asp-append-version="true"></script>}

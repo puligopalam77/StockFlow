@@ -1,0 +1,71 @@
+/* Keep desktop density; touch devices need readable inputs and larger tap areas. */
+@media screen and (max-width:991px) and (pointer:coarse) {
+    .sf-app :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="color"]),select,textarea) {
+        font-size:16px!important;
+        min-height:36px!important;
+        max-width:100%;
+        min-width:0;
+    }
+    .sf-app input:is([type="date"],[type="datetime-local"],[type="time"]) {width:100%}
+    .sf-app :is(.sf-menu-toggle,.sf-sidebar-close,.sf-activity-link) {
+        min-width:44px;
+        min-height:44px;
+    }
+    .sf-sidebar {
+        padding-top:env(safe-area-inset-top,0px);
+        padding-bottom:env(safe-area-inset-bottom,0px);
+    }
+    .sf-topbar {
+        padding-left:max(12px,env(safe-area-inset-left,0px));
+        padding-right:max(12px,env(safe-area-inset-right,0px));
+    }
+    .sf-main {
+        padding-left:max(12px,env(safe-area-inset-left,0px));
+        padding-right:max(12px,env(safe-area-inset-right,0px));
+    }
+    .sf-app-footer {padding-bottom:max(10px,env(safe-area-inset-bottom,0px))}
+}
+
+/* Use a viewport-bounded picker where the browser supports customizable selects.
+   Other browsers retain their native accessible selection UI. */
+@supports (appearance:base-select) {
+    @media screen and (max-width:991px) {
+        .sf-app select.form-select:not([multiple]):not([size]),
+        .sf-app select.form-select:not([multiple]):not([size])::picker(select) {
+            appearance:base-select;
+        }
+        .sf-app select.form-select:not([multiple]):not([size]) {
+            min-inline-size:0;
+            max-inline-size:100%;
+        }
+        /* Bootstrap already draws the field's dropdown arrow. */
+        .sf-app select.form-select:not([multiple]):not([size])::picker-icon {
+            display:none;
+        }
+        .sf-app select.form-select:not([multiple]):not([size])::picker(select) {
+            box-sizing:border-box;
+            inline-size:anchor-size(self-inline);
+            min-inline-size:0;
+            max-inline-size:calc(100dvw - 24px);
+            max-block-size:min(320px,50dvh);
+            overflow:auto;
+            overscroll-behavior:contain;
+            border:1px solid #d5dce8;
+            border-radius:8px;
+            background:#fff;
+            color:#14213a;
+            box-shadow:0 8px 24px #14213a26;
+            font:inherit;
+        }
+        .sf-app select.form-select:not([multiple]):not([size]) option {
+            min-block-size:44px;
+            padding:10px 12px;
+            white-space:normal;
+            overflow-wrap:anywhere;
+        }
+        .sf-app select.form-select:not([multiple]):not([size]) option:checked {
+            background:#fff0f7;
+            color:#a90050;
+        }
+    }
+}

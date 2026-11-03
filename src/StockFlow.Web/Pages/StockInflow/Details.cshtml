@@ -1,0 +1,36 @@
+@page "{source}/{id:long}"
+@model StockFlow.Web.Pages.StockInflow.DetailsModel
+@{ ViewData["Title"]="Stock receipt details"; }
+@section PageHeader {
+<header class="sf-page-heading receipt-page-heading receipt-details-heading">
+    <div>
+        <div class="receipt-title-line"><a href="/StockInflow" class="receipt-heading-back" aria-label="Back to receipts">&#8592;</a><h1 id="receipt-detail-title">Stock receipt details</h1><span id="receipt-heading-status" hidden></span></div>
+        <p id="receipt-detail-subtitle">Review the saved stock receipt and its items.</p>
+    </div>
+    <button id="receipt-print" class="btn btn-outline-primary" type="button">Print</button>
+</header>
+}
+<main id="stock-receipt-detail" data-source="@Model.Source" data-id="@Model.Id">
+    <div id="receipt-detail-message" class="alert alert-danger" role="alert" hidden>
+    </div>
+    <section class="receipt-detail-header">
+        <h2><span class="receipt-section-icon" aria-hidden="true"><svg class="sf-icon"><use href="/images/icons.svg#document" /></svg></span>Receipt information</h2>
+        <dl id="receipt-detail-fields">
+        </dl>
+    </section>
+    <section class="receipt-detail-items">
+        <h2><span class="receipt-section-icon" aria-hidden="true"><svg class="sf-icon"><use href="/images/icons.svg#box" /></svg></span><span id="receipt-items-title">Items received</span></h2>
+        <div id="receipt-detail-table">
+        </div>
+    </section>
+    <div class="receipt-detail-bottom">
+        <section class="receipt-detail-amount"><h2><span class="receipt-section-icon" aria-hidden="true"><svg class="sf-icon"><use href="/images/icons.svg#chart" /></svg></span>Amount summary</h2><div id="receipt-detail-totals" class="receipt-detail-totals"></div></section>
+        <section class="receipt-detail-additional"><h2><span class="receipt-section-icon" aria-hidden="true"><svg class="sf-icon"><use href="/images/icons.svg#document" /></svg></span>Additional information</h2><dl id="receipt-additional-fields"></dl></section>
+    </div>
+    <a class="btn btn-outline-secondary receipt-detail-back" href="/StockInflow">&#8592; Back to receipts</a>
+</main>
+@section Styles {
+<link rel="stylesheet" href="~/css/stock-receipts.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/stock-receipt-detail.css" asp-append-version="true" />
+}
+@section Scripts {<script src="~/js/stock-receipt-detail.js" asp-append-version="true"></script>}

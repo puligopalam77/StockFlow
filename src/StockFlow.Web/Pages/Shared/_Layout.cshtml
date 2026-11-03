@@ -1,0 +1,270 @@
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject StockFlow.Application.Common.BusinessScope BusinessScope
+@{
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    var isListScreen = currentPage != "/Index" && currentPage.EndsWith("/Index", StringComparison.OrdinalIgnoreCase)
+        || new[] { "/StockInflow", "/StockOutflow", "/Inventory/LowStock", "/Products/Variants", "/Service/Pending", "/Warranty/Lookup", "/Warranty/Claims", "/Warranty/Expiring", "/Admin/Users", "/Admin/Roles", "/Admin/AuditLogs", "/Admin/Stores", "/Reports/Activity", "/Reports/ProductSales", "/Reports/Stores", "/Account/Sessions", "/Search" }.Contains(currentPage);
+    var isBusinessDocument = currentPage is "/StockInflow/Details" or "/Purchases/Details" or "/Service/Details" or "/Sales/Details" or "/CashClosing/Index";
+    var isPrintableReport = currentPage.StartsWith("/Reports/", StringComparison.OrdinalIgnoreCase) || currentPage == "/Admin/Pilot";
+    var isConfiguration = currentPage is not ("/Configuration/Notifications" or "/Configuration/WhatsApp") && new[] { "/Products/", "/Categories/", "/Brands/", "/Suppliers/", "/Customers/", "/Configuration/" }.Any(p => currentPage.StartsWith(p, StringComparison.OrdinalIgnoreCase));
+    var userName = User.Identity?.Name ?? "Guest";
+    var profile = Access.User;
+    var displayName = string.IsNullOrWhiteSpace(profile?.FullName) ? userName : profile.FullName;
+    var initials = string.Concat(displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[..1])).ToUpperInvariant();
+}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#080e18" />
+        <script src="~/js/common/device-client.js" asp-append-version="true"></script>
+        <meta name="stockflow-location" content="@(User.FindFirst("LocationId")?.Value ?? "0")" />
+    <script src="~/js/common/display-text.js" asp-append-version="true"></script>
+    <script src="~/js/common/form-validation.js" asp-append-version="true"></script>
+    <script src="~/js/common/screen-language-catalog.js" asp-append-version="true"></script>
+    <script src="~/js/common/language.js" asp-append-version="true"></script>
+    <script src="~/js/branch-context.js" asp-append-version="true"></script>
+    @if (User.Identity?.IsAuthenticated == true) { <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" /> }
+        <title>@ViewData["Title"] - StockFlow</title>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/stockflow.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/document-brand.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/shop-navigation.css" asp-append-version="true" />
+    @if (!isConfiguration) { <link rel="stylesheet" href="~/css/operational-screens.css" asp-append-version="true" /> }
+        <link rel="stylesheet" href="~/css/profile.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/breadcrumbs.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/shop-readiness.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/help-panel.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
+    @if (isConfiguration) { <link rel="stylesheet" href="~/css/configuration.css" asp-append-version="true" /> }
+    @await RenderSectionAsync("Styles", required: false)
+    @if (isListScreen) { <link rel="stylesheet" href="~/css/list-screens.css" asp-append-version="true" /> }
+        <link rel="stylesheet" href="~/css/mobile-controls.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/camera-scanner.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/retail-usability.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/master-pages.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/button-theme.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/responsive-foundations.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/action-icons.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/list-pagination.css" asp-append-version="true" />
+</head>
+    <body class="sf-app sf-retail-ui @(new[]{"/Products/Index","/Categories/Index","/Brands/Index","/Suppliers/Index","/Customers/Index"}.Contains(currentPage) && ViewContext.RouteData.Values["mode"] is not null ? "master-form-page" : "")" data-shop-type="@(BusinessScope.BusinessProfileCode == "ELECTRICAL" ? "battery-geyser" : BusinessScope.BusinessProfileCode.ToLowerInvariant())" data-business-profile="@BusinessScope.BusinessProfileCode" data-catalog-registration-enhancements="@BusinessScope.CatalogRegistrationEnhancementsAvailable.ToString().ToLowerInvariant()" data-product-image-gallery="@BusinessScope.ProductImageGalleryAvailable.ToString().ToLowerInvariant()">
+        <a href="#main-content" class="sf-skip-link">Skip to main content</a>
+        <button class="sf-sidebar-backdrop" id="sidebar-backdrop" aria-label="Close navigation" tabindex="-1" hidden>
+        </button>
+        <aside class="sf-sidebar" id="app-sidebar" aria-label="Main navigation">
+            <div class="sf-sidebar-brand">
+                <a class="sf-brand" asp-page="/Index"><partial name="_Brand" />
+                </a>
+                <button class="sf-sidebar-close sf-icon-button" id="sidebar-close" aria-label="Close navigation">
+                    <svg class="sf-icon">
+                        <use href="/images/icons.svg#close" />
+                    </svg>
+                </button>
+            </div>
+            <partial name="_ShopNavigation" />
+            <div class="sf-sidebar-bottom">
+                <span class="sf-status-dot">
+                </span> Your inventory, connected.</div>
+        </aside>
+        <div class="sf-workspace">
+            <header class="sf-topbar">
+                <button type="button" class="sf-icon-button sf-menu-toggle" id="sidebar-toggle" aria-label="Toggle navigation" aria-controls="app-sidebar" aria-expanded="false">
+                    <svg class="sf-icon">
+                        <use href="/images/icons.svg#menu" />
+                    </svg>
+                </button>
+                <div class="sf-topbar-actions">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="sf-language-control" data-no-translate>
+                        <select id="language-choice" class="form-select form-select-sm sf-language" aria-label="Language"
+                                data-can-save="@((BusinessScope.CanReviewStores && Access.Can("COMPANY_SETTINGS", "EDIT")).ToString().ToLowerInvariant())">
+                            <option value="en">English</option>
+                        </select>
+                        <span id="language-message" class="small text-danger" role="alert" hidden></span>
+                    </div>
+                }
+                <a class="sf-icon-button sf-notification-bell" id="notification-bell" href="/Notifications" aria-label="Notifications">
+                    <span id="notification-count" class="sf-notification-count" hidden></span>
+                    <svg class="sf-icon">
+                        <use href="/images/icons.svg#bell" />
+                    </svg>
+                </a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                <details class="sf-profile" id="profile-menu">
+                    <summary class="sf-profile-trigger" aria-label="My profile" title="My profile">
+                        <span class="sf-admin-icon" aria-hidden="true">
+                            <svg class="sf-icon" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3" /><path d="M3 20v-2a6 6 0 0 1 10-4M17 11l4 2v3c0 3-4 5-4 5s-4-2-4-5v-3l4-2Z" /><path d="m15.5 16 1 1 2-2" /></svg>
+                        </span>
+                        <span class="sf-username" data-no-translate>@displayName</span>
+                        <span class="sf-profile-chevron" aria-hidden="true">⌄</span>
+                    </summary>
+                    <section class="sf-profile-panel" aria-label="Personal profile">
+                        <div class="sf-profile-heading">
+                            <strong>My profile</strong>
+                        </div>
+                        <a href="/Account/Sessions" class="sf-profile-password sf-profile-logout">Devices signed in</a>
+                        <button type="button" id="open-profile-details" class="sf-profile-password sf-profile-logout">
+                            <svg class="sf-icon" aria-hidden="true">
+                                <use href="/images/icons.svg#users" />
+                            </svg>
+                            <span>Profile Details</span>
+                            <span aria-hidden="true">›</span>
+                        </button>
+                        <button type="button" id="open-change-password" class="sf-profile-password sf-profile-logout">
+                            <svg class="sf-icon" aria-hidden="true">
+                                <use href="/images/icons.svg#settings" />
+                            </svg>
+                            <span>Change password</span>
+                            <span aria-hidden="true">›</span>
+                        </button>                            <a href="/Account/TwoFactor" class="sf-profile-password sf-profile-logout">Phone sign-in verification</a>
+                        <button type="button" id="profile-logout" class="sf-profile-password sf-profile-logout">
+                            <svg class="sf-icon" aria-hidden="true">
+                                <use href="/images/icons.svg#out" />
+                            </svg>
+                            <span>Logout</span>
+                            <span aria-hidden="true">›</span>
+                        </button>
+                    </section>
+                </details>
+                }
+                else { <a class="sf-logout" asp-page="/Account/Login">Sign in</a> }
+            </div>
+        </header>
+        <main id="main-content" class="sf-main @(currentPage == "/Index" ? "sf-dashboard-main" : "sf-module-main") @(!isConfiguration ? "sf-operational-main" : "") @(IsSectionDefined("PageHeader") ? "sf-caption-first" : "") @(isListScreen ? "sf-list-screen" : "")">
+            @await RenderSectionAsync("DashboardWelcome", required: false)
+            @if (BusinessScope.ProfileCatalogSwitchingAvailable && !isListScreen && currentPage is not ("/Index" or "/Sales/Create" or "/Purchases/Create" or "/Admin/Gst"))
+            {
+                <p class="small text-muted mb-2" id="active-shop-profile">
+                    @StockFlow.Application.Common.BusinessProfiles.Name(BusinessScope.BusinessProfileCode) setup ·
+                    @if (BusinessScope.ProfileDataVisibilityAvailable)
+                    {
+                        <span>Products, transactions and totals follow this setup. Switch back to view another setup's saved records.</span>
+                    }
+                    else
+                    {
+                        <span>Catalog and current stock follow this setup. Apply migration 051 to also filter transactions and totals.</span>
+                    }
+                </p>
+            }
+            @if (User.Identity?.IsAuthenticated == true && (isBusinessDocument || isPrintableReport))
+            {
+                <div class="@(isPrintableReport ? "sf-report-brand" : "sf-document-heading")"><partial name="_DocumentBrand" /></div>
+            }
+            @if (isConfiguration)
+            {
+            <div class="configuration-layout">
+                <div class="configuration-content"><partial name="_Breadcrumbs" />@RenderBody()</div>
+            </div>
+            }
+            else
+            {
+                @await RenderSectionAsync("PageHeader", required: false)
+                @if (currentPage != "/Index")
+                {
+                    <partial name="_Breadcrumbs" />
+                }
+                @RenderBody()
+            }
+            @if (!isListScreen && currentPage is not ("/Index" or "/Sales/Create")) { <partial name="_RetailScreenGuide" /> }
+        </main>
+        <footer class="sf-app-footer">© @DateTime.Now.Year StockFlow <span>Smart inventory. Better business.</span>
+        </footer>
+    </div>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+    <dialog id="profile-details-dialog" class="sf-account-dialog" aria-labelledby="profile-details-title">
+        <button class="sf-dialog-close" type="button" data-close-account aria-label="Close profile details">×</button>
+        <h2 id="profile-details-title">Profile Details</h2>
+        <div class="sf-profile-identity">
+            <span class="sf-profile-avatar" aria-hidden="true">@initials</span>
+            <div>
+                <strong>@displayName</strong>
+                <span>@(string.IsNullOrWhiteSpace(profile?.Email) ? "Email not provided" : profile.Email)</span>
+            </div>
+        </div>
+        <dl class="sf-profile-details">
+            <div>
+                <dt>Username</dt>
+                <dd>@(profile?.Username ?? userName)</dd>
+            </div>
+            <div>
+                <dt>Role</dt>
+                <dd>@(profile?.RoleName ?? "Not available")</dd>
+            </div>
+            <div>
+                <dt>Mobile</dt>
+                <dd>@(string.IsNullOrWhiteSpace(profile?.MobileNumber) ? "Not provided" : profile.MobileNumber)</dd>
+            </div>
+                                @if(profile is not null){<div>
+            <dt>Account status</dt>
+            <dd>
+                <span class="sf-profile-status">@(profile.IsActive ? "Active" : "Inactive")</span>
+            </dd>
+        </div>}
+    </dl>            <div class="sf-account-actions">
+        <button type="button" class="btn btn-dark" data-close-account>Close</button>
+    </div>
+</dialog>
+<dialog id="change-password-dialog" class="sf-account-dialog" aria-labelledby="change-password-title" aria-describedby="change-password-help">
+    <button class="sf-dialog-close" type="button" data-close-account aria-label="Close change password">×</button>
+    <h2 id="change-password-title">Change Password</h2>
+    <p id="change-password-help">Use 8–128 characters. Spaces and passphrases are allowed; your business may require a longer minimum. Sign in again after saving.</p>
+    <form id="profile-password-form" method="post" asp-page="/Account/ChangePassword" asp-page-handler="Popup">
+        <div id="profile-password-message" class="alert alert-danger" role="alert" hidden>
+        </div>
+        <label for="profile-current-password">Current password</label>
+        <input id="profile-current-password" name="Input.CurrentPassword" type="password" class="form-control" autocomplete="current-password" maxlength="128" required />
+        <label for="profile-new-password">New password</label>
+        <input id="profile-new-password" name="Input.Password" type="password" class="form-control" autocomplete="new-password" minlength="8" maxlength="128" required />
+        <label for="profile-confirm-password">Confirm new password</label>
+        <input id="profile-confirm-password" name="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" minlength="8" maxlength="128" required />
+        <div class="sf-account-actions">
+            <button type="button" class="btn btn-dark" data-close-account>Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Password</button>
+        </div>
+    </form>
+</dialog>        <dialog id="logout-confirmation" class="sf-logout-dialog" aria-labelledby="logout-title" aria-describedby="logout-description">
+    <button id="logout-close" class="sf-dialog-close" type="button" aria-label="Close logout confirmation">×</button>
+    <div class="sf-dialog-symbol" aria-hidden="true">!</div>
+    <h2 id="logout-title">Are you sure?</h2>
+    <p id="logout-description">Sign out of StockFlow on this device?</p>
+    <div class="sf-dialog-actions">
+        <button id="logout-cancel" class="sf-dialog-cancel" type="button" autofocus>Cancel</button>
+        <form method="post" asp-page="/Account/Logout">
+            <input type="hidden" name="SessionId" value="@User.FindFirst(StockFlow.Web.Security.IdleSessionService.ClaimType)?.Value" />
+            <button class="sf-dialog-confirm" type="submit">Sign out</button>
+        </form>
+    </div>
+</dialog>
+    }
+    @if (isListScreen) { <script src="~/js/list-screens.js" asp-append-version="true"></script> }
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/notifications-ui.js" asp-append-version="true"></script>
+    <script src="~/js/confirmation-dialog.js" asp-append-version="true"></script>
+    <script src="~/js/unsaved-changes.js" asp-append-version="true"></script>
+    <script src="~/js/stockflow-shell.js" asp-append-version="true"></script>
+    <script src="~/js/language-selector.js" asp-append-version="true"></script>
+    @if (User.Identity?.IsAuthenticated == true) { <script src="~/js/notifications.js" asp-append-version="true"></script> }
+    @if (User.Identity?.IsAuthenticated == true) { <partial name="_HelpPanel" /> }
+    <script src="~/js/help-panel.js" asp-append-version="true"></script>
+    <script src="~/js/help-voice.js" asp-append-version="true"></script>
+<partial name="_IdleSession" />
+    <script src="~/js/common/camera-scanner.js" asp-append-version="true"></script>
+    <script src="~/js/retail-usability.js" asp-append-version="true"></script>
+    <script src="~/js/variant-identity.js" asp-append-version="true"></script>
+    <script src="~/js/supplier-identifiers.js" asp-append-version="true"></script>
+    <script src="~/js/master-pages.js" asp-append-version="true"></script>
+    <script src="~/js/responsive-shell.js" asp-append-version="true"></script>
+    <script src="~/js/action-icons.js" asp-append-version="true"></script>
+    <script src="~/js/list-pagination.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+
+

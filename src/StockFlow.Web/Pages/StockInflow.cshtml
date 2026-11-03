@@ -1,0 +1,17 @@
+@page
+@model StockFlow.Web.Pages.StockInflowModel
+@{ ViewData["Title"] = "Receive Stock"; }
+@section PageHeader {
+<header class="sf-page-heading receipt-page-heading">
+    <span class="receipt-heading-icon" aria-hidden="true">&#9636;</span>
+    <div><h1>Receive Stock</h1></div>
+    @if(Access.Can("PURCHASES","CREATE")){<a class="btn btn-primary" href="/Purchases/Create">+ Receive New Stock</a>}
+</header>
+}
+<partial name="_StockReceiptHistory" />
+@section Styles {
+<link rel="stylesheet" href="~/css/stock-receipts.css" asp-append-version="true" />
+}
+@section Scripts {
+@if(Access.Can("STOCK_INFLOW")){<script src="~/js/stock-receipts.js" asp-append-version="true"></script>}
+}

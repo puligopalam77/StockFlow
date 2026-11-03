@@ -1,0 +1,42 @@
+New Sale: Quick Add Customer
+
+Implemented a scoped, centered 520px customer form with a pink customer-plus
+header, white background, rounded corners, dividers, and charcoal buttons with
+pink hover. Mobile and GSTIN share a row on desktop and stack on mobile.
+
+The popup uses the existing customer registration API and backend field
+validation. Name is required; mobile, GSTIN and address remain optional.
+Validation appears after interaction or a save attempt. Supplied GSTIN is
+normalized to uppercase. Matching active customers can be selected directly;
+inactive matches are displayed but cannot be selected or recreated.
+
+Quick creation opts into a server duplicate guard using transaction advisory
+locks and exact mobile/GSTIN checks within the current tenant and business
+profile. Ordinary Customer Registration retains its existing behavior and
+permissions. No database migration or manual SQL execution is required.
+
+The form lives outside the sale form and never reconstructs the cart. Customer
+selection preserves selected variants, serials, prices, discounts, split
+payments and notes. Pending saves disable repeat submissions and dismissal.
+Cancel, X and Escape close without saving; native dialog focus containment and
+explicit focus restoration support keyboard use. API failures retain values
+and display an inline red alert.
+
+If a name-only request has an uncertain network/server result, the popup blocks
+blind resubmission and offers Find Existing Customer. Without a mobile/GSTIN,
+the server cannot distinguish a retry from another person with the same name.
+
+Validation completed:
+- Release web build: zero warnings/errors.
+- Quick Customer API checks: required/optional fields, format validation,
+  duplicate detection, exact matching, inactive records and permissions.
+- Billing application checks and existing browser billing regression suite.
+- Focused browser checks: creation, duplicate submissions, delayed backend
+  confirmation, API failure retention, customer selection, cart preservation,
+  Escape/X/Cancel, focus return, charcoal/pink styling and responsive layout
+  at 1366x768, 1024x768, 390x844 and 320x650.
+- Real PostgreSQL integration in a disposable database clone: concurrent
+  identifier duplicates, tenant isolation, business-profile isolation,
+  inactive duplicates and unchanged sales/inventory posting counts.
+
+Production/business databases and SQL correction scripts were untouched.

@@ -1,0 +1,10 @@
+@page
+@{ViewData["Title"]="Operating Expenses";}
+<div id="expenses" data-mode="list">
+<header class="sf-page-heading"><div><h1>Operating Expenses</h1><p>Record shop overheads separately from stock purchases.</p></div><div><a class="btn btn-dark" href="/Expenses/Create" permission-module="EXPENSES" permission-action="CREATE">New Expense</a> <a class="btn btn-outline-secondary" href="/Expenses/Report">Expense Report</a></div></header>
+<div id="expense-message" role="alert" hidden></div>
+<form id="expense-filters" class="card card-body expense-filters"><label>Search<input id="expense-term" class="form-control" maxlength="150" /></label><label>Incurred from<input id="expense-from" class="form-control" type="date" /></label><label>Incurred to<input id="expense-to" class="form-control" type="date" /></label><button class="btn btn-dark">Apply</button></form>
+<div class="card card-body"><div class="table-responsive"><table class="table"><thead><tr><th>Incurred</th><th>Category</th><th>Payee</th><th>Description</th><th>Amount</th><th>Paid</th><th>Status</th><th></th></tr></thead><tbody id="expense-rows"></tbody></table></div><div class="d-flex justify-content-between"><button id="expense-prev" class="btn btn-outline-secondary">Previous</button><span id="expense-page" role="status"></span><button id="expense-next" class="btn btn-outline-secondary">Next</button></div></div>
+</div>
+@section Scripts {<script src="~/js/expenses.js" asp-append-version="true"></script>}
+@section Styles {<link rel="stylesheet" href="~/css/expenses.css" asp-append-version="true" />}

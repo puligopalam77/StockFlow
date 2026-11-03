@@ -1,0 +1,11 @@
+@inject StockFlow.Application.Interfaces.ICompanySettingsRepository CompanySettings
+@{
+    var company = await CompanySettings.GetAsync();
+}
+@if (!string.IsNullOrWhiteSpace(company.LogoDataUrl))
+{
+    <div class="sf-document-brand" aria-label="Business details">
+        <img src="@company.LogoDataUrl" alt="@company.CompanyName logo" loading="eager" />
+        <strong>@company.CompanyName</strong>
+    </div>
+}

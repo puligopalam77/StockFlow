@@ -1,0 +1,39 @@
+@page
+@model StockFlow.Web.Pages.Sales.IndexModel
+@{ ViewData["Title"] = "Customer Bills"; }
+@section PageHeader {
+<header class="sf-page-heading sales-list-heading">
+ <div><h1>Customer Bills</h1></div>
+ <div class="sales-list-actions"><button id="sales-export" class="btn btn-outline-primary" type="button">&#8595; Export</button>@if(Access.Can("SALES","CREATE")){<a asp-page="Create" class="btn btn-primary">+ Make a Bill</a>}</div>
+</header>
+}
+<div id="sale-message" class="alert alert-danger" role="status" hidden></div>
+<div class="sales-summary" aria-label="Sales summary">
+ @foreach(var tile in new[]{("total","Net Sales","pink","document","Completed sales after returns"),("count","Total Invoices","green","box","Completed invoices; excludes cancelled"),("collected","Amount Collected","blue","document","Net receipts against matching invoices"),("dues","Outstanding Dues","amber","document","Current unpaid invoice balances")}){
+ <section class="sales-summary-card @tile.Item3"><span class="sales-summary-icon"><svg class="sf-icon" aria-hidden="true"><use href="@($"/images/icons.svg#{tile.Item4}")" /></svg></span><div><h2>@tile.Item2</h2><strong id="sales-summary-@tile.Item1">&#8212;</strong><small>@tile.Item5</small><small id="sales-compare-@tile.Item1"></small></div></section>
+ }
+</div>
+<form id="sales-filter" class="sales-filter-card">
+ <div class="sf-filter-bar sales-list-filter">
+ <label class="sales-search">Search<input id="sale-search" maxlength="200" class="form-control" placeholder="Search invoice no., customer, mobile, SKU or product..." /></label>
+ <label>Date range<select id="sales-range" class="form-select"><option value="CUSTOM">Custom Range</option><option value="TODAY">Today</option><option value="YESTERDAY">Yesterday</option><option value="WEEK">Last 7 Days</option><option value="MONTH">This Month</option></select></label>
+ <label>From<input id="sales-from" type="date" class="form-control" /></label>
+ <label>To<input id="sales-to" type="date" class="form-control" /></label>
+ <label>Payment status<select id="sales-payment-status" class="form-select"><option value="">All Statuses</option><option value="PAID">Paid</option><option value="PARTIAL">Partially Paid</option><option value="UNPAID">Unpaid</option><option value="ADJUSTED">Refunded / Adjusted</option></select></label>
+ <div class="sales-filter-actions"><button type="submit" class="btn btn-primary">Search</button><button id="sales-reset" class="btn btn-outline-secondary" type="button">Reset</button></div>
+ </div>
+ <details id="sales-more-filters"><summary>More Filters</summary><div class="sales-advanced-filters">
+ <label>Payment method<select id="sales-payment-method" class="form-select"><option value="">All Methods</option><option value="CASH">Cash</option><option value="UPI">UPI</option><option value="DEBIT_CARD">Debit Card</option><option value="CREDIT_CARD">Credit Card</option><option value="CARD">Card (legacy / unspecified)</option><option value="BANK_TRANSFER">Bank Transfer</option><option value="MIXED">Mixed Payments</option><option value="CREDIT">Pay Later / No Collection</option><option value="CHEQUE">Cheque (existing receipts)</option></select></label>
+ <label>Invoice status<select id="sales-status" class="form-select"><option value="">All Finalized Invoices</option><option value="COMPLETED">Completed (including returns)</option><option value="PARTIALLY_RETURNED">Partially Returned</option><option value="FULLY_RETURNED">Fully Returned</option><option value="CANCELLED">Cancelled</option><option value="OUTSTANDING">Customer outstanding</option><option value="OVERDUE">Overdue payments</option></select></label>
+ <label>Customer<input id="sales-customer-search" class="form-control" maxlength="200" placeholder="Find a customer..." autocomplete="off" /><select id="customer-filter" class="form-select" aria-label="Customer filter"><option value="">All Customers</option></select></label>
+ </div><p class="small text-muted">A method matches any recorded collection on the invoice. Mixed means more than one collection method. Customer Credit is money owed, not a card payment.</p></details>
+</form>
+<section class="sales-list-table" aria-label="Invoices" data-can-collect="@Access.Can("SALES","COLLECT").ToString().ToLowerInvariant()" data-can-return="@Access.Can("SALES","RETURN").ToString().ToLowerInvariant()">
+ <div class="table-responsive"><table class="table">
+ <thead><tr><th class="sales-select"><input id="sales-select-all" type="checkbox" aria-label="Select invoices on this page" /></th><th>Invoice No.</th><th>Date &amp; Time</th><th>Customer</th><th>Items</th><th>Bill Total</th><th>Paid</th><th>Balance Due</th><th>Payment Method</th><th>Payment Status</th><th>Actions</th></tr></thead>
+ <tbody id="sales-rows"></tbody></table></div>
+ <footer class="sales-list-pagination"><span id="sales-showing" role="status" aria-live="polite"></span><div><button id="sales-prev" class="btn btn-outline-secondary" aria-label="Previous page">&#8249;</button><span id="sales-page" class="sales-page-number">1</span><button id="sales-next" class="btn btn-outline-secondary" aria-label="Next page">&#8250;</button></div></footer>
+</section>
+<p class="sales-summary-note">Dates select invoices in the shop timezone. Summary shows their current settlements, including later collections, less recorded refunds. Cancelled invoices and drafts are excluded from the four totals. Bill Total preserves the original invoice; return adjustments appear separately. Period collection reports use payment dates.</p>
+@section Styles {<link rel="stylesheet" href="~/css/sales-list.css" asp-append-version="true" />}
+@section Scripts {<script src="~/js/sales-common.js" asp-append-version="true"></script><script src="~/js/sales-index.js" asp-append-version="true"></script>}

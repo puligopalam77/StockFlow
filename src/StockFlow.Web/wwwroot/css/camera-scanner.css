@@ -1,0 +1,8 @@
+.sf-camera-dialog{width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;border:1px solid #e4eaf5;border-radius:14px;padding:16px;color:#10213f}
+.sf-camera-dialog::backdrop{background:#101d3866}
+.sf-camera-dialog h2{font-size:18px}.sf-camera-dialog video{width:100%;max-height:45dvh;background:#101d38;border-radius:8px;object-fit:contain}
+.sf-camera-dialog p{font-size:14px;margin:10px 0}.sf-camera-dialog .btn{min-height:40px;margin:8px 8px 0 0}
+.sf-camera-dialog input{font-size:16px}.sf-camera-trigger{white-space:nowrap}
+:is(.d-flex,.billing-scan-row,.purchase-scan-controls):has(>.sf-camera-trigger){flex-wrap:wrap}
+input[data-camera-ready]{min-width:0}
+@media print{.sf-camera-trigger,.sf-camera-dialog{display:none!important}}

@@ -1,0 +1,387 @@
+{
+  "schemaVersion": 1,
+  "releaseScope": "Existing supported retail workflows; official provider generation and unimplemented advanced modules excluded",
+  "evidenceMaxAgeHours": 24,
+  "gates": [
+    {
+      "id": "gate-policy",
+      "label": "Fail-closed release classification and evidence binding",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "powershell",
+      "target": "tests/ReleaseGateChecks.ps1",
+      "dependsOn": []
+    },
+    {
+      "id": "build",
+      "label": "Build test host and application",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "build",
+      "target": null,
+      "dependsOn": []
+    },
+    {
+      "id": "private-shops",
+      "label": "Private same-profile shops, explicit sharing, tenants and quarantined history",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "private-shop-checks",
+      "dependsOn": ["build"]
+    },
+    {
+      "id": "expenses",
+      "label": "Operating expenses, payments, refunds, receipts, reports and Cash Closing",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "expense-checks",
+      "dependsOn": ["build"]
+    },
+    {
+      "id": "billing-rules",
+      "label": "Billing validation and rendered checkout",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "dotnet",
+      "target": "billing-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "reconciliation",
+      "label": "Financial and inventory reconciliation",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "p0-reconciliation-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "quotations",
+      "label": "Persisted quotation revisions, permissions and exact-once checkout conversion",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "quotation-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "sales-retries",
+      "label": "Last unit, serial race, payments and recovery",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "new-sale-integration-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "receiving",
+      "label": "Direct/partial/damaged/serialized receiving",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "receive-stock-integration-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "billing-gst",
+      "label": "Five payment methods, discounts, approvals and GST snapshots",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "fast-billing-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "product-profit",
+      "label": "Historical source dates and unknown estimated costs",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "workflow-reporting-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "draft-recovery",
+      "label": "Draft HTTP and current-schema lifecycle",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "draft-lifecycle-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "gst-setup",
+      "label": "GST registration setup and scope",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "gst-setup-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "gst-catalog",
+      "label": "Reviewed GST mappings and import safety",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "gst-catalog-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "eway-preparation",
+      "label": "Scoped preparations, external evidence and unavailable official provider",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "database",
+      "target": "eway-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "pagination-http",
+      "label": "Actual HTTP page/filter parameter validation",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "dotnet",
+      "target": "list-pagination-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "operations-privacy",
+      "label": "Operational endpoint authorization and evidence privacy",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "dotnet",
+      "target": "operational-readiness-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "reports-http",
+      "label": "Report source authorization and Razor fixtures",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "dotnet",
+      "target": "reports-checks",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "report-fixtures",
+      "label": "Render current report pages for browser tests",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "dotnet",
+      "target": "list-screen-fixtures",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "backup-scheduler-contract",
+      "label": "Backup scheduler contract without task installation",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "powershell",
+      "target": "tests/BackupTaskChecks.ps1",
+      "dependsOn": []
+    },
+    {
+      "id": "clean-restore",
+      "label": "Fresh-cluster dump/restore and application reads",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "restore",
+      "target": null,
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "billing-browser",
+      "label": "Ten viewports, payment UI, dialogs and recovery",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "browser",
+      "target": "fast-billing-offline.cjs",
+      "dependsOn": [
+        "billing-rules"
+      ]
+    },
+    {
+      "id": "cart-browser",
+      "label": "Cart rows, keyboard/touch and contained scrolling",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "browser",
+      "target": "billing-cart-offline.cjs",
+      "dependsOn": [
+        "billing-rules"
+      ]
+    },
+    {
+      "id": "profit-browser",
+      "label": "Estimated profit rows, unknown costs and report errors",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "browser",
+      "target": "product-profit-offline.cjs",
+      "dependsOn": [
+        "report-fixtures"
+      ]
+    },
+    {
+      "id": "print-consistency",
+      "label": "Actual saved invoice rendering in A4/80mm browser print media",
+      "kind": "automated",
+      "mandatory": true,
+      "critical": true,
+      "run": "browser",
+      "target": "fast-billing-print.cjs",
+      "dependsOn": [
+        "billing-gst"
+      ]
+    },
+    {
+      "id": "receiving-corrections",
+      "label": "Receipt corrections/cancellation scope and rollback evidence",
+      "kind": "manual",
+      "mandatory": true,
+      "critical": true,
+      "run": "manual",
+      "target": null,
+      "dependsOn": []
+    },
+    {
+      "id": "after-sales",
+      "label": "Returns, damaged goods, warranty, repairs and supported reversals",
+      "kind": "manual",
+      "mandatory": true,
+      "critical": true,
+      "run": "manual",
+      "target": null,
+      "dependsOn": []
+    },
+    {
+      "id": "shop-model",
+      "label": "Approved independent-shop master model and real topology verification",
+      "kind": "manual",
+      "mandatory": true,
+      "critical": true,
+      "run": "manual",
+      "target": null,
+      "dependsOn": []
+    },
+    {
+      "id": "migration-deployment",
+      "label": "Applied schema/history/RLS and compatible rollback or forward fix",
+      "kind": "manual",
+      "mandatory": true,
+      "critical": true,
+      "run": "manual",
+      "target": null,
+      "dependsOn": []
+    },
+    {
+      "id": "production-recovery",
+      "label": "Scheduled/offsite backup, assets/secrets and agreed RPO/RTO drill",
+      "kind": "manual",
+      "mandatory": true,
+      "critical": true,
+      "run": "manual",
+      "target": null,
+      "dependsOn": []
+    },
+    {
+      "id": "production-hosting",
+      "label": "HTTPS, restart, persistent storage, logs and alert delivery",
+      "kind": "manual",
+      "mandatory": true,
+      "critical": true,
+      "run": "manual",
+      "target": null,
+      "dependsOn": []
+    },
+    {
+      "id": "physical-devices",
+      "label": "Actual scanners and A4/80mm/58mm printing within supported scope",
+      "kind": "manual",
+      "mandatory": true,
+      "critical": true,
+      "run": "manual",
+      "target": null,
+      "dependsOn": []
+    },
+    {
+      "id": "pilot-acceptance",
+      "label": "Owner/accountant pilot sign-off for exact version/environment/shop",
+      "kind": "manual",
+      "mandatory": true,
+      "critical": true,
+      "run": "manual",
+      "target": null,
+      "dependsOn": []
+    },
+    {
+      "id": "usability-issues",
+      "label": "Noncritical usability issues resolved or explicitly accepted",
+      "kind": "manual",
+      "mandatory": true,
+      "critical": false,
+      "run": "manual",
+      "target": null,
+      "dependsOn": []
+    }
+  ]
+}

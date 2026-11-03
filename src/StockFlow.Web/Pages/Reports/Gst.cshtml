@@ -1,0 +1,57 @@
+@page
+@{ ViewData["Title"]="GST & Tax Reports"; }
+<link rel="stylesheet" href="~/css/gst.css" asp-append-version="true" />
+<div class="gst-workspace" id="gst-reports" data-wide="@Access.Can("GST_REPORTS","VIEW_REGISTRATION").ToString().ToLowerInvariant()" data-review="@Access.Can("GST_REPORTS","REVIEW").ToString().ToLowerInvariant()">
+    <h1>GST &amp; Tax Reports</h1>
+    <p permission-module="EWAY_BILLS"><a href="/EWayBills" class="btn btn-sm btn-outline-secondary">E-Way Bill preparation &amp; register</a></p>
+    <p class="gst-warning">Accountant working records, not filed returns. Recorded purchase GST is not approved ITC. Figures preserve issuance/recording values; source cancellations and operational returns require linked tax-adjustment review. Have a GST practitioner validate reports and document templates before production use.</p>
+    <div id="gst-report-message" role="alert" hidden></div>
+    <form id="gst-filters" class="gst-card">
+        <div class="gst-grid">
+            <div class="gst-field"><label for="gst-registration">GST Registration</label><select id="gst-registration" required><option value="">Loading…</option></select></div>
+            <div class="gst-field"><label for="gst-from">From date</label><input id="gst-from" type="date" required /></div>
+            <div class="gst-field"><label for="gst-to">To date</label><input id="gst-to" type="date" required /></div>
+            <div class="gst-field"><label for="gst-term">Search document or party</label><input id="gst-term" type="search" maxlength="200" placeholder="Invoice number, party name or GSTIN…" /></div>
+            <div class="gst-field"><label for="gst-party-type">Party type</label><select id="gst-party-type"><option value="">All</option><option>B2B</option><option>B2C</option></select></div>
+            <div class="gst-field"><label for="gst-rate">Tax rate (%)</label><input id="gst-rate" type="number" min="0" max="100" step="0.0001" placeholder="All rates" /></div>
+            <div class="gst-field"><label for="gst-scope">Report scope</label><select id="gst-scope"><option value="false">Selected shop/profile — partial registration</option>@if(Access.Can("GST_REPORTS","VIEW_REGISTRATION")){<option value="true">Registration-wide tax records</option>}</select></div>
+            <div class="gst-field"><label for="gst-sort">Sort</label><select id="gst-sort"><option value="date">Date</option><option value="number">Document number</option><option value="value">Document value</option></select></div>
+        </div>
+        <div class="gst-actions"><button class="gst-button" type="submit">Apply</button><button class="gst-button" id="gst-reset" type="button">Reset filters</button>@if(Access.Can("GST_REPORTS","EXPORT")){<button class="gst-button" type="button" id="gst-export">Export working CSV</button>}</div>
+    </form>
+    <p id="gst-scope-label" role="status"></p>
+    <div id="gst-overview" class="gst-cards"></div>
+    <p id="gst-coverage" class="gst-warning"></p>
+    <nav class="gst-tabs" aria-label="GST working registers">
+        <button data-report="sales" type="button">Sales Tax Register</button>
+        <button data-report="purchases" type="button">Purchase Tax Register</button>
+        <button data-report="hsn" type="button">HSN / SAC Summary</button>
+        <button data-report="notes" type="button">Credit &amp; Debit Notes</button>
+    </nav>
+    <section class="gst-card"><div class="gst-table-wrap" id="gst-report-table"></div><div id="gst-report-pager"></div></section>
+    <section class="gst-card" id="gst-document-detail" hidden aria-label="Tax document details"></section>
+    @if(Access.Can("GST_REPORTS","CREATE")){
+    <details class="gst-card" id="gst-record-panel"><summary>Record supplier tax invoice or linked tax note</summary>
+        <p class="gst-help">Use actual source invoice values and supporting evidence. Purchase notes must be supplier-issued credit/debit tax notes; a buyer return document alone is not a GST adjustment. Purchase orders and GRNs do not become tax invoices automatically. This entry does not post inventory, refunds or payments.</p>
+        <form id="gst-record-form"><div class="gst-grid">
+            <div class="gst-field"><label for="gst-entry-kind">Document type</label><select id="gst-entry-kind"><option value="INVOICE">Supplier tax invoice</option><option value="CREDIT_NOTE">Credit note</option><option value="DEBIT_NOTE">Debit note</option></select></div>
+            <div class="gst-field"><label for="gst-entry-direction">Direction</label><select id="gst-entry-direction"><option value="PURCHASE">Purchase</option><option value="SALES">Sales (notes only)</option></select></div>
+            <div class="gst-field"><label for="gst-entry-number">Source document number *</label><input id="gst-entry-number" required maxlength="100" /></div>
+            <div class="gst-field"><label for="gst-entry-date">Source document date *</label><input id="gst-entry-date" type="date" required /></div>
+            <div class="gst-field"><label for="gst-entry-supplier">Existing supplier (purchase invoice)</label><select id="gst-entry-supplier"><option value="">Choose supplier…</option></select></div>
+            <div class="gst-field"><label for="gst-entry-purchases">Related purchases (select all applicable)</label><select id="gst-entry-purchases" multiple size="3"></select></div>
+            <div class="gst-field"><label for="gst-entry-parent">Original GST document ID (notes)</label><input id="gst-entry-parent" type="number" min="1" /></div>
+            <div class="gst-field"><label for="gst-entry-state">Supplier registration state *</label><select id="gst-entry-state">@foreach(var state in StockFlow.Application.Common.GstRules.States){<option value="@state.Key">@state.Key — @state.Value</option>}</select></div>
+            <div class="gst-field"><label for="gst-entry-pos">Place of supply *</label><select id="gst-entry-pos">@foreach(var state in StockFlow.Application.Common.GstRules.States){<option value="@state.Key">@state.Key — @state.Value</option>}</select></div>
+            <div class="gst-field"><label for="gst-entry-evidence">Source document / attachment reference *</label><input id="gst-entry-evidence" required minlength="3" maxlength="1000" /></div>
+            <div class="gst-field"><label for="gst-entry-reason">Adjustment reason</label><input id="gst-entry-reason" maxlength="1000" /></div>
+        </div>
+        <p class="gst-help">Enter recorded source line amounts. For notes, use the original invoice classifications. Source documents remain immutable after recording.</p>
+        <div class="gst-table-wrap"><table><thead><tr><th>Product</th><th>Description</th><th>HSN/SAC</th><th>UQC</th><th>Classification</th><th>Treatment</th><th>Quantity</th><th>GST %</th><th>Taxable value</th><th>CGST</th><th>SGST</th><th>UTGST</th><th>IGST</th><th>Cess</th><th>Total</th><th>Action</th></tr></thead><tbody id="gst-entry-lines"></tbody></table></div>
+        <div class="gst-actions"><button type="button" class="gst-button" id="gst-add-line">Add line</button><button class="gst-button" type="submit" id="gst-record-save">Record source document</button></div>
+        </form>
+    </details>}
+    <details class="gst-card"><summary>Export &amp; Review History</summary><button type="button" id="gst-history-refresh" class="gst-button">Load export history</button><div class="gst-table-wrap" id="gst-history"></div><p class="gst-help">Document review history is available in each tax document. Exports are working papers, not portal submissions.</p></details>
+    <p class="gst-help">GSTR-1 / GSTR-3B preparation, GSTR-2B import/reconciliation, eligible ITC and direct filing are not implemented here. GSTR-2B is an auto-drafted ITC statement, not a return to file. Estimated tax payable is unavailable until eligible-credit and adjustment workflows are verified.</p>
+</div>
+@section Scripts { <script src="~/js/gst-reports.js" asp-append-version="true"></script> }

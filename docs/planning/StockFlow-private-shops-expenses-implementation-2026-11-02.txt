@@ -1,0 +1,197 @@
+StockFlow private shops and Operating Expenses implementation - 2 November 2026
+
+Scope and release decision
+Implemented the approved private-shop model and F04 Expenses in additive source
+changes. No production migration, deployment, ownership reassignment or costing
+policy selection was performed. Release remains BLOCKED until mandatory review
+gates have actual evidence. The nine manual gates do not block isolated development.
+
+A03 remains Partial: private-master enforcement/sharing/resolution are implemented,
+but actual historical allocation decisions, deployment topology and independent
+simultaneous per-store active-profile selection remain limited. The existing
+active-profile selection is tenant-wide; no second profile engine was added.
+F04 changes from Missing to Implemented for the operating workflow below, with
+deployment and owner/accountant/pilot acceptance separately unverified.
+The 62-workflow register now has 36 Implemented, 20 Partial, 5 Missing, 0 Defective
+and 1 Deferred. These counts are not production-readiness scores.
+
+Private-master implementation
+database/migrations/085_private_shop_masters.sql (manual, after 084):
+- Nullable owner_store_id on products, categories, brands, customers and suppliers.
+  Variants, barcodes, relevant product/location prices and tax settings inherit
+  product authority. New master writes default to the selected owning store.
+- Existing IDs, SKUs, barcodes, invoice and transaction references are retained.
+  Original tenant-wide SKU/barcode/code namespaces are retained, not renumbered.
+  Per-owner category/brand names can coexist without merging shop records.
+- Legacy masters are allocated automatically ONLY where the tenant has exactly
+  one store, counting inactive stores. No usage/creator/profile guess is used.
+  Multi-store or no-store records retain NULL ownership and are quarantined from
+  master lookup/search until an explicit owner decision. Authorized historical
+  transaction snapshots and report movement totals remain readable.
+- Restrictive PostgreSQL RLS, write triggers, guarded definer functions and scoped
+  repository/API access enforce authority. Forged selected-store/tenant context,
+  foreign master references and edits to another shop's shared catalog are denied.
+- Sharing is explicit, read-only and audited by actor/reason. The tenant owner
+  needs Company Settings EDIT and actual source/target shop membership. Product
+  category/brand prerequisites must be shared explicitly; dependent revocation is
+  rejected. Contacts are not implicitly shared with products.
+- Quarantined NULL-to-owner resolution requires the authorized owner, selected
+  target shop and a recorded reason. Already allocated ownership cannot be
+  reassigned through this workflow. Historical IDs are preserved.
+- Existing authorized owner switching/consolidated reports remain controlled.
+  Registration-wide GST reports retain their separate permission; sharing is not
+  a substitute for registration mappings or GST consolidation authority.
+
+Screen: /Admin/ShopData. API: GET/POST /api/shopmasters.
+Entities: owner_store_id columns, per-master *_shop_shares, master_sharing_events.
+Source: Application/Interfaces/IShopMasterRepository.cs;
+Infrastructure/Repositories/ShopMasterRepository.cs;
+Web/Controllers/ShopMastersController.cs; Web/Pages/Admin/ShopData.cshtml;
+Web/wwwroot/js/shop-data.js. Paths above are relative to src/StockFlow.*.
+
+Operating Expenses F04 implementation
+database/migrations/086_operating_expenses.sql (manual, after 085):
+- Private shop/location/profile expense categories and payees, draft/save/post,
+  incurred dates and amounts; partial/full payments on their actual recorded dates.
+- Five manual methods: CASH, UPI, DEBIT_CARD, CREDIT_CARD, BANK_TRANSFER.
+  Immutable signed payment/refund/reversal movements; linked reversal cannot be
+  applied twice. Exact operation identity retries return the saved result, changed
+  payload retries fail, stale versions fail, overpayment/negative net paid fail.
+- Posted corrections retain snapshots/reasons. Current amount cannot fall below
+  net paid. Cancellation requires zero net paid; cancelled expenses cannot be paid.
+- Private PDF/PNG/JPEG receipt attachments up to 5 MB, signature checks, authorized
+  download, no public upload URL. Audit retains file identity/digest without a
+  second base64 copy in every event. No stock, invoice or eligible GST ITC posting.
+- Current corrected incurred report, signed paid-date report and cutoff outstanding,
+  CSV export, list pagination and filters. Formula-like exported cells are escaped.
+- Cash Closing subtracts signed CASH expenses and counts expense movements through
+  a narrow authorized aggregate function. Refund/reversal cash flows retain their
+  own dates. Existing saved closing snapshots remain immutable; recount rules remain.
+- Existing module/action permission engine, RLS and tenant/store/location/profile
+  guards. Separate view/create/edit/post/pay/reverse/cancel/attach/export actions.
+
+Screens: /Expenses, /Expenses/Create, /Expenses/Details?id=UUID, /Expenses/Report.
+API: GET /api/expenses, /options, /{id}, /report, /export;
+POST /api/expenses/masters/{kind}; POST /api/expenses/{id}/{command}
+(SAVE, POST, CORRECT, PAY, REFUND, REVERSE, CANCEL);
+POST /api/expenses/{id}/attachments;
+GET /api/expenses/{id}/attachments/{attachmentId}.
+Entities: expense_categories, expense_payees, expenses, expense_payments,
+expense_events, expense_attachments, expense_master_events.
+
+Actual changed implementation files
+src/StockFlow.Application/Interfaces/IExpenseRepository.cs
+src/StockFlow.Application/Interfaces/IShopMasterRepository.cs
+src/StockFlow.Application/Common/PermissionCatalog.cs
+src/StockFlow.Application/DTOs/Operations/CashClosingModels.cs
+src/StockFlow.Infrastructure/Repositories/ExpenseRepository.cs
+src/StockFlow.Infrastructure/Repositories/ShopMasterRepository.cs
+src/StockFlow.Infrastructure/Repositories/CashClosingRepository.cs
+src/StockFlow.Infrastructure/Repositories/PurchaseRepository.cs
+src/StockFlow.Infrastructure/Repositories/WarrantyRepository.cs
+src/StockFlow.Infrastructure/Repositories/ServiceRepository.cs
+src/StockFlow.Infrastructure/Repositories/ReportingRepository.cs
+src/StockFlow.Web/Program.cs
+src/StockFlow.Web/Security/PermissionMiddleware.cs
+src/StockFlow.Web/Filters/ExpenseExceptionFilter.cs
+src/StockFlow.Web/Controllers/ExpensesController.cs
+src/StockFlow.Web/Controllers/ShopMastersController.cs
+src/StockFlow.Web/Pages/Admin/ShopData.cshtml
+src/StockFlow.Web/Pages/Expenses/{Index,Create,Details,Report}.cshtml
+src/StockFlow.Web/Pages/Shared/_ExpenseEditor.cshtml
+src/StockFlow.Web/Pages/Shared/_AdminNavigation.cshtml
+src/StockFlow.Web/Pages/Shared/_ReportsNavigation.cshtml
+src/StockFlow.Web/Pages/CashClosing/Index.cshtml
+src/StockFlow.Web/wwwroot/js/expenses.js
+src/StockFlow.Web/wwwroot/js/shop-data.js
+src/StockFlow.Web/wwwroot/js/cash-closing.js
+src/StockFlow.Web/wwwroot/css/expenses.css
+Both migrations listed above. Historical repository joins now retain transaction
+snapshots/totals when a related quarantined master is hidden. New Sale/cart and
+billing calculations were not replaced. No authoritative costing method chosen.
+
+Executed verification and evidence boundaries
+New real PostgreSQL/API cases:
+tests/StockFlow.MasterDataChecks/PrivateShopExpenseChecks.cs, dispatched by
+Program.cs --private-shop-checks / --expense-checks. Actual branch/security and
+business repositories run with disposable PostgreSQL, test authentication and a
+test session store. This is not production login/session acceptance.
+- Two same-profile shops: private customer/supplier/category/brand/product/variant
+  lookup, scans and prices; explicit sharing and revocation; shared catalog read-only;
+  no foreign private hierarchy children; category config/identifier/tax guards.
+- Actual second tenant, restricted employee and forged shop context are denied.
+- Owner consolidated reads; second location master visibility without borrowing
+  another location's stock; actual two-shop registration-level GST reporting and
+  denial when its dedicated permission is removed.
+- Multi-store legacy fixture: quarantine, byte-identical saved invoice rows,
+  preserved invoice totals/SKUs/lines and stock movement totals; explicit allocation
+  keeps original identity and forbids subsequent ownership reassignment.
+- Expense partial/full payments, concurrency/idempotency, changed retries, refunds,
+  linked reversal, corrections, cutoff reports, permission revocation, isolated
+  attachment access, CSV escaping and Cash Closing including report-only authority.
+  All four supported profiles exercised; expense operations leave inventory and
+  GST document counts unchanged.
+- tests/StockFlow.UiChecks/expense-live.cjs runs actual Razor/JS through a loopback
+  Kestrel proxy to real API/PG: category/payee, draft/post, lost-response CASH payment,
+  reload/exact retry, UPI full payment, receipt and report. Four responsive widths
+  (1366, 768, 390, 320). Actual PG reconciles to one expense paid exactly 25 after
+  the intentionally dropped response. This is live browser evidence, not a mocked
+  HTTP response or physical-device acceptance.
+
+Existing ReliabilityChecks.cs and FastBillingChecks.cs fixtures now explicitly
+share transfer catalogs or create their own shop customer as required by private
+ownership. FakeSecurityRepository.cs recognizes the new permission module for
+unrelated fake-service tests. tests/acceptance/gates.json has 25 automated gates.
+
+tests/P0CleanRestoreChecks.ps1 now seeds a posted synthetic expense (25), CASH
+payment (10) and private PDF receipt. Fresh isolated restoration compares all 148
+public tables/digests and normal restricted application reads including payment
+and exact receipt bytes. It does not prove actual offsite backup, login, secrets,
+assets or production RPO/RTO.
+A prior full run (63d5b6dd83c64ec9981feec83b715132) genuinely FAILED clean restore:
+an earlier harness startup race left its own fresh cluster on port 55444. Cleanup
+now rechecks the exact generated data directory/postmaster state and stops that
+owned cluster even when the initial startup flag missed readiness. The known
+orphan was stopped by its exact path; arbitrary listeners are never adopted.
+Earlier passing runs whose source changed during execution retain their source
+drift warnings; their artifacts were not promoted or rewritten.
+
+Final command (from E:/StockFlow, 2 November 2026):
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/Run-ShopPilotChecks.ps1 -ReleaseAcceptance -WithDatabase -WithBrowser -WithCleanRestore -ApplicationVersion '2026.11.02-shop-isolation-expenses'
+Candidate source SHA256: 474F58DC700FC7F0670FB3BA9B520D9C12B6E554668837F8C9E8F4BF5916C71D
+Final run: tests/bin/release-acceptance/5d0ebb0df81f4648b9d27f36b901f79c/
+Final outcome: 25 automated gates PASSED, 0 automated failures; all 9 manual review
+gates UNVERIFIED. Classification BLOCKED, expected runner exit code 2. Environment
+LocalSynthetic, shop DISPOSABLE-FIXTURES. The post-run fingerprint matches the
+candidate above; this final run has no source drift. Per-gate commands/results,
+timing and log hashes are in release-report.json; readable summary in
+release-report.txt. No production deployment authorized.
+All requested existing billing/receiving/GST/reconciliation regression gates passed.
+Fresh restore artifact: tests/bin/p0-clean-restore/a30bd70906ae4551a5bad408395eb811/result.json
+Actual result: passed=true, 148 public tables, 45.506 seconds, application startup
+verified, productionVerified=false, assetsVerified=false. The owned port 55444
+cluster was stopped successfully after verification; no listener remained.
+
+Remaining migration decisions and release limits
+Actual multi-store historical ownership is unknown until the owner reviews each
+quarantined case, including category/brand dependencies and deliberate shares.
+The read-only review output is triage, not an allocation approval. Do not infer
+ownership from historic sales or auto-share records to make an import succeed.
+No production 085/086 execution occurred. Both are manual whole-file migrations;
+stop writers, back up and review actual schema/data before separately approved
+execution. Do not re-run on an already migrated database or rename live IDs.
+
+Expense reports use current corrected amounts, not an as-recorded historical
+accrual ledger. Paid dates cannot precede incurred dates; prepayment accounting is
+outside scope. The expense report requires one selected location. Category/payee
+labels are create/reuse records, not in-place historical renames. No automatic
+bank settlement, eligible ITC, full accounting or audited net-profit claim.
+Per-shop independent active-profile selection remains outside this slice; existing
+tenant-wide selection does not reassign/merge ownership. Broader master-editor
+UX and every historical deployment topology have not been independently piloted.
+
+Mandatory release reviews still require actual evidence: receiving-corrections,
+after-sales, shop-model, migration-deployment, production-recovery,
+production-hosting, physical-devices, pilot-acceptance and usability-issues.
+No hardware/production/pilot sign-off was fabricated. These implementation results
+do not authorize production deployment or claim that P0 is complete.

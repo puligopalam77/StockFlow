@@ -1,0 +1,129 @@
+P0 master-roadmap implementation slice - 2 November 2026
+Candidate: 2026.11.02-p0-master-roadmap-final
+Source: F80025452E7EECBC631474214215F2A4D2926C0EE250EFB3DE6E002BF2D783FA
+Environment: LocalSynthetic; shop scope: DISPOSABLE-FIXTURES.
+Result: BLOCKED. 23 automated gates passed, zero failed, nine review gates
+unverified. No source-drift/harness blocker on the final run. No deployment approval.
+P0 is not complete. P1 Expenses/report extensions were not started.
+
+Implemented and verified in this slice
+F01 Daily Cash Closing (previous Implemented; remains Implemented for existing scope)
+- Extended existing real PostgreSQL reconciliation via /api/cashclosing and
+  CashClosingRepository; entities payments, sale_returns, supplier_payments and
+  cash_closings. Production posting implementation was preserved.
+- Cash receipts, exactly one refund and supplier cash payment reconcile with
+  actual movements. Concurrent closing retries share one immutable version.
+  Changed payloads and stale movement fingerprints are rejected. Later activity
+  flags the old closing; an explained recount appends version two with zero
+  difference. Original closing totals remain unchanged.
+- Forged submitted location and restricted HTTP role are denied. Other-shop and
+  other-profile contexts cannot read source closing history through RLS. Closing
+  and retries do not post inventory. No SQL migration needed.
+
+S05 Returns/refunds and S07 historical collections (previous Implemented; unchanged)
+- Concurrent actual HTTP/DB refund retries return one source return/refund;
+  changing the refund amount with the same identity is rejected. Stock, due and
+  cash reconciliation detect duplicate refund posting.
+- Existing historical-credit fixture verifies later card collections are excluded
+  from Cash Closing cash totals, original cash remains at its historical cutoff,
+  later collections do not increase current invoice revenue or deduct stock again.
+  Legacy seeding/backdating occurs only in a generated disposable database.
+
+A03 Strict shop independence (previous Partial; remains Partial)
+- Owner selected private shops within one tenant, with explicitly authorized
+  sharing. Current source still shares same-profile product/customer/supplier
+  masters. The reconciliation fixture demonstrates that limitation explicitly;
+  a passing characterization does not certify privacy.
+- Added a concrete ownership design and read-only usage-triage exporter. The
+  exporter requires an explicit administrative full-history connection, applies a
+  read-only repeatable-read transaction and exports IDs/profile/use hints only.
+  It records database/tenant/query/artifact identity with SHA256. No automatic
+  connection to an application database or ownership allocation occurs.
+- Executed tests cover two-shop transfer references, customer/supplier source
+  references, tenant filter, PENDING decisions, no contact-name export, checksum,
+  refusal to overwrite evidence, refusal of public wwwroot output and refusal of
+  restricted RLS readers. No access links or private-store RLS were implemented.
+- Draft/quotation JSON, configuration, additional historical dependencies and
+  identifier conflicts still require review. Usage does not establish ownership.
+  Actual target data/topology has not been inspected. No schema cutover authorized.
+
+Q01 Quotations (previous Implemented; unchanged)
+- Added the existing --quotation-checks suite to the mandatory release catalog.
+  No duplicate quotation module. Actual API/PostgreSQL coverage includes persisted
+  revisions, lifecycle, permissions, immutable print snapshots, safe CSV export,
+  shop/tenant denial and existing-checkout conversion. No new posting engine.
+
+A16 Release acceptance (previous Partial; remains Partial)
+- Existing runner now has 23 automated gates and nine review gates. All 23 passed
+  on the final source. Build had zero warnings/errors. Passing automation does not
+  waive critical reviews or authorize deployment.
+- Final report: tests/bin/release-acceptance/49276f4cc4894ca481ac8aeeff95701e/release-report.json
+  Human-readable: same directory/release-report.txt; per-gate logs retained there.
+- Command, run from E:/StockFlow:
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/Run-ShopPilotChecks.ps1 -ReleaseAcceptance -WithDatabase -WithBrowser -WithCleanRestore -ApplicationVersion '2026.11.02-p0-master-roadmap-final'
+  Actual native exit: 2 (BLOCKED), not suppressed or converted to success.
+- Earlier run cfdd4508e398435b88b8cde57c4e55b3 also passed 23 automated gates but
+  recorded a source-change blocker as ownership work continued after the owner's
+  selection. That run is preserved unchanged, not promoted to the final fingerprint.
+- Preliminary baseline and extended reconciliation logs remain under
+  tests/bin/p0-master-roadmap. Targeted build used .artifacts/p0-master-roadmap.
+
+A09 Recovery and hosting evidence (existing Partial scopes preserved)
+- Final fresh-cluster synthetic restore passed: all 135 public table counts/digests
+  matched; normal application startup and scoped runtime product/invoice reads
+  passed. Result: tests/bin/p0-clean-restore/e3b57471a4b04a3091ef906c4644153a/result.json
+  Drill elapsed 38.359 seconds, archive age 14.208 seconds. These are synthetic
+  observations, not agreed or verified production RPO/RTO. Assets and production
+  verification are false; real restored login/secrets/offsite recovery remain open.
+- Read-only current-workstation observation at 2026-11-02T07:04:57Z found no matching
+  StockFlow scheduled task/service and did find a tunnel process. This does not
+  identify or certify production hosting/backup availability. Private evidence:
+  tests/bin/p0-master-roadmap/workstation-observation.json.
+- Stopped the source disposable cluster after acceptance; restore harness stopped
+  its own target. Integration clones were dropped by their existing finally paths.
+
+Modified implementation/test files
+database/maintenance/Export-StockFlowOwnershipReview.ps1
+tests/OwnershipReviewChecks.ps1
+tests/StockFlow.MasterDataChecks/ReliabilityChecks.cs
+tests/StockFlow.MasterDataChecks/NewSaleIntegrationChecks.cs
+tests/acceptance/gates.json
+No financial/inventory posting implementation, invoice history, permission grants,
+shop ownership, existing migration or production configuration was changed.
+
+Documentation and review artifacts
+StockFlow-shop-ownership-design-2026-11-02.txt: selected model, proposed additive
+  structures/defaults, history, mapping and rollback/forward-fix implications.
+StockFlow-P0-migration-applicability-2026-11-02.csv: existing 001-084 applicability,
+  target-schema uncertainty and separate ownership/costing/deployment approvals.
+StockFlow-P0-operator-acceptance-2026-11-02.txt: concrete target recovery, hosting,
+  mapping, device and pilot acceptance steps using existing tooling.
+StockFlow-feature-evidence-register-2026-11-02.csv: links for F01/S05/S07/A03/A16/Q01;
+  62 unique IDs and counts unchanged: 35 Implemented, 20 Partial, six Missing,
+  zero Defective, one Deferred. No workflow upgraded by a build or triage export.
+StockFlow-evidence-policy-2026-11-02.txt and release-acceptance instructions updated
+  with the selected private-shop model, current limits and expanded gate catalog.
+
+Outstanding P0 release blockers
+receiving-corrections; after-sales; shop-model; migration-deployment;
+production-recovery; production-hosting; physical-devices; pilot-acceptance;
+usability-issues. All remain UNVERIFIED in the final report.
+Known implementation gap: current same-profile sharing does not meet the selected
+private-shop target. Real memberships/search/export/configuration and full
+same/different-profile multi-shop behavior are not certified by fixed-scope tests.
+HTTP integration uses test authentication/branch services with real PostgreSQL
+repositories; mocked browser HTTP is a separate UI layer. Not all 62 workflows,
+all historical states or real devices were retested. No new transaction defect
+was reproduced by the extended cases; this is not proof of no defects.
+
+Decisions and next eligible work
+Private stores with explicit sharing is the chosen target. Prepare/review the
+actual historical mapping and missing references, then implement additive private
+ownership enforcement and all affected consumers in a separately tested slice.
+Do not privatize existing shared records from usage hints alone. Proposed initial
+defaults retain tenant-wide SKU/barcode uniqueness and separate private editable
+master IDs; explicit authority is required for shared access/edits.
+Historical ownership cutover/irreversible splits and production deployment still
+need explicit approval. F05 cost method/opening/backfill policy is not selected.
+Preserve corrected F06 estimates. Start F04 Expenses only after P0 requirements
+are satisfied, as requested; develop subsequent P1 work in separate tested changes.

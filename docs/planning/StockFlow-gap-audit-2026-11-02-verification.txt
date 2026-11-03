@@ -1,0 +1,342 @@
+STOCKFLOW GAP AUDIT: VERIFICATION RECORD
+2 November 2026 | E:\StockFlow
+
+Build executed:
+dotnet build tests/StockFlow.MasterDataChecks --artifacts-path E:\StockFlow\.artifacts\gap-audit -v quiet
+Result: exit 0; 0 warnings; 0 errors. Isolated output avoids replacing running application assemblies.
+
+billing
+Command: dotnet .artifacts/gap-audit/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --billing-checks
+Observed command exit: 0
+Scope: Application/API tests with fake repositories; no application DB needed.
+Captured result lines (groups are not individual test-case counts):
+PASS: generic/debit/credit card preserve CARD accounting
+PASS: absent subtype preserves legacy serialized idempotency payload
+PASS: generic/debit/credit card preserve CARD accounting
+PASS: absent subtype preserves legacy serialized idempotency payload
+PASS: generic/debit/credit card preserve CARD accounting
+PASS: absent subtype preserves legacy serialized idempotency payload
+PASS: unsupported identifiers/subtypes cannot masquerade as card collections
+PASS: unsupported identifiers/subtypes cannot masquerade as card collections
+PASS: unsupported identifiers/subtypes cannot masquerade as card collections
+PASS: unsupported identifiers/subtypes cannot masquerade as card collections
+PASS: Credit Card is collected money; customer CREDIT is a receivable
+PASS: inline discount remains one line amount: 2 x 4000 minus 100 is 7900 before tax
+PASS: synthetic arithmetic example: five at 2500, seven percent item discount, six percent exclusive tax includes tax in Line Total
+PASS: invoice discount is applied separately after line discount and tax
+PASS: percentage reduction on tax-inclusive prices preserves extracted tax and customer discount
+PASS: inclusive tax is extracted from the discounted line without adding tax again
+PASS: invoice discount reduces taxable base before GST without double subtraction
+PASS: mixed-rate discount allocation excludes exempt values from taxable amount
+PASS: inclusive invoice discount extracts GST without adding it twice
+PASS: allocation semantics invalidate an after-tax discount approval
+PASS: billing combines scanner/cart with simple payment and optional controls
+PASS: authorized manual billing action is visible near scanning
+PASS: manual billing action and reviewed-rule endpoint require explicit permission
+PASS: unified product search and one customer picker replace duplicate controls
+PASS: empty billing search returns no catalog dump
+PASS: bounded billing search rejects oversized input
+PASS: billing search retains catalog permission checks
+PASS: policy settings endpoint requires Administration access
+PASS: invoice exposes receipt format and next-bill action
+PASS: lookup, scanner, unit and customer controls follow module permissions
+PASS: customer lookup works independently of quick creation permission
+PASS: New Sale removes receivable controls and credit mode without removing historical APIs
+PASS: payment due date cannot be recorded for walk-in cash
+PASS: new checkout requires a registered customer
+PASS: full cash payment supports a registered customer sale
+PASS: previous billing draft can retrieve a matching completed invoice
+PASS: legacy recovery requires billing permission
+PASS: walk-in credit rejected by API
+PASS: named customer cannot bypass fully paid checkout with CREDIT
+PASS: incomplete payments rejected by API
+PASS: identical split allocations rejected by backend
+PASS: repeated split transaction references rejected by backend
+PASS: fractional payment precision rejected before posting
+PASS: duplicate physical unit rejected before stock write
+Billing application checks passed; no application database accessed.
+
+fast-billing
+Command: dotnet .artifacts/gap-audit/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --fast-billing-checks
+Observed command exit: 0
+Scope: Real PostgreSQL, disposable clone of product_edit_069_test at 127.0.0.1:55443; applies 070-082 in the clone.
+Captured result lines (groups are not individual test-case counts):
+PASS: GST is optional for ordinary manual billing and adds no tax
+PASS: ordinary no-GST manual bill is idempotent
+PASS: ordinary billing does not invent HSN or a GST exemption
+PASS: draft tax classifications cannot be billed
+PASS: existing shops retain mandatory routine reasons before explicit opt-in
+PASS: existing policy management permission protects Fast Billing opt-in
+PASS: authorized owner explicitly enables Fast Billing on existing policy
+PASS: stale settings cannot overwrite a newer policy version
+PASS: saved policy distinguishes routine and exceptional requirements
+PASS: 0% routine discount requires no reason or approval at a strictly-above 10% threshold
+PASS: routine checkout records policy version, shop and financial authorization without inventing a reason
+PASS: 5% routine discount requires no reason or approval at a strictly-above 10% threshold
+PASS: routine checkout records policy version, shop and financial authorization without inventing a reason
+PASS: 10% routine discount requires no reason or approval at a strictly-above 10% threshold
+PASS: routine checkout records policy version, shop and financial authorization without inventing a reason
+PASS: routine invoice discount follows the same no-reason policy
+PASS: exceptional discount still requires its configured reason
+PASS: cashier cannot approve their own approval request
+PASS: pending exception cannot finalize
+PASS: unprivileged approver is rejected on backend
+PASS: existing approval workflow records manager rejection
+PASS: quote reports rejected approval distinctly
+PASS: rejected exception cannot finalize
+PASS: different authorized manager approves exact requested amounts
+PASS: selling price edit invalidates approval
+PASS: discount edit invalidates approval
+PASS: quantity edit invalidates approval
+PASS: policy version change invalidates previously approved amounts
+PASS: combined item and invoice reductions cannot bypass the threshold
+PASS: no-reason routine discounts still require discount permission
+PASS: another shop retains strict inherited policy
+PASS: runtime cannot read another shop policy row
+Fast Billing policy and existing approval workflow checks passed.
+PASS: invoice keeps original price and separate item/invoice discount snapshots
+PASS: allocated quote, persisted lines, invoice and full payment agree
+PASS: invoice details read allocated-discount snapshots without repricing history
+PASS: percentage discount uses authoritative tax-inclusive/exclusive calculator
+PASS: 0% discount on multiple quantity
+PASS: 5% discount on multiple quantity
+PASS: 10% discount on multiple quantity
+PASS: 2.55% discount on multiple quantity
+PASS: 100% discount on multiple quantity
+PASS: saved fixed amount remains fixed
+PASS: tax-inclusive customer payable amount cannot exceed MRP
+PASS: missing manual MRP remains unknown
+PASS: empty manual descriptions rejected
+PASS: invalid rule rejected
+PASS: customer required on new invoices
+PASS: new split payments rejected on server
+PASS: unverified electronic collection rejected
+PASS: concurrent identical retries create one manual invoice
+PASS: invoice details preserve manual identity, MRP, unit and percentage snapshots
+PASS: manual posting creates neither stock movements nor products
+PASS: sales history searches manual item descriptions
+PASS: manual refund is idempotent and does not restock
+PASS: manual return history retains line description
+PASS: unchanged price and zero discount require no approval
+PASS: seven percent discount is below the configured ten percent approval threshold
+PASS: exact threshold retains the existing strictly-above semantics
+PASS: above-threshold discount requires a matching approval
+PASS: quote distinguishes requested approval from missing reason
+PASS: quote recognizes a current approval for the exact line adjustments
+PASS: quantity changes invalidate the matching approval status
+PASS: combined item and invoice reductions use the existing aggregate policy
+PASS: new per-line adjustments cannot use a generic bill reason for another missing line reason
+PASS: barcode/SKU scan includes the saved variant MRP
+PASS: quote reads saved variant MRP and authorized ordinary-bill tax override
+PASS: registered product MRP cap is enforced using its saved variant value
+PASS: tax change requires a recorded reason
+PASS: out-of-range tax override rejected
+PASS: tax override permission enforced by backend
+PASS: successful checkout stores overridden line tax
+PASS: tax override reason retained in original sale request
+PASS: original invoice request retains the reason against the specific adjusted line
+PASS: mixed invoice preserves both lines and correct variant MRP
+PASS: mixed checkout posts stock only for the registered SKU
+PASS: manual refund on a mixed invoice never restocks its registered neighbor
+PASS: full CASH  checkout posts one allocation
+PASS: full UPI  checkout posts one allocation
+PASS: confirmed UPI  checkout accepts an omitted transaction reference
+PASS: reference-free electronic checkout remains idempotent
+PASS: reference-free UPI still requires collection confirmation
+PASS: reused electronic reference rejected
+PASS: full CARD DEBIT checkout posts one allocation
+PASS: confirmed CARD DEBIT checkout accepts an omitted transaction reference
+PASS: reference-free electronic checkout remains idempotent
+PASS: reference-free CARD still requires collection confirmation
+PASS: full CARD CREDIT checkout posts one allocation
+PASS: confirmed CARD CREDIT checkout accepts an omitted transaction reference
+PASS: reference-free electronic checkout remains idempotent
+PASS: reference-free CARD still requires collection confirmation
+PASS: full BANK_TRANSFER  checkout posts one allocation
+PASS: confirmed BANK_TRANSFER  checkout accepts an omitted transaction reference
+PASS: reference-free electronic checkout remains idempotent
+PASS: reference-free BANK_TRANSFER still requires collection confirmation
+PASS: manual cost and profit are unknown, never zero-cost profit
+PASS: financial quantity reconciliation explicitly separates non-stock lines
+PASS: another shop cannot reuse a manual tax classification
+PASS: manual billing permission enforced inside database
+PASS: GST bills cannot bypass their required reviewed tax mappings with a manual override
+PASS: authorized tax override cannot replace an effective reviewed GST rate
+PASS: GST-enabled invoice still requires a reviewed classification
+PASS: checkout cannot bypass GST invoice checks using an ordinary held item
+PASS: manual lines reach GST snapshot and invoice template by original line ID
+PASS: allocated invoice tax components and GST line snapshots reconcile to the collected total
+PASS: HSN report includes posted manual goods
+PASS: sales tax register includes manual invoices
+PASS: manual tax note cannot substitute another original line identity
+PASS: manual GST credit note records once against its original line
+PASS: manual goods cannot be cumulatively credited beyond the original invoice
+PASS: actual Razor invoice renders manual name, note, MRP, percentage and HSN for A4/thermal printing
+PASS: all manual workflows leave inventory unchanged
+PASS: explicitly unregistered shop can post an ordinary bill without a GST document
+PASS: ordinary unregistered bills are not reported as missing GST snapshots
+Fast billing checks passed on a disposable database clone.
+
+gst-setup
+Command: dotnet .artifacts/gap-audit/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --gst-setup-checks
+Observed command exit: 0
+Scope: Real PostgreSQL, separate disposable clone; setup, scope, roles and activation.
+Captured result lines (groups are not individual test-case counts):
+PASS: Concurrent identical business creates reuse one saved record
+PASS: Identical registration retry reuses saved identity and date
+PASS: Identical assignment retry reuses saved row
+PASS: Readiness uses backend product tax coverage rather than visited steps
+PASS: Incomplete setup cannot activate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Identical product tax version retry does not create an overlapping duplicate
+PASS: Saved inactive assignment can activate only after valid saved tax versions
+PASS: Changed configuration invalidates a stale activation review
+PASS: Activation uses existing mapping ACTIVE status in a transaction
+PASS: Activation retry is a no-op without duplicate audit writes
+PASS: Audit filters read actual direct shop-assignment history
+PASS: Audit rejects invalid pagination
+PASS: Read-only settings responses mask GSTIN and PAN on the backend
+PASS: Read-only audit payload masks tax identities
+PASS: View-only user cannot activate setup
+PASS: Readiness does not inherit another shop's mapping
+PASS: Another shop cannot activate using the first shop review
+PASS: Forged tenant cannot review setup
+PASS: Setup review and activation do not post sales, stock or payments
+GST guided setup database checks passed in a disposable clone.
+
+gst-catalog
+Command: dotnet .artifacts/gap-audit/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --gst-catalog-checks
+Observed command exit: 0
+Scope: Real PostgreSQL, separate disposable clone; rules, mapping/import and scope.
+Captured result lines (groups are not individual test-case counts):
+PASS: Step 4 options materialize actual category and brand dropdown records
+PASS: Server-side catalog reads scoped products
+PASS: Rules begin as drafts
+PASS: Unreviewed rules cannot be assigned
+PASS: Single product gets validated preview
+PASS: Repeated preview reuses saved operation
+PASS: Confirmed mapping saved
+PASS: Repeated confirmation cannot double-apply
+PASS: Readiness shows configured mapping
+PASS: Effective mapping and audit history retained
+PASS: Variant override preview uses stable variant identity
+PASS: Variant override is distinguishable from inheritance
+PASS: Authorized future variant classification preserves the prior period
+PASS: Checkout resolver selects the dated variant override without changing its product default
+PASS: Duplicate assignment rows are rejected
+PASS: CSV stable-ID import parsed
+PASS: XLSX template/export and import roundtrip
+PASS: Import validates against reviewed rule and existing mapping
+PASS: Imported rate inconsistent with reviewed rule is rejected
+PASS: Stale preview cannot overwrite a concurrent mapping change
+PASS: Filtered export includes stable IDs
+PASS: Import template prefills stable IDs, actual product codes and SKUs
+PASS: Template invents no HSN, percentage or reviewed classification
+PASS: Imported identifiers must agree with their stable product ID
+PASS: Explicit imported pricing must agree with the reviewed rule
+PASS: Unexpected import headers are rejected
+PASS: Bulk assignment cannot bypass explicit permission
+PASS: Export cannot bypass explicit permission
+PASS: Prefilled template download requires import permission
+PASS: Import cannot bypass explicit permission
+PASS: Same-profile second shop does not inherit first shop's new mapping
+PASS: Another shop cannot resume operation
+PASS: Forged tenant denied
+PASS: Tax administration preserves invoices, stock, payments, SKUs and barcodes
+PASS: Normal product registration atomically assigns its selected reviewed rule
+PASS: Large catalog paginates on the server
+PASS: Select All Matching captures all 2,000 backend results beyond the visible page
+PASS: Download includes all 2,000 filtered products rather than the visible page
+PASS: Excel template includes a separate instruction sheet
+PASS: Owner only fills RuleId; both identifiers and blank optional tax fields roundtrip through Excel
+PASS: Authenticated CSV template endpoint returns all 2,000 scoped products
+PASS: Excel template endpoint returns a real XLSX workbook
+PASS: Downloaded Excel file includes instructions
+PASS: Real multipart filled.csv uploads validate 2,000 rows without applying mappings
+PASS: Real multipart filled.xlsx uploads validate 2,000 rows without applying mappings
+PASS: File validation endpoints perform no tax mapping writes
+PASS: Corrupt XLSX gets a clear server validation response
+PASS: Empty uploads are rejected on the server
+PASS: Server rejects unsupported extensions independently of the browser
+PASS: Unauthorized users cannot download the prefilled catalog template
+PASS: Unauthorized users cannot validate an import
+PASS: All 2,000 file rows preview using their reviewed rule details and effective dates
+PASS: Preview status filtering reports correct totals
+PASS: First chunk is recoverable after 100 updates
+PASS: Resumed chunks import 2,000 mappings exactly once
+PASS: Repeated file confirmation is idempotent
+MEASURE: seed, templates, preview and 2,000-row import: 40.57 seconds; 20 chunks.
+PASS: Rule ending prospectively also ends assigned mappings with audit history
+PASS: Expired classification never counts as configured
+PASS: Next non-overlapping rule version preserves earlier reviewed identity
+GST catalog checks passed.
+
+gst-spreadsheet
+Command: dotnet .artifacts/gap-audit/bin/StockFlow.MasterDataChecks/debug/StockFlow.MasterDataChecks.dll --gst-spreadsheet-checks
+Observed command exit: 0
+Scope: Spreadsheet parsing/safety tests; no external provider.
+Captured result lines (groups are not individual test-case counts):
+PASS: missing RuleId header rejected
+PASS: duplicate headers rejected
+PASS: unexpected columns rejected
+PASS: malformed CSV quoting rejected
+PASS: row limits enforced before preview
+PASS: upload byte limit enforced
+PASS: Excel preserves leading-zero codes and SKUs as text
+PASS: invalid dates produce row errors
+PASS: Excel formulas rejected without execution
+GST spreadsheet safety checks passed.
+
+browser-billing
+Command: tests/StockFlow.UiChecks/bin/Debug/net10.0/.playwright/node/win32_x64/node.exe tests/StockFlow.UiChecks/fast-billing-offline.cjs
+Observed command exit: 0
+Scope: Headless Microsoft Edge; actual Razor fixture and local JS/CSS; mocked HTTP, ten viewports.
+Captured result lines (groups are not individual test-case counts):
+PASS viewport 1920x1080
+PASS viewport 1366x768
+PASS viewport 1280x720
+PASS viewport 1280x650
+PASS viewport 1280x600
+PASS viewport 1024x768
+PASS viewport 768x1024
+PASS viewport 390x844
+PASS viewport 375x667
+PASS viewport 320x640
+PASS optional GST: ordinary billing works with no reviewed rules; GST invoicing retains required classification.
+PASS opted-in routine discounts and invoice discounts have no warning/reason/approval; exceptional dialog fits eight requested viewports.
+PASS contextual reason/approval indicators, no warning for zero or justified below-threshold discount, exact threshold, pending/approved/stale status and per-line reason.
+PASS stable totals for empty/invalid price, quantity, item discount and tax; delayed/error quotes; inline invoice discount editing; optional cash change; cashier tax restriction.
+PASS browser: customer requirement/quick-add, scan-repeat, MRP, percentage, manual add/edit, hold/resume, single verified payment, 10 viewports; no JavaScript errors.
+
+Application database evidence:
+psql -X -v ON_ERROR_STOP=1 -f docs/planning/StockFlow-gap-audit-2026-11-02-readonly.sql
+Connection loaded privately from local appsettings.Development.json; no credentials recorded.
+Observed exit: 0, explicit REPEATABLE READ READ ONLY transaction completed.
+No migration or business mutation issued against the application database.
+The running web host may use environment/user-secret overrides; its effective deployment configuration was not independently verified.
+
+Counterexample boundary: synthetic SQL VALUES demonstrate expressions in the source. They are not repository-level posted-fixture regression tests.
+Additional tests in the matrix are REQUIRED FUTURE acceptance checks, not tests claimed to have run.
+Not run: complete role/API suite, all stock/financial correction paths, real two-shop deployment acceptance, hardware/provider live tests, backup/restore drill, penetration testing.
+No external provider messages were sent.

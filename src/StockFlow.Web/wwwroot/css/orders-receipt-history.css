@@ -1,0 +1,5 @@
+.history-view-tabs { display:flex; gap:8px; margin-bottom:14px; border-bottom:1px solid #dde5f0; }
+.history-view-tabs button { border:0; border-bottom:3px solid transparent; background:none; padding:10px 14px; color:#60718d; font-size:13px; font-weight:700; }
+.history-view-tabs button[aria-selected=true] { color:#ff0085; border-color:#ff0085; }
+#orders-receipt-history [role=tabpanel][hidden] { display:none !important; }
+@media(max-width:575px) { .history-view-tabs button { padding:9px 8px; font-size:12px; } }

@@ -1,0 +1,84 @@
+Same-task retail workflow benchmark and supervised pilot protocol
+
+Status: NOT RUN. This is a reproducible procedure, not a competitive result.
+Use with StockFlow-workflow-benchmark-results.csv and the existing /Admin/Pilot
+checklist / docs/phase8-pilot-signoff.md. Do not create another checklist engine.
+
+Before testing
+Record each product's actual version/build, edition/license, platform, browser,
+profile, tax configuration, roles, shop/location and hardware. Use authorized
+isolated test businesses. Disable external messaging and provider submissions.
+Do not use live customer records, real provider credentials or production stock.
+Record functionality unavailable in an edition/profile as Not supported or Not
+applicable with evidence. Do not reinterpret that result as a software defect.
+Do not assume StockFlow has separate same-profile shop master ownership: the
+existing audit's master-isolation/production-topology release gate still applies.
+
+Matched dataset
+Create four distinguishable sellable variants A/B/C/D under the supported catalog
+configuration. Example attributes: Red/M, Blue/M, Red/L, Blue/L where the profile
+supports them; otherwise use supported model/color attributes. Record the actual
+generated product IDs, variant IDs, SKUs and barcodes in each product. Do not force
+or rewrite StockFlow identifiers to match another application's numbering.
+Use the same business prices (A 100, B 200, C 300, D 400), quantities, reviewed tax
+configuration, currency and rounding in both products. Check tax-inclusive MRP.
+Use an owner-approved synthetic customer/supplier with external delivery disabled.
+Record opening stock C=2, D=1 using the supported source-linked opening workflow.
+Use a second authorized shop/location for transfers. For warranty/serial tasks,
+use a separate supported serialized product with an actual unit and coverage;
+StockFlow currently restricts those capabilities to the Electrical profile.
+Vehicle fitment, when tested separately, requires actual stored mappings in the
+Bike Accessories profile. A similar product name is not evidence of fitment.
+
+Task IDs (the CSV has separate NOT RUN rows for StockFlow and Vyapar)
+B01 Register four variants. Verify distinct generated SKUs/barcodes, attributes,
+    bounded search and correct selection by exact barcode; preserve identifiers.
+B02 Order A=10 and B=5. Partially receive accepted A=6 and B=3.
+B03 In that receipt record damaged A=1. Expected: saleable A=6/B=3;
+    unresolved order A=3/B=2. Damaged A must not increase saleable stock.
+B04 Dispatch then receive A=2 to shop two. Source A=4, destination A=2;
+    verify in-transit quantities between dispatch and receipt, not just final sum.
+B05 At source bill A=1 and B=1 with a 5% item discount using the supported policy.
+    Expected source A=3/B=2; total follows each product's identically configured
+    reviewed tax rules and rounding. Retain original invoice, payment and line IDs.
+B06 Record full receipt of the total using one supported payment method; compare
+    cash and digital cases as separate runs. StockFlow intentionally excludes new
+    split/CREDIT checkout. Record differences as product policy; do not enable it.
+B07 Return B=1 against the original line with the same disposition/refund policy.
+    Restock case: source B=3. Verify return, refund, original tax and due separately;
+    an operational return is not proof of a statutory GST credit note.
+B08 Search a serial and investigate a warranty/repair enquiry using linked source
+    records and a role permitted to see that customer. Record missing evidence
+    honestly. Skip with a reason if the selected profile/edition does not support it.
+B09 Interrupt a successful finalization response on an isolated network/test rig.
+    Capture request identity; refresh/reconnect/retry. Exactly one invoice/payment/
+    stock deduction is expected. Unknown outcome must not appear as confirmed saved.
+B10 Have two cashiers quote D=1, then finalize concurrently. At most one succeeds;
+    closing stock cannot go negative. Preserve both attempts and the winning source.
+B11 Attempt an exact duplicate synthetic contact, then choose the existing contact.
+    Verify whether duplicates are blocked, warned or allowed under the actual policy.
+B12 Collect against an older credit invoice, using historical fixtures/import where
+    supported. New StockFlow credit issuance remains disabled. Today's collections
+    increase; today's invoice sales and stock do not. Test later return/refund too.
+
+Measurement
+For each attempt record UTC start/end plus displayed business timezone, product/
+version/platform/configuration, completion status, interactions, validation errors,
+recovery time, final source/destination inventory, net invoice value, collections,
+refunds, receivables/payables where supported, role behavior and evidence paths.
+Repeat the same sequence with equivalent preparation/training; record run number,
+operator and any assistance. Keep failed and unsupported attempts in the results.
+Do not remove slow attempts. Report sample count and median; only calculate other
+statistics when the sample supports them. Blank or unknown values stay unknown.
+Separate interface interactions, network conditions, hardware, edition/profile
+limits and product-policy differences from reproduced correctness defects.
+Do not publish superiority/defect claims without reproducible results and review.
+
+Pilot integration
+Use the existing Administration pilot checklist to attach this benchmark's evidence.
+Record baseline billing time, corrections/bills, failed saves/attempts, recovery
+seconds, SKU/unit discrepancies, warranty-enquiry time, support requests and staff
+training time before setting any improvement targets. Record observation counts.
+Require owner supervision, daily invoice/payment/stock reconciliation, access checks,
+verified isolated restore evidence and a pause/rollback plan. Keep sign-off pending
+until the relevant evidence is accepted by the authorized owner/admin.

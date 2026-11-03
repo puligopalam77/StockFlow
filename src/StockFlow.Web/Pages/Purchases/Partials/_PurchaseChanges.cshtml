@@ -1,0 +1,6 @@
+<section id="purchase-change-history" class="pd-card" style="margin-top:14px"><div class="pd-card-heading"><h2>Edit History</h2><button id="purchase-history-refresh" class="btn btn-outline-secondary" type="button">Refresh</button></div><div id="purchase-change-rows" class="table-responsive" role="status">Loading history...</div></section>
+@if(Access.CanExplicit("PURCHASES","EDIT")){
+<dialog id="purchase-change-dialog" class="pd-dialog pd-dialog-wide" aria-label="Edit purchase"><div class="pd-dialog-heading"><h2 id="pc-title">Edit Purchase</h2><button type="button" class="pd-dialog-close" data-pd-close="purchase-change-dialog" aria-label="Close edit">&times;</button></div>
+<div id="pc-message" class="alert alert-danger" role="alert" hidden></div><p id="pc-help" class="text-muted"></p>
+<form id="purchase-change-form"><div id="pc-fields"></div><label class="form-label" for="pc-reason">Reason for Change *</label><textarea id="pc-reason" class="form-control" required minlength="3" maxlength="1000" rows="2"></textarea><div id="pc-review" class="table-responsive" hidden></div><div class="pd-settlement-actions"><button id="pc-back" class="btn btn-outline-secondary" type="button" hidden>Back to editing</button><button id="pc-submit" class="btn btn-primary" type="submit">Review Changes</button></div></form></dialog>
+}

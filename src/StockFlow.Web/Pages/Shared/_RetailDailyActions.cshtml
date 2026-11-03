@@ -1,0 +1,13 @@
+@inject StockFlow.Application.Common.BusinessScope DailyScope
+<section class="retail-daily-actions no-print" aria-labelledby="retail-daily-title">
+    <h2 id="retail-daily-title">Quick Actions</h2>
+    <nav aria-label="Quick Actions">
+    @foreach (var item in new[] { ("/Sales/Create", "Make a bill", DailyScope.BusinessProfileCode == StockFlow.Application.Common.BusinessProfiles.BikeAccessories ? "Sell bike parts and accessories" : "Sell a battery or geyser", "cart"), ("/Purchases/Create", "Receive stock", "Goods arrived from supplier", "in"), ("/Inventory", "Check stock", "Find what is available", "box"), ("/Service/Create", "Take a repair", "Record a customer problem", "tools"), ("/Warranty/Lookup", "Check warranty", "Find by serial number or bill", "shield"), ("/CashClosing", "Count cash", "Finish the day", "cash") })
+    {
+        if (Access.CanVisit(item.Item1))
+        {
+        <a href="@item.Item1"><svg class="sf-icon" aria-hidden="true"><use href="@($"/images/icons.svg#{item.Item4}")" /></svg><span><strong>@item.Item2</strong><small>@item.Item3</small></span></a>
+        }
+    }
+    </nav>
+</section>

@@ -1,0 +1,129 @@
+@page "{id:long}"
+@model StockFlow.Web.Pages.Service.DetailsModel
+@{ ViewData["Title"] = "Repair details"; }
+<h1 id="service-title">Repair details</h1>
+<p>
+    <a asp-page="Pending">Pending repairs</a> · <a asp-page="Index">Repair history</a> · <button id="reload" type="button" class="btn btn-sm btn-outline-secondary">Refresh repair details</button>
+</p>
+<div id="service-message" class="alert alert-danger" role="alert" hidden>
+</div>
+<div id="service-summary" aria-live="polite">
+</div>
+@if (Access.Can("SERVICE","EDIT"))
+{
+<section data-approve="@Access.Can("SERVICE","APPROVE").ToString().ToLowerInvariant()" id="service-edit" hidden>
+    <form id="details-form" class="my-4">
+        <h2>Repair details</h2>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="diagnosis" class="form-label">Problem found by technician</label><textarea id="diagnosis" class="form-control" maxlength="4000"></textarea></div>
+            <div class="col-md-6">
+                <label for="repair" class="form-label">Repair details</label><textarea id="repair" class="form-control" maxlength="4000"></textarea></div>
+            <div class="col-md-4">
+                <label for="charge" class="form-label">Repair / labour charge</label>
+                <input id="charge" type="number" min="0" max="9999999999.99" step="0.01" class="form-control" required />
+                <small>Parts are totalled separately. Warranty does not automatically waive charges.</small>
+            </div>
+            <div class="col-md-4">
+                <label for="technician" class="form-label">Technician</label>
+                <select id="technician" class="form-select">
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="expected" class="form-label">Customer collection date</label>
+                <input id="expected" type="date" class="form-control" />
+            </div>
+            <div class="col-12">
+                <label for="notes" class="form-label">Notes</label><textarea id="notes" class="form-control" maxlength="2000"></textarea></div>
+        </div>
+        <button class="btn btn-primary mt-3">Save repair details</button>
+    </form>
+    <form id="status-form" class="my-4">
+        <h2>Change status</h2>
+        <label for="next-status" class="form-label">Next status</label>
+        <select id="next-status" class="form-select" required>
+        </select>
+        <label for="remarks" class="form-label">Status remarks</label><textarea id="remarks" class="form-control" maxlength="1000" required></textarea>
+        <button class="btn btn-primary mt-3">Update status</button>
+    </form>
+    <form id="part-form" class="my-4" hidden>
+        <h2>Add parts used</h2>
+        <p>Saving issues stock immediately. Parts cannot be deleted from the ticket.</p>
+        <label for="part-search" class="form-label">Inventory part search</label>
+        <div class="d-flex gap-2">
+            <input id="part-search" class="form-control" maxlength="200" />
+            <button id="find-parts" type="button" class="btn btn-secondary">Find</button>
+        </div>
+        <label for="part-product" class="form-label">Part</label>
+        <select id="part-product" class="form-select" required>
+            <option value="">Select part</option>
+        </select>
+        <div id="part-unit-fields" hidden>
+            <label for="unit-search" class="form-label">Available part serial</label>
+            <div class="d-flex gap-2">
+                <input id="unit-search" class="form-control" maxlength="200" />
+                <button id="find-units" type="button" class="btn btn-secondary">Find units</button>
+            </div>
+            <select id="part-unit" class="form-select" aria-label="Part serial number">
+            </select>
+        </div>
+        <div class="row g-3 mt-1">
+            <div class="col-md-6">
+                <label for="part-quantity" class="form-label">Quantity</label>
+                <input id="part-quantity" type="number" min="1" max="10000" value="1" class="form-control" required />
+            </div>
+            <div class="col-md-6">
+                <label for="part-price" class="form-label">Price charged per part</label>
+                <input id="part-price" type="number" min="0" max="9999999999.99" step="0.01" value="0" class="form-control" required />
+            </div>
+        </div>
+        <button class="btn btn-warning mt-3">Use part &amp; remove from stock</button>
+    </form>
+</section>
+}
+<h2>Parts used</h2>
+<div id="parts-results">
+</div>
+<button id="more-parts" class="btn btn-secondary mb-3" hidden>Load more parts</button>
+<section class="card card-body my-3">
+    <h2 class="h5">Service payment</h2>
+    <p id="service-account-summary">
+    </p>
+    <button type="button" class="btn btn-outline-secondary mb-2 align-self-start" onclick="window.print()">Print service receipt</button>
+    <div id="service-payment-history">
+    </div>
+    <div permission-module="SERVICE" permission-action="COLLECT">
+@if(Access.Can("SERVICE","APPROVE")){<form id="service-payment-form" class="row g-2">
+        <div class="col-md-3">
+            <label class="form-label">Amount</label>
+            <input id="service-payment-amount" type="number" min="0.01" step="0.01" class="form-control" required />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Method</label>
+            <select id="service-payment-mode" class="form-select">
+                <option value="CASH">Cash</option>
+                <option value="CARD">Card</option>
+                <option value="UPI">UPI</option>
+                <option value="BANK">Bank payment</option>
+                <option value="CREDIT">Pay later (credit)</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Reference</label>
+            <input id="service-payment-reference" class="form-control" maxlength="100" />
+        </div>
+        <div class="col-md-2 align-self-end">
+            <button class="btn btn-primary">Record payment</button>
+        </div>
+    </form>}
+</div>
+</section>
+<h2>Service history</h2>
+<div id="history-results">
+</div>
+<button id="more-history" class="btn btn-secondary" hidden>Load more history</button>
+@section Scripts {
+    <script src="~/js/service-common.js" asp-append-version="true"></script>
+    <script src="~/js/service-details.js" asp-append-version="true"></script>
+    <script src="~/js/shop-operations.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,35 @@
+@page "/CashClosing"
+@model StockFlow.Web.Pages.CashClosing.IndexModel
+@inject StockFlow.Application.Common.BusinessScope Scope
+@{ ViewData["Title"] = "Daily cash closing"; }
+@section PageHeader {
+<header class="sf-page-heading cash-heading"><div><h1>Daily cash closing</h1></div>
+ <div class="cash-toolbar no-print"><select id="report-location" class="form-select" aria-label="Closing location" disabled><option>@Scope.LocationName</option></select><input id="cash-date" type="date" class="form-control" aria-label="Closing date" required /><button id="cash-refresh" type="button" class="btn btn-outline-primary">&#8635; Refresh totals</button><button id="cash-print" type="button" class="btn btn-primary"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#print" /></svg> Print closing</button></div>
+</header>
+}
+<div id="cash-workspace" data-storage-key="stockflow.cash.@Scope.TenantId.@Scope.UserId.@Scope.LocationId">
+ <div id="cash-message" role="alert" hidden></div>
+ <div id="cash-pending" class="alert alert-warning" hidden>A closing has an unconfirmed result. Keep its saved details and retry. <button id="cash-retry" type="button" class="btn btn-outline-primary">Retry saved closing</button></div>
+ <p id="cash-zone" class="cash-zone"></p>
+ <p id="cash-changed" class="alert alert-warning" hidden>Cash activity changed after the last closing. Recount and save an updated closing with a reason.</p>
+ <div class="cash-overview">
+ @foreach(var tile in new[]{("sales","Cash received from sales","invoices","pink"),("service","Cash received from repairs","receipts","green"),("refunds","Cash refunded to customers","refunds","purple"),("suppliers","Cash paid to suppliers","payments","amber"),("expenses","Net cash paid for expenses","movements","pink")}){
+ <section class="cash-overview-card @tile.Item4"><span class="cash-icon"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#cash" /></svg></span><div><h2>@tile.Item2</h2><strong id="cash-tile-@tile.Item1">&#8212;</strong><small id="cash-count-@tile.Item1">&#8212;</small></div></section>
+ }
+ </div>
+ <section class="cash-panel"><header class="cash-panel-heading"><span class="cash-icon pink"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#chart" /></svg></span><div><h2>Cash received and paid out</h2><p>Summary of all cash transactions for the selected date and location.</p></div></header>
+ <div class="cash-movements">@foreach(var tile in new[]{("sales","From sales","pink"),("service","From repairs","green"),("refunds","Refunded to customers","purple"),("suppliers","Paid to suppliers","amber"),("expenses","Operating expenses (net)","pink")}){<div><span class="cash-icon @tile.Item3"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#cash" /></svg></span><div><span>@tile.Item2</span><strong id="cash-@tile.Item1">&#8212;</strong></div></div>}</div>
+ <p class="cash-info">UPI, card, bank payments and unpaid credit are excluded. Opening cash is the cash left in the drawer before today's movements. Extra cash added/removed excludes expense and supplier payments and refunds already shown above. Expense refunds/reversals use their recorded movement dates.</p>
+ </section>
+ <form id="cash-form" class="cash-panel"><fieldset id="cash-fields" disabled>
+ <header class="cash-panel-heading"><span class="cash-icon pink"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#calculator" /></svg></span><div><h2>Count and close</h2><p>Enter the actual cash count and save the closing.</p></div></header>
+ <div class="cash-input-grid">@foreach(var field in new[]{("opening","Opening cash"),("added","Extra cash added"),("removed","Extra cash removed"),("counted","Counted cash")}){<div><label for="cash-@field.Item1">@field.Item2 *</label><div class="cash-amount-input"><span aria-hidden="true">&#8377;</span><input id="cash-@field.Item1" type="number" class="form-control" min="0" max="9999999999.99" step="0.01" value="0" required /></div></div>}</div>
+ <div class="cash-reason-field"><label for="cash-reason">Reason / explanation</label><textarea id="cash-reason" class="form-control" maxlength="250" rows="2" placeholder="Enter reason for difference, extra cash movement or updated closing..."></textarea><div class="cash-reason-help"><small>A reason is required for a difference, extra cash movement or an updated closing.</small><span id="cash-reason-count">0/250</span></div></div>
+ <div class="cash-equation"><div class="cash-equation-card"><span>Counted cash</span><strong id="cash-counted-preview">&#8212;</strong></div><span class="cash-equation-sign" aria-hidden="true">&#8722;</span><div class="cash-equation-card"><span>Cash that should be in the drawer</span><strong id="cash-expected">&#8212;</strong></div><span class="cash-equation-sign" aria-hidden="true">=</span><div class="cash-equation-card cash-difference-card"><span>Difference</span><strong id="cash-difference" aria-live="polite">&#8212;</strong></div><button id="cash-save" type="submit" class="btn btn-primary">Save cash closing</button></div>
+ </fieldset></form>
+ <section class="cash-panel cash-history-panel"><header class="cash-panel-heading"><span class="cash-icon pink"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#clock" /></svg></span><div><h2>Saved closing history</h2><p>Every correction is kept as a new version. Closing records a snapshot; it does not stop later sales or payments.</p></div><button id="cash-history-all" type="button" class="btn btn-outline-primary no-print" hidden>View all &#8594;</button></header><div class="table-responsive"><table class="table"><thead><tr><th>Version</th><th>Date</th><th>Opening cash</th><th>Cash added</th><th>Cash removed</th><th>Counted cash</th><th>Difference</th><th>Reason</th><th>Saved at</th><th class="no-print">Actions</th></tr></thead><tbody id="cash-history"></tbody></table></div></section>
+</div>
+<dialog id="cash-record-dialog" aria-labelledby="cash-record-title"><h2 id="cash-record-title">Saved cash closing</h2><div id="cash-record-details"></div><form method="dialog"><button class="btn btn-outline-secondary">Close</button></form></dialog>
+<section id="cash-print-record" hidden></section>
+@section Styles {<link rel="stylesheet" href="~/css/shop-readiness.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/cash-closing.css" asp-append-version="true" />}
+@section Scripts {<script src="~/js/cash-closing.js" asp-append-version="true"></script>}

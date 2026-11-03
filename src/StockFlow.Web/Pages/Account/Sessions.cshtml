@@ -1,0 +1,32 @@
+@page
+@model StockFlow.Web.Pages.Account.SessionsModel
+@{ ViewData["Title"]="Devices signed in"; }
+<h1>Devices signed in</h1>
+<div id="sessions-message" class="alert" role="status" hidden>
+</div>
+<button id="sessions-refresh" type="button" class="btn btn-outline-secondary mb-3">Refresh sessions</button>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Device / browser</th>
+                <th>IP address</th>
+                <th>Signed in</th>
+                <th>Last activity</th>
+                <th>Login ends</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="sessions-rows">
+        </tbody>
+    </table>
+</div>
+<dialog id="session-revoke-dialog" class="sf-account-dialog" aria-labelledby="session-revoke-title">
+    <h2 id="session-revoke-title" class="h5">Sign out this device?</h2>
+    <p>The device must sign in again to continue.</p>
+    <div class="d-flex gap-2 justify-content-end">
+        <button id="session-revoke-cancel" type="button" class="btn btn-outline-secondary">Cancel</button>
+        <button id="session-revoke-confirm" type="button" class="btn btn-primary">Sign out device</button>
+    </div>
+</dialog>
+@section Scripts {<script src="~/js/account-sessions.js" asp-append-version="true"></script>}

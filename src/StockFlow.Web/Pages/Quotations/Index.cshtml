@@ -1,0 +1,10 @@
+@page
+@{ViewData["Title"]="Quotations & Estimates";}
+<div id="quotations" data-mode="list">
+<header class="sf-page-heading"><div><h1>Quotations &amp; Estimates</h1><p>Customer estimates. Stock and payments are posted only at final checkout.</p></div><a href="/Quotations/Create" class="btn btn-dark" permission-module="QUOTATIONS" permission-action="CREATE">New Quotation</a></header>
+<div id="quotation-message" role="alert" class="alert alert-danger" hidden></div>
+<form id="quotation-filters" class="sf-filter-bar"><label>Search<input id="quote-search" class="form-control" maxlength="150" placeholder="Number or customer" /></label><label>Status<select id="quote-status" class="form-select"><option value="">All</option>@foreach(var s in new[]{"DRAFT","SENT","ACCEPTED","REJECTED","EXPIRED","CONVERTED","CANCELLED"}){<option>@s</option>}</select></label><label>From<input id="quote-from" type="date" class="form-control" /></label><label>To<input id="quote-to" type="date" class="form-control" /></label><button class="btn btn-dark">Apply</button><a id="quote-export" class="btn btn-outline-secondary" permission-module="QUOTATIONS" permission-action="EXPORT">Export CSV</a></form>
+<div class="card card-body"><div class="table-responsive"><table class="table"><thead><tr><th>Quotation</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Items</th><th>Estimated Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="quotation-rows"></tbody></table></div><div class="d-flex justify-content-between"><button id="quote-prev" class="btn btn-outline-secondary">Previous</button><span id="quote-page" role="status"></span><button id="quote-next" class="btn btn-outline-secondary">Next</button></div></div>
+</div>
+@section Scripts {<script src="~/js/sales-common.js" asp-append-version="true"></script><script src="~/js/quotations.js" asp-append-version="true"></script>}
+@section Styles {<link rel="stylesheet" href="~/css/quotations.css" asp-append-version="true" />}

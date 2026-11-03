@@ -1,0 +1,124 @@
+@page "/Transfers"
+@inject StockFlow.Application.Common.BusinessScope Scope
+@{ViewData["Title"]="Stock transfers";}
+@section PageHeader {
+<header class="sf-page-heading">
+    <div>
+        <h1>Stock transfers</h1>
+        <a href="/EWayBills/Prepare?sourceType=TRANSFER" permission-module="EWAY_BILLS" class="btn btn-sm btn-outline-secondary">Prepare outward E-Way movement</a>
+    </div>
+</header>
+}
+<div id="transfer-workspace" data-storage-key="stockflow.transfer.@Scope.TenantId.@Scope.UserId.@Scope.LocationId@Scope.DraftProfileSuffix" data-can-dispatch="@Access.Can("STOCK_TRANSFER","DISPATCH").ToString().ToLowerInvariant()">
+    <p class="small text-muted">Current location: @Scope.LocationName. Transfers stay separate from purchases and sales.</p>
+    <div id="transfer-message" role="alert" hidden>
+    </div>
+    <div id="transfer-pending" class="alert alert-warning" hidden>A transfer action has an unconfirmed result. <button id="transfer-retry" type="button" class="btn btn-outline-primary">Retry saved action</button>
+    </div>
+    <fieldset id="transfer-editor">
+        <details id="transfer-new" class="card card-body mb-3" permission-module="STOCK_TRANSFER" permission-action="CREATE">
+            <summary>Create transfer</summary>
+            <form id="transfer-create" class="row g-3 mt-2">
+                <div class="col-12">
+                    <label for="transfer-direction" class="form-label">Send or request goods?</label>
+                    <select id="transfer-direction" class="form-select">
+                        <option value="send">Send from this location</option>
+                        <option value="request">Request goods for this location</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="transfer-from" class="form-label">Sending location</label>
+                    <select id="transfer-from" class="form-select" required>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="transfer-to" class="form-label">Receiving location</label>
+                    <select id="transfer-to" class="form-select" required>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label for="transfer-search" class="form-label">@(Scope.BusinessProfileCode == "BIKE_ACCESSORIES" ? "Find bike part, helmet size, bike model or part number" : "Find product, capacity or shop code")</label>
+                    <div class="d-flex gap-2">
+                        <input id="transfer-search" class="form-control" />
+                        <button id="transfer-find" type="button" class="btn btn-outline-primary">Find items</button>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <label for="transfer-variant" class="form-label">Item / size / model</label>
+                    <select id="transfer-variant" class="form-select">
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="transfer-quantity" class="form-label">Quantity</label>
+                    <input id="transfer-quantity" type="number" min="1" max="10000" value="1" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <button id="transfer-add" type="button" class="btn btn-outline-primary">Add item</button>
+                    <div id="transfer-cart" class="mt-3">
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label for="transfer-notes" class="form-label">Notes (optional)</label><textarea id="transfer-notes" class="form-control" maxlength="2000" rows="2"></textarea></div>
+                <div class="col-12">
+                    <button class="btn btn-primary">Save draft</button>
+                </div>
+            </form>
+        </details>
+        <section class="card card-body mb-3">
+            <h2 class="h5">Transfers for this location</h2>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <select id="transfer-filter" class="form-select" style="max-width:220px" aria-label="Filter transfers">
+                    <option value="active">Active transfers</option>
+                    <option value="incoming">Coming to this location</option>
+                    <option value="outgoing">Leaving this location</option>
+                    <option value="all">All recent transfers</option>
+                </select>
+                <button id="transfer-refresh" type="button" class="btn btn-outline-primary">Refresh</button>
+            </div>
+            <p id="transfer-count" class="small" role="status">
+            </p>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Transfer</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Status</th>
+                            <th>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="transfer-list">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section id="transfer-detail" class="card card-body" hidden>
+            <h2 id="transfer-title" class="h5">
+            </h2>
+            <p id="transfer-route">
+            </p>
+            <p id="transfer-progress" role="status">
+            </p>
+            <div id="transfer-lines">
+            </div>
+            <label for="action-notes" class="form-label">Receipt notes / damage or loss reason</label><textarea id="action-notes" class="form-control" maxlength="2000" rows="2"></textarea>
+            <div class="d-flex flex-wrap gap-2 my-3">
+                <button type="button" class="btn btn-primary" data-action="request" permission-module="STOCK_TRANSFER" permission-action="CREATE">Submit request</button>
+                <button type="button" class="btn btn-primary" data-action="approve" permission-module="STOCK_TRANSFER" permission-action="APPROVE">Approve request</button>
+                <button type="button" class="btn btn-primary" data-action="dispatch" permission-module="STOCK_TRANSFER" permission-action="DISPATCH">Send goods</button>
+                <button type="button" class="btn btn-primary" data-action="receive" permission-module="STOCK_TRANSFER" permission-action="RECEIVE">Receive goods</button>
+                <button type="button" class="btn btn-outline-warning" data-action="discrepancy" permission-module="STOCK_TRANSFER" permission-action="APPROVE">Record damage / loss</button>
+                <button type="button" class="btn btn-outline-danger" data-action="cancel" permission-module="STOCK_TRANSFER" permission-action="CANCEL">Cancel before sending</button>
+            </div>
+            <details>
+                <summary>Action history</summary>
+                <div id="transfer-history" class="small mt-2">
+                </div>
+            </details>
+        </section>
+    </fieldset>
+</div>
+@section Styles {<link rel="stylesheet" href="~/css/inventory-control.css" asp-append-version="true" />}
+@section Scripts {<script src="~/js/common/scanner.js" asp-append-version="true"></script><script src="~/js/transfers.js" asp-append-version="true"></script>}

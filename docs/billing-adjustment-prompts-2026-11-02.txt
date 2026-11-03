@@ -1,0 +1,38 @@
+Billing adjustment prompts — 2026-11-02
+
+The shared line-adjustment dialog previously repeated discount/price fields when
+requesting a tax reason, even if a reason was already stored. Its tax-only heading
+could also describe a form containing several different adjustment reasons.
+
+Changes in src/StockFlow.Web/wwwroot/js/sales-create.js:
+- Ask for missing reasons only. Keep visible inputs stable during typing; hide
+  completed reasons when the dialog is opened again.
+- Use Adjustment Reasons when multiple reasons are needed, otherwise identify
+  the relevant discount, price or tax reason.
+- Keep tax-only context to product/SKU and tax change. Use Configured tax if the
+  original rate is unavailable rather than inventing a value.
+- Remove repeated approval-status/placeholder-approver text from line context.
+- Carry saved discount, price and invoice reasons into the existing manager
+  approval request as text; do not request the same entry a second time.
+- Keep discount and tax reasons as distinct existing payload fields. Existing
+  server policy, permissions, approval checks and checkout validation unchanged.
+
+Verification:
+PASS dotnet build src/StockFlow.Web --artifacts-path
+     E:/StockFlow/.artifacts/adjustment-prompts -v quiet
+     0 warnings, 0 errors.
+PASS tests/StockFlow.UiChecks/fast-billing-offline.cjs using headless Edge.
+     New regression: simultaneous discount/tax reasons use a combined heading;
+     completed discount disappears from the tax-only follow-up; separate saved
+     reasons reach the request; approval reuses the stored reason without input.
+     Existing suite: ten screen sizes, eight approval-dialog sizes, thresholds,
+     opted-in routine policy, pending/approved/stale approvals, cashier tax
+     restrictions, GST configuration errors, input/quote handling, customer/manual
+     flows, hold/resume, payment validation and quotation checkout. No JS errors.
+     Browser suite uses real Razor fixture/scripts and mocked HTTP; no live-shop
+     or new database integration verification claimed for this presentation change.
+
+Screenshot: tests/bin/fast-billing-ui-fixtures/
+            tax-reason-without-repeated-discount.png
+
+No SQL migration or application database changes.

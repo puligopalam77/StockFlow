@@ -1,0 +1,24 @@
+@page
+@model StockFlow.Web.Pages.Warranty.ClaimsModel
+@{ ViewData["Title"] = "Warranty claims"; }
+<h1>Warranty claims</h1>
+<div id="warranty-message" class="alert alert-danger" role="alert" hidden>
+</div>
+<label for="claim-filter" class="form-label">Status</label>
+<select id="claim-filter" class="form-select mb-3">
+    <option value="">All statuses</option>
+    <option value="OPEN">Open</option>
+    <option value="UNDER_REVIEW">Under review</option>
+    <option value="APPROVED">Approved</option>
+    <option value="REJECTED">Rejected</option>
+    <option value="REPLACED">Replaced</option>
+    <option value="CLOSED">Closed</option>
+</select>
+<div id="claim-results" aria-live="polite">
+</div>
+<button id="previous" class="btn btn-secondary" disabled>Previous</button>
+<button id="next" class="btn btn-secondary" disabled>Next</button>
+@section Scripts {
+    <script src="~/js/warranty-common.js" asp-append-version="true"></script>
+    <script src="~/js/warranty-claims.js" asp-append-version="true"></script>
+}

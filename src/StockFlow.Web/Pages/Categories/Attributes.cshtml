@@ -1,0 +1,14 @@
+@page
+@{ ViewData["Title"] = "Category Fields & Variants"; }
+<header class="sf-page-heading"><div><h1>Category Fields &amp; Variants</h1><p>Configure reusable fields for the current shop profile. With category inheritance enabled, product registration combines parent fields with the selected category's own fields.</p></div></header>
+<p><a href="/Categories">Back to Categories</a></p>
+<div id="attribute-error" class="alert alert-danger" role="alert" hidden></div>
+<p id="attribute-status" role="status">Loading category settings…</p>
+<form id="attribute-form" data-can-edit="@Access.Can("CATEGORIES","EDIT").ToString().ToLowerInvariant()">
+    <fieldset id="attribute-fields" disabled>
+        <section class="card card-body mb-3"><h2 class="h5">Reusable attributes</h2><p class="small text-muted">Codes are stable storage keys. Selection options use commas. Define separate size fields when categories use different sizing systems, such as clothing sizes and footwear sizes.</p><div id="attribute-definitions"></div><div class="d-flex flex-wrap gap-2"><button id="attribute-add" type="button" class="btn btn-outline-primary">Add attribute</button><button id="attribute-suggestions" type="button" class="btn btn-outline-secondary">Load shop suggestions</button></div></section>
+        <section class="card card-body mb-3"><h2 class="h5">Category assignments</h2><p class="small text-muted">Mark common product details as required when needed. Variant axes must be required selection fields. Assign at most three axes per category. Assignments and referenced definitions lock after a category has products, including inactive products. Use a new category for a different configuration.</p><div id="attribute-categories"></div></section>
+        <button id="attribute-save" type="submit" class="btn btn-primary">Save category settings</button>
+    </fieldset>
+</form>
+@section Scripts { <script src="~/js/category-attributes-settings.js" asp-append-version="true"></script> }

@@ -1,0 +1,103 @@
+Independent-shop ownership design - 2 November 2026
+P0 / A01-A03 / A16. Follow-up implementation: 085_private_shop_masters.sql and
+the /Admin/ShopData workflow now enforce private masters, explicit sharing and
+quarantine resolution in isolated tests. No production migration/release approval.
+See StockFlow-private-shops-expenses-implementation-2026-11-02.txt for current
+source/verification. The design discussion below records the pre-implementation
+baseline and proposed model; it is not evidence of an applied production schema.
+
+Current ownership and historical links
+020_tenants_stores_locations.sql applies tenant RLS to masters and location RLS
+to transaction headers; sf_can_location checks membership. 051_profile_data_visibility.sql
+adds restrictive selected-profile visibility. Its sf_shared_contact_profile
+deliberately retains contacts used by the selected profile, including other branches.
+Products inherit categories' profile; variants/barcodes inherit products. Customers,
+suppliers, categories and brands have no independent-shop ownership boundary.
+051 selects the profile on tenants, not stores. BusinessProfileRepository calls the
+existing guarded sf_change_business_profile function; do not add a second engine.
+BusinessScopeMiddleware validates authenticated membership and active location.
+
+Sales/items/payments, purchases/receipts/returns, inventory units/movements, repairs,
+warranties and drafts retain references to existing master IDs. Issued invoice/GST
+and quotation snapshots preserve historical terms. Quotation 083 and e-way 084
+headers already retain tenant/store/location/profile. These links must survive.
+
+The extended ReliabilityChecks fixture explicitly characterizes same-profile master
+sharing and transaction/Cash Closing isolation. A passing characterization is not
+a passing independent-shop privacy test. The shop-model gate remains mandatory.
+It uses fixed repository scope and test authentication; it does not certify actual
+production memberships, independent profiles per shop, every master or every API.
+
+Required boundary
+Separate unrelated legal operators by tenant. For independently operated stores
+inside one tenant, require explicit shop visibility for masters, prices, barcodes,
+catalog search, supplier catalog, contact details, imports/exports and attachments.
+Transactions must still intersect tenant, authorized store/location, action and
+profile. Owner authority cannot cross tenants. Warehouse locations within a shop
+retain that shop's ownership. Configuration and provider secrets need explicit
+tenant/legal-business/store applicability; never infer it from an owner's UI role.
+GSTIN consolidation remains a separately authorized reporting scope, not a master
+or transaction visibility exception.
+
+Selected target model
+The owner selected private shops within one tenant, with explicitly authorized
+sharing, during this task. Separate tenants are not the chosen solution for this
+requirement. This decision does not approve historical allocation, an irreversible
+split or a production migration.
+
+Proposed additive implementation (historical mapping/cutover still require review)
+Keep existing IDs and source documents. Add tenant/store/master visibility links
+with provenance, actor, effective time and explicit PRIVATE or SHARED intent.
+Use real composite foreign keys per entity (product_store_access,
+customer_store_access, supplier_store_access, category_store_access,
+brand_store_access); avoid unverifiable polymorphic master IDs.
+Variants/barcodes inherit product access; location prices and stock remain scoped.
+If stores must independently edit prices/contact identity on the same master,
+explicit store overrides or approved separate master IDs are required. A visibility
+link alone cannot supply independent editable values. Resolve identifier uniqueness
+and barcode lookup ambiguity before allowing private duplicate SKUs/barcodes.
+Extend existing profile selection safely to store context only after its lock,
+permission, defaulting, history and compatibility contracts are designed and tested.
+
+Legacy allocation must not guess from created_by or the currently selected shop.
+Produce a read-only manifest of each master's historical use by shop, unreferenced
+records, conflicting names/barcodes and cross-shop references. Owner-approved
+mapping can retain explicit shared ownership or assign private access. Existing
+history stays readable to its original authorized shop without granting live-master
+editing or exposing other shops' balances. New masters default private only after
+the approved model and all source consumers enforce that boundary.
+
+Migration/recovery implications
+First add structures with enforcement disabled in a test clone. Export and review
+the mapping manifest; reconcile row counts, all historical foreign keys, snapshots,
+balances and IDs. Exercise all four profiles, same/different shops, tenants,
+multiple locations, restricted staff, forged IDs, search/export and attachments.
+Then perform an approved writer-stop migration with backups and a tested forward
+fix. No invoice/stock/payment reposting. New source remains compatible until the
+explicit cutover. Reverting to broad old RLS after privacy cutover is a disclosure
+risk, not a safe rollback. Prefer forward fixes; full restore requires an approved
+recovery point and reconciliation of transactions after that point.
+
+Decision needed before dependent implementation
+The private-store target is selected. Proposed initial defaults preserve the
+existing tenant-wide SKU/barcode uniqueness rules and use distinct private master
+IDs for independently editable records; sharing and shared edits require explicit
+authority. These defaults avoid ambiguous scans and silent historical reassignment.
+Review the actual legacy allocation manifest before any ownership cutover. No irreversible split,
+ownership reassignment or production migration is authorized by this document.
+Continue transaction, recovery and acceptance work independently of that decision.
+
+Read-only mapping preparation
+database/maintenance/Export-StockFlowOwnershipReview.ps1 accepts an explicit DB,
+tenant and a new private output directory. It enforces a read-only repeatable-read
+transaction and requires an authorized administrative full-history reader; a
+runtime RLS-filtered view is refused. It exports IDs/profile/source-use hints for
+products, customers, suppliers, categories and brands, with SHA256 evidence and
+all ownership decisions PENDING. Variant/barcode ownership inherits its product.
+Inventory, sales, purchases, intakes, units, service and both transfer ends inform
+this initial triage. It does not export contact names, prices or credentials.
+No application database is inferred or contacted by the tests.
+This is not a complete mapping manifest: unposted draft/quotation JSON references,
+configuration, identifier conflicts and additional shared-history review remain.
+Every row carries that limitation. Usage in a shop does not establish ownership.
+The tool cannot apply access links, privatize records or certify shop isolation.

@@ -1,0 +1,775 @@
+STOCKFLOW AUDIT STRUCTURAL INVENTORY
+2 November 2026; source inventory, not a claim that every endpoint was executed.
+Database entities/policies: see database-evidence.txt.
+
+Controllers and route/verb attributes
+
+src/StockFlow.Web/Controllers/AdminController.cs
+9: [ApiController, Authorize, Route("api/admin")]
+23: [HttpGet("users")]
+29: [HttpGet("users/{id:int}")]
+42: [HttpPost("users")]
+51: [HttpPut("users/{id:int}")]
+60: [HttpPut("users/{id:int}/status")]
+67: [HttpPost("users/{id:int}/reset-password")]
+74: [HttpGet("users/{id:int}/permissions")]
+91: [HttpPut("users/{id:int}/permissions")]
+98: [HttpGet("modules")]
+104: [HttpGet("roles")]
+110: [HttpGet("roles/{id:int}/permissions")]
+116: [HttpPut("roles/{id:int}/permissions")]
+123: [HttpGet("auditlogs")]
+129: [HttpGet("auditlogs/export")]
+
+src/StockFlow.Web/Controllers/AdminSecurityController.cs
+13: [ApiController, Authorize, Route("api/admin")]
+72: [HttpPost("roles")]
+118: [HttpGet("store-options")]
+128: [HttpGet("security/policy")]
+135: [HttpPut("security/policy")]
+152: [HttpPut("roles/{id:int}/security")]
+181: [HttpPost("users/{id:int}/reset-authenticator")]
+
+src/StockFlow.Web/Controllers/BarcodeLotsController.cs
+9: [ApiController,Authorize,Route("api/labels/lots")]
+12: [HttpGet]
+19: [HttpGet("receipt/{id:long}")]
+20: [HttpPost("receipt/{id:long}/{actionName}")]
+
+src/StockFlow.Web/Controllers/BarcodeManagementController.cs
+10: [ApiController,Authorize,Route("api/labels/management/lots")]
+15: [HttpGet]
+22: [HttpGet("{kind}/{id:long}")]
+30: [HttpPost("{kind}/{id:long}/prepare")]
+39: [HttpPost("{kind}/{id:long}/print")]
+40: [HttpPost("{kind}/{id:long}/reprint")]
+
+src/StockFlow.Web/Controllers/BillingController.cs
+14: [ApiController, Authorize, Route("api/sales/billing")]
+26: [HttpPost("drafts/{id:guid}/approval")]
+71: [HttpGet("approvals")]
+106: [HttpPut("approvals/{id:guid}")]
+152: [HttpGet("policy")]
+153: [HttpGet("/api/settings/billing-policy")]
+173: [HttpPut("policy")]
+174: [HttpPut("/api/settings/billing-policy")]
+210: [HttpGet("customers/{id:int}/credit")]
+235: [HttpPut("customers/{id:int}/credit")]
+276: [HttpGet("drafts")]
+297: [HttpGet("drafts/{id:guid}")]
+304: [HttpPut("drafts/{id:guid}")]
+319: [HttpPost("drafts/{id:guid}/hold")]
+321: [HttpPost("drafts/{id:guid}/heartbeat")]
+323: [HttpPost("drafts/{id:guid}/release")]
+325: [HttpPost("drafts/{id:guid}/resume")]
+333: [HttpDelete("drafts/{id:guid}")]
+
+src/StockFlow.Web/Controllers/BranchController.cs
+12: [ApiController, Authorize, Route("api/branches")]
+28: [HttpGet("context")]
+59: [HttpPost("context")]
+86: [HttpGet("stores")]
+92: [HttpPost("stores")]
+101: [HttpPost("locations")]
+110: [HttpGet("users/{id:int}")]
+116: [HttpPut("users/{id:int}")]
+123: [HttpGet("comparison")]
+129: [HttpGet("summary")]
+
+src/StockFlow.Web/Controllers/BrandController.cs
+8: [ApiController]
+9: [Route("api/brands")]
+10: [Authorize]
+28: [HttpGet("categories")]
+33: [HttpGet("registration-options")]
+35: [HttpGet("{id:int}/logo")]
+38: [HttpGet]
+45: [HttpGet("{id:int}")]
+58: [HttpGet("search")]
+64: [HttpPost, Authorize]
+75: [HttpPut("{id:int}"), Authorize]
+99: [HttpDelete("{id:int}"), Authorize]
+
+src/StockFlow.Web/Controllers/BusinessProfileController.cs
+10: [ApiController, Authorize, Route("api/business-profile")]
+13: [HttpGet]
+33: [HttpPut]
+
+src/StockFlow.Web/Controllers/CashClosingController.cs
+10: [ApiController, Authorize, Route("api/cashclosing")]
+26: [HttpGet]
+42: [HttpPost]
+
+src/StockFlow.Web/Controllers/CatalogSchemaController.cs
+9: [ApiController, Authorize, Route("api/categories/schema")]
+12: [HttpGet]
+15: [HttpPut]
+
+src/StockFlow.Web/Controllers/CategoryController.cs
+8: [ApiController]
+9: [Route("api/categories")]
+10: [Authorize]
+22: [HttpGet]
+42: [HttpGet("{id:int}")]
+55: [HttpGet("search")]
+61: [HttpGet("sku-prefix-suggestion")]
+68: [HttpGet("tree")]
+78: [HttpPost, Authorize]
+89: [HttpPut("{id:int}"), Authorize]
+113: [HttpDelete("{id:int}"), Authorize]
+127: [HttpPost("{id:int}/status"), Authorize]
+
+src/StockFlow.Web/Controllers/CrmController.cs
+7: [ApiController,Authorize,Route("api/crm"),TypeFilter(typeof(StockFlow.Web.Filters.CrmExceptionFilter))]
+10: [HttpGet("dashboard")] public async Task<IActionResult> Dashboard()=>Ok(await repository.DashboardAsync());
+11: [HttpGet("customers")] public async Task<IActionResult> Customers([FromQuery]CrmQuery q)=>Ok(await repository.CustomersAsync(q));
+12: [HttpGet("customers/{id:int}")] public async Task<IActionResult> Customer(int id,int page=1,int pageSize=10)=>await repository.CustomerAsync(id,page,pageSize) is {} value?Ok(value):NotFound();
+13: [HttpPost("customers/{id:int}/link")] public async Task<IActionResult> Link(int id){await repository.LinkCustomerAsync(id);return NoContent();}
+14: [HttpPost("customers/{id:int}/notes")] public async Task<IActionResult> Note(int id,CrmNoteRequest r){await repository.NoteAsync(id,r);return NoContent();}
+15: [HttpPut("customers/{id:int}/preferences")] public async Task<IActionResult> Preferences(int id,CrmPreferencesRequest r){await repository.PreferencesAsync(id,r);return NoContent();}
+16: [HttpGet("options")] public async Task<IActionResult> Options(string? term)=>Ok(await repository.OptionsAsync(term));
+17: [HttpGet("enquiries")] public async Task<IActionResult> Enquiries([FromQuery]CrmQuery q)=>Ok(await repository.EnquiriesAsync(q));
+18: [HttpGet("enquiries/{id:long}")] public async Task<IActionResult> Enquiry(long id)=>await repository.EnquiryAsync(id) is {} value?Ok(value):NotFound();
+19: [HttpPost("enquiries")] public async Task<IActionResult> Create(CrmEnquiryRequest r)=>Ok(new{id=await repository.SaveAsync(null,r)});
+20: [HttpPut("enquiries/{id:long}")] public async Task<IActionResult> Edit(long id,CrmEnquiryRequest r)=>Ok(new{id=await repository.SaveAsync(id,r)});
+21: [HttpPost("enquiries/{id:long}/follow-ups")] public async Task<IActionResult> FollowUp(long id,CrmFollowUpRequest r){await repository.FollowUpAsync(id,r);return NoContent();}
+
+src/StockFlow.Web/Controllers/CustomerController.cs
+8: [ApiController]
+9: [Route("api/customers")]
+10: [Authorize]
+22: [HttpGet]
+28: [HttpGet("{id:int}")]
+41: [HttpGet("search")]
+61: [HttpPost, Authorize]
+77: [HttpPut("{id:int}"), Authorize]
+101: [HttpDelete("{id:int}"), Authorize]
+
+src/StockFlow.Web/Controllers/DashboardController.cs
+8: [ApiController, Route("api/dashboard"), Authorize]
+25: [HttpGet("inventory-summary")]
+33: [HttpGet("business-summary")]
+41: [HttpGet("inflow-outflow-trend")]
+61: [HttpGet("category-stock")]
+67: [HttpGet("recent-inflow")]
+76: [HttpGet("recent-outflow")]
+82: [HttpGet("recent-sales"), Authorize]
+88: [HttpGet("recent-services")]
+94: [HttpGet("low-stock")]
+100: [HttpGet("movements")]
+111: [HttpGet("search")]
+117: [HttpGet("users"), Authorize]
+
+src/StockFlow.Web/Controllers/DatabaseHealthController.cs
+7: [ApiController]
+9: [Route("api/database")]
+20: [HttpGet("health")]
+
+src/StockFlow.Web/Controllers/ErrorLogController.cs
+7: [AllowAnonymous]
+13: [Route("/error-log")]
+
+src/StockFlow.Web/Controllers/GstCatalogController.cs
+11: [ApiController,Authorize,Route("api/gst/settings/catalog"),TypeFilter(typeof(StockFlow.Web.Filters.GstExceptionFilter))]
+15: [HttpPost("billing-defaults")] public async Task<IActionResult> Billing(BillingDefault request){await company.SaveTaxModeAsync(request.Mode,scope.UserId);return Ok(new{mode=request.Mode});}
+16: [HttpGet] public async Task<IActionResult> Catalog([FromQuery]GstCatalogQuery q)=>Ok(await repository.CatalogAsync(q));
+17: [HttpGet("options")] public async Task<IActionResult> Options()=>Ok(await repository.CatalogOptionsAsync());
+18: [HttpGet("rules")] public async Task<IActionResult> Rules([FromQuery]GstCatalogQuery q)=>Ok(await repository.TaxRulesAsync(q));
+19: [HttpPost("rules")] public async Task<IActionResult> Rule(GstTaxRule rule)=>Ok(new{id=await repository.SaveRuleAsync(rule)});
+20: [HttpPost("rules/review")] public async Task<IActionResult> Review(GstRuleReview request){await repository.ReviewRuleAsync(request.RuleId);return NoContent();}
+21: [HttpPost("rules/end")] public async Task<IActionResult> End(GstRuleEnd request){await repository.EndRuleAsync(request);return NoContent();}
+22: [HttpGet("history")] public async Task<IActionResult> History(int productId,long? variantId)=>Ok(await repository.MappingHistoryAsync(productId,variantId));
+23: [HttpPost("preview")] public async Task<IActionResult> Preview(GstAssignment request)=>Ok(await repository.PreviewAssignmentAsync(request));
+24: [HttpGet("operations/{id:guid}")] public async Task<IActionResult> Operation(Guid id,int page=1,int pageSize=25,string? status=null)=>Ok(await repository.OperationAsync(id,page,pageSize,status));
+25: [HttpGet("operations")] public async Task<IActionResult> Operations(int page=1,int pageSize=10)=>Ok(await repository.OperationsAsync(page,pageSize));
+26: [HttpPost("commit")] public async Task<IActionResult> Commit(GstOperationConfirm request)=>Ok(await repository.CommitAssignmentAsync(request));
+27: [HttpGet("export")] public async Task<IActionResult> Export([FromQuery]GstCatalogQuery q,string format="csv")=>Download(await repository.ExportMappingsAsync(q),format);
+28: [HttpPost("export")] public async Task<IActionResult> ExportSelection(GstAssignment request,string format="csv")=>Download(await repository.ExportMappingsAsync(request.Filter,request.Targets),format);
+29: [HttpGet("template")] public async Task<IActionResult> Template([FromQuery]GstCatalogQuery q,string format="xlsx")
+34: [HttpPost("import"),RequestSizeLimit(11*1024*1024),RequestFormLimits(MultipartBodyLengthLimit=11*1024*1024)]
+42: [HttpGet("operations/{id:guid}/errors")]
+
+src/StockFlow.Web/Controllers/GstController.cs
+9: [ApiController, Authorize, Route("api/gst"), TypeFilter(typeof(StockFlow.Web.Filters.GstExceptionFilter))]
+12: [HttpGet("settings")]
+14: [HttpGet("settings/states")]
+16: [HttpGet("settings/readiness")]
+18: [HttpPost("settings/activate")]
+20: [HttpGet("settings/audit")]
+22: [HttpPost("settings/businesses")]
+24: [HttpPost("settings/registrations")]
+26: [HttpPost("settings/mappings")]
+28: [HttpPost("settings/taxes")]
+30: [HttpGet("registrations")]
+32: [HttpGet("reports")]
+34: [HttpGet("documents/{id:long}")]
+36: [HttpPost("documents")]
+38: [HttpPost("review")]
+40: [HttpGet("export")]
+42: [HttpGet("source-options")]
+44: [HttpGet("export-history")]
+46: [HttpGet("documents/{id:long}/reviews")]
+
+src/StockFlow.Web/Controllers/HealthController.cs
+5: [ApiController]
+7: [Route("api/[controller]")]
+10: [HttpGet]
+
+src/StockFlow.Web/Controllers/HelpAiController.cs
+13: [Authorize, ApiController, Route("api/help/questions")]
+30: [HttpPost("feedback")]
+34: [HttpPost]
+
+src/StockFlow.Web/Controllers/HelpStockController.cs
+10: [Authorize, ApiController, Route("api/help/stock")]
+13: [HttpGet]
+
+src/StockFlow.Web/Controllers/HelpVoiceController.cs
+8: [Authorize, ApiController, Route("api/help/voice")]
+11: [HttpPost, RequestSizeLimit(2_000_000)]
+
+src/StockFlow.Web/Controllers/InventoryController.cs
+11: [ApiController, Route("api/inventory"), Authorize]
+25: [HttpGet]
+31: [HttpGet("history")]
+42: [HttpGet("units")]
+53: [HttpPost("adjustments"), Authorize]
+
+src/StockFlow.Web/Controllers/InvoiceController.cs
+7: [ApiController, Authorize]
+18: [HttpGet("api/invoices/{saleId:long}")]
+19: [HttpGet("api/sales/{saleId:long}/invoice")]
+
+src/StockFlow.Web/Controllers/NotificationJobsController.cs
+10: [ApiController,Route("api/notification-jobs"),AllowAnonymous,IgnoreAntiforgeryToken]
+14: [HttpPost("failure")]
+
+src/StockFlow.Web/Controllers/NotificationsController.cs
+7: [Authorize, ApiController, Route("api/notifications")]
+10: [HttpGet]
+16: [HttpPost("read")]
+
+src/StockFlow.Web/Controllers/OperationsController.cs
+10: [ApiController, Route("api/operations"), Authorize]
+23: [HttpGet("sales/{id:long}")]
+36: [HttpPost("sales/{id:long}/payments")]
+52: [HttpPost("sales/{id:long}/returns")]
+68: [HttpPost("sales/{id:long}/fulfilments")]
+84: [HttpPost("sales/{id:long}/trade-ins")]
+100: [HttpGet("purchases/{id:long}")]
+113: [HttpPost("purchases/{id:long}/payments")]
+129: [HttpPost("purchases/{id:long}/returns")]
+145: [HttpPost("stock-counts")]
+161: [HttpGet("service/{id:long}")]
+174: [HttpPost("service/{id:long}/payments")]
+190: [HttpGet("warranty-claims/{id:long}/rmas")]
+203: [HttpPost("warranty-claims/{id:long}/rmas")]
+219: [HttpGet("reports/product-sales")]
+
+src/StockFlow.Web/Controllers/ProductCatalogToolsController.cs
+11: [ApiController, Authorize, Route("api/products/catalog")]
+53: [HttpPost("preview")]
+61: [HttpPost("commit")]
+81: [HttpGet("export")]
+
+src/StockFlow.Web/Controllers/ProductController.cs
+9: [ApiController]
+10: [Route("api/products")]
+11: [Authorize]
+27: [HttpGet]
+33: [HttpPost("identifier-reservations")]
+41: [HttpPut("{id:int}/identifier-reservations")]
+49: [HttpGet("{id:int}")]
+62: [HttpGet("search")]
+69: [HttpGet("{id:int}/skus")]
+90: [HttpPost, Authorize]
+105: [HttpPut("{id:int}"), Authorize]
+160: [HttpDelete("{id:int}"), Authorize]
+173: [HttpGet("barcode/{barcode}")]
+186: [HttpGet("catalog-lookup")]
+202: [HttpGet("{id:int}/image")]
+214: [HttpGet("{id:int}/images/{imageId:guid}")]
+
+src/StockFlow.Web/Controllers/ProductVehiclesController.cs
+6: [Authorize,ApiController,Route("api/products/vehicles")]
+9: [HttpGet]
+
+src/StockFlow.Web/Controllers/PurchaseChangesController.cs
+7: [ApiController,Authorize,Route("api/purchases/{id:long}/changes")]
+10: [HttpGet] public async Task<IActionResult> History(long id) => Ok(await repository.HistoryAsync(id));
+11: [HttpPost] public async Task<IActionResult> Change(long id,PurchaseChangeRequest request)
+
+src/StockFlow.Web/Controllers/PurchaseController.cs
+9: [ApiController, Route("api/purchases"), Authorize]
+21: [HttpGet]
+27: [HttpGet("{id:long}")]
+40: [HttpGet("{id:long}/invoice-attachment")]
+53: [HttpPost]
+76: [HttpPut("{id:long}")]
+100: [HttpPost("{id:long}/complete")]
+
+src/StockFlow.Web/Controllers/PurchaseReceiptController.cs
+9: [ApiController, Authorize, Route("api/purchases/{id:long}/receipts")]
+21: [HttpGet]
+27: [HttpPost]
+
+src/StockFlow.Web/Controllers/ReceivingController.cs
+10: [ApiController, Authorize, Route("api/receiving")]
+24: [HttpPost]
+30: [HttpPost("opening")]
+43: [HttpPost("opening/import-key")]
+54: [HttpGet("{id:long}/labels")]
+60: [HttpPost("{id:long}/labels/generate")]
+69: [HttpPost("{id:long}/labels/print")]
+75: [HttpPost("{id:long}/labels/reprint")]
+
+src/StockFlow.Web/Controllers/ReportingController.cs
+8: [ApiController, Route("api/reports"), Authorize]
+20: [HttpGet("activity")]
+
+src/StockFlow.Web/Controllers/SalesController.cs
+9: [ApiController, Route("api/sales"), Authorize]
+21: [HttpGet]
+27: [HttpGet("gst-context")]
+36: [HttpGet("manual-tax-rules")]
+47: [HttpGet("{id:long}")]
+60: [HttpGet("list")]
+72: [HttpPost("quote")]
+79: [HttpPost]
+100: [HttpPost("recover")]
+
+src/StockFlow.Web/Controllers/ScanController.cs
+7: [ApiController, Route("api/scan"), Authorize]
+18: [HttpGet]
+24: [HttpGet("{code}")]
+
+src/StockFlow.Web/Controllers/ScreenLanguagesController.cs
+10: [ApiController, Authorize, Route("api/screenlanguages")]
+23: [HttpGet]
+30: [HttpPut]
+
+src/StockFlow.Web/Controllers/ServiceController.cs
+9: [ApiController, Route("api/service"), Authorize]
+22: [HttpGet]
+28: [HttpGet("pending")]
+35: [HttpGet("{id:long}")]
+48: [HttpGet("units/{unitId:long}")]
+61: [HttpGet("technicians")]
+67: [HttpGet("{id:long}/parts")]
+73: [HttpGet("{id:long}/history")]
+79: [HttpPost, Authorize]
+102: [HttpPut("{id:long}"), Authorize]
+130: [HttpPut("{id:long}/status"), Authorize]
+148: [HttpPost("{id:long}/parts"), Authorize]
+
+src/StockFlow.Web/Controllers/SessionController.cs
+9: [Authorize, ApiExplorerSettings(IgnoreApi = true)]
+10: [Route("account/session")]
+25: [HttpPost("activity")]
+54: [HttpPost("expire")]
+67: [HttpGet("devices")]
+75: [HttpPost("revoke")]
+
+src/StockFlow.Web/Controllers/StockReceiptHistoryController.cs
+10: [ApiController, Authorize, Route("api/stock-receipts")]
+25: [HttpGet]
+33: [HttpGet("items")]
+41: [HttpGet("suppliers")]
+48: [HttpGet("{source}/{id:long}")]
+
+src/StockFlow.Web/Controllers/SupplierController.cs
+8: [ApiController]
+9: [Route("api/suppliers")]
+10: [Authorize]
+22: [HttpGet("options")]
+32: [HttpGet("duplicates")]
+49: [HttpGet]
+55: [HttpGet("{id:int}")]
+68: [HttpGet("search")]
+74: [HttpPost, Authorize]
+84: [HttpPut("{id:int}"), Authorize]
+108: [HttpDelete("{id:int}"), Authorize]
+
+src/StockFlow.Web/Controllers/TransferController.cs
+8: [ApiController, Authorize, Route("api/transfers")]
+20: [HttpGet]
+26: [HttpGet("locations")]
+32: [HttpGet("variants")]
+38: [HttpGet("{id:long}")]
+51: [HttpGet("{id:long}/dispatch-units")]
+57: [HttpPost]
+66: [HttpPost("{id:long}/{actionName}")]
+
+src/StockFlow.Web/Controllers/UnitIdentifiersController.cs
+9: [ApiController,Authorize,Route("api/receiving/unit-identifiers")]
+12: [HttpPost]
+
+src/StockFlow.Web/Controllers/VariantController.cs
+9: [ApiController, Authorize, Route("api/products/variants")]
+31: [HttpGet("{id:long}/item-labels")]
+32: [HttpPost("{id:long}/item-labels/generate")]
+41: [HttpPost("{id:long}/print")]
+42: [HttpPost("{id:long}/reprint")]
+82: [HttpGet]
+95: [HttpPost]
+107: [HttpPut("{id:long}")]
+152: [HttpPost("{id:long}/barcode")]
+166: [HttpPost("units/{unitId:long}/barcode")]
+
+src/StockFlow.Web/Controllers/WarrantyController.cs
+9: [ApiController, Route("api/warranty"), Authorize]
+22: [HttpGet("{id:long}")]
+35: [HttpGet("serial/{serial}")]
+48: [HttpGet("unit/{id:long}")]
+61: [HttpGet("invoice/{invoice}")]
+67: [HttpGet("expiring")]
+73: [HttpGet("claims")]
+79: [HttpGet("{id:long}/history")]
+85: [HttpPost("register/{saleItemId:long}"), Authorize]
+99: [HttpPost("claims"), Authorize]
+113: [HttpPut("claims/{id:long}"), Authorize]
+145: [HttpPut("{id:long}/coverage"), Authorize]
+
+src/StockFlow.Web/Controllers/WhatsAppController.cs
+14: [Authorize,ApiController,Route("api/configuration/whatsapp"),RequestSizeLimit(16*1024)]
+17: [HttpPost("signup")]
+25: [HttpPost("complete")]
+39: [AllowAnonymous,IgnoreAntiforgeryToken,ApiController,Route("api/whatsapp/webhook")]
+42: [HttpGet]
+50: [HttpPost,RequestSizeLimit(1024*1024)]
+
+Razor screens
+src/StockFlow.Web/Pages/Account/AccessDenied.cshtml
+src/StockFlow.Web/Pages/Account/ChangePassword.cshtml
+src/StockFlow.Web/Pages/Account/ForgotPassword.cshtml
+src/StockFlow.Web/Pages/Account/Home.cshtml
+src/StockFlow.Web/Pages/Account/Login.cshtml
+src/StockFlow.Web/Pages/Account/Logout.cshtml
+src/StockFlow.Web/Pages/Account/Sessions.cshtml
+src/StockFlow.Web/Pages/Account/TwoFactor.cshtml
+src/StockFlow.Web/Pages/Admin/AuditLogs.cshtml
+src/StockFlow.Web/Pages/Admin/Gst.cshtml
+src/StockFlow.Web/Pages/Admin/Pilot.cshtml
+src/StockFlow.Web/Pages/Admin/Roles.cshtml
+src/StockFlow.Web/Pages/Admin/Security.cshtml
+src/StockFlow.Web/Pages/Admin/Stores.cshtml
+src/StockFlow.Web/Pages/Admin/Users.cshtml
+src/StockFlow.Web/Pages/Brands/Index.cshtml
+src/StockFlow.Web/Pages/CashClosing/Index.cshtml
+src/StockFlow.Web/Pages/Categories/Attributes.cshtml
+src/StockFlow.Web/Pages/Categories/Index.cshtml
+src/StockFlow.Web/Pages/Configuration/Index.cshtml
+src/StockFlow.Web/Pages/Configuration/Notifications.cshtml
+src/StockFlow.Web/Pages/Configuration/WhatsApp.cshtml
+src/StockFlow.Web/Pages/Crm/Enquiries.cshtml
+src/StockFlow.Web/Pages/Crm/Index.cshtml
+src/StockFlow.Web/Pages/Customers/Index.cshtml
+src/StockFlow.Web/Pages/Error.cshtml
+src/StockFlow.Web/Pages/Index.cshtml
+src/StockFlow.Web/Pages/Inventory/Index.cshtml
+src/StockFlow.Web/Pages/Inventory/LowStock.cshtml
+src/StockFlow.Web/Pages/Labels/Index.cshtml
+src/StockFlow.Web/Pages/Notifications/Index.cshtml
+src/StockFlow.Web/Pages/Privacy.cshtml
+src/StockFlow.Web/Pages/Products/Index.cshtml
+src/StockFlow.Web/Pages/Products/Variants.cshtml
+src/StockFlow.Web/Pages/Purchases/Create.cshtml
+src/StockFlow.Web/Pages/Purchases/Details.cshtml
+src/StockFlow.Web/Pages/Purchases/Index.cshtml
+src/StockFlow.Web/Pages/Receiving/Index.cshtml
+src/StockFlow.Web/Pages/Reports/Activity.cshtml
+src/StockFlow.Web/Pages/Reports/Gst.cshtml
+src/StockFlow.Web/Pages/Reports/Index.cshtml
+src/StockFlow.Web/Pages/Reports/ProductSales.cshtml
+src/StockFlow.Web/Pages/Reports/Stores.cshtml
+src/StockFlow.Web/Pages/Sales/Create.cshtml
+src/StockFlow.Web/Pages/Sales/Details.cshtml
+src/StockFlow.Web/Pages/Sales/Index.cshtml
+src/StockFlow.Web/Pages/Sales/Invoice.cshtml
+src/StockFlow.Web/Pages/Scan/Index.cshtml
+src/StockFlow.Web/Pages/Search.cshtml
+src/StockFlow.Web/Pages/Service/Create.cshtml
+src/StockFlow.Web/Pages/Service/Details.cshtml
+src/StockFlow.Web/Pages/Service/Index.cshtml
+src/StockFlow.Web/Pages/Service/Pending.cshtml
+src/StockFlow.Web/Pages/Settings/BusinessProfile.cshtml
+src/StockFlow.Web/Pages/Settings/Company.cshtml
+src/StockFlow.Web/Pages/StockInflow.cshtml
+src/StockFlow.Web/Pages/StockInflow/Details.cshtml
+src/StockFlow.Web/Pages/StockOutflow.cshtml
+src/StockFlow.Web/Pages/Suppliers/Index.cshtml
+src/StockFlow.Web/Pages/Transfers/Index.cshtml
+src/StockFlow.Web/Pages/Users/Index.cshtml
+src/StockFlow.Web/Pages/Warranty/Claims.cshtml
+src/StockFlow.Web/Pages/Warranty/Details.cshtml
+src/StockFlow.Web/Pages/Warranty/Expiring.cshtml
+src/StockFlow.Web/Pages/Warranty/Lookup.cshtml
+
+Repository implementations
+src/StockFlow.Infrastructure/Repositories/BarcodeLotRepository.cs
+src/StockFlow.Infrastructure/Repositories/BarcodeManagementRepository.cs
+src/StockFlow.Infrastructure/Repositories/BillingPolicyStore.cs
+src/StockFlow.Infrastructure/Repositories/BranchRepository.cs
+src/StockFlow.Infrastructure/Repositories/BrandRepository.cs
+src/StockFlow.Infrastructure/Repositories/BusinessProfileRepository.cs
+src/StockFlow.Infrastructure/Repositories/CashClosingRepository.cs
+src/StockFlow.Infrastructure/Repositories/CatalogIdentifierAllocator.cs
+src/StockFlow.Infrastructure/Repositories/CatalogSchemaRepository.cs
+src/StockFlow.Infrastructure/Repositories/CategoryRepository.cs
+src/StockFlow.Infrastructure/Repositories/CompanySettingsRepository.cs
+src/StockFlow.Infrastructure/Repositories/CrmRepository.cs
+src/StockFlow.Infrastructure/Repositories/CustomerRepository.cs
+src/StockFlow.Infrastructure/Repositories/DashboardRepository.cs
+src/StockFlow.Infrastructure/Repositories/GstCatalog.cs
+src/StockFlow.Infrastructure/Repositories/GstDocuments.cs
+src/StockFlow.Infrastructure/Repositories/GstRepository.cs
+src/StockFlow.Infrastructure/Repositories/GstSetup.cs
+src/StockFlow.Infrastructure/Repositories/GstTaxAssignments.cs
+src/StockFlow.Infrastructure/Repositories/HelpBusinessRepository.cs
+src/StockFlow.Infrastructure/Repositories/HelpOperationsQueries.cs
+src/StockFlow.Infrastructure/Repositories/InventoryRepository.cs
+src/StockFlow.Infrastructure/Repositories/InvoiceRepository.cs
+src/StockFlow.Infrastructure/Repositories/NotificationRepository.cs
+src/StockFlow.Infrastructure/Repositories/OperationsRepository.cs
+src/StockFlow.Infrastructure/Repositories/ProductEditIntegrity.cs
+src/StockFlow.Infrastructure/Repositories/ProductRepository.cs
+src/StockFlow.Infrastructure/Repositories/PurchaseChanges.cs
+src/StockFlow.Infrastructure/Repositories/PurchaseReceiptRepository.cs
+src/StockFlow.Infrastructure/Repositories/PurchaseRepository.cs
+src/StockFlow.Infrastructure/Repositories/ReportingRepository.cs
+src/StockFlow.Infrastructure/Repositories/SalesEnquiryRepository.cs
+src/StockFlow.Infrastructure/Repositories/SalesManualItems.cs
+src/StockFlow.Infrastructure/Repositories/SalesRepository.cs
+src/StockFlow.Infrastructure/Repositories/ScanRepository.cs
+src/StockFlow.Infrastructure/Repositories/ScreenLanguageRepository.cs
+src/StockFlow.Infrastructure/Repositories/SecurityRepository.Stores.cs
+src/StockFlow.Infrastructure/Repositories/SecurityRepository.cs
+src/StockFlow.Infrastructure/Repositories/ServiceRepository.cs
+src/StockFlow.Infrastructure/Repositories/StockIntakeRepository.cs
+src/StockFlow.Infrastructure/Repositories/StockItemLabels.cs
+src/StockFlow.Infrastructure/Repositories/StockReceiptHistoryRepository.cs
+src/StockFlow.Infrastructure/Repositories/SupplierRepository.cs
+src/StockFlow.Infrastructure/Repositories/TransferRepository.cs
+src/StockFlow.Infrastructure/Repositories/UnitIdentifierAllocator.cs
+src/StockFlow.Infrastructure/Repositories/UserRepository.cs
+src/StockFlow.Infrastructure/Repositories/VariantRepository.cs
+src/StockFlow.Infrastructure/Repositories/VehicleFitmentStorage.cs
+src/StockFlow.Infrastructure/Repositories/WarrantyRepository.cs
+
+Application services
+src/StockFlow.Application/Services/AuthService.cs
+src/StockFlow.Application/Services/BrandService.cs
+src/StockFlow.Application/Services/CatalogSchemaValidator.cs
+src/StockFlow.Application/Services/CategoryFieldInheritance.cs
+src/StockFlow.Application/Services/CategoryService.cs
+src/StockFlow.Application/Services/CustomerService.cs
+src/StockFlow.Application/Services/DashboardService.cs
+src/StockFlow.Application/Services/InvoiceService.cs
+src/StockFlow.Application/Services/ProductService.cs
+src/StockFlow.Application/Services/PurchaseService.cs
+src/StockFlow.Application/Services/RetailVariantSelection.cs
+src/StockFlow.Application/Services/SalesService.cs
+src/StockFlow.Application/Services/ScanService.cs
+src/StockFlow.Application/Services/SecurityAuthService.cs
+src/StockFlow.Application/Services/ServiceService.cs
+src/StockFlow.Application/Services/SupplierService.cs
+src/StockFlow.Application/Services/UserService.cs
+src/StockFlow.Application/Services/WarrantyService.cs
+
+Migrations
+database/migrations/007_phase5_master_data.sql
+database/migrations/008_phase6_purchases.sql
+database/migrations/009_phase7_inventory.sql
+database/migrations/010_phase8_scanning.sql
+database/migrations/011_phase9_invoice_sequence.sql
+database/migrations/012_phase9_sales.sql
+database/migrations/013_phase10_invoices.sql
+database/migrations/014_phase11_warranty.sql
+database/migrations/015_phase12_service.sql
+database/migrations/016_phase13_dashboard_indexes.sql
+database/migrations/017_administration_security.sql
+database/migrations/018_common_inventory_variants.sql
+database/migrations/019_purchase_receipts.sql
+database/migrations/020_tenants_stores_locations.sql
+database/migrations/021_stock_transfers.sql
+database/migrations/022_product_registration_defaults.sql
+database/migrations/023_supplier_registration.sql
+database/migrations/024_category_brand_registration.sql
+database/migrations/025_admin_security_actions.sql
+database/migrations/026_guided_stock_receiving.sql
+database/migrations/027_inventory_transfer_actions.sql
+database/migrations/028_shop_operations.sql
+database/migrations/029_module_hierarchy.sql
+database/migrations/030_receiving_catalog_extensions.sql
+database/migrations/031_stock_receipt_history.sql
+database/migrations/032_brand_categories.sql
+database/migrations/033_shared_login_sessions.sql
+database/migrations/034_billing_workflow.sql
+database/migrations/035_cash_closing.sql
+database/migrations/036_screen_languages.sql
+database/migrations/037_customer_payment_due_dates.sql
+database/migrations/038_company_profile_and_billing_settings.sql
+database/migrations/039_notifications.sql
+database/migrations/040_business_alerts_email.sql
+database/migrations/041_login_email_otp.sql
+database/migrations/042_password_minimum_eight.sql
+database/migrations/043_staff_login_email_otp.sql
+database/migrations/044_account_only_login_otp.sql
+database/migrations/045_disable_login_email_otp.sql
+database/migrations/046_electrical_business_profile_baseline.sql
+database/migrations/047_shop_business_profiles.sql
+database/migrations/048_category_attribute_schemas.sql
+database/migrations/049_retail_variant_document_snapshots.sql
+database/migrations/050_bike_catalog_setup_switch.sql
+database/migrations/051_profile_data_visibility.sql
+database/migrations/052_catalog_registration_improvements.sql
+database/migrations/053_product_image_gallery.sql
+database/migrations/054_unique_stock_item_labels.sql
+database/migrations/055_category_hierarchy_inheritance.sql
+database/migrations/056_category_registration_tabs.sql
+database/migrations/057_category_registration_details.sql
+database/migrations/058_brand_registration_details.sql
+database/migrations/059_stock_barcode_workflow.sql
+database/migrations/060_purchase_barcode_lots.sql
+database/migrations/061_barcode_print_requests.sql
+database/migrations/062_barcode_label_sizes.sql
+database/migrations/063_purchase_corrections.sql
+database/migrations/064_product_registration_review.sql
+database/migrations/065_two_level_categories.sql
+database/migrations/066_product_registration_integrity.sql
+database/migrations/067_reviewed_local_prefix_plan.sql
+database/migrations/067_sequential_catalog_identifiers.sql
+database/migrations/067_sku_prefix_dry_run.sql
+database/migrations/068_unit_identifier_sources.sql
+database/migrations/069_product_edit_integrity.sql
+database/migrations/070_gst_foundation.sql
+database/migrations/071_gst_source_documents.sql
+database/migrations/072_retail_crm.sql
+database/migrations/073_gst_catalog_tax_mapping.sql
+database/migrations/074_fast_billing_manual_items.sql
+database/migrations/075_optional_gst_manual_items.sql
+database/migrations/076_whatsapp_business_notifications.sql
+database/migrations/077_manual_bill_draft_guard.sql
+database/migrations/078_sequential_draft_numbers.sql
+database/migrations/079_bill_draft_lifecycle.sql
+database/migrations/080_unused_product_variants.sql
+database/migrations/081_cashier_tax_override.sql
+database/migrations/082_fast_billing_policy.sql
+
+Database/application check implementations
+tests/StockFlow.MasterDataChecks/AdminActionChecks.cs
+tests/StockFlow.MasterDataChecks/AdministrationRolloutDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/BarcodeManagementChecks.cs
+tests/StockFlow.MasterDataChecks/BikeDemoSetupChecks.cs
+tests/StockFlow.MasterDataChecks/BillingChecks.cs
+tests/StockFlow.MasterDataChecks/BillingDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/BrandCategoryChecks.cs
+tests/StockFlow.MasterDataChecks/BrandCategoryDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/BrandRegistrationChecks.cs
+tests/StockFlow.MasterDataChecks/BusinessProfilePhaseTwoChecks.cs
+tests/StockFlow.MasterDataChecks/CatalogRegistrationChecks.cs
+tests/StockFlow.MasterDataChecks/CatalogRegistrationReviewChecks.cs
+tests/StockFlow.MasterDataChecks/CategoryAttributeChecks.cs
+tests/StockFlow.MasterDataChecks/CategoryHierarchyChecks.cs
+tests/StockFlow.MasterDataChecks/CategoryRegistrationTabChecks.cs
+tests/StockFlow.MasterDataChecks/CompanyProfileChecks.cs
+tests/StockFlow.MasterDataChecks/ConfigurationChecks.cs
+tests/StockFlow.MasterDataChecks/CrmChecks.cs
+tests/StockFlow.MasterDataChecks/CrmHttpChecks.cs
+tests/StockFlow.MasterDataChecks/DashboardChecks.cs
+tests/StockFlow.MasterDataChecks/DashboardFollowUpDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/DatabaseReadChecks.cs
+tests/StockFlow.MasterDataChecks/DraftLifecycleChecks.cs
+tests/StockFlow.MasterDataChecks/DraftNumberingChecks.cs
+tests/StockFlow.MasterDataChecks/ElectricalPhaseOneChecks.cs
+tests/StockFlow.MasterDataChecks/ErrorLogChecks.cs
+tests/StockFlow.MasterDataChecks/FastBillingChecks.cs
+tests/StockFlow.MasterDataChecks/FastPolicyChecks.cs
+tests/StockFlow.MasterDataChecks/FieldValidationChecks.cs
+tests/StockFlow.MasterDataChecks/ForgotPasswordChecks.cs
+tests/StockFlow.MasterDataChecks/GstCatalogChecks.cs
+tests/StockFlow.MasterDataChecks/GstChecks.cs
+tests/StockFlow.MasterDataChecks/GstHttpChecks.cs
+tests/StockFlow.MasterDataChecks/GstImportHttpChecks.cs
+tests/StockFlow.MasterDataChecks/GstSetupChecks.cs
+tests/StockFlow.MasterDataChecks/GstSpreadsheetChecks.cs
+tests/StockFlow.MasterDataChecks/HelpAiCancellationChecks.cs
+tests/StockFlow.MasterDataChecks/HelpAiChecks.cs
+tests/StockFlow.MasterDataChecks/HelpBusinessChecks.cs
+tests/StockFlow.MasterDataChecks/HelpIntentLiveChecks.cs
+tests/StockFlow.MasterDataChecks/HelpPanelChecks.cs
+tests/StockFlow.MasterDataChecks/HelpSalesChecks.cs
+tests/StockFlow.MasterDataChecks/HelpSalesDatabaseReadChecks.cs
+tests/StockFlow.MasterDataChecks/HelpStockChecks.cs
+tests/StockFlow.MasterDataChecks/HelpVoiceChecks.cs
+tests/StockFlow.MasterDataChecks/IdentifierIntegrationDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/IdleSessionChecks.cs
+tests/StockFlow.MasterDataChecks/InventoryControlChecks.cs
+tests/StockFlow.MasterDataChecks/InventoryDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/InvoiceChecks.cs
+tests/StockFlow.MasterDataChecks/InvoiceDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/LabelChecks.cs
+tests/StockFlow.MasterDataChecks/LegacySkuCorrectionChecks.cs
+tests/StockFlow.MasterDataChecks/ListPaginationChecks.cs
+tests/StockFlow.MasterDataChecks/LoginValidationChecks.cs
+tests/StockFlow.MasterDataChecks/MasterScreenChecks.cs
+tests/StockFlow.MasterDataChecks/MultiStoreDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/NavigationChecks.cs
+tests/StockFlow.MasterDataChecks/NewSaleIntegrationChecks.cs
+tests/StockFlow.MasterDataChecks/NotificationChecks.cs
+tests/StockFlow.MasterDataChecks/NotificationDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/NotificationDeliveryChecks.cs
+tests/StockFlow.MasterDataChecks/PeriodReportingDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/ProductDescriptiveDetailsDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/ProductEditIntegrityChecks.cs
+tests/StockFlow.MasterDataChecks/ProductIdentityDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/ProductListSkuChecks.cs
+tests/StockFlow.MasterDataChecks/ProductRegistrationChecks.cs
+tests/StockFlow.MasterDataChecks/ProductRegistrationDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/ProductReviewChecks.cs
+tests/StockFlow.MasterDataChecks/ProductSalesReadChecks.cs
+tests/StockFlow.MasterDataChecks/ProductSkuPreviewChecks.cs
+tests/StockFlow.MasterDataChecks/PurchaseCorrectionChecks.cs
+tests/StockFlow.MasterDataChecks/PurchaseCorrectionDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/PurchaseDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/PurchaseReceivingChecks.cs
+tests/StockFlow.MasterDataChecks/QuickCustomerChecks.cs
+tests/StockFlow.MasterDataChecks/QuickCustomerIntegrationChecks.cs
+tests/StockFlow.MasterDataChecks/ReceiveStockChecks.cs
+tests/StockFlow.MasterDataChecks/ReceiveStockIntegrationChecks.cs
+tests/StockFlow.MasterDataChecks/ReceivingCatalogExtensionChecks.cs
+tests/StockFlow.MasterDataChecks/ReceivingChecks.cs
+tests/StockFlow.MasterDataChecks/ReceivingDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/ReportsChecks.cs
+tests/StockFlow.MasterDataChecks/RetailTransactionChecks.cs
+tests/StockFlow.MasterDataChecks/SalesChecks.cs
+tests/StockFlow.MasterDataChecks/SalesDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/SavedBillsChecks.cs
+tests/StockFlow.MasterDataChecks/ScanChecks.cs
+tests/StockFlow.MasterDataChecks/ScreenLanguageChecks.cs
+tests/StockFlow.MasterDataChecks/ScreenLanguageSchemaChecks.cs
+tests/StockFlow.MasterDataChecks/SecurityChecks.cs
+tests/StockFlow.MasterDataChecks/SenderVerificationChecks.cs
+tests/StockFlow.MasterDataChecks/SequentialSkuDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/ServiceChecks.cs
+tests/StockFlow.MasterDataChecks/ServiceDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/SessionWorkerChecks.cs
+tests/StockFlow.MasterDataChecks/SharedSessionDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/ShopOperationsDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/ShopReadinessChecks.cs
+tests/StockFlow.MasterDataChecks/ShopReadinessDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/StockBarcodeWorkflowChecks.cs
+tests/StockFlow.MasterDataChecks/StockReceiptDatabaseReadChecks.cs
+tests/StockFlow.MasterDataChecks/StockReceiptPaginationChecks.cs
+tests/StockFlow.MasterDataChecks/StoreAssignmentChecks.cs
+tests/StockFlow.MasterDataChecks/SupplierRegistrationChecks.cs
+tests/StockFlow.MasterDataChecks/TwoLevelCategoryChecks.cs
+tests/StockFlow.MasterDataChecks/VariantDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/WarrantyChecks.cs
+tests/StockFlow.MasterDataChecks/WarrantyDatabaseChecks.cs
+tests/StockFlow.MasterDataChecks/WhatsAppChecks.cs
+
+Background worker source files
+src/StockFlow.Web/Help/LocalAiWorker.cs
+src/StockFlow.Web/Notifications/NotificationWorker.cs
+src/StockFlow.Web/Security/SessionExpirationWorker.cs

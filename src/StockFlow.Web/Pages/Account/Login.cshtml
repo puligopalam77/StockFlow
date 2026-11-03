@@ -1,0 +1,109 @@
+@page
+@model StockFlow.Web.Pages.Account.LoginModel
+@inject Microsoft.Extensions.Options.IOptions<StockFlow.Web.Security.SessionSecurityOptions> SessionSettings
+@{ Layout = "_AuthLayout"; ViewData["Title"] = "Sign in"; }
+@section Styles {
+    <link rel="stylesheet" href="~/css/login-responsive.css" asp-append-version="true" />
+}
+<main id="main-content" class="sf-login">
+    <section class="sf-login-panel" aria-labelledby="login-title">
+        <a class="sf-brand sf-login-brand" asp-page="/Index" aria-label="StockFlow home"><partial name="_Brand" />
+        </a>
+        <div class="sf-login-content">
+            <div class="sf-eyebrow">Welcome back <span>
+                </span>
+            </div>
+            <h1 id="login-title">Sign in to your<br /><em>StockFlow</em> account</h1>
+            <p class="sf-login-intro">Manage your inventory, track stock movement<br class="sf-wide-only" /> and keep your business running smoothly.</p>
+            @if(Request.Query["reason"] == "idle") {<p class="alert alert-info" role="status">You were signed out after @SessionSettings.Value.IdleMinutes minutes of inactivity. Sign in to continue.</p>}
+            @if(Request.Query["reason"] == "absolute") {<p class="alert alert-info" role="status">Your sign-in time has ended. Sign in again to continue.</p>}
+            @if(Request.Query["reason"] == "ended") {<p class="alert alert-info" role="status">Your login session has ended. Sign in again to continue.</p>}
+            <form method="post" class="sf-login-form" data-inline-validation>
+                @if(Request.Query["passwordChanged"] == "True") { <p class="alert alert-success" role="status">Password updated. Sign in with your new password.</p> }
+                <input type="hidden" asp-for="ReturnUrl" />
+                <input type="hidden" asp-for="Input.TenantCode" />
+                <label asp-for="Input.Username">Username</label>
+                <div class="sf-input-wrap">
+                    <svg class="sf-icon" aria-hidden="true">
+                        <use href="/images/icons.svg#user" />
+                    </svg>
+                    <input asp-for="Input.Username" autocomplete="username" maxlength="50" placeholder="Enter your username" required />
+                </div>
+                <span asp-validation-for="Input.Username" class="sf-field-error">
+                </span>
+                <label asp-for="Input.Password">Password</label>
+                <div class="sf-input-wrap">
+                    <svg class="sf-icon" aria-hidden="true">
+                        <use href="/images/icons.svg#lock" />
+                    </svg>
+                    <input asp-for="Input.Password" autocomplete="current-password" maxlength="128" placeholder="Enter your password" required />
+                    <button type="button" id="password-toggle" class="sf-icon-button" aria-label="Show password" aria-pressed="false">
+                        <svg class="sf-icon" aria-hidden="true">
+                            <use href="/images/icons.svg#eye" />
+                        </svg>
+                    </button>
+                </div>
+                <span asp-validation-for="Input.Password" class="sf-field-error">
+                </span>
+                <div class="sf-login-options">
+                    <label class="sf-remember">
+                        <input asp-for="Input.RememberMe" /> <span>Remember Me</span>
+                    </label>
+                    <a asp-page="/Account/ForgotPassword" class="sf-text-button" id="forgot-password-link">Forgot Password?</a>
+                </div>
+                <div asp-validation-summary="ModelOnly" class="sf-login-errors" role="alert"></div>
+                <button type="submit" class="sf-signin">
+                    <svg class="sf-icon" aria-hidden="true">
+                        <use href="/images/icons.svg#lock" />
+                    </svg> Sign In <svg class="sf-icon" aria-hidden="true">
+                        <use href="/images/icons.svg#arrow" />
+                    </svg>
+                </button>
+            </form>
+        </div>
+        <footer class="sf-login-footer">
+            <div class="sf-trust">
+                <span>Secure</span><i></i>
+                <span>Smart</span><i></i>
+                <span>Reliable</span>
+            </div>
+            <p>© @DateTime.Now.Year StockFlow. All rights reserved.</p>
+        </footer>
+    </section>
+    <section class="sf-login-visual" aria-label="StockFlow inventory management">
+        <img class="sf-warehouse" src="~/images/warehouse-stockflow.png" alt="Warehouse with pink shelving and an employee checking stock on a tablet" fetchpriority="high" width="1536" height="1024" />
+        <div class="sf-visual-tint">
+        </div>
+        <p class="sf-handwritten">Track<br />
+            <span>Today.</span>
+            <br />Stock a<br />
+            <span>Brighter</span>
+            <br />Tomorrow.</p>
+        <div class="sf-feature-grid">
+            <article class="sf-feature">
+            <span class="sf-feature-icon">
+                <svg class="sf-icon" aria-hidden="true">
+                    <use href="/images/icons.svg#in" />
+                </svg>
+            </span>
+            <h2>Stock received</h2>
+            <p>Record incoming stock and update inventory in real time.</p></article>
+            <article class="sf-feature">
+            <span class="sf-feature-icon">
+                <svg class="sf-icon" aria-hidden="true">
+                    <use href="/images/icons.svg#out" />
+                </svg>
+            </span>
+            <h2>Stock leaving the shop</h2>
+            <p>Keep track of outgoing stock and monitor usage efficiently.</p></article>
+            <article class="sf-feature">
+            <span class="sf-feature-icon">
+                <svg class="sf-icon" aria-hidden="true">
+                    <use href="/images/icons.svg#chart" />
+                </svg>
+            </span>
+            <h2>Inventory Reports</h2>
+            <p>See stock movement and clear inventory insights at a glance.</p></article>
+        </div>
+    </section>
+</main>

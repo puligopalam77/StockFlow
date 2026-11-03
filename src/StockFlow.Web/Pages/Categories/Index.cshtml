@@ -1,0 +1,13 @@
+@page "{mode?}"
+@model StockFlow.Web.Pages.Categories.IndexModel
+@{ ViewData["Title"] = "Categories"; }
+<partial name="_ConfigurationMaster" model='@("Categories")' />
+@section Styles {
+    <link rel="stylesheet" href="~/css/category-management.css" asp-append-version="true" />
+}
+@section Scripts {
+    <script src="~/js/category-cascades.js" asp-append-version="true"></script>
+    <script src="~/js/category-registration.js" asp-append-version="true"></script>
+    <script src="~/js/master-data.js" asp-append-version="true"></script>
+    <script src="~/js/category.js" asp-append-version="true"></script>
+}
