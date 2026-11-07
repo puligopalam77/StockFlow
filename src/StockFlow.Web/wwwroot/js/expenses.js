@@ -109,6 +109,7 @@
  }
  function initialFields(){const v=$('expense-initial-state').value,show=v!=='UNPAID';$('expense-initial-fields').hidden=!show;$('expense-initial-amount-wrap').hidden=v!=='PARTIAL';$('expense-initial-amount').required=v==='PARTIAL';$('expense-initial-date').required=show;$('expense-initial-confirm').required=show;$('expense-initial-date').min=$('expense-incurred').value;$('expense-initial-date').max=today;summary();}
  function controls(){const locked=busy||Boolean(pending)||receiptReading||Boolean(receiptCompletion),draft=!expense||expense.status==='DRAFT',editable=(expense?can('EDIT'):can('CREATE'))&&(draft||correcting)&&expense?.status!=='CANCELLED';
+  $('expense-state').hidden=createMode||!expense;
   $('expense-fields').disabled=locked||!editable;$('expense-reason').disabled=locked;
   $('expense-save').hidden=!editable;$('expense-save').disabled=locked||!taxReady();($('expense-save-label')||$('expense-save')).textContent=expense?.status==='POSTED'?'Save Correction':'Save Draft';
   $('expense-record').hidden=!!expense||!can('CREATE')||!can('POST');$('expense-record').disabled=locked||!taxReady();
@@ -140,11 +141,11 @@
  function fillOptions(){for(const [name,rows] of [['category',options.categories],['payee',options.payees]]){const select=$('expense-'+name),value=select.value;select.replaceChildren(new Option('Select '+name,''));for(const r of rows)select.add(new Option(r.name,r.id));select.value=value;}}
  async function load(){options=await api('/api/expenses/options');fillOptions();if(root.dataset.id||expense||pending||receiptCompletion){try{expense=await api('/api/expenses/'+id);}catch(e){if(!(e.status===404&&['SAVE','RECORD'].includes(pending?.action)))throw e;}}
   if(expense){for(const [field,value] of Object.entries({category:expense.category_id,payee:expense.payee_id,incurred:expense.incurred_date,amount:expense.amount,description:expense.description}))$('expense-'+field).value=value;
-   $('expense-state').textContent=state(expense)+' / '+lifecycle(expense)+' / version '+expense.version;($('expense-save-label')||$('expense-save')).textContent=expense.status==='POSTED'?'Save Correction':'Save Draft';$('expense-balance').textContent=`Amount Paid: ${money(expense.paid)} · Balance Due: ${money((paise(expense.amount)-paise(expense.paid))/100)}`;
+   $('expense-state').textContent=expense.status==='DRAFT'?'Draft':state(expense)+' / '+lifecycle(expense)+' / version '+expense.version;($('expense-save-label')||$('expense-save')).textContent=expense.status==='POSTED'?'Save Correction':'Save Draft';$('expense-balance').textContent=`Amount Paid: ${money(expense.paid)} · Balance Due: ${money((paise(expense.amount)-paise(expense.paid))/100)}`;
    $('expense-payments').replaceChildren();const reversed=new Set(expense.payments.map(p=>p.reverses_id));for(const p of expense.payments){const tr=row($('expense-payments'),[p.paid_date,p.kind,paymentMethod(p.payment_mode),money(p.amount),p.reference,p.actor_id]);const td=document.createElement('td');if(can('REVERSE')&&expense.status==='POSTED'&&p.kind!=='REVERSAL'&&!reversed.has(p.payment_id)){const b=document.createElement('button');b.type='button';b.className='btn btn-sm btn-outline-secondary';b.textContent='Reverse';b.dataset.reverse='true';b.onclick=()=>run(()=>{$('expense-refund-tools').open=true;if($('expense-payment-reason').value.trim().length<3){$('expense-payment-reason').focus();throw new Error('Enter a reversal reason in the refund/reversal form.');}return write('REVERSE',{paymentId:p.payment_id,paidDate:$('expense-paid-date').value,reason:$('expense-payment-reason').value});});td.append(b);}tr.append(td);}
    $('expense-history').replaceChildren();for(const e of expense.events)row($('expense-history'),[e.version,e.action,e.at,e.actor,e.reason,money(e.snapshot.amount)]);
    $('expense-attachments').replaceChildren();for(const a of expense.attachments){const li=document.createElement('li'),link=document.createElement('a');link.textContent=a.name;link.href='/api/expenses/'+id+'/attachments/'+a.id;li.append(link);$('expense-attachments').append(li);}
-  }else{$('expense-state').textContent='Unsaved Draft';if(!$('expense-incurred').value)$('expense-incurred').value=today;}
+  }else{$('expense-state').textContent='';if(!$('expense-incurred').value)$('expense-incurred').value=today;}
   const restore=pending?.action==='RECORD'?pending.request.body.expense:pending?.action==='SAVE'?pending.request.body:null;
   if(restore)for(const [field,value]of Object.entries({category:restore.categoryId,payee:restore.payeeId,incurred:restore.incurredDate,amount:restore.amount,description:restore.description,reason:restore.reason||''}))$('expense-'+field).value=value;
   setTax(restore&&Object.hasOwn(restore,'gst')?restore.gst:expense?.gst_details);
@@ -157,7 +158,7 @@
   if(!$('expense-paid-date').value)$('expense-paid-date').value=today;correcting=false;if(!pending)$('expense-reason').value='';$('expense-reason').required=false;$('expense-correction').hidden=true;$('expense-cancel').hidden=true;clean();initialFields();controls();
   if(pending)message('An earlier result is unconfirmed. Retry the unchanged request before making another change.');
   if(receiptCompletion)receiptError(receiptFile?'Expense saved, but receipt upload failed.':'Expense saved. Reselect the receipt, then choose Retry Upload.');
-  const flash=sessionStorage.getItem(key+'.success.'+id);if(flash){sessionStorage.removeItem(key+'.success.'+id);message(flash);window.StockFlowNotify?.show('success',flash,{key:'expense-saved',duration:4000});}
+  const flash=sessionStorage.getItem(key+'.success.'+id);if(flash){sessionStorage.removeItem(key+'.success.'+id);const draft=expense?.status==='DRAFT',text=draft?'Draft saved successfully.':flash;message(draft?'':text);window.StockFlowNotify?.show('success',text,{key:'expense-saved',duration:4000});}
  }
  async function run(action){if(busy)return;busy=true;controls();try{await action();}catch(e){message(e.message);}finally{busy=false;controls();}}
  async function send(){const r=pending;try{await api('/api/expenses/'+r.id+'/'+r.action.toLowerCase(),r.request);
@@ -169,7 +170,7 @@
   if(receiptCompletion){await completeReceipt();return;}
   if(!root.dataset.id){await finishSaved(r.action);return;}
   await load();if(['PAY','REFUND','REVERSE'].includes(r.action)){window.StockFlowUnsaved?.markSaved($('expense-payment'));window.StockFlowUnsaved?.markSaved(paymentForm);paymentDialog.close();}
-  const text=r.action==='PAY'?'Payment recorded successfully':'Saved and confirmed by the server.';message(text);window.StockFlowNotify?.show('success',text,{key:'expense-saved',duration:4000});
+  const text=r.action==='SAVE'?'Draft saved successfully.':r.action==='PAY'?'Payment recorded successfully':'Saved and confirmed by the server.';message(r.action==='SAVE'?'':text);window.StockFlowNotify?.show('success',text,{key:'expense-saved',duration:4000});
  }
  async function write(action,body){if(pending)throw new Error('Resolve the pending request first.');pending={id,action,request:{operationId:crypto.randomUUID(),expectedVersion:expense?.version||0,body}};sessionStorage.setItem(key,JSON.stringify(pending));controls();await send();}
  const details=()=>({categoryId:$('expense-category').value,payeeId:$('expense-payee').value,incurredDate:$('expense-incurred').value,amount:Number($('expense-amount').value),description:$('expense-description').value,reason:$('expense-reason').value,gst:gstInput()});
@@ -298,9 +299,9 @@
  }
  async function finishSaved(action){
   sessionStorage.removeItem(completionKey);receiptCompletion=null;
-  const text=action==='SAVE'?'Expense draft saved successfully':'Expense recorded successfully';
+  const text=action==='SAVE'?'Draft saved successfully.':'Expense recorded successfully';
   if(!root.dataset.id){sessionStorage.setItem(key+'.success.'+id,text);sessionStorage.removeItem(createKey);clean();window.StockFlowUnsaved?.allowNavigation();location.replace('/Expenses/Details?id='+encodeURIComponent(id));return;}
-  await load();message(text);window.StockFlowNotify?.show('success',text,{key:'expense-saved',duration:4000});
+  await load();message(action==='SAVE'?'':text);window.StockFlowNotify?.show('success',text,{key:'expense-saved',duration:4000});
  }
  async function completeReceipt(){
   const action=receiptCompletion.action;try{await load();await uploadReceipt();await finishSaved(action);}

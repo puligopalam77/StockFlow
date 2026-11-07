@@ -1,7 +1,7 @@
 @page
 @{ViewData["Title"]="Operating Expenses";}
 <div id="expenses" data-mode="list" class="sf-list-screen">
-<header class="sf-page-heading"><div><h1>Operating Expenses</h1><p>Record shop overheads separately from stock purchases.</p></div><div><a class="btn btn-primary" href="/Expenses/Create" permission-module="EXPENSES" permission-action="CREATE">New Expense</a> <a class="btn btn-outline-secondary" href="/Expenses/Report">Expense Report</a></div></header>
+<header class="sf-page-heading"><div><h1>Operating Expenses</h1><p>Record shop overheads separately from stock purchases.</p></div><div><a class="btn btn-primary d-inline-flex align-items-center gap-2" href="/Expenses/Create" permission-module="EXPENSES" permission-action="CREATE"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><use href="/images/icons.svg#plus" /></svg><span>Add Expense</span></a> <a class="btn btn-outline-secondary" href="/Expenses/Report">Expense Report</a></div></header>
 <div id="expense-message" role="alert" hidden></div>
 <form id="expense-filters" class="card card-body expense-filters sf-filter-bar">
 <label for="expense-term">Search<input id="expense-term" class="form-control" maxlength="150" placeholder="Category, payee or description" /></label>
