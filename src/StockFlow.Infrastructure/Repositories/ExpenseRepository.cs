@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Dapper;
 using StockFlow.Application.Interfaces;
+using StockFlow.Application.Common;
 using StockFlow.Infrastructure.Data;
 namespace StockFlow.Infrastructure.Repositories;
 
@@ -19,25 +20,45 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
         return Read(await c.ExecuteScalarAsync<string>("""
           SELECT jsonb_build_object('categories',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',category_id,'name',name) ORDER BY name),'[]') FROM expense_categories),
           'payees',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',payee_id,'name',name) ORDER BY name),'[]') FROM expense_payees),
+          'taxRules',sf_expense_tax_options(),
           'permissions',(SELECT jsonb_object_agg(act,sf_expense_allowed(act)) FROM unnest(ARRAY['CREATE','EDIT','POST','PAY','REVERSE','CANCEL','ATTACH','EXPORT']) act))::text
           """));
     }
-    private const string RowSql="""
-        SELECT e.*,c.name category,p.name payee,coalesce((SELECT sum(amount) FROM expense_payments x WHERE x.tenant_id=e.tenant_id AND x.expense_id=e.expense_id),0) paid
+    public async Task<JsonElement> TaxPreviewAsync(ExpenseTaxPreview request)
+    {
+        if(request.Amount is <=0 or >9999999999.99m||SaleRules.Money(request.Amount)!=request.Amount||request.IncurredDate==default||request.IncurredDate.TimeOfDay!=TimeSpan.Zero||request.Gst.ValueKind!=JsonValueKind.Object)
+            throw new ValidationException("Enter an expense amount, date and configured GST rate.");
+        await using var c=factory.CreateConnection();await Require(c);
+        JsonElement result;
+        try{result=Read(await c.ExecuteScalarAsync<string>("SELECT sf_expense_gst(@gst::jsonb,@amount,@day::date,NULL::jsonb)::text",new{gst=request.Gst.GetRawText(),amount=request.Amount,day=request.IncurredDate}));}
+        catch(Npgsql.PostgresException error)when(error.SqlState=="23514"){throw new ValidationException(error.MessageText);}
+        if(result.ValueKind==JsonValueKind.Object)
+        {
+            var calculated=GstRules.InclusiveAmounts(request.Amount,result.GetProperty("rate").GetDecimal());
+            if(calculated.TaxableAmount!=result.GetProperty("taxableAmount").GetDecimal()||calculated.GstAmount!=result.GetProperty("gstAmount").GetDecimal())
+                throw new ValidationException("GST amounts could not be confirmed. Review the tax details.");
+        }
+        return result;
+    }
+    private static string Rows(bool cutoff=false)=>$"""
+        SELECT e.*,c.name category,p.name payee,coalesce((SELECT sum(amount) FROM expense_payments x WHERE x.tenant_id=e.tenant_id AND x.expense_id=e.expense_id{(cutoff?" AND x.paid_date<=@to::date":"")}),0) paid
         FROM expenses e JOIN expense_categories c USING(tenant_id,category_id) JOIN expense_payees p USING(tenant_id,payee_id)
         """;
-    public async Task<JsonElement> ListAsync(string? term,DateTime? from,DateTime? to,int page,int pageSize)
+    public async Task<JsonElement> ListAsync(string? term,DateTime? from,DateTime? to,int page,int pageSize,Guid? category=null,Guid? payee=null,string? status=null,string? paymentStatus=null)
     {
         if(page<1||page>100000||pageSize<1||pageSize>100||term?.Length>150||from>to)throw new ValidationException("Invalid expense filters or page.");
+        if(status is not(null or "" or "DRAFT" or "POSTED" or "CANCELLED")||paymentStatus is not(null or "" or "UNPAID" or "PARTIAL" or "PAID"))throw new ValidationException("Choose valid expense lifecycle and payment filters.");
         await using var c=factory.CreateConnection();await Require(c);
         return Read(await c.ExecuteScalarAsync<string>("""
           WITH filtered AS (
-          """+RowSql+"""
+          """+Rows()+"""
           WHERE (@term IS NULL OR e.description ILIKE '%'||@term||'%' OR p.name ILIKE '%'||@term||'%' OR c.name ILIKE '%'||@term||'%')
            AND (@from::date IS NULL OR e.incurred_date>=@from::date) AND (@to::date IS NULL OR e.incurred_date<=@to::date)
-          ), paged AS(SELECT * FROM filtered ORDER BY incurred_date DESC,expense_id OFFSET @offset LIMIT @pageSize)
-          SELECT jsonb_build_object('total',(SELECT count(*) FROM filtered),'page',@page,'pageSize',@pageSize,'rows',(SELECT coalesce(jsonb_agg(to_jsonb(paged)),'[]') FROM paged))::text
-          """,new{term=string.IsNullOrWhiteSpace(term)?null:term.Trim(),from,to,page,pageSize,offset=(page-1)*pageSize}));
+           AND (@category::uuid IS NULL OR e.category_id=@category) AND (@payee::uuid IS NULL OR e.payee_id=@payee)
+           AND (@status IS NULL OR e.status=@status)
+          ), selected AS(SELECT * FROM filtered WHERE @paymentStatus IS NULL OR status='POSTED' AND CASE @paymentStatus WHEN 'UNPAID' THEN paid=0 WHEN 'PARTIAL' THEN paid>0 AND paid<amount WHEN 'PAID' THEN paid=amount ELSE false END), paged AS(SELECT * FROM selected ORDER BY incurred_date DESC,expense_id OFFSET @offset LIMIT @pageSize)
+          SELECT jsonb_build_object('total',(SELECT count(*) FROM selected),'page',@page,'pageSize',@pageSize,'rows',(SELECT coalesce(jsonb_agg(to_jsonb(paged)),'[]') FROM paged))::text
+          """,new{term=string.IsNullOrWhiteSpace(term)?null:term.Trim(),from,to,page,pageSize,category,payee,status=string.IsNullOrEmpty(status)?null:status,paymentStatus=string.IsNullOrEmpty(paymentStatus)?null:paymentStatus,offset=(page-1)*pageSize}));
     }
     public async Task<JsonElement> GetAsync(Guid id)
     {
@@ -47,7 +68,7 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
           'events',(SELECT coalesce(jsonb_agg(jsonb_build_object('action',x.action,'version',x.version,'at',x.created_at,'actor',x.actor_id,'reason',x.input->'body'->>'reason','snapshot',x.snapshot) ORDER BY x.version),'[]') FROM expense_events x WHERE x.expense_id=r.expense_id),
           'attachments',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',a.attachment_id,'name',a.name,'at',a.created_at)),'[]') FROM expense_attachments a WHERE a.expense_id=r.expense_id)))::text
           FROM (
-          """+RowSql+" WHERE e.expense_id=@id) r",new{id});
+          """+Rows()+" WHERE e.expense_id=@id) r",new{id});
         return value is null?throw new KeyNotFoundException("Expense not found in selected shop."):Read(value);
     }
     public async Task<long> WriteAsync(Guid id,string action,ExpenseOperation operation)
@@ -56,10 +77,33 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
         await using var c=factory.CreateConnection();await Require(c);
         return await c.ExecuteScalarAsync<long>("SELECT sf_expense_write(@id,@op,@expected,@action,@body::jsonb)",new{id,op=operation.OperationId,expected=operation.ExpectedVersion,action,body=operation.Body.GetRawText()});
     }
-    public async Task<Guid> MasterAsync(string kind,Guid id,string name)
+    public async Task<long> RecordAsync(Guid id,ExpenseOperation operation)
     {
+        if(id==Guid.Empty||operation.OperationId==Guid.Empty||operation.ExpectedVersion<0||operation.Body.ValueKind!=JsonValueKind.Object||!operation.Body.TryGetProperty("expense",out var input)||input.ValueKind!=JsonValueKind.Object)throw new ValidationException("A valid expense, operation identity, version and expense details are required.");
+        JsonElement? payment=operation.Body.TryGetProperty("payment",out var p)&&p.ValueKind!=JsonValueKind.Null?p:null;
+        if(payment is {} pay&&(pay.ValueKind!=JsonValueKind.Object||!pay.TryGetProperty("confirmed",out var confirmed)||confirmed.ValueKind!=JsonValueKind.True))throw new ValidationException("Confirm the actual initial payment before recording it.");
+        await using var c=factory.CreateConnection();await Require(c);await c.OpenAsync();await using var t=await c.BeginTransactionAsync();
+        Guid Stage(string stage)=>new(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(operation.OperationId.ToString("N")+":expense-record:"+stage)).AsSpan(0,16));
+        async Task<long> Write(string action,long expected,JsonElement body)=>await c.ExecuteScalarAsync<long>("SELECT sf_expense_write(@id,@op,@expected,@action,@body::jsonb)",new{id,op=Stage(action),expected,action,body=body.GetRawText()},t);
+        // Bind the complete intent into the first immutable event, including an
+        // absent payment. A changed retry cannot append a new initial payment.
+        var details=JsonSerializer.Deserialize<Dictionary<string,JsonElement>>(input.GetRawText())!;details["recordIntent"]=operation.Body;
+        var version=await Write("SAVE",operation.ExpectedVersion,JsonSerializer.SerializeToElement(details));
+        version=await Write("POST",version,JsonSerializer.SerializeToElement(new{}));
+        if(payment is {} initial)version=await Write("PAY",version,initial);
+        await t.CommitAsync();return version;
+    }
+    public async Task<Guid> MasterAsync(string kind,Guid id,string name,string? mobileNumber=null)
+    {
+        if(kind is not("CATEGORY" or "PAYEE")||id==Guid.Empty||string.IsNullOrWhiteSpace(name)||name.Trim().Length>150)throw new ValidationException("Enter a valid category or payee name.");
+        mobileNumber=string.IsNullOrWhiteSpace(mobileNumber)?null:mobileNumber.Trim();
+        if(mobileNumber is not null&&(kind!="PAYEE"||!System.Text.RegularExpressions.Regex.IsMatch(mobileNumber,@"\A[6-9][0-9]{9}\z")))throw new ValidationException("Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.");
         await using var c=factory.CreateConnection();await Require(c,"EDIT");
-        return await c.ExecuteScalarAsync<Guid>("SELECT sf_expense_master(@kind,@id,@name)",new{kind,id,name});
+        await c.OpenAsync();await using var t=await c.BeginTransactionAsync();await c.ExecuteAsync("SELECT pg_advisory_xact_lock(hashtextextended('catalog-registration:'||sf_tenant()::text,0))",transaction:t);
+        var table=kind=="CATEGORY"?"expense_categories":"expense_payees";var key=kind=="CATEGORY"?"category_id":"payee_id";
+        var existing=(await c.QueryAsync<Guid>($"SELECT {key} FROM {table} WHERE lower(btrim(name))=lower(@name)",new{name=name.Trim()},t)).ToArray();
+        if(existing.Length>1)throw new ValidationException("Several existing names match. Choose the existing record instead of merging them.");
+        var result=existing.Length==1?existing[0]:await c.ExecuteScalarAsync<Guid>("SELECT sf_expense_master(@kind,@id,@name,@mobileNumber)",new{kind,id,name=name.Trim(),mobileNumber},t);await t.CommitAsync();return result;
     }
     public async Task<JsonElement> ReportAsync(DateTime from,DateTime to,bool export=false)
     {
@@ -71,10 +115,19 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
            'paid',(SELECT coalesce(sum(amount),0) FROM expense_payments WHERE paid_date BETWEEN @from::date AND @to::date),
            'outstandingAtCutoff',(SELECT coalesce(sum(e.amount-coalesce((SELECT sum(p.amount) FROM expense_payments p WHERE p.expense_id=e.expense_id AND p.paid_date<=@to::date),0)),0) FROM expenses e WHERE e.status='POSTED' AND e.incurred_date<=@to::date),
            'expenses',(SELECT coalesce(jsonb_agg(to_jsonb(r) ORDER BY r.incurred_date,r.expense_id),'[]') FROM (
-          """+RowSql+"""
+          """+Rows(true)+"""
            WHERE e.incurred_date BETWEEN @from::date AND @to::date) r),
            'payments',(SELECT coalesce(jsonb_agg(to_jsonb(p) ORDER BY paid_date,payment_id),'[]') FROM expense_payments p WHERE paid_date BETWEEN @from::date AND @to::date),
-           'definition','Current corrected posted expense amounts by incurred date; signed recorded payments/refunds/reversals by paid date. Cutoff dues use current corrected posted amounts, not historical as-recorded accruals. No eligible GST ITC or net-profit assertion.')::text
+           'monthly',(SELECT coalesce(jsonb_agg(to_jsonb(m) ORDER BY m."month"),'[]') FROM
+            (SELECT to_char(incurred_date,'YYYY-MM') AS "month",count(*) AS count,sum(amount) total FROM expenses
+             WHERE status='POSTED' AND incurred_date BETWEEN @from::date AND @to::date GROUP BY 1) m),
+           'categories',(SELECT coalesce(jsonb_agg(to_jsonb(g) ORDER BY total DESC,category),'[]') FROM
+            (SELECT e.category_id,c.name category,count(*) count,sum(e.amount) total FROM expenses e JOIN expense_categories c USING(tenant_id,category_id)
+             WHERE e.status='POSTED' AND e.incurred_date BETWEEN @from::date AND @to::date GROUP BY e.category_id,c.name) g),
+           'outstanding',(SELECT coalesce(jsonb_agg(to_jsonb(o) ORDER BY incurred_date,expense_id),'[]') FROM (
+          """+Rows(true)+"""
+           WHERE e.status='POSTED' AND e.incurred_date<=@to::date) o WHERE o.amount>o.paid),
+           'definition','Recorded expense totals use the current corrected amount and expense date, including any GST. Payments use signed payment/refund/reversal amounts and payment dates. Outstanding balances use payments through the cutoff, including earlier expenses. Drafts and cancelled expenses are excluded from expense totals. GST reference ITC remains unclaimed; these reports do not calculate net profit.')::text
           """,new{from=from.Date,to=to.Date}));
     }
     public async Task<(string Name,string ContentType,byte[] Data)?> AttachmentAsync(Guid expenseId,Guid attachmentId)

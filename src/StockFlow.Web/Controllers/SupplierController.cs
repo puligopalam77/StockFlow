@@ -25,7 +25,8 @@ public class SupplierController : ControllerBase
         return Ok(new
         {
             countries = StockFlow.Application.Common.SupplierRules.Countries.OrderBy(x => x.Value).Select(x => new { code = x.Key, name = x.Value }),
-            supplierTypes = StockFlow.Application.Common.SupplierRules.Types
+            supplierTypes = StockFlow.Application.Common.SupplierRules.Types,
+            indianStates = StockFlow.Application.Common.GstRules.States.Where(x => x.Key != "28").Select(x => x.Value).Distinct().OrderBy(x => x)
         });
     }
 
@@ -63,6 +64,21 @@ string? country)
         {
             return NotFound();
         }
+    }
+
+    [HttpGet("page")]
+    public async Task<IActionResult> Page(string? term = null, string? status = null, int offset = 0, int limit = 10)
+    {
+        if (status is not (null or "" or "all" or "active" or "inactive"))
+            return BadRequest(new { message = "Choose All Statuses, Active or Inactive." });
+        return Ok(await service.GetPageAsync(term, status == "active" ? true : status == "inactive" ? false : null, offset, limit));
+    }
+
+    [HttpPost("{id:int}/status")]
+    public async Task<IActionResult> SetStatus(int id, SupplierStatusRequest request)
+    {
+        if (!access.Can("SUPPLIERS", "DELETE")) return Forbid();
+        return await service.SetActiveAsync(id, request.IsActive!.Value) ? NoContent() : NotFound();
     }
 
     [HttpGet("search")]

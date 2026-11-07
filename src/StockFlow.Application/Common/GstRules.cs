@@ -6,6 +6,13 @@ namespace StockFlow.Application.Common;
 
 public static class GstRules
 {
+    // Shared by inclusive billing and expense reference calculations. Keep the total unchanged.
+    public static (decimal TaxableAmount, decimal GstAmount) InclusiveAmounts(decimal total, decimal rate)
+    {
+        if (total < 0 || rate is < 0 or > 100) throw new ValidationException("Enter a valid total and GST rate.");
+        var taxable = SaleRules.Money(total / (1 + rate / 100));
+        return (taxable, total - taxable);
+    }
     public static readonly IReadOnlyDictionary<string, string> States = new Dictionary<string, string>
     {
         ["01"]="Jammu and Kashmir",["02"]="Himachal Pradesh",["03"]="Punjab",["04"]="Chandigarh",
@@ -41,10 +48,21 @@ public static class GstRules
     }
     public static void Validate(GstBusiness b)
     {
+        b.AddressLine1=Clean(b.AddressLine1); b.AddressLine2=Clean(b.AddressLine2); b.City=Clean(b.City); b.District=Clean(b.District);
+        if(b.AddressLine1 is not null || b.AddressLine2 is not null || b.City is not null || b.District is not null)
+        {
+            if(b.AddressLine1 is null) throw new ValidationException("Address Line 1 is required.", null, nameof(b.AddressLine1));
+            if(b.City is null) throw new ValidationException("City / Town is required.", null, nameof(b.City));
+            State(b.StateCode);
+            b.Address=FormatAddress(b);
+        }
+        if(string.IsNullOrWhiteSpace(b.Address)||b.Address.Trim().Length<3) throw new ValidationException("Enter a registered address of at least three characters.");
         b.LegalName=b.LegalName.Trim(); b.Address=b.Address.Trim(); b.Pan=Clean(b.Pan)?.ToUpperInvariant(); b.Mobile=Clean(b.Mobile); b.Email=Clean(b.Email);
         Validator.ValidateObject(b,new(b),true); State(b.StateCode);
         if(!Regex.IsMatch(b.PinCode,"^[1-9][0-9]{5}$") || b.Pan is not null && !Regex.IsMatch(b.Pan,"^[A-Z]{5}[0-9]{4}[A-Z]$")) throw new ValidationException("Enter a valid PIN code and PAN where applicable.");
     }
+    // Only formats current explicitly structured business data; historical snapshots are never updated.
+    public static string FormatAddress(GstBusiness b) => PostalAddress.Format(b.AddressLine1,b.AddressLine2,b.City,b.District,States.GetValueOrDefault(b.StateCode,b.StateCode),b.PinCode);
     public static void Validate(GstRegistration r)
     {
         r.Gstin=Clean(r.Gstin)?.ToUpperInvariant(); r.Address=r.Address.Trim();

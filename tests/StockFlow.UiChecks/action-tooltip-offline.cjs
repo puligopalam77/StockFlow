@@ -1,0 +1,34 @@
+// Actual shared assets; synthetic controls isolate lifecycle from business APIs.
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
+const assets=path.resolve(__dirname,'../../src/StockFlow.Web/wwwroot');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
+ const page=await browser.newPage({viewport:{width:1280,height:650}}),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(5000);
+ await page.setContent('<body><p title="Keep explanatory title">Explanation</p><table><tr><td><button id="edit" title="Edit Customer" aria-describedby="hint"><svg></svg></button><a id="view" href="#details" aria-label="View Details"><svg></svg></a><button id="disabled" disabled title="Unavailable"><svg></svg></button></td></tr></table><span id="hint">Extra context</span><dialog><button class="sf-dialog-close" aria-label="Close dialog"><svg></svg></button></dialog></body>');
+ await page.addStyleTag({path:path.join(assets,'css/action-icons.css')});
+ await page.addScriptTag({path:path.join(assets,'js/action-icons.js')});
+ const edit=page.locator('#edit'),view=page.locator('#view'),tip=page.locator('#sf-action-tooltip');
+ assert.equal(await edit.getAttribute('title'),null);assert.equal(await edit.getAttribute('aria-label'),'Edit Customer');
+ assert.equal(await page.locator('p').getAttribute('title'),'Keep explanatory title');
+ await edit.hover();assert.equal(await tip.count(),0);await tip.waitFor();assert.equal(await tip.textContent(),'Edit Customer');
+ await view.hover();await tip.waitFor();assert.equal(await tip.textContent(),'View Details');assert.equal(await page.locator('[role=tooltip]').count(),1);
+ await page.mouse.move(500,500);assert.equal(await tip.count(),0);
+ await edit.focus();await tip.waitFor();assert.equal(await edit.getAttribute('aria-describedby'),'hint sf-action-tooltip');
+ await page.keyboard.press('Escape');assert.equal(await edit.getAttribute('aria-describedby'),'hint');
+ await page.keyboard.press('Tab');await tip.waitFor();assert.equal(await tip.textContent(),'View Details');
+ await view.press('Enter');assert.equal(await tip.count(),0);assert.equal(await page.evaluate(()=>location.hash),'#details');
+ await edit.focus();await tip.waitFor();await page.evaluate(()=>document.querySelector('dialog').showModal());assert.equal(await tip.count(),0);
+ const close=page.getByRole('button',{name:'Close dialog'});await close.focus();await page.mouse.move(500,500);await close.blur();await close.focus();await tip.waitFor();
+ assert(await tip.evaluate(e=>e.matches(':popover-open')),'Top-layer tooltip above modal');
+ await page.evaluate(()=>document.querySelector('dialog').close());await page.waitForTimeout(50);assert.equal(await tip.count(),0);
+ await edit.blur();await edit.focus();await tip.waitFor();await edit.evaluate(e=>e.disabled=true);await page.waitForTimeout(50);assert.equal(await tip.count(),0);
+ await edit.evaluate(e=>e.disabled=false);await view.focus();await tip.waitFor();await view.evaluate(e=>e.remove());await page.waitForTimeout(50);assert.equal(await tip.count(),0);
+ await edit.evaluate(e=>e.blur());await edit.hover();await edit.evaluate(e=>e.remove());await page.waitForTimeout(250);assert.equal(await tip.count(),0,'Pending tooltip cancelled on removal');
+ const touch=await browser.newPage({hasTouch:true,isMobile:true,viewport:{width:375,height:667}});
+ await touch.setContent('<table><tr><td><button aria-label="Edit Product" onclick="window.activations=(window.activations||0)+1"><svg></svg></button></td></tr></table>');
+ await touch.addStyleTag({path:path.join(assets,'css/action-icons.css')});await touch.addScriptTag({path:path.join(assets,'js/action-icons.js')});
+ await touch.getByRole('button',{name:'Edit Product'}).tap();await touch.waitForTimeout(250);
+ assert.equal(await touch.evaluate(()=>activations),1);assert.equal(await touch.locator('[role=tooltip]').count(),0);
+ assert.deepEqual(errors,[]);console.log('PASS shared action tooltips: single owner, hover delay, keyboard/Tab/Escape, retained descriptions/titles/routes, modal top layer, disabled/removed/pending cleanup, touch first-tap activation.');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

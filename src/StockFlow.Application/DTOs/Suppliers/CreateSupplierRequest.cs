@@ -4,6 +4,14 @@ namespace StockFlow.Application.DTOs.Suppliers;
 
 public class CreateSupplierRequest
 {
+    // Null keeps the legacy contract; true explicitly replaces the combined address.
+    public bool? UseStructuredAddress { get; set; }
+    [StringLength(250)]
+    public string? AddressLine1 { get; set; }
+    [StringLength(250)]
+    public string? AddressLine2 { get; set; }
+    [StringLength(100)]
+    public string? District { get; set; }
     [Required]
     [StringLength(150, MinimumLength = 2)]
     public string SupplierName { get; set; } = string.Empty;

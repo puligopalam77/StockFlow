@@ -11,7 +11,7 @@ namespace StockFlow.Web.Controllers;
 [ApiController,Authorize,Route("api/quotations"),TypeFilter(typeof(Filters.QuotationExceptionFilter))]
 public sealed class QuotationsController(IQuotationRepository repository,ICompanySettingsRepository company,PermissionContext access,IOptions<ShopTimeOptions> time,TimeProvider clock,BusinessScope scope):ControllerBase
 {
-    [HttpGet] public async Task<IActionResult> List(string? term,string? status,DateTime? from,DateTime? to,int page=1,int pageSize=20)=>Ok(await repository.ListAsync(term,status,from,to,page,pageSize));
+    [HttpGet] public async Task<IActionResult> List(string? term,string? status,DateTime? from,DateTime? to,int page=1,int pageSize=10)=>Ok(await repository.ListAsync(term,status,from,to,page,pageSize));
     [HttpGet("{id:guid}")] public async Task<IActionResult> Get(Guid id,int? revision)=>Ok(await repository.GetAsync(id,revision));
     [HttpGet("options")] public async Task<IActionResult> Options()
     {

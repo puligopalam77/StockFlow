@@ -23,6 +23,8 @@ public sealed partial class GstRepository
             foreach(var field in new[]{"store_id","variant_id","rule_id","change_reason"})value.Remove(field);
         foreach(var date in new[]{"effective_from","effective_to"})if(value[date] is not null)
             value[date]=DateTime.Parse(value[date]!.ToString(),System.Globalization.CultureInfo.InvariantCulture).ToString("yyyy-MM-dd");
+        if(table=="gst_legal_businesses" && !await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='gst_legal_businesses' AND column_name='address_line1')",transaction:tx))
+            foreach(var field in new[]{"address_line1","address_line2","city","district"})value.Remove(field);
         if(value["company_settings_id"] is null)value.Remove("company_settings_id");
         // table/key are private constants supplied only by the four existing save methods.
         var existing=await c.ExecuteScalarAsync<long?>("SELECT "+key+" FROM "+table+" t WHERE to_jsonb(t) @> CAST(@payload AS jsonb) ORDER BY "+key+" LIMIT 1",new{payload=value.ToJsonString()},tx);
@@ -59,7 +61,7 @@ public sealed partial class GstRepository
         void Check(string key,string label,bool valid,string error,string step)=>result.Checks.Add(new(key,label,valid?"pass":"error",valid?"Saved configuration validated.":error,step));
         void Warn(string key,string label,string message,string step)=>result.Checks.Add(new(key,label,"warning",message,step));
         var r=await c.QuerySingleOrDefaultAsync<GstRegistration>("SELECT registration_id RegistrationId,business_id BusinessId,gstin,registration_type RegistrationType,other_type OtherType,state_code StateCode,status,effective_from EffectiveFrom,effective_to EffectiveTo,address,authorized_contact AuthorizedContact,updated_at UpdatedAt FROM gst_registrations WHERE registration_id=@id",new{id},tx);
-        var b=r is null?null:await c.QuerySingleOrDefaultAsync<GstBusiness>("SELECT business_id BusinessId,company_settings_id CompanySettingsId,legal_name LegalName,trade_name TradeName,constitution,pan,address,state_code StateCode,pin_code PinCode,mobile,email,updated_at UpdatedAt FROM gst_legal_businesses WHERE business_id=@id",new{id=r.BusinessId},tx);
+        var b=r is null?null:await c.QuerySingleOrDefaultAsync<GstBusiness>("SELECT to_jsonb(gst_legal_businesses)->>'address_line1' AddressLine1,to_jsonb(gst_legal_businesses)->>'address_line2' AddressLine2,to_jsonb(gst_legal_businesses)->>'city' City,to_jsonb(gst_legal_businesses)->>'district' District,business_id BusinessId,company_settings_id CompanySettingsId,legal_name LegalName,trade_name TradeName,constitution,pan,address,state_code StateCode,pin_code PinCode,mobile,email,updated_at UpdatedAt FROM gst_legal_businesses WHERE business_id=@id",new{id=r.BusinessId},tx);
         bool Valid(Action validate){try{validate();return true;}catch(ValidationException){return false;}}
         Check("business","Business details complete",b is not null&&Valid(()=>GstRules.Validate(b)),"Save valid legal business details first.","businesses");
         Check("registration","Registration details valid",r is not null&&Valid(()=>GstRules.Validate(r))&&(r.Gstin is null||b?.Pan is null||r.Gstin.Substring(2,10)==b.Pan),"Save a registration with valid identity, state, PAN and dates.","registrations");

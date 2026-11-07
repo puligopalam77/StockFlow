@@ -35,7 +35,7 @@ const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/StockFlow.
   assert((await page.locator('#business-profile-preservation').innerText()).includes('purchases, receipts, sales, payments, reports and totals follow the selected shop setup'));
   await page.locator('#business-profile-save').click();await page.waitForURL('**/Products');await page.locator('#add-record').click();await page.waitForFunction(()=>!document.querySelector('#purchase-registration-fields').disabled);
   assert.equal(code,'BIKE_ACCESSORIES');assert.equal(await page.locator('#quick-category option').count(),11);assert(await page.locator('#quick-warranty').isHidden());assert(await page.locator('#quick-tracking').isHidden());assert((await page.locator('.configuration-help').innerText()).includes('bike spare parts'));
-  assert((await page.locator('#active-shop-profile').innerText()).includes('Products, transactions and totals follow this setup'));
+  assert.equal(await page.locator('#active-shop-profile').count(),0,'Setup information banner is removed from the shared layout');
   assert((await page.locator('#retail-screen-guide').innerText()).includes('bike part or accessory model'));
   assert(!(await page.locator('#master-table thead').count())||!(await page.locator('#master-table thead').innerText()).includes('Warranty'));
   const category=name=>String(categories.find(c=>c.categoryName===name).categoryId);

@@ -17,7 +17,7 @@ const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/StockFlow.
  });
  await page.goto('http://localhost:5220/Products/Create');await page.locator('#purchase-registration-fields:not([disabled])').waitFor();
  assert.equal(requests.length,0);assert.equal(await page.locator('#quick-sku').inputValue(),'');
- await page.locator('#registration-tab-variants').click();assert.equal(requests.length,0);assert(await page.getByText('2 required fields need attention.',{exact:true}).isVisible());
+ await page.locator('#registration-tab-variants').click();assert.equal(requests.length,0);assert(await page.locator('#purchase-registration-message').isHidden());assert(await page.locator('#quick-product-name-error').isVisible());
  await page.locator('#quick-product-name').fill('Brake pad set');await page.locator('#quick-category-level-0-toggle').click();await page.locator('#quick-category-level-0-panel').getByRole('button',{name:'Brake Parts',exact:true}).click();
  fail=true;await page.locator('#registration-next').click();await page.getByText('The active shop changed. Return to the original shop.',{exact:true}).waitFor();assert.equal(await page.locator('#quick-product-name').inputValue(),'Brake pad set');fail=false;
  await page.locator('#registration-next').click();await page.locator('#registration-panel-variants:not([hidden])').waitFor();

@@ -40,8 +40,8 @@ const profiles=[
   await open();await page.locator('#business-profile-code').selectOption('CLOTHING');
   assert((await page.locator('#business-profile-preview').innerText()).includes('Shirts'));assert((await page.locator('#business-profile-preview').innerText()).includes('hidden and direct access is denied'));
   await page.locator('#business-profile-reason').fill('Configure clothing shop');await page.locator('#business-profile-acknowledge').check();
-  version++;await page.locator('#business-profile-save').click();await page.locator('#business-profile-message').waitFor({state:'visible'});assert.equal(code,'ELECTRICAL');assert.equal(saveCalls,1);
-  await open();await page.locator('#business-profile-code').selectOption('CLOTHING');await page.locator('#business-profile-reason').fill('Configure clothing shop');await page.locator('#business-profile-acknowledge').check();await page.locator('#business-profile-save').click();await page.waitForFunction(()=>document.querySelector('#business-profile-current').textContent.includes('Clothing'));assert.equal(code,'CLOTHING');
+  version++;await page.locator('#business-profile-save').click();await page.getByRole('button',{name:'Confirm & Apply',exact:true}).click();await page.locator('#business-profile-message').waitFor({state:'visible'});assert.equal(code,'ELECTRICAL');assert.equal(saveCalls,1);
+  await open();await page.locator('#business-profile-code').selectOption('CLOTHING');await page.locator('#business-profile-reason').fill('Configure clothing shop');await page.locator('#business-profile-acknowledge').check();await page.locator('#business-profile-save').click();await page.getByRole('button',{name:'Confirm & Apply',exact:true}).click();await page.waitForFunction(()=>document.querySelector('#business-profile-current').textContent.includes('Clothing'));assert.equal(code,'CLOTHING');
   for(const width of [1440,768,390,320]){
    await page.setViewportSize({width,height:1000});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Settings overflow '+width);
   }

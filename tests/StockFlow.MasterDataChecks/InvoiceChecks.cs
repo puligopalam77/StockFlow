@@ -92,9 +92,16 @@ internal class FakeInvoiceRepository : IInvoiceRepository
 }
 internal class FakeCompanySettingsRepository : ICompanySettingsRepository
 {
+    public CompanyGstIdentity? GstIdentity { get; set; }
+    public Task<CompanyGstIdentity?> GetGstIdentityAsync()=>Task.FromResult(GstIdentity);
     public CompanySettings Settings { get; private set; } = new() { CompanyName="Test Store" };
     public int Saves { get; private set; }
     public Task<CompanySettings> GetAsync() => Task.FromResult(System.Text.Json.JsonSerializer.Deserialize<CompanySettings>(System.Text.Json.JsonSerializer.Serialize(Settings))!);
     public Task SaveAsync(CompanySettings settings,int userId) { Settings=System.Text.Json.JsonSerializer.Deserialize<CompanySettings>(System.Text.Json.JsonSerializer.Serialize(settings))!; Saves++; return Task.CompletedTask; }
+    public Task SaveSectionAsync(CompanySettings settings,string section,string expectedVersion,int userId)
+    {
+        if(StockFlow.Application.Common.CompanySettingsViews.Version(Settings,section)!=expectedVersion)throw new System.ComponentModel.DataAnnotations.ValidationException("These settings changed. Reload before saving.");
+        return SaveAsync(StockFlow.Application.Common.CompanySettingsViews.Merge(Settings,settings,section),userId);
+    }
     public Task<IReadOnlyList<CompanySalesperson>> GetSalespeopleAsync() => Task.FromResult<IReadOnlyList<CompanySalesperson>>([new(1,"Store Owner")]);
 }

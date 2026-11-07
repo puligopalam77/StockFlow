@@ -1,1 +1,88 @@
 #quotations h1{font-size:1.6rem;color:#14253c}#quotations h2{font-size:1rem;color:#14253c}#quotations label{display:block;font-size:.85rem;color:#14253c}#quotations .form-control,#quotations .form-select{background:#fff;color:#14253c}#quotations .quote-header-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.quote-lower-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}.quote-lines input{min-width:75px;max-width:140px}.quote-results{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.quote-preserve{white-space:pre-wrap;overflow-wrap:anywhere}#quotations .card{border:1px solid #dce3ee;box-shadow:none}#quotations td{vertical-align:middle}#quotations .btn:focus-visible{outline:3px solid #ff0089;outline-offset:2px}#quotations a:not([href]){display:none}@media(max-width:768px){#quotations .quote-header-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quote-lower-grid{grid-template-columns:1fr}#quotations .sf-page-heading{display:flex;flex-wrap:wrap;gap:12px}}@media(max-width:420px){#quotations .quote-header-grid{grid-template-columns:1fr}#quotations .sf-filter-bar{display:flex;flex-direction:column;align-items:stretch}#quotations .sf-filter-bar>*{width:100%}}
+/* Editor-only refinements; saved details and print snapshots retain their own layout. */
+#quotations[data-mode=editor]{container-type:inline-size;color:#14253c}
+#quotations .quote-heading{align-items:center;margin:0 0 10px;gap:12px}
+#quotations .quote-heading h1{font-size:1.35rem;margin:0;overflow-wrap:anywhere}
+#quotations .quote-title-row{display:flex;align-items:center;gap:8px;min-width:0}
+#quotations .quote-help-button{background:transparent!important;border:0!important;color:#576b85!important;padding:2px!important;min-width:26px;min-height:26px;font-size:1.15rem;line-height:1;cursor:pointer}
+#quotations .quote-help{position:fixed;inset:auto;margin:0;width:min(340px,calc(100vw - 24px));padding:12px;border:1px solid #d8dfeb;border-radius:8px;box-shadow:0 6px 22px #14253c25;background:#fff;color:#14253c;font-size:.8rem}
+#quotations .quote-help p{margin:6px 0 0}
+#quotations :is(button,summary):focus-visible{outline:2px solid #ff007f;outline-offset:3px}
+#quotations .quote-header-actions,#quotation-saved-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+#quotations .quote-workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+#quotations .quote-editor-column,#quotations .quote-commercial-column{display:grid;gap:14px;min-width:0}
+#quotations .quote-card{border-radius:12px;overflow:visible;min-width:0;background:#fff}
+#quotations .quote-card-title{background:#fff3f9;border-bottom:1px solid #f7e0ed;padding:10px 14px;border-radius:12px 12px 0 0}
+#quotations .quote-card-title h2{margin:0;font-size:.94rem;font-weight:700}
+#quotations .quote-card-title small{font-size:.75rem;font-weight:400;margin-left:5px}
+#quotations .quote-card-body{padding:14px;min-width:0}
+#quotations .quote-metadata{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;margin-top:10px}
+#quotations[data-mode=editor] label,#quotations .quote-field-label{font-size:.78rem;margin:0}
+#quotations[data-mode=editor] :is(.form-control,.form-select){border:1px solid #d8dfeb;border-radius:6px;background:#fff;color:#14253c;font-size:.83rem;min-height:34px;padding:6px 9px}
+#quotations[data-mode=editor] :is(.form-control,.form-select):focus{border-color:#ff087d;box-shadow:0 0 0 2px #ff087d15}
+#quotations input[type=number]{text-align:right;appearance:textfield;-moz-appearance:textfield}
+#quotations input[type=number]::-webkit-inner-spin-button,#quotations input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#quotations .quote-customer-row,#quotations .quote-search-row{display:flex;gap:8px;align-items:start;min-width:0}
+#quotations .quote-customer-field,#quotations .quote-search-field{position:relative;flex:1;min-width:0}
+#quotations .quote-customer-row .btn,#quotations .quote-search-row .btn{min-height:34px;white-space:nowrap;font-size:.78rem}
+#quotations .quote-selected-customer{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #ff087d;border-radius:6px;padding:6px 10px;min-height:38px;background:#fff}
+#quotations .quote-selected-customer strong{font-size:.88rem;overflow-wrap:anywhere}
+#quotations .quote-selected-customer span{display:block;font-size:.75rem;color:#61738b}
+#quotations .quote-customer-results{position:absolute;z-index:12;top:100%;left:0;right:0;max-height:230px;overflow:auto;background:#fff;border:1px solid #d8dfeb;border-radius:6px;box-shadow:0 6px 16px #14253c22}
+#quotations .quote-customer-results [role=option]{padding:9px 12px;cursor:pointer}
+#quotations .quote-customer-results [role=option]:hover,#quotations .quote-customer-results [aria-selected=true]{background:#fff0f7}
+#quotations .quote-customer-results span{display:block;color:#61738b;font-size:.75rem}
+#quotations .quote-field-status{font-size:.75rem;color:#52677f;margin:5px 0;overflow-wrap:anywhere}
+#quotations .quote-field-status:empty{display:none}
+#quotations .quote-results:empty{display:none}
+#quotations .quote-results{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;max-height:240px;overflow:auto;margin:8px 0}
+#quotations .quote-result{text-align:left;white-space:normal;border:1px solid #e1e6ef;background:#fff;border-radius:6px;padding:8px 10px;color:#14253c}
+#quotations .quote-result:hover{border-color:#ff087d;background:#fff7fb}
+#quotations .quote-result small{display:block;color:#61738b}
+#quotations .quote-empty{display:flex;align-items:center;flex-direction:column;gap:3px;background:#f7f8fb;border-radius:8px;padding:12px;margin-top:10px;font-size:.8rem;color:#62738a;text-align:center}
+#quotations .quote-empty .sf-icon{color:#ff007f;width:22px;height:22px}
+#quotations .quote-table-scroll{max-width:100%;margin-top:12px;border:1px solid #dce3ee;border-radius:9px;overscroll-behavior-x:contain}
+#quotations .quote-lines{min-width:820px;width:100%;margin:0}
+#quotations .quote-lines thead th{background:#1b2c42;color:white;font-size:.74rem;font-weight:600;padding:12px 9px;vertical-align:middle;border:0;white-space:nowrap}
+#quotations .quote-lines td{padding:10px 8px;font-size:.82rem;border-bottom:1px solid #e5e9f0;vertical-align:middle}
+#quotations .quote-lines tbody tr:last-child td{border-bottom:0}
+#quotations .quote-lines .form-control{width:84px;max-width:none;min-width:64px;height:34px}
+#quotations .quote-lines [data-quote-input=sellingPrice]{width:108px}
+#quotations .quote-product-cell{display:flex;gap:8px;align-items:center;min-width:180px;max-width:300px}
+#quotations .quote-product-thumb{width:40px;height:40px;flex-shrink:0;border:1px solid #e8edf4;border-radius:7px;object-fit:contain;background:#f7f8fb;display:grid;place-items:center}
+#quotations .quote-product-thumb .sf-icon{width:22px;height:22px;color:#8193aa}
+#quotations .quote-product-copy{min-width:0;overflow-wrap:anywhere}
+#quotations .quote-product-copy strong{display:block;font-size:.83rem}
+#quotations .quote-product-copy small{display:block;font-size:.72rem;color:#61738b}
+#quotations .quote-number{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+#quotations .quote-line-total{font-weight:700}
+#quotations .quote-remove{color:#e00065;background:#fff0f7;border:1px solid #ffd8e9;padding:6px 8px;border-radius:7px}
+#quotations .quote-remove .sf-icon{width:17px;height:17px}
+#quotations .quote-line-reason{margin-top:5px}
+#quotations .quote-line-reason summary{color:#c50063;font-size:.75rem;cursor:pointer}
+#quotations .quote-lines .quote-line-reason input{width:230px;max-width:100%;min-width:0;text-align:left;margin-top:5px}
+#quotations .quote-summary .quote-summary-value,#quotations .quote-discount-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:6px 0;border-bottom:1px solid #edf0f5;font-size:.8rem}
+#quotations .quote-discount-row input{width:110px;min-width:70px;max-width:45%;height:34px;background:#fff}
+#quotations .quote-summary .quote-estimated-total{background:#fff0f7;color:#e00065;border:0;border-radius:7px;margin-top:6px;padding:10px 8px;font-weight:700}
+#quotations .quote-summary .quote-estimated-total strong{font-size:1.15rem;color:#14253c}
+#quotations .quote-validation{font-size:.75rem;color:#b0004f;margin:5px 0;overflow-wrap:anywhere}
+#quotations .quote-validation:empty{display:none}
+#quotations .quote-lines td:nth-child(3),#quotations .quote-lines td:last-child{text-align:center}
+#quotations .quote-lines [data-quote-input=quantity]{text-align:center}
+#quotations .quote-summary.is-provisional{opacity:.7}
+#quotations .quote-summary strong{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+#quotations .quote-commercial-fields{display:grid;gap:10px}
+#quotations .quote-commercial-fields details summary{font-size:.78rem;cursor:pointer}
+#quotations .quote-commercial-fields details textarea{margin-top:6px}
+#quotations .quote-address-preview{font-size:.8rem;margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere;color:#61738b}
+#quotations .quote-save-bar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px;scroll-margin-block:100px}
+#quotations #quotation-save{background-color:#ff007f!important;border-color:#ff007f!important;color:white;min-height:38px;padding:8px 18px;font-weight:650;font-size:.84rem}
+#quotations #quotation-save:disabled{opacity:.55}
+#quotations .quote-dialog{border:0;border-radius:12px;padding:20px;width:min(480px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;color:#14253c;box-shadow:0 12px 48px #14253c40}
+#quotations .quote-dialog::backdrop{background:#14253c66}
+#quotations .quote-dialog header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+#quotations .quote-dialog label{margin:9px 0}
+#quotations .quote-dialog .form-control,#quotations .quote-dialog .form-select{margin-top:4px}
+#quotations [hidden]{display:none!important}
+@container(min-width:1100px){#quotations .quote-workspace{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+@media(max-width:600px){#quotations .quote-metadata{grid-template-columns:repeat(2,minmax(0,1fr))}#quotations .quote-metadata>label:last-child{grid-column:1/-1}#quotations .quote-card-body{padding:11px}#quotations .quote-heading{align-items:start}#quotations .quote-header-actions .btn{font-size:.75rem}#quotations .quote-search-row{flex-wrap:wrap}#quotations .quote-search-field{flex-basis:100%}#quotations .quote-summary p{font-size:.78rem}#quotations .quote-save-bar .btn{width:100%}}

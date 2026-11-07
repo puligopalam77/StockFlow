@@ -1,0 +1,63 @@
+/* Quotations list only. Editor, Details and Print keep their approved layouts. */
+#quotations[data-mode=list]{color:#14253c;min-width:0}
+#quotations .quote-list-heading{align-items:center;gap:12px;margin-bottom:12px}
+#quotations .quote-list-heading h1{font-size:1.35rem;margin:0}
+#quotations .quote-list-heading p{font-size:.8rem;color:#61738b;margin:5px 0 0}
+#quotations .quote-list-primary{background:#ff007f!important;border-color:#ff007f!important;color:#fff!important;white-space:nowrap;font-weight:650}
+#quotations .quote-list-filters{display:flex;align-items:end;flex-wrap:wrap;gap:10px;padding:12px;background:#fff;border:1px solid #dce3ee;border-radius:12px;margin-bottom:12px}
+#quotations .quote-list-filters label{margin:0;font-size:.78rem;min-width:120px}
+#quotations .quote-list-filters label:first-child{flex:1;min-width:min(280px,100%)}
+#quotations .quote-list-filters :is(input,select){height:34px;min-height:34px;font-size:.82rem;border:1px solid #d8dfeb;background:#fff;border-radius:6px}
+#quotations[data-mode=list] :is(input,select):focus{border-color:#ff007f;box-shadow:0 0 0 2px #ff007f18}
+#quotations[data-mode=list] :is(button,a,summary):focus-visible{outline:2px solid #ff007f;outline-offset:3px}
+#quotations .quote-list-error{flex-basis:100%;margin:0;color:#b0004f;font-size:.8rem}
+#quotations .quote-list-card{padding:12px;border-radius:12px;background:#fff;min-width:0}
+#quotations .quote-list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:.8rem;color:#61738b}
+#quotations .quote-list-toolbar .btn{font-size:.78rem;min-height:34px}
+#quotations .quote-list-toolbar a[aria-disabled=true]{opacity:.5;cursor:default}
+#quotations[data-mode=list] #quote-export:not([href]):not([hidden]){display:inline-flex}
+#quotations .quote-list-scroll{max-width:100%;border:1px solid #dce3ee;border-radius:9px;overscroll-behavior-x:contain}
+#quotations .quote-list-table{min-width:880px;width:100%;margin:0;background:#fff}
+#quotations .quote-list-table th{background:#1b2c42;color:#fff;border:0;padding:11px 10px;font-size:.77rem;white-space:nowrap}
+#quotations .quote-list-table td{padding:10px;font-size:.82rem;border-bottom:1px solid #e5e9f0;vertical-align:middle}
+#quotations .quote-list-table tbody tr:last-child td{border-bottom:0}
+#quotations .quote-list-table td:first-child a{color:#d7006b;font-weight:650;white-space:nowrap;text-decoration:none}
+#quotations .quote-list-table td:nth-child(2){max-width:230px;min-width:150px;overflow-wrap:anywhere}
+#quotations .quote-list-table td:nth-child(2) strong{display:block;font-weight:600}
+#quotations .quote-list-table small{display:block;color:#61738b;font-size:.74rem;margin-top:3px}
+#quotations .quote-list-table :is(th,td):nth-child(5),#quotations .quote-list-table :is(th,td):last-child{text-align:center}
+#quotations .quote-list-table :is(th,td):nth-child(6){text-align:right;white-space:nowrap}
+#quotations .quote-saved-total{font-variant-numeric:tabular-nums;font-weight:700}
+#quotations .quote-list-table td:nth-child(3),#quotations .quote-list-table td:nth-child(4){white-space:nowrap}
+#quotations .quote-status{display:inline-block;border-radius:5px;padding:4px 7px;white-space:nowrap;font-size:.72rem;font-weight:600;background:#edf1f6;color:#43556d}
+#quotations .quote-status-sent{background:#eaf2ff;color:#285b99}
+#quotations .quote-status-accepted{background:#e7f6ee;color:#216943}
+#quotations .quote-status-rejected{background:#ffebed;color:#a53043}
+#quotations .quote-status-expired{background:#fff3dd;color:#805b17}
+#quotations .quote-status-converted{background:#f0eaff;color:#664299}
+#quotations .quote-row-trigger{min-width:36px;min-height:34px;border:1px solid #d8dfeb!important;border-radius:6px;background:#fff!important;color:#14253c!important;font-size:1.2rem;padding:0 8px!important}
+#quotations .quote-row-menu{position:fixed;inset:auto;margin:0;padding:5px;width:190px;border:1px solid #d8dfeb;border-radius:8px;background:#fff;box-shadow:0 6px 20px #14253c28;max-height:calc(100dvh - 24px);overflow:auto}
+#quotations .quote-row-menu a{display:block;padding:8px 10px;color:#14253c;text-decoration:none;border-radius:4px;font-size:.82rem}
+#quotations .quote-row-menu a:hover{background:#fff0f7;color:#d7006b}
+#quotations .quote-list-state{padding:26px 12px;text-align:center;color:#61738b;font-size:.82rem}
+#quotations .quote-list-state h2{font-size:1rem;margin:7px 0}
+#quotations .quote-list-state p{margin:6px 0 12px}
+#quotations .quote-list-state .sf-icon{width:26px;height:26px;color:#ff007f}
+#quotations .quote-list-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;font-size:.78rem}
+/* The shared pager is hidden when the filtered total is at most ten. */
+#quotations #quote-pagination .sf-pagination-position[hidden]{display:block!important}
+#quotations #quote-pagination .sf-pagination-range{display:none}
+#quotations #quote-pagination{margin:0;min-width:0}
+#quotations #quote-pagination .sf-pagination-size{display:inline-flex;align-items:center;gap:7px;font-size:.78rem}
+#quotations[data-mode=list] [hidden]{display:none!important}
+@media(max-width:600px){
+ #quotations .quote-list-heading{align-items:start}
+ #quotations .quote-list-heading h1{font-size:1.15rem}
+ #quotations .quote-list-heading .btn{font-size:.76rem}
+ #quotations .quote-list-filters label{flex:1;min-width:calc(50% - 10px)}
+ #quotations .quote-list-filters label:first-child{flex-basis:100%}
+ #quotations .quote-list-filters label:nth-child(2){flex-basis:100%}
+ #quotations .quote-list-card{padding:10px}
+ #quotations .quote-list-footer{display:block}
+ #quotations #quote-pagination{margin-top:10px}
+}

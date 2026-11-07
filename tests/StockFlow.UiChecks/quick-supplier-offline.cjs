@@ -1,3 +1,5 @@
+const {selectValue}=require('./address-test-helpers.cjs');
+const {fillLocation}=require('./address-test-helpers.cjs');
 // Generate Razor fixtures with MasterDataChecks --supplier-checks first.
 const fs = require('fs'), path = require('path'), assert = require('assert');
 const { chromium } = require('./bin/Debug/net10.0/.playwright/package');
@@ -58,38 +60,39 @@ const assets = path.join(root, 'src/StockFlow.Web/wwwroot');
             }
             const submit = page.locator('#master-form [type=submit]');
             await start();
-            await page.locator(selector).selectOption('1');
+            await selectValue(page.locator(selector),'1');
             if (url === '/Purchases/Create') {
                 await page.locator('#notes').fill('Keep this receipt');
                 await page.locator('#purchase-search').fill('Cable');
-                await page.locator('#purchase-items select').first().selectOption('11');
+                await selectValue(page.locator('#purchase-items select').first(),'11');
                 await page.locator('#purchase-items input[type=number]').first().fill('3');
             } else {
                 await page.locator('#intake-next').click();
                 await page.locator('#intake-scan').fill('CABLE');
                 await page.locator('#intake-scan').press('Enter');
                 await page.locator('[data-variant="11"]').waitFor();
-                await page.locator('#intake-back').click();
+                for(let step=0;step<2 && await page.locator('#intake-back').isVisible();step++){await page.locator('#intake-back').click(); if(await page.locator('#sf-confirm-dialog').isVisible())await page.locator('#sf-confirm-accept').click();} await page.locator('#receiving-step-1').waitFor({state:'visible'});
             }
             await open();
-            await page.locator('#cancel-edit').click();
+            await page.locator('#cancel-edit').click();if(await page.locator('#sf-confirm-dialog').isVisible())await page.locator('#sf-confirm-accept').click();await page.locator('#editor').waitFor({state:'hidden'});
             assert.equal(await page.locator(selector).inputValue(), '1');
             let before = supplierPosts.length;
             await open(''); await submit.click(); assert.equal(supplierPosts.length, before, 'Required name prevents API calls');
             await page.locator('#quick-supplier-supplierName').fill('New supplier');
-            await page.locator('#quick-supplier-paymentTermsChoice').selectOption('CUSTOM');
+            while(await page.locator('.supplier-optional:not([open])>summary').count())await page.locator('.supplier-optional:not([open])>summary').first().click();
+            await selectValue(page.locator('#quick-supplier-paymentTermsChoice'),'CUSTOM');
             await page.locator('#quick-supplier-paymentTermsDays').fill('21');
             await page.locator('#quick-supplier-gstNumber').fill('29ABCDE1234F1Z5');
             assert(await page.locator('#quick-supplier-state').evaluate(n => n.required));
-            await page.locator('#quick-supplier-state').fill('Karnataka');
+            await fillLocation(page.locator('#quick-supplier-state'),'Karnataka');
             duplicates = true;
             await submit.click();
-            await page.getByText('Possible Duplicate Supplier', { exact: true }).waitFor();
+            await page.getByText('Possible existing supplier found', { exact: true }).waitFor();
             await page.locator('dialog').last().getByRole('button', { name: 'Cancel', exact: true }).click();
             assert.equal(supplierPosts.length, before, 'Duplicate cancellation never creates a supplier');
             assert(await page.locator('#editor').evaluate(n => n.open));
             await submit.click();
-            await page.getByRole('button', { name: 'Continue Anyway' }).click();
+            await page.getByRole('button', { name: 'Continue Adding' }).click();
             await page.locator('#editor').waitFor({ state: 'hidden' });
             assert.equal(supplierPosts.length, before + 1);
             assert.equal(await page.locator(selector).inputValue(), String(10 + supplierPosts.length));
@@ -109,10 +112,10 @@ const assets = path.join(root, 'src/StockFlow.Web/wwwroot');
             duplicates = false;
             for (const status of [400, 403]) {
                 failure = status; await open(); await submit.click();
-                await page.locator('#editor-message').getByText(status === 403 ? 'You do not have permission for this action.' : 'Enter a valid supplier name.', { exact: true }).waitFor();
+                if(status === 400) await page.locator('#quick-supplier-supplierName-server-error').getByText('Enter a valid supplier name.', {exact:true}).waitFor(); else await page.getByRole('region', {name:'Notifications'}).getByText('You do not have permission for this action.', {exact:true}).waitFor();
                 assert(await page.locator('#editor').evaluate(n => n.open));
                 assert(!(await submit.isDisabled()));
-                await page.locator('#cancel-edit').click();
+                await page.locator('#cancel-edit').click();if(await page.locator('#sf-confirm-dialog').isVisible())await page.locator('#sf-confirm-accept').click();await page.locator('#editor').waitFor({state:'hidden'});
             }
             failure = 0; delay = true; before = supplierPosts.length;
             await open('One supplier');
@@ -124,7 +127,7 @@ const assets = path.join(root, 'src/StockFlow.Web/wwwroot');
             for (const width of [1440, 768, 390, 320]) {
                 await page.setViewportSize({ width, height: 900 }); await open();
                 const box = await page.locator('#editor').boundingBox(); assert(box.x >= 0 && box.x + box.width <= width);
-                await page.locator('#cancel-edit').click();
+                await page.locator('#cancel-edit').click();if(await page.locator('#sf-confirm-dialog').isVisible())await page.locator('#sf-confirm-accept').click();await page.locator('#editor').waitFor({state:'hidden'});
             }
             limited = true; await start();
             assert.equal(await page.locator('#add-record,#master-data').count(), 0, 'No creation UI without permission');

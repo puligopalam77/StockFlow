@@ -1,26 +1,20 @@
-@page
+﻿@page
 @{ ViewData["Title"] = "Shop Business Profile"; }
-<header class="sf-page-heading"><div><h1>Shop Business Profile</h1><p>Choose the business experience for this company and all its branches. Review the impact before saving.</p></div></header>
 <div id="business-profile-workspace">
-    <div id="business-profile-message" class="alert alert-danger" role="alert" hidden></div>
-    <p id="business-profile-status" role="status"></p>
-    <section class="card card-body mb-3"><h2 class="h5">Current configuration</h2><dl id="business-profile-current"></dl></section>
-    <form id="business-profile-form">
+    <header class="sf-page-heading bp-heading"><div><h1>Shop Business Profile</h1></div></header>
+    <div id="business-profile-message" class="bp-error" role="alert" hidden></div>
+    <p id="business-profile-status" class="bp-status" role="status" aria-live="polite">Loading current configuration…</p>
+    <section class="bp-card bp-current"><h2><svg aria-hidden="true" class="bp-icon"><use href="/images/icons.svg#grid" /></svg>Current Configuration</h2><dl id="business-profile-current"></dl></section>
+    <form id="business-profile-form" data-unsaved-context="Shop Business Profile">
         <fieldset id="business-profile-fields" disabled>
-            <section class="card card-body mb-3">
-                <label for="business-profile-code" class="form-label">Shop type</label><select id="business-profile-code" class="form-select mb-3" required></select>
-                <div id="business-profile-preview" class="business-profile-preview" aria-live="polite"></div>
-                <label class="mt-3"><input id="business-profile-categories" type="checkbox" checked /> Create the suggested starter categories when changing profile</label>
-                <p class="small text-muted">Existing categories remain stored under their original profile. You can enter relevant product specifications manually.</p>
-            </section>
-            <section class="card card-body mb-3">
-                <h2 class="h5">Review and apply</h2>
-                <p id="business-profile-impact"></p>
-                <p id="business-profile-preservation" class="alert alert-info">Existing products, stock and history will be preserved. Review the setup before applying it.</p>
-                <label for="business-profile-reason" class="form-label">Reason for change *</label><textarea id="business-profile-reason" class="form-control mb-3" minlength="5" maxlength="500" rows="2" required></textarea>
-                <label><input id="business-profile-acknowledge" type="checkbox" required /> I have reviewed the categories and enabled features for this business.</label>
-            </section>
-            <div class="d-flex gap-2 flex-wrap"><a href="/Settings/Company" class="btn btn-outline-secondary">Business &amp; Billing</a><button id="business-profile-save" class="btn btn-primary" type="submit">Apply shop profile</button></div>
+            <div class="bp-columns">
+                <section class="bp-card"><h2>Select Shop Type</h2><label for="business-profile-code" class="form-label">Shop Type</label><select id="business-profile-code" class="form-select" required></select><p id="business-profile-pending" class="bp-pending" role="status" aria-live="polite" hidden>Unsaved profile change</p><p class="bp-muted">Preview only. Your active configuration changes after confirmation.</p><p class="bp-muted">Changing shop type does not automatically grant user permissions.</p><label class="bp-category-option"><input id="business-profile-categories" type="checkbox" checked /> Create the suggested starter categories when changing profile</label></section>
+                <section class="bp-card"><h2>Profile Preview</h2><div id="business-profile-preview" aria-live="polite" aria-atomic="true"></div></section>
+            </div>
+            <section id="business-profile-unchanged" class="bp-card bp-unchanged" role="status" hidden><h2><svg class="bp-check-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span id="business-profile-unchanged-title"></span></h2><p>No profile change selected. Your current setup remains unchanged.</p><p id="business-profile-unchanged-counts"></p><p>Applies to: This company and all its branches.</p></section>
+            <section id="business-profile-comparison-card" class="bp-card bp-comparison" hidden><h2>Before &amp; After</h2><p id="business-profile-change" role="status"></p><div id="business-profile-comparison-details" hidden><div class="bp-table-scroll" tabindex="0" role="region" aria-label="Current and selected profile comparison"><table><thead><tr><th scope="col">Setting</th><th scope="col">Current Profile</th><th scope="col">Selected Profile</th></tr></thead><tbody id="business-profile-comparison"></tbody></table></div><details id="business-profile-category-details"><summary>View category comparison</summary><div id="business-profile-category-comparison" class="bp-columns"></div></details></div></section>
+            <section id="business-profile-review" class="bp-card" hidden><h2>Review Before Applying</h2><p id="business-profile-impact"></p><p class="bp-preservation">Existing products, categories, transactions and stock records remain associated with their original profile. Changing the active profile does not convert historical records.</p><p class="bp-scope">This change applies to the company and all branches.</p><details class="bp-impact"><summary>View Details</summary><h3>What happens when you apply?</h3><ul><li>The active configuration changes for this company and all its branches.</li><li>Menus and features follow profile capabilities; existing permission checks still apply.</li><li>Historical records remain saved under their original profile.</li></ul><p id="business-profile-preservation"></p><p id="business-profile-seeding"></p></details><label for="business-profile-reason" class="form-label">Reason for change *</label><textarea id="business-profile-reason" class="form-control" minlength="5" maxlength="500" rows="2" required></textarea><label class="bp-acknowledge"><input id="business-profile-acknowledge" type="checkbox" required /> I have reviewed the categories and enabled features for this business.</label></section>
+            <footer class="bp-actions"><a href="/Settings/Company?section=business" class="btn btn-dark">Back to Business Information</a><button id="business-profile-save" class="btn bp-primary" type="submit" disabled>Apply Shop Setup</button></footer>
         </fieldset>
     </form>
 </div>

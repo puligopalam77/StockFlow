@@ -190,10 +190,12 @@ internal static class PrivateShopExpenseChecks
             scope.StoreId=other.Store;scope.LocationId=other.Location;await Reject(()=>repo.GetAsync(profileExpense),profile+" second same-profile shop cannot read private expense");scope.StoreId=1;scope.LocationId=1;
         }scope.BusinessProfileCode="ELECTRICAL";await setup.ExecuteAsync("UPDATE tenants SET business_profile_code='ELECTRICAL' WHERE tenant_id=1");
         Check(await setup.ExecuteScalarAsync<long>("SELECT count(*) FROM inventory_transactions")==stock&&await setup.ExecuteScalarAsync<long>("SELECT count(*) FROM gst_documents")==gst,"Expense creation/payments/refunds/corrections/attachments never post inventory or GST documents");
+        var gstRepository=new GstRepository(factory);var browserRule=await gstRepository.SaveRuleAsync(new(){RuleName="Browser GST 18",Description="Synthetic browser expense GST rule",Tax=new(){Classification="SERVICE",HsnSac="998719",TaxRate=18,EffectiveFrom=day.AddYears(-1),ReviewReference="Synthetic browser rate review"}});await gstRepository.ReviewRuleAsync(browserRule);
         await Browser(client);
         var browserRows=await repo.ListAsync("Browser verified overhead",day,day,1,20);
         Check(browserRows.GetProperty("rows").GetArrayLength()==1&&browserRows.GetProperty("rows")[0].GetProperty("paid").GetDecimal()==25,"Live Razor/JS workflow reconciles to one PostgreSQL expense with exactly 25 paid after lost-response retry");
         Check(await setup.ExecuteScalarAsync<long>("SELECT count(*) FROM inventory_transactions")==stock,"Browser expense workflow has no inventory posting");
+        Check(await setup.ExecuteScalarAsync<long>("SELECT count(*) FROM gst_documents")==gst,"Browser GST expense references do not create tax or ITC claim documents");
         Console.WriteLine("Expense integration passed against real branch/security repositories, test authentication and disposable PostgreSQL.");
     }
     static async Task Browser(HttpClient client)

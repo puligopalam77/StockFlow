@@ -18,7 +18,7 @@
     <div id="master-message" class="alert d-none" role="status" aria-live="polite">
     </div>
     <section id="master-list" aria-label="@Model list">
-        @if (Model != "Products") {
+        @if (Model != "Products" && Model != "Suppliers") {
             <h3>Saved @Model</h3>
         }
         <div class="row g-3 mb-3">
@@ -29,8 +29,9 @@
             <div class="col-md-4">
                 <label for="status-filter" class="form-label">Status</label>
                 <select id="status-filter" class="form-select">
-                    <option value="false">All records</option>
-                    <option value="true">Active only</option>
+                    <option value="false">@(Model == "Suppliers" ? "All Statuses" : "All records")</option>
+                    <option value="true">@(Model == "Suppliers" ? "Active" : "Active only")</option>
+                    @if (Model == "Suppliers") { <option value="inactive">Inactive</option> }
                 </select>
             </div>
         </div>

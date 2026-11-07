@@ -43,30 +43,16 @@ window.ProductRegistrationForm = (() => {
         return (await requestJson('/api/products/identifier-reservations',{method:'POST',body:JSON.stringify({businessProfileCode:document.body.dataset.businessProfile,categoryId:Number(getElement('quick-category').value),requestId,parentCode,operationId:variantOperations.get(cacheKey),count})})).codes;
     }
     function chooseSavedSku(rows){return new Promise(resolve=>{const dialog=document.createElement('dialog');dialog.className='purchase-registration';const form=document.createElement('form');const label=document.createElement('label');label.className='form-label';label.textContent='Choose the exact SKU to add to this receipt';const select=document.createElement('select');select.className='form-select';select.required=true;select.add(new Option('Select variant / SKU',''));for(const row of rows)select.add(new Option(row.variantName+' / '+row.sku,row.variantId));label.append(select);const add=document.createElement('button');add.className='btn btn-primary mt-3';add.textContent='Add selected SKU';const cancel=document.createElement('button');cancel.type='button';cancel.className='btn btn-outline-secondary mt-3 ms-2';cancel.textContent='Cancel';cancel.onclick=()=>dialog.close();form.append(label,add,cancel);dialog.append(form);document.body.append(dialog);let selected=null;form.onsubmit=event=>{event.preventDefault();if(!select.reportValidity())return;selected=rows.find(row=>row.variantId===Number(select.value));dialog.close();};dialog.addEventListener('close',()=>{dialog.remove();resolve(selected);});dialog.showModal();select.focus();});}
-    let openCategorySelect;
-    document.addEventListener('pointerdown',event=>{if(openCategorySelect&&!openCategorySelect.host.contains(event.target))openCategorySelect.close();});
-    // Keep the existing select as the value/validation source; search lives inside its popup.
+    // Use the same selection primitive as addresses, retaining authorized options and IDs.
     function searchable(select,items,label,value,addAction){
         select.productSearchCleanup?.();
-        const previous=select.closest('.product-category-select');if(previous){if(openCategorySelect?.host===previous)openCategorySelect.close();previous.before(select);previous.remove();}
-        const host=document.createElement('div');host.className='product-category-select';select.before(host);host.append(select);select.hidden=true;select.tabIndex=-1;select.setAttribute('aria-label',label);
-        const toggle=document.createElement('button');toggle.type='button';toggle.className='form-select product-category-select-toggle';toggle.id=select.id+'-toggle';toggle.disabled=select.disabled;toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-controls',select.id+'-panel');toggle.setAttribute('aria-haspopup','dialog');toggle.setAttribute('aria-required',String(select.required));
-        const caption=select.closest('.product-category-level,.col-md-6').querySelector('label');caption.htmlFor=toggle.id;toggle.setAttribute('aria-label',label);
-        const panel=document.createElement('div');panel.className='product-category-select-panel';panel.id=select.id+'-panel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Choose '+label.toLowerCase());
-        const search=document.createElement('input');search.type='search';search.className='form-control';search.placeholder=label==='Brand (Optional)'?'Search Brands':'Search '+label.toLowerCase();search.setAttribute('aria-label',search.placeholder);
-        const results=document.createElement('div');results.className='product-category-select-results';panel.append(search,results);host.append(toggle,panel);
-        const prompt=select.options[0].textContent,isBrand=label==='Brand (Optional)',itemName=item=>isBrand?item.brandName:item.categoryName;
-        if(addAction){const footer=document.createElement('div');footer.className='product-select-add';const add=document.createElement('button');add.type='button';add.id='quick-add-brand';add.className='btn btn-sm';add.textContent='Add New Brand';add.onclick=()=>{close();addAction();};footer.append(add);panel.append(footer);}
-        const close=(focus=false)=>{panel.hidden=true;toggle.setAttribute('aria-expanded','false');if(openCategorySelect?.host===host)openCategorySelect=null;if(focus&&toggle.isConnected)toggle.focus();};
-        function render(){const term=search.value.trim().toLowerCase(),matches=items.filter(item=>itemName(item).toLowerCase().includes(term));results.replaceChildren();
-            const option=(text,id)=>{const button=document.createElement('button');button.type='button';button.className='product-category-select-option';button.textContent=text;button.setAttribute('aria-pressed',String(select.value===String(id)));button.onclick=()=>{if(id&&!Array.from(select.options).some(o=>o.value===String(id)))select.add(new Option(text,id));select.value=String(id);close();select.dispatchEvent(new Event('change',{bubbles:true}));getElement(toggle.id)?.focus();};results.append(button);};
-            option(prompt,'');for(const item of matches.slice(0,50))option(itemName(item),value(item));
-            if(!matches.length||matches.length>50){const note=document.createElement('p');note.className='small text-muted mb-0';note.textContent=matches.length?'Showing first 50 matches. Type to narrow results.':(isBrand?'No matching brands found':'No matching categories.');results.append(note);}
-        }
-        const updateCaption=()=>{toggle.textContent=select.value?(select.selectedOptions[0]?.textContent||prompt):(isBrand?'Select brand or search...':prompt);};updateCaption();select.addEventListener('change',updateCaption);select.productSearchCleanup=()=>select.removeEventListener('change',updateCaption);toggle.onclick=()=>{if(!panel.hidden){close();return;}openCategorySelect?.close();search.value='';render();panel.hidden=false;toggle.setAttribute('aria-expanded','true');openCategorySelect={host,close};search.focus();};
-        search.oninput=render;host.onkeydown=event=>{const options=[...results.querySelectorAll('button')],index=options.indexOf(document.activeElement);if(event.key==='Escape'){event.preventDefault();close(true);}else if(!panel.hidden&&(event.key==='ArrowDown'||event.key==='ArrowUp')){event.preventDefault();options[index<0?(event.key==='ArrowDown'?0:options.length-1):(index+(event.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();}else if(event.target===search&&event.key==='Enter'){event.preventDefault();(search.value?options[1]:options[0])?.click();}};
-        host.addEventListener('focusout',()=>{setTimeout(()=>{if(!host.contains(document.activeElement))close();},0);});
-        select.addEventListener('invalid',event=>{event.preventDefault();toggle.focus();});select.focus=()=>toggle.focus();
+        const prompt=select.options[0]?.textContent||'Select '+label;
+        const isBrand=label==='Brand (Optional)';
+        const api=StockFlowSelect.create(select,{button:true,label,notifyReselect:true,
+            hostClass:'product-category-select',triggerClass:'product-category-select-toggle',triggerId:select.id+'-toggle',
+            values:()=>[{value:'',label:prompt},...items.map(item=>({value:value(item),label:isBrand?item.brandName:(item.categoryPath||item.categoryName),disabled:item.isActive===false&&String(value(item))!==select.value}))],
+            addAction,addLabel:'Add New Brand',addId:'quick-add-brand'});
+        select.productSearchCleanup=()=>api.destroy();
     }
     function bindProductBrandPicker(){const brand=getElement('quick-brand');if(!brand||!enhanced||brand.dataset.integratedBrandPicker)return;brand.dataset.integratedBrandPicker='true';brand.addEventListener('brand-options-updated',event=>{const caption=brand.closest('.col-md-6').querySelector('label');caption.textContent='Brand (Optional)';searchable(brand,event.detail,'Brand (Optional)',item=>item.brandId,getElement('purchase-registration').dataset.canBrandCreate==='true'?()=>quickCreate('Brand'):null);});}
     function categoryCascade(select,items,locked){
@@ -174,7 +160,7 @@ window.ProductRegistrationForm = (() => {
         if (!saved) getElement('purchase-registration-save').textContent = catalogOnly?'Save Product':'Save & Add to Receipt';
     }
     function selectTab(key, focus = false) {
-        openCategorySelect?.close();
+        StockFlowSelect.closeAll();
         activeTab = key;
         for (const button of document.querySelectorAll('[data-registration-tab]')) {
             if(button.dataset.registrationTab==='compatibility')continue;
@@ -251,8 +237,9 @@ window.ProductRegistrationForm = (() => {
     }
     function stepFor(input){return input.closest('[role=tabpanel]')?.id.replace('registration-panel-','')==='compatibility'?'variants':input.closest('[role=tabpanel]')?.id.replace('registration-panel-','')||activeTab;}
     function validationAlert(key,issues){
-        const required=issues.every(({input})=>input.required&&!input.value?.trim());
-        showNotice('error',issues.length+' '+(required?'required ':'')+(issues.length===1?'field needs':'fields need')+' attention.',null,key,issues.map(issue=>issue.input));
+        // Field errors and step markers already explain what needs correcting.
+        // Do not dismiss or replace operation notifications when validation runs.
+        if(alertState?.fields?.length){alertState=null;renderAlert();}
     }
     function validateStep(key){
         validationShown=true;validatedSteps.add(key);const issues=stepIssues(key,true);updateTabs();
@@ -366,7 +353,6 @@ window.ProductRegistrationForm = (() => {
     function refreshValidation(){
         for(const key of validatedSteps)stepIssues(key,true);
         updateTabs();
-        if(alertState?.fields?.length){const issues=stepIssues(alertState.step);if(!issues.length)showMessage(null);else {const required=issues.every(({input})=>input.required&&!input.value?.trim());alertState.title=issues.length+' '+(required?'required ':'')+(issues.length===1?'field needs':'fields need')+' attention.';alertState.fields=issues.map(issue=>issue.input);renderAlert();}}
         if(alertState?.prerequisite&&getElement('quick-category').value&&!categoryDefinitions.some(c=>String(c.parentCategoryId)===getElement('quick-category').value))showMessage(null);
     }
     function options() {

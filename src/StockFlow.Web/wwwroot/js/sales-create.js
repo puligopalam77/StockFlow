@@ -1783,6 +1783,7 @@
             if(!Array.isArray(list))throw Error('Saved bills could not be loaded.');
             if(!list.length&&savedPage>1){savedPage=Math.max(1,Math.ceil(total/25));return loadSavedBills();}
             getElement('saved-bills-count').textContent=total+' '+(total===1?'Draft':'Drafts');
+            getElement('saved-bills-prev').closest('.billing-saved-pagination').hidden=!StockFlowPagination.shouldShow(total);
             getElement('saved-bills-page').textContent='Page '+savedPage+' of '+Math.max(1,Math.ceil(total/25));
             getElement('saved-bills-prev').disabled=savedPage<=1;getElement('saved-bills-next').disabled=savedPage*25>=total;
             savedList.replaceChildren();savedList.scrollTop=0;drawerFeedback('');

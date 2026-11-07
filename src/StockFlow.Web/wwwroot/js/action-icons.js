@@ -7,7 +7,7 @@ window.StockFlowActionIcons = (() => {
     const selector = 'button,a,.sales-more > summary';
     const excluded = '#password-toggle,.sf-menu-toggle,.sf-sidebar-close,.sf-help-open,.sf-signin,[role="tab"],.product-gallery-thumbnail,.product-gallery-stage,.product-gallery-empty';
     const enhanced = new WeakSet();
-    let tooltip, owner, title;
+    let tooltip, owner, timer, pendingOwner, touchUntil = 0;
     const name = node => node.getAttribute('aria-label') || node.getAttribute('title') || node.dataset.bsOriginalTitle || node.querySelector('.visually-hidden,.sr-only')?.textContent.trim();
     function text(node) {
         const walker=document.createTreeWalker(node,NodeFilter.SHOW_TEXT);let value='';
@@ -18,17 +18,17 @@ window.StockFlowActionIcons = (() => {
         return value.trim();
     }
     function hide() {
+        clearTimeout(timer);pendingOwner=null;
         tooltip?.remove();tooltip=null;
         if(owner){
             const ids=(owner.getAttribute('aria-describedby')||'').split(/\s+/).filter(id=>id&&id!=='sf-action-tooltip');
             if(ids.length)owner.setAttribute('aria-describedby',ids.join(' '));else owner.removeAttribute('aria-describedby');
-            if(title && !owner.getAttribute('title'))owner.setAttribute('title',title);
         }
-        owner=null;title=null;
+        owner=null;
     }
     function show(node) {
-        hide();const label=name(node);if(!label||node.disabled)return;
-        owner=node;title=node.getAttribute('title');if(title)node.removeAttribute('title');
+        hide();const label=name(node);if(!label||node.disabled||!node.isConnected||!node.getClientRects().length)return;
+        owner=node;
         tooltip=document.createElement('span');tooltip.className='sf-action-tooltip';tooltip.id='sf-action-tooltip';
         tooltip.setAttribute('role','tooltip');tooltip.setAttribute('popover','manual');tooltip.textContent=label;
         document.body.append(tooltip);tooltip.showPopover?.();
@@ -43,6 +43,10 @@ window.StockFlowActionIcons = (() => {
         node.classList.add('sf-action-icon');
         if(!node.dataset.actionSize)node.dataset.actionSize=size;
         if(!node.hasAttribute('aria-label'))node.setAttribute('aria-label',name(node));
+        const sharedTooltip=!node.matches('.category-icon-action')&&!node.onpointerenter&&!window.bootstrap?.Tooltip?.getInstance(node);
+        // Only shared-owned icon actions relinquish their redundant native title.
+        // The accessible name is retained before removing it.
+        if(sharedTooltip)node.removeAttribute('title');
         if(!enhanced.has(node)){
             enhanced.add(node);
             // Existing Bootstrap tooltips may sit over a neighboring compact
@@ -54,9 +58,15 @@ window.StockFlowActionIcons = (() => {
                 }
             });
             // Keep existing category/popover/Bootstrap tooltips; do not duplicate them.
-            if(!node.matches('.category-icon-action')&&!node.onpointerenter&&!window.bootstrap?.Tooltip?.getInstance(node)) {
-                node.addEventListener('pointerenter',()=>show(node));node.addEventListener('focus',()=>show(node));
-                node.addEventListener('pointerleave',hide);node.addEventListener('blur',hide);node.addEventListener('pointerdown',hide);
+            if(sharedTooltip) {
+                node.addEventListener('pointerenter',event=>{
+                    hide();if(event.pointerType==='touch'||Date.now()<touchUntil||node.disabled)return;
+                    pendingOwner=node;timer=setTimeout(()=>show(node),180);
+                });
+                node.addEventListener('focus',()=>{if(Date.now()>=touchUntil)show(node);});
+                const hideOwn=()=>{if(owner===node||pendingOwner===node)hide();};
+                node.addEventListener('pointerleave',hideOwn);node.addEventListener('blur',hideOwn);
+                node.addEventListener('pointerdown',hide);node.addEventListener('click',hide);
                 node.addEventListener('keydown',event=>{if(event.key==='Escape')hide();});
             }
         }
@@ -95,9 +105,14 @@ window.StockFlowActionIcons = (() => {
             if(change.type==='attributes')pending.add(change.target);
             else for(const node of change.addedNodes)if(node instanceof Element&&!node.matches('.sf-action-tooltip'))pending.add(node);
         }
-        if(owner&&!owner.isConnected)hide();
+        if((owner&&(!owner.isConnected||owner.disabled))||(pendingOwner&&!pendingOwner.isConnected))hide();
+        if(changes.some(change=>change.type==='attributes'&&change.attributeName==='open'))hide();
         if(!frame&&pending.size)frame=requestAnimationFrame(()=>{frame=null;const roots=[...pending];pending.clear();roots.forEach(node=>scan(node));});
-    }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['aria-label','title']});
+    }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['aria-label','title','open','disabled']});
+    document.addEventListener('pointerdown',event=>{if(event.pointerType==='touch')touchUntil=Date.now()+1000;hide();},true);
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')hide();},true);
+    document.addEventListener('beforetoggle',event=>{if(event.target!==tooltip)hide();},true);
+    addEventListener('pagehide',hide);addEventListener('popstate',hide);
     addEventListener('scroll',hide,true);addEventListener('resize',hide);
     scan();return {enhance,scan};
 })();

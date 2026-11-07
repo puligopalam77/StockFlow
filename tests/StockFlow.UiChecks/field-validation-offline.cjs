@@ -125,7 +125,7 @@ const scripts = path.join(root, 'src/StockFlow.Web/wwwroot/js');
             await page.addScriptTag({ path: path.join(scripts, script) });
             await page.locator('#add-record').click();
             await page.locator('#master-form [type="submit"]').click();
-            assert.match(await page.locator('.sf-validation-summary').textContent(), /highlighted fields/);
+            assert.equal(await page.locator('.sf-validation-summary').count(), 0);
             assert.match(await page.locator('#' + name + '-validation-error').textContent(), /required/);
             assert.equal(await page.evaluate(() => validationWrites.length), 0);
             await page.locator('#' + name).fill('Example ' + module);

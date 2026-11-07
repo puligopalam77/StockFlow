@@ -175,7 +175,8 @@ public class PermissionMiddleware
         }
 
         var key = p.FirstOrDefault() ?? "";
-        if(key=="expenses") return ("EXPENSES",method=="GET"?(p.Contains("export")?"EXPORT":p.Contains("create")?"CREATE":"VIEW"):p.Contains("masters")?"EDIT":p.Contains("attachments")?"ATTACH":p.LastOrDefault() switch{"save"=>"VIEW","correct"=>"EDIT","post"=>"POST","pay"=>"PAY","refund" or "reverse"=>"REVERSE","cancel"=>"CANCEL",_=>"CREATE"});
+        if(key=="replenishment") return ("REPLENISHMENT",p.Contains("export")?"EXPORT":p.Contains("policy")?"POLICY_EDIT":p.Contains("draft")?"PREPARE_PO":"VIEW");
+        if(key=="expenses") return ("EXPENSES",method=="GET"?(p.Contains("export")?"EXPORT":p.Contains("create")?"CREATE":"VIEW"):p.Contains("masters")?"EDIT":p.Contains("attachments")?"ATTACH":p.LastOrDefault() switch{"save" or "record"=>"VIEW","correct"=>"EDIT","post"=>"POST","pay"=>"PAY","refund" or "reverse"=>"REVERSE","cancel"=>"CANCEL",_=>"CREATE"});
         if(key=="shopmasters" || key=="admin"&&p.ElementAtOrDefault(1)=="shopdata") return ("COMPANY_SETTINGS",method=="GET"?"VIEW":"EDIT");
         if(key=="ewaybills") return ("EWAY_BILLS",p.Contains("provider")?"CONFIGURE_PROVIDER":p.Contains("usage")?"VIEW_USAGE":p.Contains("export")?"EXPORT":p.Contains("validate")?"VALIDATE":p.Contains("external")?"RECORD_EXTERNAL":method=="PUT"?"EDIT":method=="POST"?"PREPARE":"VIEW");
         if(key=="configuration" && (p.ElementAtOrDefault(1)=="whatsapp" || p.ElementAtOrDefault(1)=="notifications" && p.ElementAtOrDefault(2)=="whatsapp"))
@@ -199,7 +200,7 @@ public class PermissionMiddleware
         if (key == "admin" && p.ElementAtOrDefault(1) == "gst") return ("GST_SETTINGS", "VIEW");
         if (key == "reports" && p.ElementAtOrDefault(1) == "gst") return ("GST_REPORTS", "VIEW");
         if(method=="GET" && p.ElementAtOrDefault(1)=="edit" && new[]{"products","categories","brands","suppliers","customers"}.Contains(key)) action="EDIT";
-        if(method=="POST" && key=="categories" && p.LastOrDefault()=="status") action="DELETE";
+        if(method=="POST" && (key=="categories" || key=="suppliers") && p.LastOrDefault()=="status") action="DELETE";
         if(key=="quotations")
             return ("QUOTATIONS",p.Contains("print")?"PRINT":p.Contains("export")?"EXPORT":p.Contains("checkout")?"CONVERT":p.Contains("state")?"STATUS":p.Contains("preview")?"VIEW":p.Contains("edit")?"EDIT":p.Contains("create")?"CREATE":method=="GET"?"VIEW":method=="PUT"?"EDIT":"CREATE");
         string? module = key switch

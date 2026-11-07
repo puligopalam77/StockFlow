@@ -3,6 +3,10 @@
 @{
     var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     var guide = RetailScreenGuides.For(page, GuideScope.BusinessProfileCode);
+    if(page=="/Settings/Company")
+        guide=ViewData["CompanySection"]?.ToString()=="billing"
+            ?new RetailScreenGuide("Configure future invoice defaults and the active-shop discount policy.",["Review numbering, billing defaults and printing messages.","Save Billing Settings for this company and all branches; existing documents retain their saved details.","Save Policy separately for the active shop."])
+            :new RetailScreenGuide("Manage company identity, contact details, address and branding.",["Review business details and the saved address.","Use GST Settings for authoritative registrations and mappings.","Save Business Information for this company and all branches."]);
     if (page == "/Purchases/Create" && (Context.Request.Query["mode"] == "order" || Context.Request.Query.ContainsKey("id")))
         guide = RetailScreenGuides.For("/Purchases/Index", GuideScope.BusinessProfileCode);
 }

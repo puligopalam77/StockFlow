@@ -21,6 +21,7 @@
     else if (page.StartsWith("/Inventory/")) { parentLabel = "Stock on hand"; parentUrl = "/Inventory"; }
     else if (page == "/Configuration/WhatsApp") { parentLabel = "Notifications"; parentUrl = "/Configuration/Notifications"; }
     else if (page.StartsWith("/Settings/") || page == "/Configuration/Notifications") { parentLabel = "Setup"; }
+    else if (page.StartsWith("/Expenses/")) { parentLabel="Operating Expenses";parentUrl="/Expenses"; }
     else if (page.StartsWith("/Account/") && page != "/Account/Home") { parentLabel = "My account"; parentUrl = "/Account/Home"; }
     if (page == "/Purchases/Create" && Context.Request.Query.ContainsKey("id")) title = "Edit draft";
     if (Access.Can("REPORTS") && (page.StartsWith("/Reports/") && page != "/Reports/Index" || Context.Request.Query["fromReports"] == "1"))
@@ -32,6 +33,12 @@
     if (page == "/Sales/Invoice") title = "Invoice";
     if (page == "/Account/Home") title = "My account";
     var currentUrl = page.EndsWith("/Index") ? page[..^6] : page;
+    if(page=="/Settings/Company")
+    {
+        parentLabel=null;
+        parents.Add(("Administration",null));
+        parents.Add(("Business Setup",null));
+    }
     if (parentLabel is not null && (parentUrl != currentUrl || page.StartsWith("/Admin/")))
         parents.Add((parentLabel, parentUrl is not null && (parentUrl.StartsWith("/Account/") || Access.CanVisit(parentUrl)) ? parentUrl : null));
     var backUrl = parents.LastOrDefault(p => p.Url is not null).Url ?? home;

@@ -8,7 +8,7 @@ using StockFlow.Infrastructure.Data;
 
 namespace StockFlow.Infrastructure.Repositories;
 
-public class BranchRepository : IBranchRepository
+public partial class BranchRepository : IBranchRepository
 {
     private readonly DbConnectionFactory factory;
     private readonly BusinessScope scope;
@@ -72,48 +72,47 @@ scope);
 
     public async Task<long> CreateStoreAsync(StoreRequest r)
     {
-        Owner();
-        Validator.ValidateObject(r, new ValidationContext(r), true);
-        if (string.IsNullOrWhiteSpace(r.StoreCode) || string.IsNullOrWhiteSpace(r.StoreName))
-        {
-            throw new ValidationException("Store name and code are required.");
+        Owner();Normalize(r);await using var c=factory.CreateConnection();await c.OpenAsync();await using var t=await c.BeginTransactionAsync();await Manage(c,t,"CREATE");
+        await c.ExecuteAsync("SELECT pg_advisory_xact_lock(hashtextextended('store-management:'||sf_tenant()::text,0))",transaction:t);
+        var metadata=await ManagementAvailable(c,t);var details=Metadata(r);
+        if(!metadata&&(r.AddressLine1 is not null||r.Email is not null||r.AlternatePhone is not null))throw new ValidationException("Apply manual migration 089 before saving structured store metadata.");
+        var existing=await c.ExecuteScalarAsync<long?>("SELECT store_id FROM stores WHERE lower(store_code)=lower(@StoreCode)",r,t);
+        if(existing is {} id){
+            var same=await c.ExecuteScalarAsync<bool>("""
+            SELECT store_name=@StoreName AND address IS NOT DISTINCT FROM @Address AND city IS NOT DISTINCT FROM @City AND state IS NOT DISTINCT FROM @State AND mobile_number IS NOT DISTINCT FROM @MobileNumber AND is_active
+            AND jsonb_strip_nulls(coalesce(to_jsonb(s)->'management_details','{}'::jsonb))=jsonb_strip_nulls(CAST(@details AS jsonb))
+            AND (SELECT count(*) FROM store_locations l WHERE l.store_id=s.store_id AND l.location_type='SALES_FLOOR' AND l.is_active)=1
+            FROM stores s WHERE store_id=@id
+            """,new{r.StoreName,r.Address,r.City,r.State,r.MobileNumber,details,id},t);
+            if(!same)throw new ValidationException("This store code is already used. Review the existing store instead of creating a duplicate.");
+            await t.CommitAsync();return id;
         }
-
-        using var c = factory.CreateConnection();
-        await c.OpenAsync();
-        using var t = c.BeginTransaction();
-        var id = await c.ExecuteScalarAsync<long>("INSERT INTO stores(store_code,store_name,address,city,state,mobile_number,gst_number) VALUES(@StoreCode,@StoreName,@Address,@City,@State,@MobileNumber,@GstNumber) RETURNING store_id",
-r,
-t);
-        await c.ExecuteAsync("INSERT INTO store_locations(store_id,location_name,location_type) VALUES(@id,'Main stock','SALES_FLOOR'); INSERT INTO audit_logs(user_id,module_name,action_name,table_name,record_id) VALUES(@actor,'Stores','CREATE','stores',@id)",
-new
-{
-    id,
-    actor = scope.UserId
-},
-t);
-        t.Commit();
-        return id;
+        var created=await c.ExecuteScalarAsync<long>(metadata?"INSERT INTO stores(store_code,store_name,address,city,state,mobile_number,management_details) VALUES(@StoreCode,@StoreName,@Address,@City,@State,@MobileNumber,CAST(@details AS jsonb)) RETURNING store_id":"INSERT INTO stores(store_code,store_name,address,city,state,mobile_number) VALUES(@StoreCode,@StoreName,@Address,@City,@State,@MobileNumber) RETURNING store_id",new{r.StoreCode,r.StoreName,r.Address,r.City,r.State,r.MobileNumber,details},t);
+        await c.ExecuteAsync("INSERT INTO store_locations(store_id,location_name,location_type) VALUES(@created,'Main stock','SALES_FLOOR'); INSERT INTO audit_logs(user_id,module_name,action_name,table_name,record_id) VALUES(sf_actor(),'Stores','CREATE','stores',@created)",new{created},t);
+        await t.CommitAsync();return created;
     }
-
     public async Task<long> CreateLocationAsync(LocationRequest r)
     {
-        Owner();
-        Validator.ValidateObject(r, new ValidationContext(r), true);
-        if (r.LocationType is not ("SALES_FLOOR" or "BACKROOM" or "STOCKROOM" or "WAREHOUSE" or "SERVICE_CENTER") || string.IsNullOrWhiteSpace(r.LocationName) || r.StoreId is null && r.LocationType != "WAREHOUSE")
-        {
-            throw new ValidationException("Choose a valid location name and type. A location without a store must be a central warehouse.");
-        }
-
-        using var c = factory.CreateConnection();
-        return await c.ExecuteScalarAsync<long>("INSERT INTO store_locations(store_id,location_name,location_type) VALUES(@StoreId,@LocationName,@LocationType) RETURNING location_id",
-r);
+        Owner();r.LocationName=r.LocationName?.Trim()??"";Validator.ValidateObject(r,new(r),true);
+        if(r.LocationType is not("SALES_FLOOR" or "BACKROOM" or "STOCKROOM" or "WAREHOUSE" or "SERVICE_CENTER")||r.LocationName.Length==0||r.StoreId is null&&r.LocationType!="WAREHOUSE")throw new ValidationException("Choose a valid location name and type. A location without a store must be a central warehouse.");
+        await using var c=factory.CreateConnection();await c.OpenAsync();await using var t=await c.BeginTransactionAsync();await Manage(c,t,"CREATE");
+        await c.ExecuteAsync("SELECT pg_advisory_xact_lock(hashtextextended('store-management:'||sf_tenant()::text,0))",transaction:t);
+        if(r.StoreId.HasValue&&!await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM stores WHERE store_id=@StoreId AND is_active)",r,t))throw new ValidationException("Choose an active store in this business.");
+        var existing=(await c.QueryAsync<long>("SELECT location_id FROM store_locations WHERE store_id IS NOT DISTINCT FROM @StoreId AND lower(btrim(location_name))=lower(@LocationName) AND location_type=@LocationType AND is_active",r,t)).ToArray();
+        if(existing.Length>1)throw new ValidationException("Several existing locations match. Review them before retrying creation.");
+        if(existing.Length==1){await t.CommitAsync();return existing[0];}
+        // The location read policy resolves the persisted row through a STABLE
+        // helper. Read its generated ID in the next statement, after insertion.
+        await c.ExecuteAsync("INSERT INTO store_locations(store_id,location_name,location_type) VALUES(@StoreId,@LocationName,@LocationType)",r,t);
+        var id=await c.ExecuteScalarAsync<long>("SELECT currval(pg_get_serial_sequence('public.store_locations','location_id'))",transaction:t);
+        await c.ExecuteAsync("INSERT INTO audit_logs(user_id,module_name,action_name,table_name,record_id) VALUES(sf_actor(),'Stores','CREATE_LOCATION','store_locations',@id)",new{id},t);await t.CommitAsync();return id;
     }
 
     public async Task<StoreAccessRequest> AccessAsync(int userId)
     {
         Owner();
         using var c = factory.CreateConnection();
+        await Manage(c,action:"MANAGE_ACCESS");
         if (!await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM users WHERE user_id=@userId)", new
         {
             userId
@@ -150,6 +149,7 @@ r);
         using var c = factory.CreateConnection();
         await c.OpenAsync();
         using var t = c.BeginTransaction();
+        await Manage(c,t,"MANAGE_ACCESS");
         var target = await c.QuerySingleOrDefaultAsync<BranchUserState>("SELECT is_tenant_owner AS IsOwner FROM users WHERE user_id=@userId FOR UPDATE", new
         {
             userId

@@ -1,3 +1,4 @@
+const {fillAddress,fillLocation}=require('./address-test-helpers.cjs');
 // Actual Razor/assets and database-produced source snapshots. Provider/HTTP is mocked.
 const fs = require('fs'), path = require('path'), assert = require('assert');
 const { chromium } = require('./bin/Debug/net10.0/.playwright/package');
@@ -47,17 +48,19 @@ const read = name => JSON.parse(fs.readFileSync(path.join(fixtures, name), 'utf8
         assert.strictEqual(await page.locator('[data-party=dispatchFrom] [data-field=address]').inputValue(), '', 'Unknown physical address was inferred');
         for (const party of ['billFrom', 'dispatchFrom', 'billTo', 'shipTo']) {
             const set = page.locator('[data-party=' + party + ']');
-            await set.locator('[data-field=name]').fill('Reviewed actual party'); await set.locator('[data-field=address]').fill('Reviewed actual physical address');
-            await set.locator('[data-field=state]').selectOption('29'); await set.locator('[data-field=pin]').fill('560001');
+            await set.locator('[data-field=name]').fill('Reviewed actual party'); await fillAddress(set.locator('[data-field=address]'),'Reviewed actual physical address');
+            await fillLocation(set.locator('[data-field=state]'),'29'); await set.locator('[data-field=pin]').fill('560001');
             await set.locator('[data-field=gstin]').fill(party === 'billFrom' ? source.registration.gstin : 'URP');
         }
         await page.locator('[name=transactionType]').selectOption('4');
         await page.locator('[name=movementReason]').fill('Supply; actual subtype reviewed');
         await page.locator('[name=distanceKm]').fill('20'); await page.locator('[name=vehicle]').fill('KA01AB1234');
         await page.locator('[name=applicabilityReview]').fill('Authorized test reviewer checked actual movement and state rules');
+        await page.waitForFunction(()=>[...document.querySelectorAll('[data-party] [data-field=pin]')].every(e=>e.validity.valid));
         await page.locator('#eway-save').click();
         await page.waitForFunction(() => document.getElementById('eway-state').textContent.includes('unresolved'));
         assert(await page.locator('[name=movementReason]').isDisabled(), 'Uncertain save must freeze its original payload');
+        await page.waitForFunction(()=>[...document.querySelectorAll('[data-party] [data-field=pin]')].every(e=>e.validity.valid));
         await page.locator('#eway-save').click();
         await page.waitForFunction(() => document.getElementById('eway-state').textContent.includes('Saved revision 1'));
         assert.strictEqual(saves[0].operationId, saves[1].operationId); assert.deepStrictEqual(saves[0], saves[1]); assert.strictEqual(operations.size, 1);

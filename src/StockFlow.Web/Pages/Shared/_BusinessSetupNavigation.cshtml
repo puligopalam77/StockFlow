@@ -1,0 +1,12 @@
+@inject StockFlow.Application.Common.BusinessScope SetupScope
+@{var currentPath=Context.Request.Path.Value ?? ""; var billingView=ViewData["CompanySection"]?.ToString()=="billing";}
+<details class="sf-nav-group" open="@(currentPath.StartsWith("/Settings/",StringComparison.OrdinalIgnoreCase)||currentPath.StartsWith("/Admin/Gst",StringComparison.OrdinalIgnoreCase)||currentPath=="/Admin/Stores")" data-nav-group="Business Setup">
+<summary class="sf-nav-link">Business Setup<span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
+<div class="sf-nav-children">
+@if(Access.Can("COMPANY_SETTINGS")){
+<a class="sf-nav-child @(currentPath=="/Settings/Company"&&!billingView?"active":"")" href="/Settings/Company?section=business" aria-current="@(currentPath=="/Settings/Company"&&!billingView?"page":null)">Business Information</a>
+<a class="sf-nav-child @(currentPath=="/Settings/Company"&&billingView?"active":"")" href="/Settings/Company?section=billing" aria-current="@(currentPath=="/Settings/Company"&&billingView?"page":null)">Billing &amp; Invoice Settings</a>
+@if(SetupScope.CanReviewStores){<a class="sf-nav-child @(currentPath=="/Settings/BusinessProfile"?"active":"")" href="/Settings/BusinessProfile" aria-current="@(currentPath=="/Settings/BusinessProfile"?"page":null)">Shop Business Profile</a>}}
+@if(Access.Can("GST_SETTINGS")){<a class="sf-nav-child @(currentPath.StartsWith("/Admin/Gst",StringComparison.OrdinalIgnoreCase)?"active":"")" href="/Admin/Gst" aria-current="@(currentPath.StartsWith("/Admin/Gst",StringComparison.OrdinalIgnoreCase)?"page":null)">GST Settings</a>}
+@if(Access.Can("STORES")){<a class="sf-nav-child @(currentPath=="/Admin/Stores"?"active":"")" href="/Admin/Stores" aria-current="@(currentPath=="/Admin/Stores"?"page":null)">Stores &amp; Locations</a>}
+</div></details>

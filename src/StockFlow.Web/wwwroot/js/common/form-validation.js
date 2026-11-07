@@ -9,7 +9,7 @@ window.StockFlowValidation = (() => {
         const label = input.labels?.[0];
         // Wrapped labels also contain the input and its feedback. Read their text only.
         const copy = label?.cloneNode(true);
-        copy?.querySelectorAll('input, select, textarea, .sf-field-validation').forEach((node) => {
+        copy?.querySelectorAll('input, select, textarea, .sf-field-validation, .sf-address-options').forEach((node) => {
             node.remove();
         });
         return (window.StockFlowLanguage?.originalText(label) || copy?.textContent || input.getAttribute('aria-label') || input.name || 'This field')
@@ -124,7 +124,7 @@ window.StockFlowValidation = (() => {
         }
         const id = input.id + (input.form?.dataset.validationOwner === 'product-registration' ? '-error' : '-validation-error');
         let feedback = document.getElementById(id);
-        if (!feedback && input.form?.hasAttribute('data-inline-validation')) {
+        if (!feedback && input.form) {
             feedback = [...input.form.querySelectorAll('[data-valmsg-for]')]
                 .find((element) => element.getAttribute('data-valmsg-for') === input.name);
             if (feedback) {
@@ -136,7 +136,7 @@ window.StockFlowValidation = (() => {
             feedback = document.createElement('div');
             feedback.id = id;
             feedback.className = 'sf-field-validation text-danger small';
-            input.after(feedback);
+            (input.sfSelect?.wrapper || input.sfAddressPicker?.wrapper || input).after(feedback);
             const describedBy = input.getAttribute('aria-describedby') || '';
             input.setAttribute('aria-describedby', `${describedBy} ${id}`.trim());
         }
@@ -149,9 +149,14 @@ window.StockFlowValidation = (() => {
         input.classList.toggle('is-invalid', Boolean(message));
         if (message) {
             input.setAttribute('aria-invalid', 'true');
+            // Optional sections must expose errors before focus moves to a field.
+            for (let parent = input.parentElement; parent; parent = parent.parentElement) {
+                if (parent.tagName === 'DETAILS') parent.open = true;
+            }
         } else {
             input.removeAttribute('aria-invalid');
         }
+        (input.sfSelect || input.sfAddressPicker)?.refresh();
     }
 
     function validate(container, focus = true) {
@@ -164,24 +169,8 @@ window.StockFlowValidation = (() => {
                 invalid.push(input);
             }
         }
-        let summary = container.querySelector(':scope > .sf-validation-summary');
-        if (!summary && invalid.length && (!container.hasAttribute('data-inline-validation') || container.dataset.productValidation==='true')) {
-            summary = document.createElement('div');
-            summary.className = 'sf-validation-summary alert alert-danger col-12';
-            summary.setAttribute('role', 'alert');
-            container.prepend(summary);
-        }
-        if (summary) {
-            if(container.dataset.productValidation==='true'&&window.ProductRegistrationForm?.banner){
-                ProductRegistrationForm.banner(summary,invalid.length?{type:'error',title:invalid.length+' '+(invalid.length===1?'field needs':'fields need')+' attention.',dismissible:false}:null);
-                summary.classList.add('sf-validation-summary');
-                if(invalid.length)document.getElementById('editor-message').hidden=true;
-            }else{
-            summary.textContent = invalid.length
-                ? (window.StockFlowLanguage?.text('Please complete or correct the highlighted fields before saving.') || 'Please complete or correct the highlighted fields before saving.') : '';
-            summary.hidden = invalid.length === 0;
-            }
-        }
+        // Validation stays beside each field; operation notifications are independent.
+        container.querySelectorAll(':scope > .sf-validation-summary').forEach(summary => summary.remove());
         if (focus && invalid.length) {
             invalid[0].focus();
         }
@@ -255,6 +244,19 @@ window.StockFlowValidation = (() => {
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
     document.querySelectorAll('form, input, select, textarea').forEach(prepareField);
+    function restoreServerFieldErrors() {
+        for (const feedback of document.querySelectorAll('[data-valmsg-for].field-validation-error')) {
+            const scope = feedback.closest('form') || document;
+            const input = [...scope.querySelectorAll('input,select,textarea')]
+                .find(field => field.name === feedback.getAttribute('data-valmsg-for'));
+            if (input && feedback.textContent.trim()) {
+                if (input.form) shownForms.add(input.form);
+                showField(input, feedback.textContent.trim());
+            }
+        }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restoreServerFieldErrors, { once: true });
+    else restoreServerFieldErrors();
     document.addEventListener('focusin', (event) => {
         if (event.target instanceof Element && event.target.matches('input, select, textarea')) {
             prepareField(event.target);

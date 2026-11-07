@@ -22,6 +22,24 @@ internal static class GstHttpChecks
             var response=await client.GetAsync(route);Check(response.IsSuccessStatusCode,"Razor screen renders: "+route);
             await File.WriteAllTextAsync(Path.Combine(output,route.Contains("Admin")?"settings.html":"reports.html"),await response.Content.ReadAsStringAsync());
         }
+        var settingsHtml=await File.ReadAllTextAsync(Path.Combine(output,"settings.html"));
+        var settingsBody=settingsHtml.Split("id=\"gst-settings\"")[1];
+        Check(!settingsBody.Contains("Integrations: E-Way Bill provider readiness"),"GST setup no longer contains the misplaced provider button");
+        var providerHtml=await client.GetStringAsync("/EWayBills/Provider");
+        await File.WriteAllTextAsync(Path.Combine(output,"provider.html"),providerHtml);
+        var nav=System.Text.RegularExpressions.Regex.Match(providerHtml,"<nav class=\"sf-nav[\\s\\S]*?</nav>").Value;
+        Check(System.Text.RegularExpressions.Regex.Matches(nav,"href=\"/EWayBills/Provider\"").Count==1,"Single provider sidebar entry");
+        Check(nav.Contains("data-nav-group=\"Integrations\"")&&nav.Contains("aria-current=\"page\""),"Existing provider route selects Administration Integrations");
+        Check(System.Text.RegularExpressions.Regex.IsMatch(nav,"<details[^>]*open[^>]*data-nav-group=\"Setup\""),"Provider page expands Administration");
+        Check(providerHtml.Contains("<h1>E-Way Bill Provider</h1>"),"Provider page has correct heading without fake credential fields");
+        client.DefaultRequestHeaders.Add("Test-Deny-Action","EWAY_BILLS:CONFIGURE_PROVIDER");
+        Check((await client.GetAsync("/EWayBills/Provider")).Headers.Location?.OriginalString=="/Account/AccessDenied","Provider direct Razor route requires its own action");
+        Check((int)(await client.GetAsync("/api/ewaybills/provider")).StatusCode==403,"Provider API denied before repository when action is absent");
+        Check((await client.GetAsync("/Admin/Gst")).IsSuccessStatusCode,"GST setup does not depend on provider configuration permission");
+        var deniedHtml=await client.GetStringAsync("/Admin/Gst");
+        Check(!deniedHtml.Contains("data-nav-group=\"Integrations\""),"No empty Integrations group without provider action");
+        Check((await client.GetAsync("/EWayBills")).IsSuccessStatusCode,"Operational preparations retain separate view authorization");
+        client.DefaultRequestHeaders.Remove("Test-Deny-Action");
         client.DefaultRequestHeaders.Add("Test-Deny","GST_SETTINGS,GST_REPORTS");
         Check((int)(await client.GetAsync("/api/gst/registrations")).StatusCode==403,"Denied GST viewer cannot reach report repository");
         Check((int)(await client.PostAsJsonAsync("/api/gst/settings/mappings",new{})).StatusCode==403,"Denied manager cannot submit shop mappings");

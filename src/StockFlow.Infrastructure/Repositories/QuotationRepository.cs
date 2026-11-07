@@ -84,14 +84,16 @@ public sealed class QuotationRepository(DbConnectionFactory factory, ISalesRepos
     }
     public async Task<QuotationPage> ListAsync(string? term,string? status,DateTime? from,DateTime? to,int page,int pageSize)
     {
-        if(page<1 || page>100000 || pageSize is <1 or >100 || term?.Length>150 || from>to || (from.HasValue&&from.Value.Year<2000) || (to.HasValue&&to.Value.Year>2100))throw new ValidationException("Choose valid search, dates and pagination.");
+        if(page<1 || page>100000 || pageSize is <1 or >100 || term?.Length>150 || from>to || (from.HasValue&&(from.Value.Year<2000||from.Value.Year>2100||from.Value.TimeOfDay!=TimeSpan.Zero)) || (to.HasValue&&(to.Value.Year<2000||to.Value.Year>2100||to.Value.TimeOfDay!=TimeSpan.Zero)))throw new ValidationException("Choose valid search, dates and pagination.");
         var states=new[]{"DRAFT","SENT","ACCEPTED","REJECTED","EXPIRED","CONVERTED","CANCELLED"};
         if(!string.IsNullOrWhiteSpace(status)&&!states.Contains(status))throw new ValidationException("Choose a supported quotation status.");
         await using var c=factory.CreateConnection();await Require(c,"VIEW");await c.OpenAsync();await using var tx=await c.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         await c.ExecuteAsync("SET TRANSACTION READ ONLY",transaction:tx);
-        const string filter=" WHERE (@term::text IS NULL OR \"QuotationNumber\" ILIKE @term OR \"CustomerName\" ILIKE @term) AND (@status::text IS NULL OR \"Status\"=@status) AND (@from::date IS NULL OR \"DocumentDate\">=@from::date) AND (@to::date IS NULL OR \"DocumentDate\"<=@to::date)";
+        const string filter=" WHERE (@term::text IS NULL OR \"QuotationNumber\" ILIKE @term OR \"CustomerName\" ILIKE @term OR \"CustomerMobile\" ILIKE @term) AND (@status::text IS NULL OR \"Status\"=@status) AND (@from::date IS NULL OR \"DocumentDate\">=@from::date) AND (@to::date IS NULL OR \"DocumentDate\"<=@to::date)";
         // PostgreSQL folds unquoted aliases from Header to lower case.
-        var query="WITH filtered AS (SELECT quotationid AS \"QuotationId\",quotationnumber AS \"QuotationNumber\",customername AS \"CustomerName\",status AS \"Status\",documentdate AS \"DocumentDate\",validuntil AS \"ValidUntil\",total AS \"Total\",itemcount AS \"ItemCount\",currentrevision AS \"CurrentRevision\",version AS \"Version\",saleid AS \"SaleId\" FROM ("+Header+") h) ";
+        // Read mobile from the current saved revision under the same RLS scope.
+        // Never join a mutable/shared customer master to supply another shop's data.
+        var query="WITH filtered AS (SELECT h.quotationid AS \"QuotationId\",quotationnumber AS \"QuotationNumber\",customername AS \"CustomerName\",coalesce(r.body->'customer'->>'MobileNumber',r.body->'customer'->>'mobileNumber') AS \"CustomerMobile\",status AS \"Status\",documentdate AS \"DocumentDate\",validuntil AS \"ValidUntil\",total AS \"Total\",itemcount AS \"ItemCount\",currentrevision AS \"CurrentRevision\",version AS \"Version\",saleid AS \"SaleId\" FROM ("+Header+") h LEFT JOIN quotation_revisions r ON r.tenant_id=public.sf_tenant() AND r.quotation_id=h.quotationid AND r.revision=h.currentrevision) ";
         var args=new{term=string.IsNullOrWhiteSpace(term)?null:"%"+term.Trim().Replace("\\","\\\\").Replace("%","\\%").Replace("_","\\_")+"%",status=string.IsNullOrWhiteSpace(status)?null:status,from,to,offset=(page-1)*pageSize,pageSize};
         var rows=(await c.QueryAsync<QuotationRow>(query+"SELECT * FROM filtered"+filter+" ORDER BY \"DocumentDate\" DESC,\"QuotationNumber\" DESC LIMIT @pageSize OFFSET @offset",args,tx)).ToArray();
         var total=await c.ExecuteScalarAsync<long>(query+"SELECT count(*) FROM filtered"+filter,args,tx);await tx.CommitAsync();return new(rows,total,page,pageSize);

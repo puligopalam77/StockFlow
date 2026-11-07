@@ -17,11 +17,8 @@ public class InventoryRepository : IInventoryRepository
         this.factory = factory;
     }
 
-    public async Task<IEnumerable<InventoryBalance>> GetBalancesAsync(string? term, bool lowStockOnly, bool includeInactive)
-    {
-        await using var connection = factory.CreateConnection();
-        return await connection.QueryAsync<InventoryBalance>("""
-            SELECT p.product_id AS ProductId, v.variant_id AS VariantId, p.product_name || ' / ' || v.variant_name AS ProductName, v.variant_name AS VariantName,
+    private string BalanceSql => """
+            SELECT p.product_id AS ProductId, v.variant_id AS VariantId, p.product_name AS ProductLabel,p.product_name || ' / ' || v.variant_name AS ProductName, v.variant_name AS VariantName,
                 p.product_image_url AS ProductImageUrl,(p.product_image_name IS NOT NULL) AS HasProductImage,c.category_name AS CategoryName,
                 v.attributes::text AS AttributesJson,p.unit_of_measure AS UnitOfMeasure,
                 b.brand_name AS BrandName, v.sku AS Sku, (SELECT barcode FROM variant_barcodes WHERE variant_id=v.variant_id AND is_active ORDER BY is_primary DESC,variant_barcode_id LIMIT 1) AS Barcode, (p.is_active AND v.is_active) AS IsActive,
@@ -38,14 +35,30 @@ public class InventoryRepository : IInventoryRepository
                     OR c.category_name ILIKE @Term OR b.brand_name ILIKE @Term OR EXISTS(SELECT 1 FROM variant_barcodes vb WHERE vb.variant_id=v.variant_id AND vb.is_active AND vb.barcode ILIKE @Term)
                     OR EXISTS(SELECT 1 FROM product_units pu WHERE pu.variant_id=v.variant_id AND (pu.serial_number ILIKE @Term OR pu.barcode ILIKE @Term OR pu.internal_barcode ILIKE @Term OR pu.manufacturer_barcode ILIKE @Term)))
                 AND (NOT @LowStockOnly OR s.current_stock <= sf_variant_minimum(v.variant_id,v.minimum_stock_level))
-            ORDER BY p.product_name, p.product_id, v.variant_id;
-            """,
-new
-{
-    Term = string.IsNullOrWhiteSpace(term) ? null : "%" + term.Trim() + "%",
-    LowStockOnly = lowStockOnly,
-    IncludeInactive = includeInactive
-});
+
+            """;
+
+    public async Task<IEnumerable<InventoryBalance>> GetBalancesAsync(string? term, bool lowStockOnly, bool includeInactive)
+    {
+        await using var connection = factory.CreateConnection();
+        return await connection.QueryAsync<InventoryBalance>(BalanceSql+" ORDER BY p.product_name,p.product_id,v.variant_id;",new{
+            Term=string.IsNullOrWhiteSpace(term)?null:"%"+term.Trim()+"%",LowStockOnly=lowStockOnly,IncludeInactive=includeInactive});
+    }
+    public async Task<LowStockPage> GetLowStockPageAsync(string? term,string? stockStatus,int page,int pageSize)
+    {
+        if(page<1||page>100000||pageSize is not (10 or 25 or 50 or 100)||term?.Length>150||stockStatus is not (null or "" or "OUT" or "LOW"))
+            throw new ValidationException("Choose valid shortage filters and pagination.");
+        factory.RequireLocation();
+        await using var connection=factory.CreateConnection();await connection.OpenAsync();
+        if(!await connection.ExecuteScalarAsync<bool>("SELECT sf_store()>0 AND sf_can_location(sf_location()) AND EXISTS(SELECT 1 FROM store_locations WHERE tenant_id=sf_tenant() AND store_id=sf_store() AND location_id=sf_location() AND is_active) AND sf_transfer_permission('INVENTORY','VIEW')"))
+            throw new UnauthorizedAccessException("Choose an authorized inventory shop and location.");
+        await using var tx=await connection.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+        await connection.ExecuteAsync("SET TRANSACTION READ ONLY",transaction:tx);
+        var cte="WITH balances AS ("+BalanceSql+"), filtered AS (SELECT *,GREATEST(minimumstocklevel::bigint-currentstock,0) AS QuantityNeeded,CASE WHEN currentstock=0 THEN 'OUT' WHEN currentstock<0 THEN 'REVIEW' ELSE 'LOW' END AS StockStatus FROM balances WHERE (@Status::text IS NULL OR (@Status='OUT' AND currentstock=0) OR (@Status='LOW' AND currentstock>0))) ";
+        var args=new{Term=string.IsNullOrWhiteSpace(term)?null:"%"+term.Trim().Replace("\\","\\\\").Replace("%","\\%").Replace("_","\\_")+"%",Status=string.IsNullOrEmpty(stockStatus)?null:stockStatus,LowStockOnly=true,IncludeInactive=false,Offset=(page-1)*pageSize,PageSize=pageSize};
+        using var results=await connection.QueryMultipleAsync(cte+"SELECT count(*) AS LowStockVariants,count(*) FILTER(WHERE currentstock=0) AS OutOfStock,coalesce(sum(quantityneeded),0)::bigint AS UnitsToReplenish FROM filtered;"+cte+"SELECT * FROM filtered ORDER BY productname,productid,variantid LIMIT @PageSize OFFSET @Offset;",args,tx);
+        var summary=await results.ReadSingleAsync<LowStockSummary>();var rows=(await results.ReadAsync<LowStockItem>()).ToArray();
+        await tx.CommitAsync();return new(rows,summary.LowStockVariants,page,pageSize,summary);
     }
 
     public async Task<IEnumerable<InventoryMovement>> GetHistoryAsync(int? productId, DateTime? from, DateTime? to, int offset, long? variantId = null)

@@ -9,6 +9,11 @@ public sealed class GstExceptionFilter : IExceptionFilter
 {
     public void OnException(ExceptionContext context)
     {
+        if(context.Exception is System.ComponentModel.DataAnnotations.ValidationException validation && validation.Value is string field && field is "AddressLine1" or "City")
+        {
+            context.Result=new BadRequestObjectResult(new{message=validation.Message,errors=new Dictionary<string,string[]>{{field,[validation.Message]}}});
+            context.ExceptionHandled=true;return;
+        }
         if(context.Exception is not PostgresException ex)return;
         if(ex.SqlState==PostgresErrorCodes.InsufficientPrivilege){context.Result=new ObjectResult(new{message="This GST change requires additional authorization."}){StatusCode=403};context.ExceptionHandled=true;return;}
         var message=ex.SqlState switch

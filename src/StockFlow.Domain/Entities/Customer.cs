@@ -2,6 +2,7 @@ namespace StockFlow.Domain.Entities;
 
 public class Customer
 {
+    public string? AddressDetailsJson { get; set; }
     public int CustomerId
     {
         get; set;

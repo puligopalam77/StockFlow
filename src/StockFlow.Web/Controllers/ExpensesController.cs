@@ -9,7 +9,9 @@ namespace StockFlow.Web.Controllers;
 public sealed class ExpensesController(IExpenseRepository repository):ControllerBase
 {
     [HttpGet("options")]public async Task<IActionResult> Options()=>Ok(await repository.OptionsAsync());
-    [HttpGet]public async Task<IActionResult> List(string? term,DateTime? from,DateTime? to,int page=1,int pageSize=20)=>Ok(await repository.ListAsync(term,from,to,page,pageSize));
+    [HttpPost("tax-preview")]public async Task<IActionResult> TaxPreview(ExpenseTaxPreview request)=>Ok(await repository.TaxPreviewAsync(request));
+    [HttpGet]public async Task<IActionResult> List(string? term,DateTime? from,DateTime? to,int page=1,int pageSize=10,Guid? category=null,Guid? payee=null,string? status=null,string? paymentStatus=null)=>Ok(await repository.ListAsync(term,from,to,page,pageSize,category,payee,status,paymentStatus));
+    [HttpPost("{id:guid}/record")]public async Task<IActionResult> Record(Guid id,ExpenseOperation request)=>Ok(new{version=await repository.RecordAsync(id,request)});
     [HttpGet("{id:guid}")]public async Task<IActionResult> Get(Guid id)=>Ok(await repository.GetAsync(id));
     [HttpPost("{id:guid}/{command}")]public async Task<IActionResult> Write(Guid id,string command,ExpenseOperation request)
     {
@@ -17,8 +19,12 @@ public sealed class ExpensesController(IExpenseRepository repository):Controller
         if(!new[]{"SAVE","POST","CORRECT","PAY","REFUND","REVERSE","CANCEL"}.Contains(action.ToUpperInvariant()))return BadRequest(new{message="Unsupported expense action."});
         return Ok(new{version=await repository.WriteAsync(id,action.ToUpperInvariant(),request)});
     }
-    public record MasterRequest(Guid Id,string Name);
-    [HttpPost("masters/{kind}")]public async Task<IActionResult> Master(string kind,MasterRequest request)=>Ok(new{id=await repository.MasterAsync(kind.ToUpperInvariant(),request.Id,request.Name)});
+    public record MasterRequest(Guid Id,string Name,string? MobileNumber=null);
+    [HttpPost("masters/{kind}")]public async Task<IActionResult> Master(string kind,MasterRequest request)
+    {
+        var id=await repository.MasterAsync(kind.ToUpperInvariant(),request.Id,request.Name,request.MobileNumber);
+        return Ok(new{id,existing=id!=request.Id});
+    }
     [HttpGet("report")]public async Task<IActionResult> Report(DateTime from,DateTime to)=>Ok(await repository.ReportAsync(from,to));
     [HttpGet("export")]public async Task<IActionResult> Export(DateTime from,DateTime to)
     {

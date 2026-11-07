@@ -7,7 +7,6 @@
     .sf-app .table-responsive { max-width:100%; overscroll-behavior-inline:contain; }
     .sf-app :is(.sf-page-heading,.master-screen-heading,.sf-account-actions,.configuration-dialog-actions,.goods-dialog-actions,.bc-dialog-footer) { flex-wrap:wrap; }
     .sf-app :is(.sf-field-validation,.invalid-feedback,.alert,.sf-toast-copy,.sf-profile-details dd) { overflow-wrap:anywhere; }
-    .sf-app :is(input,select,textarea):focus-visible { outline:2px solid var(--sf-pink,#ff007f)!important; outline-offset:2px; }
     .sf-app dialog { min-width:0; max-width:calc(100vw - 24px); max-width:calc(100dvw - 24px); max-height:calc(100vh - 24px); max-height:calc(100dvh - 24px); }
     .sf-app .sf-logout-dialog { overflow:auto; }
     .sf-app dialog :is(input,select,textarea) { max-width:100%; }

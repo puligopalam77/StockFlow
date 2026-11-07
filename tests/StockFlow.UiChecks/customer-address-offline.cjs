@@ -1,0 +1,32 @@
+// Real Customer Add/Edit/View assets, controlled API and postal responses.
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
+const {fillAddress,fillLocation}=require('./address-test-helpers.cjs');
+const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/StockFlow.Web/wwwroot');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
+ const page=await browser.newPage({viewport:{width:1366,height:768}});page.setDefaultTimeout(8000);const errors=[],writes=[];let postal=0;
+ page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
+ let record={customerId:8,customerName:'Saved customer',address:null,addressDetails:null,isActive:true};
+ const legacy={customerId:9,customerName:'Legacy customer',address:'Original building, floor 3\nNever split this saved text',addressDetails:null,isActive:true};
+ await page.route('**/*',route=>{const req=route.request(),u=new URL(req.url()),p=u.pathname,json=(data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.hostname==='api.postalpincode.in'){postal++;return json([{Status:'Success',PostOffice:[{Name:'Bengaluru',State:'Karnataka',District:'Bengaluru Urban'}]}]);}
+  if(p.startsWith('/Customers')){let html=fs.readFileSync(path.join(root,'tests/bin/master-screen-fixtures/Customers-'+(p.split('/')[2]||'List')+'.html'),'utf8');if(!/address-fields(?:\.[a-z0-9]+)?\.js/.test(html))html=html.replace('</head>','<link rel="stylesheet" href="/css/address-fields.css"><script src="/js/address-fields.js"></script></head>');return route.fulfill({contentType:'text/html',body:html});}
+  if(p==='/api/customers/9')return json(legacy);
+  if(p==='/api/customers/8'&&req.method()==='GET')return json(record);
+  if(p==='/api/customers'&&req.method()==='POST'||p==='/api/customers/8'&&req.method()==='PUT'){const body=req.postDataJSON();writes.push(body);record={...record,...body};return req.method()==='POST'?json(record,201):route.fulfill({status:204});}
+  if(p==='/api/customers')return json([record,legacy]);if(p==='/api/notifications')return json({items:[],unread:0});if(p.startsWith('/api/'))return json([]);
+  const file=path.join(assets,decodeURIComponent(p).replace(/\.[a-z0-9]{10}(?=\.(js|css|png)$)/,''));return fs.existsSync(file)&&fs.statSync(file).isFile()?route.fulfill({path:file}):route.fulfill({body:''});
+ });
+ const ready=()=>page.waitForFunction(()=>document.getElementById('master-data')?.dataset.screenReady==='true'&&document.getElementById('address')?.sfAddressCombined),save=()=>page.locator('#master-form [type=submit]');
+ await page.goto('http://stockflow.test/Customers/Create');await ready();await page.locator('#customerName').fill('Name only customer');await save().click();await page.waitForURL('**/Customers');assert.equal(writes.at(-1).address,null);
+ await page.goto('http://stockflow.test/Customers/Create');await ready();await page.locator('#customerName').fill('Structured customer');await fillAddress(page.locator('#address'),'20 Retail Street');await page.locator('#address-line2').fill('Floor 2');await fillLocation(page.locator('#address-state'),'Karnataka');await fillLocation(page.locator('#address-district'),'Bengaluru Urban');await page.locator('#address-pin').fill('560001');await page.waitForFunction(()=>document.getElementById('address-city').value==='Bengaluru'&&document.getElementById('address-pin').validity.valid);
+ await save().click();await page.waitForURL('**/Customers');assert.equal(writes.at(-1).addressDetails.district,'Bengaluru Urban');assert.equal(writes.at(-1).useStructuredAddress,true);
+ const count=postal;await page.goto('http://stockflow.test/Customers/Edit?id=8');await ready();await page.locator('#address-details > summary').click();assert.equal(await page.locator('#address-line1').inputValue(),'20 Retail Street');assert.equal(await page.locator('#address-line2').inputValue(),'Floor 2');assert.equal(await page.locator('#address-district-search').inputValue(),'Bengaluru Urban');assert.equal(postal,count,'Reopening retained metadata makes no unwanted external lookup');
+ await page.evaluate(()=>{const controls=document.getElementById('address').sfAddressCombined.fields;for(const [key,input]of Object.entries(controls))if(key!=='country'){input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));}});await save().click();await page.waitForURL('**/Customers');assert.equal(writes.at(-1).addressDetails,null);assert.equal(writes.at(-1).address,null);assert.equal(writes.at(-1).useStructuredAddress,true);
+ await page.goto('http://stockflow.test/Customers/Edit?id=9');await ready();assert.equal(await page.locator('#address').inputValue(),legacy.address);assert.equal(await page.locator('#address-line1').inputValue(),'');assert(await page.locator('#address-line1').isDisabled());
+ record={...record,address:'Foreign saved address',addressDetails:{addressLine1:'Foreign street',city:'New York',state:'New York',district:null,country:'United States',postalCode:'10001'}};
+ await page.goto('http://stockflow.test/Customers/Edit?id=8');await ready();await page.locator('#address-details > summary').click();assert.equal(await page.locator('#address-country').inputValue(),'United States');assert.equal(await page.locator('#address-pin').inputValue(),'10001');assert.equal(await page.locator('#address-pin').getAttribute('maxlength'),'20');
+ for(const width of [1366,768,390,320]){await page.setViewportSize({width,height:720});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),JSON.stringify(await page.locator('body').evaluate(e=>({width:innerWidth,overflow:[...e.querySelectorAll('*')].filter(n=>n.getBoundingClientRect().right>innerWidth+1).slice(0,12).map(n=>[n.tagName,n.id,n.className,n.getBoundingClientRect().right])}))));}
+ await page.goto('http://stockflow.test/Customers/View?id=8');await ready();assert(await page.locator('#address-line1').isDisabled());assert.deepEqual(errors,[]);
+ console.log('PASS: Customer name-only registration, structured API payload, district/state/PIN persistence contract, edit restoration, explicit clear, unsplit legacy text, international metadata, View permissions and responsive layouts. Controlled APIs.');
+ }finally{await browser.close();}})().catch(error=>{console.error(error);process.exitCode=1;});

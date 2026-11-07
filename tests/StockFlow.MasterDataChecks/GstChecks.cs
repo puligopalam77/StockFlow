@@ -126,13 +126,18 @@ internal static class GstChecks
             await repository.SaveMappingAsync(new(){RegistrationId=unregistered,BusinessProfileCode="ELECTRICAL",StoreId=thirdStore,EffectiveFrom=new(2026,1,1)});
             await c.ExecuteAsync("SELECT set_config('app.store_id',@store,false),set_config('app.location_id',@location,false)",new{store=thirdStore.ToString(),location=thirdLocation.ToString()});
             scope.StoreId=thirdStore;scope.LocationId=thirdLocation;
-            // Each shop explicitly classifies its catalog; a shared profile does not inherit new mappings.
-            await repository.SaveTaxAsync(new(){ProductId=1,HsnSac="610910",Uqc="NOS",TaxRate=18,EffectiveFrom=new(2026,1,1),ReviewReference="Synthetic unregistered shop classification"});
-            Check(await c.ExecuteScalarAsync<decimal>("SELECT public.sf_gst_product_rate(1)")==0,"Unregistered issuer does not collect a product's intrinsic GST rate");
-            var unregisteredDoc=await Capture("GST-UNREG-1","27",rate:0);
+            // Private shops need their own fixture catalog, including when their profiles match.
+            var thirdCategory=await new CategoryRepository(new DbConnectionFactory(config,scope)).CreateAsync(new(){CategoryName="Synthetic unregistered GST",BusinessProfileCode="ELECTRICAL",IsActive=true});
+            var unregisteredProduct=await c.ExecuteScalarAsync<int>("INSERT INTO products(category_id,product_name,sku,hsn_code,selling_price) VALUES(@thirdCategory,'Synthetic unregistered GST item',@sku,'610910',100) RETURNING product_id",new{thirdCategory,sku="GSTU-"+Guid.NewGuid().ToString("N")});
+            var unregisteredVariant=await c.ExecuteScalarAsync<long>("SELECT variant_id FROM product_variants WHERE product_id=@unregisteredProduct AND is_default",new{unregisteredProduct});
+            await repository.SaveTaxAsync(new(){ProductId=unregisteredProduct,HsnSac="610910",Uqc="NOS",TaxRate=18,EffectiveFrom=new(2026,1,1),ReviewReference="Synthetic unregistered shop classification"});
+            Check(await c.ExecuteScalarAsync<decimal>("SELECT public.sf_gst_product_rate(@unregisteredProduct)",new{unregisteredProduct})==0,"Unregistered issuer does not collect a product's intrinsic GST rate");
+            var unregisteredDoc=await Capture("GST-UNREG-1","27",rate:0,productId:unregisteredProduct,variantId:unregisteredVariant);
             Check((await repository.DocumentAsync(unregisteredDoc))!.TotalGst==0,"Unregistered source snapshot records no collected GST");
-            await repository.SaveTaxAsync(new(){ProductId=2,HsnSac="490110",Uqc="NOS",Treatment="EXEMPT",TaxRate=0,EffectiveFrom=new(2026,1,1),ReviewReference="Synthetic exempt classification"});
-            await Capture("GST-EXEMPT-1","27",rate:0,productId:2,variantId:2);
+            var exemptProduct=await c.ExecuteScalarAsync<int>("INSERT INTO products(category_id,product_name,sku,hsn_code,selling_price) VALUES(@thirdCategory,'Synthetic exempt GST item',@sku,'490110',100) RETURNING product_id",new{thirdCategory,sku="GSTE-"+Guid.NewGuid().ToString("N")});
+            var exemptVariant=await c.ExecuteScalarAsync<long>("SELECT variant_id FROM product_variants WHERE product_id=@exemptProduct AND is_default",new{exemptProduct});
+            await repository.SaveTaxAsync(new(){ProductId=exemptProduct,HsnSac="490110",Uqc="NOS",Treatment="EXEMPT",TaxRate=0,EffectiveFrom=new(2026,1,1),ReviewReference="Synthetic exempt classification"});
+            await Capture("GST-EXEMPT-1","27",rate:0,productId:exemptProduct,variantId:exemptVariant);
             var unregisteredReport=await repository.ReportAsync(new(){RegistrationId=unregistered,From=date,To=date,RegistrationWide=true});
             Check(unregisteredReport.Summary.TaxableSales==100&&unregisteredReport.Summary.OtherSupplyValue==100,"Exempt supply value does not inflate the taxable-sales overview");
             await c.ExecuteAsync("UPDATE gst_shop_mappings SET status='INACTIVE' WHERE registration_id=@unregistered",new{unregistered});
