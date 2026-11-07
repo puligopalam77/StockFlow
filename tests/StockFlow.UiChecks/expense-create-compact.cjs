@@ -34,6 +34,7 @@ const screens=path.join(root,'.artifacts/expense-create-compact');fs.mkdirSync(s
  async function enter(){await selectValue(field('category'),options.categories[0].id);await selectValue(field('payee'),options.payees[0].id);await field('amount').fill('1800');await field('description').fill('Shop rent payment');}
  async function preview(amount,paid,balance,status){assert.equal(await field('summary-amount').textContent(),money(amount));assert.equal(await field('summary-paid').textContent(),money(paid));assert.equal(await field('summary-outstanding').textContent(),balance===null?'—':money(balance));assert.equal(await field('summary-payment').textContent(),status);}
  await go();await preview(0,0,0,'Not set');
+ assert(await field('state').isHidden());assert.equal(await page.locator('.expense-heading .expense-badge').count(),0,'New expense has no draft status badge');
  for(const status of ['PAID','PARTIAL','UNPAID']){
   await selectValue(field('initial-state'),status);if(status==='PARTIAL')await field('initial-amount').fill('600');
   await field('amount').fill('0');await preview(0,0,0,'Not set');await field('amount').fill('');await preview(0,0,0,'Not set');
@@ -56,7 +57,10 @@ const screens=path.join(root,'.artifacts/expense-create-compact');fs.mkdirSync(s
  // Save Draft stores expense details only, with the payment plan kept in session storage.
  await field('initial-confirm').uncheck();await field('save').click();await page.waitForURL(/Expenses\/Details\?id=/);await page.waitForFunction(()=>document.querySelector('#expense-state').textContent.includes('Draft'));
  const draft=writes.at(-1);assert.equal(draft.action,'save');assert(!Object.hasOwn(draft.input.body,'payment'));assert.equal(records.get(draft.id).paid,0);assert.equal(records.get(draft.id).payments.length,0);
+ const draftToast=page.locator('.sf-toast-success[data-notification-key="expense-saved"] .sf-toast-copy>p');await draftToast.waitFor();assert.equal(await draftToast.textContent(),'Draft saved successfully.');assert(await field('message').isHidden());assert(await field('state').isVisible());assert.equal(await field('state').textContent(),'Draft');
  assert.equal(await field('initial-amount').inputValue(),'600');assert.equal(await field('initial-method').inputValue(),'CREDIT_CARD');assert.equal(await field('initial-reference').inputValue(),'Card reference');assert.equal(await field('initial-notes').inputValue(),'Keep these notes');assert(!await field('initial-confirm').isChecked());assert.equal(await field('summary-title').textContent(),'Expense Summary');assert(await field('attachment-form').isVisible());
+ await field('description').fill('Updated saved draft');assert.equal(await field('state').textContent(),'Draft');await field('save').click();await page.waitForFunction(()=>!document.querySelector('#expense-save').disabled);assert.equal(await draftToast.textContent(),'Draft saved successfully.');assert.equal(await draftToast.count(),1);assert.equal(records.get(draft.id).description,'Updated saved draft');assert.equal(records.get(draft.id).payments.length,0);
+ await page.reload();await page.waitForFunction(()=>document.querySelector('#expense-state').textContent==='Draft');assert(await field('state').isVisible());assert.equal(await draftToast.count(),0,'Reopening a draft does not repeat the save toast');assert.equal(await field('description').inputValue(),'Updated saved draft');
  // The same existing method tokens are submitted for actual recording.
  for(const method of ['CASH','UPI','BANK_TRANSFER','DEBIT_CARD','CREDIT_CARD']){
   await go();await enter();await selectValue(field('initial-state'),'PAID');await selectValue(field('initial-method'),method);await field('initial-confirm').check();await field('record').click();await page.waitForURL(/Expenses\/Details\?id=/);
@@ -69,6 +73,7 @@ const screens=path.join(root,'.artifacts/expense-create-compact');fs.mkdirSync(s
  for(const [width,height]of [[1920,1080],[1366,768],[1280,720],[1280,600],[1024,768],[768,1024],[390,844],[375,667],[320,640],[853,512]]){
   await page.setViewportSize({width,height});await go();await enter();await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No page overflow '+width);
+  assert(await field('state').isHidden(),'New expense status remains hidden after editing at '+width);
   const columns=await page.locator('#expense-fields>.expense-fields-grid').evaluate(e=>getComputedStyle(e).gridTemplateColumns.split(' ').length);
   const formWidth=await page.locator('.expense-main').evaluate(e=>e.getBoundingClientRect().width);assert.equal(columns,formWidth>=1120?4:formWidth>=840?3:formWidth>=560?2:1,'Columns follow available form width '+width);
   const box=async id=>field(id).evaluate(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,width:r.width};});
