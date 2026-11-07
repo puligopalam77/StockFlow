@@ -40,6 +40,8 @@ StockFlowMaster.start({
         }
     ],
     columns: ['customerName', 'mobileNumber', 'email', 'gstNumber'],
+    onOpen(controls,record){if(record?.addressDetails)window.StockFlowAddress?.restore(controls.address,record.addressDetails);},
+    beforeSave(body){const details=document.getElementById('address')?.sfAddressCombined?.read();if(details!==undefined){body.addressDetails=details;body.useStructuredAddress=true;}return true;},
     onLoaded({records,rows}) {
         if(!document.getElementById('customer-crm-link'))return;
         for(let i=0;i<rows.length;i++){

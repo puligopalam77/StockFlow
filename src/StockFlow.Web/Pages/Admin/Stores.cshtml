@@ -1,75 +1,36 @@
 @page
-@{ ViewData["Title"]="Stores and locations"; }
-<h1>Stores and locations</h1>
-<div id="branch-message" role="status">
-</div>
-<div class="row g-4">
-    <section class="col-lg-6">
-        <h2>Create store</h2>
-        <form id="store-form" class="d-grid gap-2">
-            <label>Store code<input name="storeCode" class="form-control" required maxlength="50" />
-            </label>
-            <label>Store name<input name="storeName" class="form-control" required maxlength="150" />
-            </label>
-            <label>Address<input name="address" class="form-control" maxlength="1000" />
-            </label>
-            <label>City<input name="city" class="form-control" maxlength="100" />
-            </label>
-            <label>State<input name="state" class="form-control" maxlength="100" />
-            </label>
-            <label>Phone<input name="mobileNumber" type="tel" inputmode="numeric" pattern="[0-9]{10}" class="form-control" maxlength="10" />
-            </label>
-            <label>GST number<input name="gstNumber" class="form-control" maxlength="15" />
-            </label>
-            <button class="btn btn-primary">Create store and main stock location</button>
-        </form>
-    </section>
-    <section class="col-lg-6">
-        <h2>Add stock location</h2>
-        <form id="location-form" class="d-grid gap-2">
-            <label>Store<select name="storeId" id="location-store" class="form-select">
-                </select>
-            </label>
-            <label>Name<input name="locationName" class="form-control" required maxlength="150" />
-            </label>
-            <label>Type<select name="locationType" class="form-select">
-                    <option value="WAREHOUSE">Warehouse</option>
-                    <option value="STOCKROOM">Stock room</option>
-                    <option value="SALES_FLOOR">Shop floor</option>
-                    <option value="BACKROOM">Back room</option>
-                    <option value="SERVICE_CENTER">Repair centre</option>
-                </select>
-            </label>
-            <button class="btn btn-primary">Add location</button>
-        </form>
-        <h2 class="mt-4">Assign user access</h2>
-        <label>Find user<input id="access-search" class="form-control" placeholder="Name or username" />
-        </label>
-        <button id="find-access-users" class="btn btn-secondary">Find users</button>
-        <label>User<select id="access-user" class="form-select">
-            </select>
-        </label>
-        <a href="/Admin/Users">Create or edit users</a>
-        <button id="load-access" class="btn btn-secondary">Load access</button>
-        <form id="access-form" class="d-grid gap-2" hidden>
-            <fieldset>
-                <legend>Assigned stores</legend>
-                <div id="access-stores">
-                </div>
-            </fieldset>
-            <fieldset>
-                <legend>Central warehouses</legend>
-                <div id="access-warehouses">
-                </div>
-            </fieldset>
-            <label>Default store<select id="default-store" class="form-select">
-                </select>
-            </label>
-            <button class="btn btn-primary">Save access</button>
-        </form>
-    </section>
-</div>
-<h2 class="mt-4">Current locations</h2>
-<div id="branch-locations">
-</div>
+@inject StockFlow.Application.Common.BusinessScope StoreScope
+@{ViewData["Title"]="Stores & Locations";}
+<div id="stores-workspace" class="sf-list-screen" data-user-access="@(Access.Can("USER_MANAGEMENT","VIEW")&&Access.Can("STORES","MANAGE_ACCESS"))" data-gst="@Access.Can("GST_SETTINGS","VIEW")">
+<header class="stores-heading"><div><h1>Stores &amp; Locations</h1><p>Manage retail branches, warehouses, stock locations and authorized staff access.</p></div><div class="stores-actions"><button id="store-add" type="button" class="btn btn-primary" disabled>+ Add Store</button><button id="location-add" type="button" class="btn btn-outline-secondary" disabled>+ Add Stock Location</button></div></header>
+<nav class="stores-setup-links" aria-label="Business Setup">
+@if(Access.Can("COMPANY_SETTINGS","VIEW")){<a href="/Settings/Company?section=business">Business Information</a><a href="/Settings/Company?section=billing">Billing &amp; Invoice Settings</a>}
+@if(Access.Can("GST_SETTINGS","VIEW")){<a href="/Admin/Gst">GST Settings</a>}
+@if(Access.Can("COMPANY_SETTINGS","VIEW")&&StoreScope.CanReviewStores){<a href="/Settings/BusinessProfile">Shop Business Profile</a>}
+@if(Access.Can("USER_MANAGEMENT","VIEW")){<a href="/Admin/Users">Staff &amp; Access</a>}
+</nav>
+<div id="branch-message" class="alert" role="status" data-keep-banner hidden></div>
+<div id="stores-context" class="stores-notice" hidden><label for="stores-context-choice">Active operational location</label><select id="stores-context-choice" class="form-select"></select><small>Uses the existing authorized owner/administrator context. Staff assignments remain pinned; this selector does not grant access or change the company business profile.</small></div>
+<p class="stores-scope">Store addresses and contacts describe physical branches. Company branding, billing defaults and business profile remain company-wide. GST legal identity is managed through effective registrations.</p>
+<div id="stores-capability" class="stores-notice" hidden></div>
+<section class="stores-kpis" aria-label="Authorized directory counts">
+@foreach(var kpi in new[]{("stores-count","Stores","pink"),("locations-count","Stock Locations","blue"),("warehouses-count","Warehouse Locations","green"),("missing-floor-count","Active Stores Without Sales Floor","orange")}){<article class="stores-kpi @kpi.Item3"><h2>@kpi.Item2</h2><strong id="@kpi.Item1">&mdash;</strong></article>}
+</section><p class="stores-help">Counts cover the authorized directory scope. A sales floor or GST mapping alone does not establish billing readiness.</p>
+<form id="store-filters" class="sf-filter-bar" role="search"><div class="store-field"><label for="store-search">Find stores</label><input id="store-search" type="search" maxlength="150" placeholder="Store name or code" class="form-control"/></div><div class="store-field"><label for="store-status">Status</label><select id="store-status" class="form-select"><option value="ALL">All statuses</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></div><button class="btn btn-outline-secondary" type="submit">Search</button><button class="btn btn-outline-secondary" id="store-reset" type="button">Reset Filters</button><button class="btn btn-outline-secondary" id="store-refresh" type="button">Refresh Directory</button></form>
+<section class="stores-directory"><div class="stores-table-scroll"><table class="table"><thead><tr><th>Store / Code</th><th>Type</th><th>Business Profile</th><th>City / State</th><th>Active Locations</th><th>GST Mapping</th><th>Status</th><th>Actions</th></tr></thead><tbody id="store-rows"></tbody></table></div><p id="store-empty" hidden>No matching stores. Adjust filters or add an authorized store.</p><div id="store-pager"></div></section>
+<dialog id="store-dialog" aria-labelledby="store-dialog-title"><header><h2 id="store-dialog-title">Add Store</h2><button type="button" class="stores-close" data-close="store-dialog" aria-label="Close store editor">&times;</button></header>
+<form id="store-form" data-unsaved-context="Store operational details"><div class="stores-dialog-body"><div class="alert alert-danger" id="store-form-error" role="alert" data-keep-banner hidden></div><h3>Store identity</h3><div class="stores-form-grid">
+<div class="store-field"><label for="store-storeCode">Store code *</label><input id="store-storeCode" name="storeCode" class="form-control" required maxlength="50"/></div><div class="store-field"><label for="store-storeName">Store display name *</label><input id="store-storeName" name="storeName" class="form-control" required maxlength="150"/></div>
+<div class="store-field"><label for="store-active">Store status</label><select name="isActive" id="store-active" class="form-select"><option value="true">Active</option><option value="false">Inactive</option></select><small>Deactivation is limited to unused stores. Historical, configured or stocked stores require a reviewed closure workflow.</small></div>
+<div class="store-field"><label for="store-profile">Business profile</label><input id="store-profile" class="form-control" readonly/><small>Company-wide configuration. Per-store profiles are not enabled.</small></div></div>
+<h3>Physical address</h3><p class="stores-help">Optional operational address; does not replace the legal registered address on GST documents.</p><div id="store-legacy-address"><label for="store-address">Saved combined address</label><textarea id="store-address" name="address" maxlength="1000" rows="2" class="form-control"></textarea><button id="store-convert-address" class="btn btn-outline-secondary" type="button">Enter Structured Address</button></div><p id="store-original-address" class="stores-help"></p>
+<div id="store-structured-address" class="stores-form-grid"><div class="stores-full"><div class="store-field"><label for="store-addressLine1">Address Line 1</label><input id="store-addressLine1" name="addressLine1" class="form-control" maxlength="250" placeholder="Building, premises and street"/></div></div><div class="stores-full"><div class="store-field"><label for="store-addressLine2">Address Line 2 (optional)</label><input id="store-addressLine2" name="addressLine2" class="form-control" maxlength="250" placeholder="Area, locality or landmark"/></div></div></div>
+<div class="stores-form-grid"><div class="store-field"><label for="store-city">City / Town</label><input id="store-city" name="city" class="form-control" maxlength="100"/></div><div class="store-field"><label for="store-state">State / Union Territory</label><select name="state" id="store-state" class="form-select"><option value="">Not specified</option>@foreach(var state in StockFlow.Application.Common.GstRules.States.Where(s=>s.Key!="28").Select(s=>s.Value).Order()){<option>@state</option>}</select></div><div id="store-district-wrap"><div class="store-field"><label for="store-district">District (optional)</label><input id="store-district" name="district" class="form-control" maxlength="100"/></div></div><div id="store-pin-wrap"><div class="store-field"><label for="store-pinCode">PIN Code (optional)</label><input id="store-pinCode" name="pinCode" class="form-control" maxlength="6" inputmode="numeric" pattern="[1-9][0-9]{5}"/></div></div></div>
+<h3>Store contact</h3><div class="stores-form-grid"><div class="store-field"><label for="store-mobileNumber">Phone (optional)</label><input id="store-mobileNumber" name="mobileNumber" class="form-control" type="tel" maxlength="10" pattern="[0-9]{10}"/></div><div class="store-field"><label for="store-alternatePhone">Alternate phone (optional)</label><input id="store-alternatePhone" name="alternatePhone" class="form-control" type="tel" maxlength="10" pattern="[0-9]{10}"/></div><div class="store-field"><label for="store-email">Email (optional)</label><input id="store-email" name="email" class="form-control" type="email" maxlength="150"/></div></div>
+<section class="stores-notice"><h3>Default stock location and GST</h3><p id="store-main-stock-note">A new store and one Main stock sales-floor location are committed together. No stock, invoice or tax registration is created.</p><p>GST registration: <span id="store-gst-status">Not assigned</span>. Use GST Settings for legal registration and effective mapping. No additional-place registration or government verification is implied.</p></section></div>
+<footer><button type="button" class="btn btn-outline-secondary" data-close="store-dialog">Cancel</button><button id="store-save" type="submit" class="btn btn-primary">Create Store &amp; Main Stock</button></footer></form></dialog>
+<dialog id="location-dialog" aria-labelledby="location-dialog-title"><header><h2 id="location-dialog-title">Add Stock Location</h2><button type="button" class="stores-close" data-close="location-dialog" aria-label="Close location editor">&times;</button></header><form id="location-form" data-unsaved-context="New stock location"><div class="stores-dialog-body"><div id="location-form-error" class="alert alert-danger" role="alert" data-keep-banner hidden></div><div class="stores-form-grid"><div class="store-field"><label for="location-store">Store / owning context</label><select id="location-store" name="storeId" class="form-select"></select></div><div class="store-field"><label for="location-name">Location name *</label><input id="location-name" name="locationName" class="form-control" required maxlength="150"/></div><div class="store-field"><label for="location-type">Location type *</label><select id="location-type" name="locationType" class="form-select"><option value="WAREHOUSE">Warehouse</option><option value="STOCKROOM">Stock room</option><option value="SALES_FLOOR">Shop floor</option><option value="BACKROOM">Back room</option><option value="SERVICE_CENTER">Repair centre</option></select></div></div><p class="stores-help">Central warehouses have no retail store. Locations are stock boundaries, not separate GST registrations. No inventory movement is posted by adding a location.</p></div><footer><button type="button" class="btn btn-outline-secondary" data-close="location-dialog">Cancel</button><button id="location-save" type="submit" class="btn btn-primary">Add Stock Location</button></footer></form></dialog>
+<dialog id="store-details-dialog" aria-labelledby="store-details-title"><header><h2 id="store-details-title">Store Details</h2><button type="button" class="stores-close" data-close="store-details-dialog" aria-label="Close store details">&times;</button></header><div id="store-details-body" class="stores-dialog-body"></div><footer><button type="button" class="btn btn-outline-secondary" data-close="store-details-dialog">Close</button></footer></dialog>
+<div class="stores-assistant-dock"></div></div>
+@section Styles {<link rel="stylesheet" href="~/css/store-management.css" asp-append-version="true"/>}
 @section Scripts {<script src="~/js/branches.js" asp-append-version="true"></script>}

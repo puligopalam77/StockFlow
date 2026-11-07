@@ -1,147 +1,31 @@
 (() => {
-    const getElement = (id) => {
-        return document.getElementById(id);
-    };
-    const requestJson = window.sfBranchApi;
-    let stores = [];
-    let locations = [];
-    let userId = 0;
-    const message = (text, error = false) => {
-        getElement('branch-message').textContent = text;
-        getElement('branch-message').className = `alert alert-${error ? 'danger' : 'success'}`;
-    };
-    const runAction = async (f) => {
-        try {
-            await f();
-        } catch (error) {
-            message(error.message, true);
-        }
-    };
-    const check = (container, id, name, selected) => {
-        const label = document.createElement('label');
-        label.className = 'd-block';
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.value = id;
-        input.checked = selected;
-        label.append(input, document.createTextNode(' ' + name));
-        container.append(label);
-    };
-    async function load() {
-        const context = await requestJson('/api/branches/context');
-        stores = await requestJson('/api/branches/stores');
-        locations = context.locations;
-        getElement('location-store').replaceChildren(
-            new Option('Central warehouse (no retail store)', '')
-        );
-        for (const store of stores) {
-            getElement('location-store').add(new Option(store.storeName, store.storeId));
-        }
-        getElement('branch-locations').replaceChildren();
-        for (const stockLocation of locations) {
-            const paragraph = document.createElement('p');
-            paragraph.textContent = `${stockLocation.storeName} / ${stockLocation.locationName} (${StockFlowText.label(stockLocation.locationType)})`;
-            getElement('branch-locations').append(paragraph);
-        }
-        if (!context.isOwner) {
-            for (const f of document.querySelectorAll('form')) {
-                for (const el of f.elements) {
-                    el.disabled = true;
-                }
-            }
-            message('Store administration requires the business owner.', true);
-        }
-    }
-    getElement('store-form').onsubmit = (event) => {
-        event.preventDefault();
-        runAction(async () => {
-            await requestJson(
-                '/api/branches/stores',
-                Object.fromEntries(new FormData(event.target))
-            );
-            event.target.reset();
-            await load();
-            message('Store created. Select its main stock location in the top bar.');
-        });
-    };
-    getElement('location-form').onsubmit = (event) => {
-        event.preventDefault();
-        runAction(async () => {
-            const body = Object.fromEntries(new FormData(event.target));
-            body.storeId = Number(body.storeId) || null;
-            await requestJson('/api/branches/locations', body);
-            await load();
-            message('Location created. Reload to update the top-bar selector.');
-        });
-    };
-    getElement('load-access').onclick = () => {
-        return runAction(async () => {
-            userId = Number(getElement('access-user').value);
-            if (userId < 1) {
-                throw new Error('Enter a user ID.');
-            }
-            const access = await requestJson(`/api/branches/users/${userId}`);
-            getElement('access-stores').replaceChildren();
-            getElement('access-warehouses').replaceChildren();
-            getElement('default-store').replaceChildren(new Option('First assigned store', ''));
-            for (const store of stores) {
-                check(
-                    getElement('access-stores'),
-                    store.storeId,
-                    store.storeName,
-                    access.storeIds.includes(store.storeId)
-                );
-                getElement('default-store').add(new Option(store.storeName, store.storeId));
-            }
-            for (const stockLocation of locations.filter((value) => {
-                return !value.storeId && value.locationType === 'WAREHOUSE';
-            })) {
-                check(
-                    getElement('access-warehouses'),
-                    stockLocation.locationId,
-                    stockLocation.locationName,
-                    access.warehouseLocationIds.includes(stockLocation.locationId)
-                );
-            }
-            getElement('default-store').value = access.defaultStoreId || '';
-            getElement('access-form').hidden = false;
-        });
-    };
-    getElement('find-access-users').onclick = () => {
-        return runAction(async () => {
-            const users = await requestJson(
-                '/api/admin/users?term=' + encodeURIComponent(getElement('access-search').value)
-            );
-            getElement('access-user').replaceChildren();
-            for (const user of users) {
-                getElement('access-user').add(
-                    new Option(`${user.fullName} (${user.username})`, user.userId)
-                );
-            }
-            if (!users.length) {
-                message('No matching users.', true);
-            }
-        });
-    };
-    getElement('access-form').onsubmit = (event) => {
-        event.preventDefault();
-        runAction(async () => {
-            const selected = (id) => {
-                return [...getElement(id).querySelectorAll('input:checked')].map((value) => {
-                    return Number(value.value);
-                });
-            };
-            await requestJson(
-                `/api/branches/users/${userId}`,
-                {
-                    storeIds: selected('access-stores'),
-                    warehouseLocationIds: selected('access-warehouses'),
-                    defaultStoreId: Number(getElement('default-store').value) || null
-                },
-                'PUT'
-            );
-            message('Access saved. Membership is checked on every request.');
-        });
-    };
-    runAction(load);
+ 'use strict';const root=document.getElementById('stores-workspace');if(!root)return;
+ const el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;},api=window.sfBranchApi;
+ let directory,editing=null,structured=true,busy=false,savedNotice='',returnFocus;
+ const show=(text,error=false)=>{el('branch-message').textContent=text;el('branch-message').className='alert '+(error?'alert-danger':'alert-success');el('branch-message').hidden=!text;};
+ const run=fn=>Promise.resolve().then(fn).catch(e=>show(e.message,true));
+ function action(label,fn){const b=node('button',label,'btn btn-outline-secondary');b.type='button';b.onclick=()=>run(fn);return b;}
+ function link(label,href){const a=node('a',label,'btn btn-outline-secondary');a.href=href;return a;}
+ function open(dialog){returnFocus=document.activeElement;el(dialog).showModal();(el(dialog).querySelector('input:not([readonly]):not([disabled])')||el(dialog).querySelector('button'))?.focus();}
+ async function close(dialog){if(busy)return;const form=el(dialog).querySelector('form');if(form&&window.StockFlowUnsaved?.hasChanges(form)&&!await StockFlowDialog.discard('Discard unsaved '+(dialog==='store-dialog'?'store':'stock location')+' changes?'))return;el(dialog).close();returnFocus?.isConnected&&returnFocus.focus();}
+ for(const b of root.querySelectorAll('[data-close]'))b.onclick=()=>run(()=>close(b.dataset.close));
+ for(const dialog of root.querySelectorAll('dialog')){dialog.oncancel=e=>{e.preventDefault();run(()=>close(dialog.id));};dialog.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const focus=[...dialog.querySelectorAll('button,a,input,select,textarea,summary')].filter(n=>!n.disabled&&n.getClientRects().length&&n.tabIndex>=0);const first=focus[0],last=focus.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}});}
+ function setStructured(value){structured=value;el('store-legacy-address').hidden=value;el('store-address').disabled=value;el('store-structured-address').hidden=!value;el('store-district-wrap').hidden=!value;el('store-pin-wrap').hidden=!value;for(const name of ['addressLine1','addressLine2','district','pinCode'])el('store-'+name).disabled=!value;}
+ function storeForm(row=null){if(!directory?.managementAvailable)throw Error('Apply manual migration 089 before using store metadata forms.');editing=row;el('store-form').reset();el('store-form-error').hidden=true;for(const input of el('store-form').querySelectorAll('input,select,textarea'))if(input.name)input.value=row?.[input.name]??'';el('store-storeCode').readOnly=!!row;el('store-active').value=String(row?.isActive??true);el('store-active').disabled=!row;el('store-profile').value=StockFlowText.label(directory.businessProfileCode||'ELECTRICAL')+' (company-wide)';if(row?.state&&!Array.from(el('store-state').options).some(o=>o.value===row.state))el('store-state').add(new Option(row.state+' (saved value)',row.state));el('store-state').value=row?.state||'';setStructured(!row||!!row.addressLine1);el('store-original-address').textContent=row?.address?'Saved address for reference: '+row.address:'';el('store-dialog-title').textContent=row?'Edit Store':'Add Store';el('store-save').textContent=row?'Save Store Changes':'Create Store & Main Stock';el('store-main-stock-note').textContent=row?'Existing locations and IDs remain unchanged. Store code is permanent.':'A new store and one Main stock sales-floor location are committed together. No stock, invoice or tax registration is created.';el('store-gst-status').textContent=row?.gstStatus||'Not assigned';window.StockFlowUnsaved?.markSaved(el('store-form'));open('store-dialog');}
+ el('store-convert-address').onclick=()=>{setStructured(true);el('store-addressLine1').focus();};
+ async function locationForm(storeId=null){const stores=await api('/api/branches/stores');el('location-form').reset();el('location-form-error').hidden=true;el('location-store').replaceChildren(new Option('Central warehouse (no retail store)',''));for(const s of stores)el('location-store').add(new Option(s.storeName,s.storeId));el('location-store').value=storeId||'';locationType();window.StockFlowUnsaved?.markSaved(el('location-form'));open('location-dialog');}
+ function locationType(){const central=!el('location-store').value;for(const option of el('location-type').options)option.disabled=central&&option.value!=='WAREHOUSE';if(central)el('location-type').value='WAREHOUSE';}el('location-store').onchange=locationType;
+ async function details(id){const data=await api('/api/branches/stores/'+id),s=data.store,host=el('store-details-body');host.replaceChildren();el('store-details-title').textContent=s.storeName+' / '+s.storeCode;for(const [heading,text]of [['Store identity',s.storeName+' / '+s.storeCode+' / '+(s.isActive?'Active':'Inactive')],['Physical address',s.address||'Not recorded'],['Contact',[s.mobileNumber,s.alternatePhone,s.email].filter(Boolean).join(' / ')||'Not recorded'],['Business profile',StockFlowText.label(s.businessProfileCode)+' (company-wide; not independently configurable)'],['GST registration',s.gstStatus+(s.gstRegistrationType?' / '+s.gstRegistrationType:'')]]){const card=node('section',null,'stores-detail-card');card.append(node('h3',heading),node('p',text));host.append(card);}
+ const locations=node('section',null,'stores-detail-card');locations.append(node('h3','Authorized stock locations'));for(const l of data.locations)locations.append(node('p',l.locationName+' / '+StockFlowText.label(l.locationType)+' / ID '+l.locationId));if(!data.locations.length)locations.append(node('p','No visible active stock locations.'));if(directory.canCreate)locations.append(action('Add Stock Location',()=>{el('store-details-dialog').close();return locationForm(id);}));host.append(locations);
+ const next=node('section',null,'stores-detail-card');next.append(node('h3','Setup and staff access'),node('p',s.salesFloorCount?'An active sales floor exists. Billing still checks permissions, applicable GST mapping and effective tax configuration.':'No active sales floor is visible. Add one if this store will support checkout.'),node('p','GST Settings and operational workflows use the active store/location. Choose an authorized operational location above the directory before configuring a different store. Physical addresses have not been verified as registered additional places of business.'));
+ if(root.dataset.gst?.toLowerCase()==='true')next.append(link('Manage GST Mapping','/Admin/Gst'));if(directory.canAssignAccess&&root.dataset.userAccess?.toLowerCase()==='true')next.append(link('Manage Staff Access','/Admin/Users'));if(directory.canManage&&directory.managementAvailable)next.append(action('Edit Store',()=>{el('store-details-dialog').close();storeForm(s);}));host.append(next);open('store-details-dialog');}
+ const pager=StockFlowPagination.remote({root,host:el('store-pager'),label:'Stores',filterRoot:el('store-filters'),load:async request=>{const query=new URLSearchParams({page:request.page,pageSize:request.size,search:el('store-search').value,status:el('store-status').value});const response=await fetch('/api/branches/directory?'+query,{signal:request.signal});const data=await response.json();if(!response.ok)throw Error(data.message||Object.values(data.errors||{}).flat().join(' ')||'Unable to load stores.');return data;},render:(rows,data)=>{directory=data;el('stores-count').textContent=data.storeCount;el('locations-count').textContent=data.locationCount;el('warehouses-count').textContent=data.warehouseCount;el('missing-floor-count').textContent=data.missingSalesFloorCount;el('store-add').disabled=!data.canCreate||!data.managementAvailable;el('location-add').disabled=!data.canCreate;el('stores-capability').hidden=data.managementAvailable;el('stores-capability').textContent='Apply manual migration 089 to enable structured store metadata and versioned edits. The directory and existing location workflow remain available.';el('store-rows').replaceChildren();el('store-empty').hidden=rows.length>0;for(const s of rows){const row=node('tr');for(const text of [s.storeName+' / '+s.storeCode,s.isHeadOffice?'Head office':'Store',StockFlowText.label(s.businessProfileCode)+' (company-wide)',[s.city,s.state].filter(Boolean).join(', ')||'Not recorded',s.locationCount,s.gstStatus+(s.gstRegistrationType?' / '+s.gstRegistrationType:''),s.isActive?'Active':'Inactive'])row.append(node('td',text));const actions=node('td');actions.append(action('View Details',()=>details(s.storeId)));if(data.canManage&&data.managementAvailable)actions.append(action('Edit',()=>storeForm(s)));row.append(actions);el('store-rows').append(row);}if(savedNotice){show(savedNotice);savedNotice='';}},onError:e=>show((savedNotice?savedNotice+' Directory refresh failed; use Refresh Directory. ':'')+e.message,true)});
+ el('store-filters').onsubmit=e=>{e.preventDefault();pager.reload({reset:true});};el('store-reset').onclick=()=>{el('store-filters').reset();pager.reload({reset:true});};el('store-refresh').onclick=()=>pager.reload();el('store-add').onclick=()=>run(()=>storeForm());el('location-add').onclick=()=>run(()=>locationForm());
+ const body=form=>{const value={};for(const [key,text]of new FormData(form))value[key]=text===''?null:text;return value;};
+ async function submit(form,button,error,save){if(busy||!form.reportValidity())return;busy=true;form.dataset.saving='true';button.disabled=true;const label=button.textContent;button.textContent='Saving...';error.hidden=true;try{await save();window.StockFlowUnsaved?.markSaved(form);form.closest('dialog').close();returnFocus?.isConnected&&returnFocus.focus();show(savedNotice);await pager.reload();}catch(e){error.textContent=e.message;error.hidden=false;error.scrollIntoView({block:'nearest'});}finally{busy=false;form.dataset.saving='false';button.disabled=false;button.textContent=label;}}
+ el('store-form').onsubmit=e=>{e.preventDefault();const line=el('store-addressLine1');line.setCustomValidity('');if(structured&&['addressLine2','district','pinCode'].some(k=>el('store-'+k).value.trim())&&!line.value.trim())line.setCustomValidity('Enter Address Line 1 for structured address details.');submit(e.target,el('store-save'),el('store-form-error'),async()=>{const input=body(e.target);if(editing){input.isActive=el('store-active').value==='true';input.expectedVersion=editing.version;await api('/api/branches/stores/'+editing.storeId,input,'PUT');savedNotice='Store details saved. Existing locations and historical documents are unchanged.';}else{const result=await api('/api/branches/stores',input);savedNotice='Store saved (ID '+result.storeId+'). One Main stock location is available; no GST registration was created.';}});};
+ el('store-addressLine1').addEventListener('input',()=>el('store-addressLine1').setCustomValidity(''));
+ el('location-form').onsubmit=e=>{e.preventDefault();submit(e.target,el('location-save'),el('location-form-error'),async()=>{const input=body(e.target);input.storeId=Number(input.storeId)||null;const result=await api('/api/branches/locations',input);savedNotice='Stock location saved (ID '+result.locationId+'). No inventory movement was posted. Reload to refresh available operational locations.';});};
+ const dock=()=>{const assistant=document.querySelector('.sf-help-open');if(assistant)root.querySelector('.stores-assistant-dock').append(assistant);};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',dock,{once:true});else dock();pager.reload();
+ run(async()=>{const context=await api('/api/branches/context');if(!context.canReviewStores)return;const select=el('stores-context-choice');select.replaceChildren(new Option('Choose an authorized operational location',''));for(const l of context.locations)select.add(new Option(l.storeName+' / '+l.locationName,l.locationId+':'+(l.storeId||0)));const current=Number(context.locationId)+':'+Number(context.storeId);select.value=current;el('stores-context').hidden=false;select.onchange=()=>run(async()=>{if(!select.value)return;if(window.StockFlowUnsaved&&!await StockFlowUnsaved.confirmNavigation()){select.value=current;return;}select.disabled=true;try{const [locationId,storeId]=select.value.split(':').map(Number);await api('/api/branches/context',{locationId,storeId});window.StockFlowUnsaved?.allowNavigation();location.reload();}catch(e){select.disabled=false;select.value=current;throw e;}});});
 })();

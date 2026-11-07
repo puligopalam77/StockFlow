@@ -9,7 +9,7 @@ using StockFlow.Application.Interfaces;
 
 namespace StockFlow.Web.Controllers;
 
-[ApiController, Authorize, Route("api/branches")]
+[ApiController, Authorize, Route("api/branches"),TypeFilter(typeof(StockFlow.Web.Filters.BranchExceptionFilter))]
 public class BranchController : ControllerBase
 {
     private readonly IBranchRepository repository;
@@ -88,6 +88,12 @@ new
     {
         return Ok(await repository.StoresAsync());
     }
+    [HttpGet("directory")]
+    public async Task<IActionResult> Directory([FromQuery]StoreDirectoryQuery query)=>Ok(await repository.DirectoryAsync(query));
+    [HttpGet("stores/{id:long}")]
+    public async Task<IActionResult> Store(long id)=>Ok(await repository.StoreDetailsAsync(id));
+    [HttpPut("stores/{id:long}")]
+    public async Task<IActionResult> UpdateStore(long id,StoreUpdateRequest request){await repository.UpdateStoreAsync(id,request);return NoContent();}
 
     [HttpPost("stores")]
     public async Task<IActionResult> CreateStore(StoreRequest request)

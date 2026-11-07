@@ -42,6 +42,19 @@ sealed class FakeBrandRepository : IBrandRepository
 }
 sealed class FakeSupplierRepository : ISupplierRepository
 {
+    public Task<StockFlow.Application.DTOs.Suppliers.SupplierPage<Supplier>> GetPageAsync(string? term, bool? active, int offset, int limit)
+    {
+        var filtered = rows.Where(x => (!active.HasValue || x.IsActive == active) && (string.IsNullOrWhiteSpace(term) ||
+            new[] { x.SupplierName, x.SupplierCode, x.MobileNumber, x.GstNumber }.Any(v => v?.Contains(term.Trim(), StringComparison.OrdinalIgnoreCase) == true)))
+            .OrderBy(x => x.SupplierName, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.SupplierId).ToList();
+        return Task.FromResult(new StockFlow.Application.DTOs.Suppliers.SupplierPage<Supplier>(filtered.Skip(offset).Take(limit).ToList(), filtered.Count));
+    }
+    public Task<bool> SetActiveAsync(int id, bool active)
+    {
+        var row = rows.SingleOrDefault(x => x.SupplierId == id);
+        if (row is null) return Task.FromResult(false);
+        row.IsActive = active; return Task.FromResult(true);
+    }
     private readonly List<Supplier> rows = [];
     public Task<IEnumerable<Supplier>> GetAllAsync(bool activeOnly = false, string? term = null) => Task.FromResult(rows.Where(x => (!activeOnly || x.IsActive) && (string.IsNullOrEmpty(term) || (x.SupplierName?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) || (x.ContactPerson?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) || (x.MobileNumber?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) || (x.Email?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) || (x.Address?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) || (x.GstNumber?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))));
     public Task<Supplier?> GetByIdAsync(int id) => Task.FromResult(rows.SingleOrDefault(x => x.SupplierId == id));

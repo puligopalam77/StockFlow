@@ -360,6 +360,7 @@
             }
             submit.disabled=false;
         },
+        initialFocus(){return ProductRegistration.initialFocus();},
         onSaved(){ProductRegistration.saved();},
         onSaveError(error){ProductRegistration.saveError(error);},
         async beforeSave(body) {

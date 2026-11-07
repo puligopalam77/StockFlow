@@ -1,5 +1,6 @@
 @using StockFlow.Application.DTOs.Security
 @inject StockFlow.Application.Common.BusinessScope ShopScope
+@inject Microsoft.Extensions.Configuration.IConfiguration FeatureConfiguration
 @{
     var path = Context.Request.Path.Value?.TrimEnd('/') ?? "";
     var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
@@ -7,6 +8,7 @@
 
     bool Allowed(NavigationModule item)
     {
+        if(item.ModuleCode=="REPLENISHMENT"&&!FeatureConfiguration.GetValue<bool>("Features:Replenishment"))return false;
         if (item.RequiredPermissions.Length == 0) return false;
         return item.RequiredPermissions.Any(requirement =>
         {
@@ -19,20 +21,24 @@
         if (Access.Can("REPORTS") && Context.Request.Query["fromReports"] == "1") return false;
         if (string.IsNullOrWhiteSpace(url)) return false;
         if (url == "/") return path == "";
-        if (url == "/Configuration")
-            return page is not ("/Configuration/Notifications" or "/Configuration/WhatsApp") && new[] { "/Products/", "/Categories/", "/Brands/", "/Suppliers/", "/Customers/", "/Configuration/" }.Any(page.StartsWith);
         return path.Equals(url, StringComparison.OrdinalIgnoreCase) || path.StartsWith(url + "/", StringComparison.OrdinalIgnoreCase);
     }
-    var roots = navigation.Where(m => m.ParentModuleId is null).ToArray();
+    bool MovedLink(string? route) => route is "/Configuration" or "/Products" or "/Categories" or "/Brands" or "/Suppliers" or "/Customers";
+    var roots = navigation.Where(m => m.ParentModuleId is null && !MovedLink(m.Route)).ToList();
+    // Older navigation metadata may predate CRM. The container still exposes only
+    // the existing Customers page to users who already have customer permission.
+    if (!roots.Any(m => m.ModuleCode == "CRM") && Access.Can("CUSTOMERS"))
+        roots.Add(new NavigationModule { ModuleId = -1, ModuleCode = "CRM", ModuleName = "Customer Relationships", Icon = "users", SortOrder = 59, IsActive = true });
+    roots = roots.OrderBy(m => m.ModuleCode == "CRM" ? (roots.FirstOrDefault(r => r.ModuleCode == "SETUP")?.SortOrder ?? 60) - 1 : m.SortOrder).ThenBy(m => m.ModuleId).ToList();
     string Caption(string name) => name switch
     {
         "Dashboard" => "Home",
         "Sell / Billing" => "Sales & Billing",
         "Receive Stock" => "Purchases",
         "Setup" => "Administration",
-        "Users" => "User Management",
+        "Users" => "Staff & Access",
         "Roles & permissions" => "Roles & Permissions",
-        "Stores" => "Store Management",
+        "Stores" => "Stores & Locations",
         "Security settings" => "Security",
         "Inventory" => "Inventory",
         "Current stock" => "Inventory Overview",
@@ -64,8 +70,18 @@
         if (Allowed(root)) { <partial name="_ReportsNavigation" /> }
         continue;
     }
-    var children = navigation.Where(m => m.ParentModuleId == root.ModuleId && Allowed(m)
-        && (m.Route != "/Configuration" || new[] { "CATEGORIES", "BRANDS", "PRODUCTS", "SUPPLIERS", "CUSTOMERS" }.Any(module => Access.Can(module)))).ToArray();
+    var children = navigation.Where(m => m.ParentModuleId == root.ModuleId && Allowed(m) && !MovedLink(m.Route)).ToArray();
+    var showCatalog = root.ModuleCode == "INVENTORY_CONTROL" && new[] { "PRODUCTS", "CATEGORIES", "BRANDS" }.Any(module => Access.Can(module));
+    if (root.ModuleCode == "RECEIVE_STOCK" && Access.Can("SUPPLIERS"))
+        children = children.Append(new NavigationModule { ModuleCode = "SUPPLIERS", ModuleName = "Suppliers", Route = "/Suppliers", IsActive = true }).ToArray();
+    if (root.ModuleCode == "CRM" && Access.Can("CUSTOMERS"))
+        children = children.Append(new NavigationModule { ModuleCode = "CUSTOMERS", ModuleName = "Customers", Route = "/Customers", IsActive = true }).ToArray();
+    var showIntegrations = root.ModuleCode == "SETUP" && Access.Can("EWAY_BILLS", "CONFIGURE_PROVIDER");
+    var showStaffAccess = root.ModuleCode == "SETUP" && (Access.Can("USER_MANAGEMENT") || Access.Can("ROLE_MANAGEMENT"));
+    if(showStaffAccess) children = children.Where(m => m.Route is not ("/Admin/Users" or "/Admin/Roles")).ToArray();
+    if (showIntegrations) children = children.Where(m => m.Route != "/EWayBills/Provider").ToArray();
+    var showBusinessSetup = root.ModuleCode == "SETUP" && (Access.Can("COMPANY_SETTINGS") || Access.Can("GST_SETTINGS") || Access.Can("STORES"));
+    if(showBusinessSetup) children = children.Where(m => m.Route is not ("/Settings/Company" or "/Admin/Gst" or "/Admin/Stores")).ToArray();
     var showNotificationCenter = Access.Can("COMPANY_SETTINGS") && navigation.Any(m => m.ParentModuleId == root.ModuleId && m.Route == "/Settings/Company");
     if (children.Any(m => m.Route == "/Purchases" || m.Route == "/StockInflow"))
     {
@@ -102,8 +118,14 @@
     }
     else
     {
-        if (children.Length == 0) { continue; }
+        if (children.Length == 0 && !showCatalog && !showIntegrations && !showBusinessSetup && !showStaffAccess) { continue; }
         var activeUrl = children.Where(m => Matches(m.Route)).OrderByDescending(m => m.Route?.Length ?? 0).Select(m => m.Route).FirstOrDefault();
+        if(showBusinessSetup && (Matches("/Settings/Company") || Matches("/Settings/BusinessProfile") || Matches("/Admin/Gst") || Matches("/Admin/Stores"))) activeUrl=path;
+        if(showStaffAccess && (Matches("/Admin/Users") || Matches("/Admin/Roles"))) activeUrl=path;
+        if (showIntegrations && path.Equals("/EWayBills/Provider", StringComparison.OrdinalIgnoreCase)) activeUrl = "/EWayBills/Provider";
+        if (showCatalog)
+            activeUrl ??= new[] { ("PRODUCTS", "/Products"), ("CATEGORIES", "/Categories"), ("BRANDS", "/Brands") }
+                .Where(item => Access.Can(item.Item1) && Matches(item.Item2)).Select(item => item.Item2).FirstOrDefault();
         if (path.Equals("/Purchases/Create", StringComparison.OrdinalIgnoreCase) && children.Any(m => m.Route == "/StockInflow")) activeUrl = "/StockInflow";
         if (showNotificationCenter && page == "/Configuration/Notifications") activeUrl = "/Configuration/Notifications";
         if (showNotificationCenter && ShopScope.IsOwner && Access.Can("COMPANY_SETTINGS", "EDIT") && page == "/Configuration/WhatsApp") activeUrl = "/Configuration/Notifications/WhatsApp";
@@ -119,17 +141,14 @@
         <div class="sf-nav-children">
             @foreach (var child in children)
             {
-            @if (child.Route == "/Configuration")
-            {
-                <partial name="_ConfigurationMenu" />
-            }
-            else
-            {
             <a class="sf-nav-child @(child.Route == activeUrl ? "active" : "")" href="@child.Route" aria-current="@(child.Route == activeUrl ? "page" : null)">@(child.Route switch { "/Purchases/Create" => "Receive Stock", "/Purchases" => "Purchase Orders", "/StockInflow" => "Receive Stock", "/Sales" => "Sales History", "/Sales/Create" => "New Sale", "/Settings/Company" => "Business & Billing", _ => Caption(child.ModuleName) })</a>
             }
-            }
+            @if(showBusinessSetup) { <partial name="_BusinessSetupNavigation" /> }
+            @if(showStaffAccess) { <partial name="_StaffAccessNavigation" /> }
+            @if(showCatalog) { <partial name="_ConfigurationMenu" /> }
+            @if(showIntegrations) { <partial name="_IntegrationsNavigation" /> }
             @if(showNotificationCenter) {
-            @if(ShopScope.CanReviewStores) {
+            @if(ShopScope.CanReviewStores && !showBusinessSetup) {
             <a class="sf-nav-child @(activeUrl == "/Settings/BusinessProfile" ? "active" : "")" href="/Settings/BusinessProfile" aria-current="@(activeUrl == "/Settings/BusinessProfile" ? "page" : null)">Shop Business Profile</a>
             }
             <a class="sf-nav-child @(activeUrl == "/Configuration/Notifications" ? "active" : "")" href="/Configuration/Notifications" aria-current="@(activeUrl == "/Configuration/Notifications" ? "page" : null)">Notifications</a>

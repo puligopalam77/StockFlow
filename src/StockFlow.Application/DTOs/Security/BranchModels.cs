@@ -27,6 +27,12 @@ public class BranchLocation
 
 public class StoreRequest
 {
+    [StringLength(250)] public string? AddressLine1 { get; set; }
+    [StringLength(250)] public string? AddressLine2 { get; set; }
+    [StringLength(100)] public string? District { get; set; }
+    [RegularExpression("^[1-9][0-9]{5}$")] public string? PinCode { get; set; }
+    [EmailAddress,StringLength(150)] public string? Email { get; set; }
+    [RegularExpression(StockFlow.Application.Common.FieldPatterns.Phone)] public string? AlternatePhone { get; set; }
     [Required, StringLength(50)]
     public string StoreCode { get; set; } = "";
 

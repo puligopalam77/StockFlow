@@ -29,13 +29,13 @@ static class StoreAssignmentChecks
         using var staff=app.CreateClient(new(){AllowAutoRedirect=false});staff.DefaultRequestHeaders.Add("Test-Role","Sales");
         var token=await staff.GetFromJsonAsync<JsonObject>("/api/antiforgery");staff.DefaultRequestHeaders.Add("X-CSRF-TOKEN",token!["requestToken"]!.GetValue<string>());
         var html=await staff.GetStringAsync("/Sales/Create");
-        Check(html.Contains("id=\"assigned-store\"")&&!html.Contains("id=\"business-location\""),"cashier sees assigned store without selector");
+        Check(!html.Contains("id=\"business-location\""),"cashier has no operational store selector");
         var context=await staff.GetFromJsonAsync<JsonObject>("/api/branches/context");
         Check(context!["canReviewStores"]!.GetValue<bool>()==false&&context["locations"]!.AsArray().Count==1,"staff context exposes only pinned location");
-        Check((int)(await staff.PostAsJsonAsync("/api/sales",new CreateSaleRequest {
-            RequestId=Guid.NewGuid(),Items=[new(){ProductId=1,Quantity=1,SellingPrice=10}],
+        var staffSale=await staff.PostAsJsonAsync("/api/sales",new CreateSaleRequest {
+            RequestId=Guid.NewGuid(),CustomerId=1,Items=[new(){ProductId=1,Quantity=1,SellingPrice=10}],
             Payments=[new(){PaymentMode="CASH",Amount=11.80m}]
-        })).StatusCode==201,"cashier can complete sale without selecting or submitting a store");
+        });Check((int)staffSale.StatusCode==201,"cashier can complete sale without selecting or submitting a store: "+await staffSale.Content.ReadAsStringAsync());
         staff.DefaultRequestHeaders.Add("X-StockFlow-Location","3");
         Check((int)(await staff.PostAsJsonAsync("/api/sales",new{})).StatusCode==409,"foreign location request stamp is rejected before posting");
         staff.DefaultRequestHeaders.Remove("X-StockFlow-Location");
@@ -56,7 +56,7 @@ static class StoreAssignmentChecks
         branches.State.IsAdmin=true;
         using var admin=app.CreateClient(new(){AllowAutoRedirect=false});admin.DefaultRequestHeaders.Add("Test-Role","Admin");
         var adminToken=await admin.GetFromJsonAsync<JsonObject>("/api/antiforgery");admin.DefaultRequestHeaders.Add("X-CSRF-TOKEN",adminToken!["requestToken"]!.GetValue<string>());
-        Check((await admin.GetStringAsync("/Sales/Create")).Contains("id=\"business-location\""),"database Admin retains store selector without owner flag");
+        Check((await admin.GetFromJsonAsync<JsonObject>("/api/branches/context"))!["canReviewStores"]!.GetValue<bool>(),"database Admin retains authorized context review without owner flag");
         Check((int)(await admin.PostAsJsonAsync("/api/branches/context",new{locationId=3,storeId=2})).StatusCode==204,"administrator can switch to authorized store");
         Check((int)(await admin.PostAsJsonAsync("/api/branches/context",new{locationId=999,storeId=2})).StatusCode==403,"administrator cannot select unassigned location");
         admin.DefaultRequestHeaders.Add("Test-Location","0");admin.DefaultRequestHeaders.Add("Test-Store","0");

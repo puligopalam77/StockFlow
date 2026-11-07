@@ -2,6 +2,8 @@
 window.StockFlowPagination = (() => {
     'use strict';
     const sizes=[10,25,50,100],defaultSize=10,clients=new Map();let serial=0;
+    // Use the filtered total, not the current page length or selected page size.
+    const shouldShow=total=>Number(total)>10;
     const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
     const element=value=>typeof value==='string'?document.querySelector(value):value;
     const integer=(value,min=0,max=2147483647)=>Number.isSafeInteger(Number(value))&&Number(value)>=min&&Number(value)<=max;
@@ -36,7 +38,7 @@ window.StockFlowPagination = (() => {
         info.append(sizeLabel,range);nav.append(first,previous,numbers,next,last);host.replaceChildren(info,nav,pageLabel,jumpLabel,error,retry);
         const pages=()=>Math.max(1,Math.ceil(state.total/state.size));
         function visibility(){
-            const small=state.total<=10;
+            const small=!shouldShow(state.total);
             info.hidden=nav.hidden=small;
             pageLabel.hidden=true;
             jumpLabel.hidden=small||!options.showPageJump;
@@ -150,5 +152,5 @@ window.StockFlowPagination = (() => {
         }
         scan();let queued=false;new MutationObserver(()=>{if(!queued){queued=true;requestAnimationFrame(()=>{queued=false;scan();});}}).observe(document.querySelector('.sf-main')||document.body,{childList:true,subtree:true});
     });
-    return {create,remote,adapt,validateFilters,scan,defaultSize,sizes:[...sizes]};
+    return {create,remote,adapt,validateFilters,scan,shouldShow,defaultSize,sizes:[...sizes]};
 })();

@@ -2,7 +2,7 @@
 window.StockFlowUnsaved = (() => {
     const states=new Map();let replaying=false,approved=false;
     const snapshot=root=>JSON.stringify([...root.querySelectorAll('input,select,textarea')]
-        .filter(field=>!['hidden','submit','button','reset','password'].includes(field.type))
+        .filter(field=>!field.dataset.sfAddressTransient&&!['hidden','submit','button','reset','password'].includes(field.type))
         .map((field,index)=>[field.id||field.name||index,field.type==='file'?[...field.files].map(file=>[file.name,file.size,file.lastModified]):['checkbox','radio'].includes(field.type)?field.checked:field.value]));
     const eligible=form=>!form.matches('[data-skip-unsaved-warning], [role="search"], [id$="-search"], [id$="-filter"], #global-search, #lookup-form, #comparison-form')&&form.querySelector('button[type="submit"],input[type="submit"]');
     function remember(root){if(root)states.set(root,{...states.get(root),initial:snapshot(root),changed:false});}
@@ -23,7 +23,7 @@ window.StockFlowUnsaved = (() => {
     }
     function discover(){document.querySelectorAll('form').forEach(form=>{if(!states.has(form)&&eligible(form))remember(form);});}
     document.addEventListener('focusin',event=>{const form=event.target.closest('form');if(!form||!eligible(form))return;const state=states.get(form);if(!state?.changed)remember(form);});
-    for(const type of ['input','change'])document.addEventListener(type,event=>{const form=event.target.closest('form');if(!form||!eligible(form)||event.target.disabled||event.target.readOnly||event.target.type==='hidden')return;if(!states.has(form))remember(form);states.get(form).changed=true;});
+    for(const type of ['input','change'])document.addEventListener(type,event=>{const form=event.target.closest('form');if(!form||!eligible(form)||event.target.dataset.sfAddressTransient||event.target.disabled||event.target.readOnly||event.target.type==='hidden')return;if(!states.has(form))remember(form);states.get(form).changed=true;});
     document.addEventListener('reset',event=>queueMicrotask(()=>remember(event.target)));
     document.addEventListener('click',async event=>{
         if(replaying||event.defaultPrevented||event.target.closest('#sf-confirm-dialog'))return;

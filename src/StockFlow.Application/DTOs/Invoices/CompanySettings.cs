@@ -3,9 +3,13 @@ using System.ComponentModel.DataAnnotations;
 namespace StockFlow.Application.DTOs.Invoices;
 
 public record CompanySalesperson(int UserId, string FullName);
+public sealed record CompanyGstIdentity(long RegistrationId,string LegalName,string? Gstin,string? Pan,string RegistrationType,string StateCode,string StoreName,string Profile);
 
 public class CompanySettings
 {
+    [StringLength(250)] public string? AddressLine1 { get; set; }
+    [StringLength(250)] public string? AddressLine2 { get; set; }
+    [StringLength(100)] public string? District { get; set; }
     [StringLength(150)] public string? LegalBusinessName { get; set; }
     [Required, StringLength(100)] public string City { get; set; } = "";
     [Required, StringLength(100)] public string State { get; set; } = "";

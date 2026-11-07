@@ -20,7 +20,7 @@ public sealed partial class GstRepository(DbConnectionFactory factory) : IGstRep
         await RequireAsync(c,"VIEW");
         // Explicit aliases keep snake_case mapping independent of process-wide Dapper settings.
         using var result=await c.QueryMultipleAsync("""
-        SELECT business_id BusinessId,company_settings_id CompanySettingsId,legal_name LegalName,trade_name TradeName,constitution,pan,address,state_code StateCode,pin_code PinCode,mobile,email,updated_at UpdatedAt FROM gst_legal_businesses ORDER BY business_id;
+        SELECT to_jsonb(gst_legal_businesses)->>'address_line1' AddressLine1,to_jsonb(gst_legal_businesses)->>'address_line2' AddressLine2,to_jsonb(gst_legal_businesses)->>'city' City,to_jsonb(gst_legal_businesses)->>'district' District,business_id BusinessId,company_settings_id CompanySettingsId,legal_name LegalName,trade_name TradeName,constitution,pan,address,state_code StateCode,pin_code PinCode,mobile,email,updated_at UpdatedAt FROM gst_legal_businesses ORDER BY business_id;
         SELECT registration_id RegistrationId,business_id BusinessId,gstin,registration_type RegistrationType,other_type OtherType,state_code StateCode,status,effective_from EffectiveFrom,effective_to EffectiveTo,authorized_contact AuthorizedContact,address,updated_at UpdatedAt FROM gst_registrations ORDER BY registration_id;
         SELECT mapping_id MappingId,registration_id RegistrationId,business_profile_code BusinessProfileCode,store_id StoreId,effective_from EffectiveFrom,effective_to EffectiveTo,status,updated_at UpdatedAt FROM gst_shop_mappings ORDER BY mapping_id;
         SELECT tax_config_id TaxConfigId,product_id ProductId,classification,hsn_sac HsnSac,uqc,treatment,tax_rate TaxRate,cess_rate CessRate,reverse_charge ReverseCharge,prices_include_tax PricesIncludeTax,effective_from EffectiveFrom,effective_to EffectiveTo,review_reference ReviewReference FROM gst_tax_configurations WHERE @catalog ORDER BY product_id,effective_from DESC;
@@ -47,14 +47,27 @@ public sealed partial class GstRepository(DbConnectionFactory factory) : IGstRep
     {
         GstRules.Validate(b);
         await using var c=factory.CreateConnection(); await RequireAsync(c,"EDIT");
+        var structured=await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='gst_legal_businesses' AND column_name='address_line1')");
+        if(!structured && b.AddressLine1 is not null) throw new ValidationException("Apply manual migration 088 before saving structured GST addresses.");
+        if(structured)
+        {
+            if(b.BusinessId==0) return await InsertOrReuse(c,"gst_legal_businesses","business_id",b,"""
+            INSERT INTO gst_legal_businesses(company_settings_id,legal_name,trade_name,constitution,pan,address,state_code,pin_code,mobile,email,address_line1,address_line2,city,district)
+            VALUES(@CompanySettingsId,@LegalName,@TradeName,@Constitution,@Pan,@Address,@StateCode,@PinCode,@Mobile,@Email,@AddressLine1,@AddressLine2,@City,@District) RETURNING business_id
+            """);
+            return await c.QuerySingleOrDefaultAsync<long?>("""
+            UPDATE gst_legal_businesses SET legal_name=@LegalName,trade_name=@TradeName,constitution=@Constitution,pan=@Pan,address=@Address,state_code=@StateCode,pin_code=@PinCode,mobile=@Mobile,email=@Email,address_line1=@AddressLine1,address_line2=@AddressLine2,city=@City,district=@District,updated_at=now()
+            WHERE business_id=@BusinessId RETURNING business_id
+            """,b) ?? throw new UnauthorizedAccessException("Legal business is not available in the authorized scope.");
+        }
         if(b.BusinessId==0) return await InsertOrReuse(c,"gst_legal_businesses","business_id",b,"""
         INSERT INTO gst_legal_businesses(company_settings_id,legal_name,trade_name,constitution,pan,address,state_code,pin_code,mobile,email)
         VALUES(@CompanySettingsId,@LegalName,@TradeName,@Constitution,@Pan,@Address,@StateCode,@PinCode,@Mobile,@Email) RETURNING business_id
         """);
-        return await c.QuerySingleAsync<long>("""
+        return await c.QuerySingleOrDefaultAsync<long?>("""
         UPDATE gst_legal_businesses SET legal_name=@LegalName,trade_name=@TradeName,constitution=@Constitution,pan=@Pan,address=@Address,state_code=@StateCode,pin_code=@PinCode,mobile=@Mobile,email=@Email,updated_at=now()
         WHERE business_id=@BusinessId RETURNING business_id
-        """,b);
+        """,b) ?? throw new UnauthorizedAccessException("Legal business is not available in the authorized scope.");
     }
     public async Task<long> SaveRegistrationAsync(GstRegistration r)
     {

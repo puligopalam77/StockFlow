@@ -5,7 +5,6 @@
 <link rel="stylesheet" href="~/css/gst-settings.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/gst-catalog.css" asp-append-version="true" />
 <div class="gst-workspace" id="gst-settings" data-edit="@Access.Can("GST_SETTINGS","EDIT").ToString().ToLowerInvariant()" data-profile="@Scope.BusinessProfileCode" data-store="@Scope.StoreId" data-billing-edit="@Access.Can("COMPANY_SETTINGS","EDIT").ToString().ToLowerInvariant()">
-    <p permission-module="EWAY_BILLS" permission-action="CONFIGURE_PROVIDER"><a href="/EWayBills/Provider" class="btn btn-sm btn-outline-secondary">Integrations: E-Way Bill provider readiness</a></p>
     <header class="gst-setup-heading"><div><h1 id="gst-title">GST Settings</h1><p id="gst-subtitle">Loading your saved configuration…</p></div><div id="gst-page-actions" class="gst-actions"></div></header>
     <div id="gst-message" role="alert" hidden></div>
     <nav id="gst-stepper" aria-label="GST setup steps" hidden></nav>

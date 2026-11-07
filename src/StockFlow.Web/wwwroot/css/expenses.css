@@ -1,1 +1,155 @@
-#expenses{color:#142b45;max-width:100%;min-width:0}#expenses .card{background:white;border:1px solid #e0e4eb;border-radius:10px;margin-bottom:12px;min-width:0;max-width:100%}#expenses fieldset{min-inline-size:0}#expenses label{display:block;font-size:.9rem;margin-bottom:10px}#expenses h2{font-size:1.1rem}#expenses .btn{margin-top:6px}#expenses .btn-dark{background:#202328;border-color:#202328}#expenses table th{background:#fff1f7;color:#142b45}#expenses td{vertical-align:middle;overflow-wrap:anywhere}#expenses dialog{border:1px solid #e0e4eb;border-radius:12px;max-width:95vw;width:420px}#expenses dialog::backdrop{background:#142b4570}.expense-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.expense-filters{display:flex;flex-direction:row;flex-wrap:wrap;align-items:end;gap:12px}.expense-filters label{min-width:150px;flex:1}#expense-message{padding:10px;background:#fff1f7;border-radius:8px;margin:10px 0}#expense-state{color:#c00066}@media(max-width:768px){.expense-grid{grid-template-columns:minmax(0,1fr)}.expense-filters{display:block}.expense-filters label{width:100%}}#expenses [hidden]{display:none!important}
+
+#expenses{color:#142b45;max-width:none;min-width:0;width:100%}#expenses [hidden]{display:none!important}
+#expenses .expense-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}#expenses h1{font-size:24px;margin:0 0 6px}#expenses h2{font-size:16px;font-weight:700;margin:0 0 16px}#expenses h1+p{margin:0;color:#596b84;font-size:13px}
+#expenses .card{background:#fff;border:1px solid #dce4ef;border-radius:12px;margin-bottom:14px;min-width:0;max-width:100%;padding:18px}#expenses fieldset{min-inline-size:0;border:0;margin:0;padding:0}
+#expenses .expense-workspace{display:grid;grid-template-columns:minmax(0,7fr) minmax(270px,3fr);gap:16px;align-items:start}#expenses .expense-main,#expenses .expense-sidebar{min-width:0}
+#expenses .expense-fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}#expenses .expense-fields-grid>div{min-width:0}#expenses .expense-full{grid-column:1/-1}
+#expenses label{display:block;font-size:13px;font-weight:600;margin:0 0 6px}#expenses .expense-label-action{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:6px}#expenses .expense-label-action label{margin:0}
+#expenses .expense-add{background:none;border:0;color:#d00067;font-size:12px;font-weight:600;padding:2px 0}#expenses .expense-add:disabled{opacity:.5}
+#expenses :is(input:not([type=checkbox]):not([type=radio]),select,textarea){background-color:#fff;min-width:0;max-width:100%;width:100%;border:1px solid #d3ddeb;border-radius:6px}#expenses :is(input:not([type=radio]),select){min-height:38px}#expenses textarea{resize:vertical}#expenses input[type=checkbox]{width:18px;min-height:18px;flex-shrink:0}
+#expenses small,#expenses .expense-muted{display:block;font-size:12px;color:#596b84;line-height:1.6;overflow-wrap:anywhere;margin:8px 0}#expenses .expense-notice{padding:10px 12px;background:#f1f5fb;border-radius:8px;font-size:12px;line-height:1.5;margin-bottom:14px}
+#expenses .expense-badge{padding:6px 12px;background:#fff0f7;border:1px solid #ffc4df;color:#a30d4b;border-radius:20px;font-size:12px}#expenses .expense-summary-values{margin:0;font-size:13px}#expenses .expense-summary-values>div{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #edf0f6}#expenses .expense-summary-values dt{font-weight:400}#expenses .expense-summary-values dd{margin:0;text-align:right;font-weight:600;overflow-wrap:anywhere;min-width:0}
+#expenses .expense-actions{display:flex;flex-direction:column;gap:10px}#expenses .expense-actions h2{margin-bottom:0}#expenses .expense-actions .btn{width:100%;margin:0;white-space:normal}#expenses .expense-actions details button{margin-top:10px}
+#expenses .btn{margin-top:10px}#expenses :is(.btn-dark,.btn-outline-secondary){--sf-action-bg:#202328;background:#202328!important;border-color:#202328!important;color:#fff!important}#expenses .btn-primary{--sf-action-bg:#ff007f;background:#ff007f!important;border-color:#ff007f!important;color:#fff!important}#expenses :is(input,select,textarea,button,a,summary):not(:is(#expense-master-dialog,#expense-payment-dialog) input,.sf-select-trigger,.sf-select-query):focus-visible{outline:2px solid #ff007f!important;outline-offset:3px!important}
+#expenses .expense-confirm{display:flex;align-items:start;gap:8px;margin-top:12px;font-weight:400}#expenses .expense-confirm input{margin-top:2px}
+#expenses .table-responsive{max-width:100%;overflow-x:auto}#expenses table{width:100%;min-width:700px;font-size:13px}#expenses th{background:#1b2d43;color:#fff;white-space:nowrap}#expenses td{vertical-align:middle;overflow-wrap:anywhere;max-width:240px}#expenses :is(th,td){padding:12px 10px}
+#expense-message,#expenses .expense-error{padding:12px;background:#fff0f7;border:1px solid #ffc4df;border-radius:8px;margin:12px 0;overflow-wrap:anywhere}
+#expenses dialog{border:1px solid #dce4ef;border-radius:12px;width:440px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:20px;overflow:auto}#expenses dialog::backdrop{background:#142b4570}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog){width:500px;padding:0;border:0;border-radius:18px;box-shadow:0 20px 65px #142b4533;color:#14243c}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-heading{display:flex;align-items:center;gap:14px;padding:22px 24px;background:linear-gradient(115deg,#fff0f8,#fff8fc);position:relative;padding-right:58px}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog) h2{font-size:24px;line-height:1.25;margin:0;font-weight:700;letter-spacing:-.5px}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-heading p{margin:5px 0 0;font-size:13px;line-height:1.5}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-icon{display:grid;place-items:center;flex-shrink:0;width:50px;height:50px;border-radius:50%;background:#ffd5ec;color:#e00070}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-icon svg{width:29px;height:29px}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-x{--sf-action-bg:transparent;--sf-action-hover:transparent;--sf-action-standard:36px;--sf-action-standard-icon:18px;position:absolute;top:14px;right:14px;display:grid;place-items:center;width:36px;height:36px;padding:9px;border:0;border-radius:0;background:transparent;color:#25334b;box-shadow:none}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-x svg{width:18px;height:18px}:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-x:is(:hover,:focus-visible) svg{stroke:#b3005a}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-body{display:grid;gap:16px;padding:20px 28px}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog) input{min-height:44px;padding:10px 12px;font-size:14px;border-radius:8px}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog) .expense-error{margin:0;padding:10px 12px;font-size:13px}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-actions{display:flex;justify-content:flex-end;gap:12px;padding:14px 28px 18px;border-top:1px solid #edf0f6}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn{margin:0;min-height:42px;min-width:100px;border-radius:9px;font-size:13px;font-weight:600;padding:10px 18px}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn-outline-secondary{--sf-action-bg:#fff;background:#fff!important;border-color:#d3ddeb!important;color:#14243c!important}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn-outline-secondary:hover{background:#fff0f7!important;border-color:#ff007f!important}
+@media(max-width:575px){:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-heading{padding:20px 50px 20px 20px;gap:10px}#expenses :is(#expense-master-dialog,#expense-payment-dialog) h2{font-size:22px}:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-icon{width:42px;height:42px}:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-body{padding:18px 20px;gap:16px}:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-actions{padding:14px 20px 18px}#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn{flex:1;min-width:0;padding-inline:12px;white-space:nowrap}}
+#expenses .expense-filters{display:flex;flex-flow:row wrap;align-items:end;gap:12px}#expenses .expense-filters label{min-width:140px;flex:1;margin:0}#expenses .expense-filters .btn{margin:0}
+#expenses .sf-page-heading>div{min-width:0;max-width:100%;overflow-wrap:anywhere}#expenses .sf-page-heading .btn{white-space:normal}
+#expense-pager .sf-pagination-size{display:inline-flex;align-items:center;white-space:normal;gap:7px;margin:0}#expense-pager .sf-pagination-jump input{width:58px}#expense-pager .sf-pagination-info{max-width:100%}
+#expenses .expense-assistant-dock{display:flex;justify-content:flex-end;margin:16px 0}#expenses .expense-assistant-dock .sf-help-open{position:static!important}
+@media(max-width:1050px){#expenses .expense-workspace{grid-template-columns:minmax(0,1fr)}#expenses .expense-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}}
+@media(max-width:575px){#expenses .expense-fields-grid,#expenses .expense-sidebar{grid-template-columns:minmax(0,1fr)}#expenses .card{padding:14px}#expenses h1{font-size:21px}#expenses .expense-filters{display:grid;grid-template-columns:minmax(0,1fr)}#expenses .expense-filters label{min-width:0}#expenses .expense-summary-values>div{gap:8px}}
+/* Compact create screen; saved expense details, lists and reports keep their layout. */
+.sf-main:has(>#expenses.expense-create){padding-top:12px}
+.sf-main:has(>#expenses.expense-create)>.sf-breadcrumb{margin-bottom:6px}
+#expenses.expense-create .expense-heading{margin-bottom:12px;gap:10px}
+#expenses.expense-create h1{line-height:1.25;margin-bottom:4px}
+#expenses.expense-create .expense-heading p{margin:0;line-height:1.5}
+#expenses.expense-create .expense-workspace{grid-template-columns:minmax(0,1fr) 320px;gap:16px}
+#expenses.expense-create .expense-main,#expenses.expense-create .expense-sidebar{display:flex;flex-direction:column;gap:14px}
+#expenses.expense-create .card{padding:16px;margin:0}
+#expenses.expense-create .card h2{font-size:15px;line-height:1.4;margin-bottom:12px}
+#expenses.expense-create .expense-main{container:expense-entry / inline-size}
+#expenses.expense-create .expense-fields-grid,#expenses.expense-create .expense-payment-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px 16px;align-items:start}
+#expenses.expense-create .expense-payment-grid>div{min-width:0}
+#expenses.expense-create .expense-fields-grid label[for],#expenses.expense-create .expense-payment-grid label[for]{min-height:20px;line-height:20px}
+#expenses.expense-create .expense-label-action{min-height:20px;flex-wrap:nowrap;align-items:center}
+#expenses.expense-create .expense-add{white-space:nowrap;padding:0;line-height:20px}
+#expenses.expense-create #expense-description{height:58px;min-height:58px;padding:8px 12px}
+#expenses.expense-create #expense-initial-fields,#expenses.expense-create #expense-initial-fields>.expense-fields-grid{display:contents}
+#expenses.expense-create .expense-payment-notes{grid-column:1/-1;margin:0;font-size:13px}
+#expenses.expense-create .expense-confirm{grid-column:1/-1;margin:0}
+#expenses.expense-create .expense-payment-notes summary{cursor:pointer;color:#52647d;width:fit-content}
+#expenses.expense-create .expense-payment-notes[open] summary{margin-bottom:10px}
+#expenses.expense-create .expense-gst-choice legend{float:none;width:auto;font-size:13px;font-weight:600;margin:0 0 6px}
+#expenses.expense-create .expense-gst-toggle{display:inline-flex;max-width:100%;gap:4px;padding:3px;border:1px solid #d3ddeb;border-radius:8px}
+#expenses.expense-create .expense-gst-toggle label{margin:0;padding:7px 14px;border-radius:5px;line-height:20px;cursor:pointer}
+#expenses.expense-create .expense-gst-toggle input:checked+label{background:#ff007f;color:#fff}
+#expenses.expense-create .expense-gst-toggle:has(input:focus-visible){border-color:#ff007f}
+#expenses.expense-create .expense-gst-toggle input:focus-visible+label{text-decoration:underline;text-underline-offset:3px}
+#expenses.expense-create .expense-gst-choice:disabled label{opacity:.6;cursor:default}
+@media(forced-colors:active){#expenses.expense-create .expense-gst-toggle input:checked+label{outline:1px solid Highlight;outline-offset:-2px}}
+#expenses.expense-create .expense-draft-note{margin:8px 0 0;line-height:1.4}
+#expenses.expense-create .expense-live-balance{margin:5px 0 0;line-height:1.4}
+#expenses.expense-create .expense-live-balance output{font-weight:600;color:#142b45}
+#expenses.expense-create #expense-receipt-section h2{margin-bottom:6px}
+#expenses.expense-create #expense-attachment-note{margin:0;line-height:1.5}
+#expenses.expense-create .expense-receipt-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+#expenses.expense-create .expense-receipt-header .btn{margin:0;flex-shrink:0}
+#expenses.expense-create #expense-attachments:empty{display:none}
+#expenses.expense-create #expense-summary-state{margin:0 0 6px;line-height:1.5}
+#expenses.expense-create .expense-summary-values>div{padding:9px 0}
+#expenses.expense-create .expense-summary-values>div:last-child{border-bottom:0;padding-bottom:0}
+#expenses.expense-create .expense-summary-values>div:first-child dd{font-size:17px}
+#expenses.expense-create .expense-back-link{display:inline-flex;justify-content:center;align-items:center;gap:6px;min-height:28px;font-size:13px;color:#52647d}
+#expenses.expense-create .expense-back-link:hover{color:#cf0068;text-decoration:underline}
+@media(max-width:1050px){#expenses.expense-create .expense-workspace{grid-template-columns:minmax(0,1fr)}#expenses.expense-create .expense-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}}
+@media(max-width:575px){#expenses.expense-create .expense-sidebar{grid-template-columns:minmax(0,1fr)}#expenses.expense-create .expense-workspace{gap:14px}#expenses.expense-create .expense-badge{font-size:11px;padding:4px 9px}}
+@container expense-entry (min-width:560px){
+ #expenses.expense-create .expense-fields-grid,#expenses.expense-create .expense-payment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container expense-entry (min-width:840px){
+ #expenses.expense-create .expense-fields-grid,#expenses.expense-create .expense-payment-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #expenses.expense-create .expense-description{grid-column:span 2}
+ #expenses.expense-create #expense-description{height:38px;min-height:38px}
+}
+@container expense-entry (min-width:1120px){
+ #expenses.expense-create .expense-fields-grid,#expenses.expense-create .expense-payment-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ #expenses.expense-create .expense-description{grid-column:1/-1}
+}
+#expenses .expense-receipt-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+#expenses .expense-receipt-actions .btn{margin-top:8px}
+#expenses :is(#expense-receipt-choose,#expense-save){display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--sf-action-bg)!important;border-color:var(--sf-action-bg)!important}
+#expenses :is(#expense-receipt-choose,#expense-save):hover:not(:disabled){background:var(--sf-action-hover)!important;border-color:var(--sf-action-hover)!important}
+#expenses :is(#expense-receipt-choose,#expense-save) svg{width:18px;height:18px;flex-shrink:0}
+#expenses .expense-receipt-selection{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border:1px solid #d3ddeb;background:#fff;border-radius:6px;font-size:13px;min-width:0}
+#expenses .expense-receipt-visual{display:grid;place-items:center;flex:0 0 24px;color:#52647d}
+#expenses .expense-receipt-visual svg{width:22px;height:22px}
+#expenses .expense-receipt-visual:has(img){flex-basis:40px}
+#expenses .expense-receipt-visual img{width:40px;height:40px;object-fit:cover;border-radius:4px}
+#expenses .expense-receipt-info{flex:1;min-width:0}
+#expenses #expense-receipt-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+#expenses #expense-receipt-meta{margin:2px 0 0;font-size:11px;line-height:1.4}
+#expenses .expense-receipt-file-actions{display:flex;gap:4px;flex-shrink:0}
+#expenses .expense-receipt-action{--sf-action-bg:#fff;--sf-action-hover:#fff0f7;display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;padding:0;border:1px solid #d3ddeb;border-radius:5px;background:#fff;color:#142b45;box-shadow:none;text-decoration:none}
+#expenses .expense-receipt-action svg{width:16px;height:16px}
+#expenses #expense-receipt-remove{color:#ad1649}
+#expenses .expense-receipt-action:is(:hover,:focus-visible){border-color:#ff007f;color:#cf0068;background:#fff0f7}
+#expenses #expense-receipt-selection .expense-receipt-action:focus-visible{border-width:2px;outline:none!important;box-shadow:none!important}
+#expenses .expense-receipt-action:disabled{opacity:.5;cursor:default}
+#expenses #expense-receipt-error{color:#ad1649;margin-bottom:0}
+#expenses #expense-receipt-saved{display:inline-block;margin-top:8px;font-size:13px}
+#expenses #expense-payment-dialog select{min-height:44px;font-size:14px}
+#expenses #expense-later-balance{font-size:13px}
+#expenses #expense-payment-dialog .expense-master-body{gap:12px}
+#expenses #expense-settlement p{margin-bottom:0;font-size:13px}
+#expenses #expense-settlement .btn{align-self:start}
+#expenses #expense-refund-tools summary{font-size:14px;font-weight:600;cursor:pointer}
+#expenses #expense-refund-tools[open] summary{margin-bottom:14px}
+#expenses .expense-tax-values{display:flex;flex-wrap:wrap;gap:12px 28px;margin:10px 0;font-size:13px}
+#expenses .expense-tax-values>div{display:flex;align-items:center;gap:10px}
+#expenses .expense-tax-values dt{font-weight:400}#expenses .expense-tax-values dd{margin:0;font-weight:600}
+#expenses .expense-tax-feedback{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12px}
+#expenses .expense-tax-feedback .expense-muted{margin:0;line-height:1.5}
+#expenses #expense-summary-gst{margin-top:12px;padding-top:12px;border-top:1px solid #edf0f6}
+#expenses #expense-summary-gst h3{font-size:13px;font-weight:700;line-height:1.4;margin:0 0 4px}
+#expenses #expense-summary-gst .expense-summary-values>div{padding:7px 0}
+#expenses #expense-summary-gst .expense-summary-values>div:first-child dd{font-size:13px}
+#expenses #expense-gst-section small{margin-bottom:0}
+#expenses #expense-gst-gstin{text-transform:uppercase}
+#expenses .expense-list-table{min-width:780px}
+#expenses .expense-list-table td:nth-child(2){min-width:200px;max-width:340px}
+#expenses .expense-list-table small{margin:4px 0 0;line-height:1.45}
+#expenses .expense-currency{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+#expenses .expense-filter-actions{display:flex;gap:8px;align-items:end}
+#expenses .expense-extra-filters{flex-basis:100%;font-size:13px}
+#expenses .expense-extra-filters summary{cursor:pointer;color:#52647d}
+#expenses .expense-extra-filters>div{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+#expenses .expense-extra-filters label{max-width:280px}
+#expenses .expense-report-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+#expenses .expense-report-groups>.card{min-width:0}
+#expenses .expense-group-table{min-width:320px}
+#expenses .expense-group-table :is(td,th):not(:first-child){text-align:right;white-space:nowrap}
+#expenses .expense-report-definition summary{font-size:12px;color:#52647d;cursor:pointer}
+#expenses #expense-summary{margin:0 0 8px;font-size:13px;line-height:1.7}
+#expenses .expense-report-detail>summary{font-size:14px;font-weight:600;cursor:pointer}
+#expenses .expense-report-detail[open]>summary{margin-bottom:14px}
+@media(max-width:900px){#expenses .expense-report-groups{grid-template-columns:minmax(0,1fr)}}

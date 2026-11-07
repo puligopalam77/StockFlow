@@ -2,6 +2,20 @@ using System.ComponentModel.DataAnnotations;
 
 namespace StockFlow.Application.DTOs.Inventory;
 
+public sealed class LowStockItem : InventoryBalance
+{
+    public string ProductLabel { get; set; } = "";
+    public long QuantityNeeded { get; set; }
+    public string StockStatus { get; set; } = "";
+}
+public sealed class LowStockSummary
+{
+    public long LowStockVariants { get; set; }
+    public long OutOfStock { get; set; }
+    public long UnitsToReplenish { get; set; }
+}
+public sealed record LowStockPage(IReadOnlyList<LowStockItem> Rows,long Total,int Page,int PageSize,LowStockSummary Summary);
+
 public class InventoryBalance
 {
     [System.Text.Json.Serialization.JsonIgnore]

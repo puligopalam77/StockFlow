@@ -69,7 +69,9 @@ window.StockFlowQuickCustomer = {
         const closeButtons = [byId('quick-customer-cancel'), dialog.querySelector('.billing-customer-x')];
         const fields = [...customer.querySelectorAll('input,textarea')], touched = new Set();
         const payload = () => ({ customerName: byId('new-customer-name').value.trim(), mobileNumber: phone.value.trim() || null,
-            email: email.value.trim() || null, gstNumber: gst.value.trim().toUpperCase() || null, address: byId('new-customer-address').value.trim() || null });
+            email: email.value.trim() || null, gstNumber: gst.value.trim().toUpperCase() || null, address: byId('new-customer-address').value.trim() || null,
+            addressDetails: byId('new-customer-address').sfAddressCombined?.read(),
+            useStructuredAddress: byId('new-customer-address').sfAddressCombined?.read()!==undefined?true:undefined });
         function validateGst(){
             gst.setCustomValidity('');
             const value=gst.value.trim().toUpperCase();

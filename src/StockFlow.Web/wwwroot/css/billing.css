@@ -196,6 +196,7 @@ html:has(.billing-saved-drawer[open]){overflow:hidden}
 .billing-saved-actions .billing-saved-resume:hover{background:#ff007c;border-color:#ff007c}
 .billing-saved-pagination{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 20px;border-top:1px solid #e0e6ef;font-size:12px;flex:none}
 .billing-saved-pagination .btn{font-size:12px}
+.billing-saved-pagination[hidden]{display:none!important}
 #saved-bills-feedback{font-size:13px;padding:0 20px;overflow-wrap:anywhere}
 .billing-saved-empty{text-align:center;padding:45px 10px;color:#5e6e85}
 .billing-saved-empty h3{font-size:17px;color:#182b49;margin:12px 0}

@@ -18,3 +18,17 @@
  opacity:.55;cursor:not-allowed;
 }
 @media(prefers-reduced-motion:reduce){:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action){transition:none}}
+
+/* Consistent hand cursor for actions and selection controls, including input-based dropdowns. */
+:is(.sf-app,.sf-auth-body) :is(a[href],button,summary,select,[role=button],[role=option],[role=menuitem],[role=tab],.sf-select-trigger,.sf-address-search,input[type=button],input[type=submit],input[type=reset],input[type=checkbox],input[type=radio],input[type=file],input[type=color],input[type=range],input[type=date],input[type=time],input[type=datetime-local],input[type=month],input[type=week],label:has(input[type=checkbox],input[type=radio])):not(:disabled):not([readonly]):not([aria-disabled=true]):not(.disabled):not(:has(input[type=checkbox]:disabled,input[type=radio]:disabled)){cursor:pointer!important}
+:is(.sf-app,.sf-auth-body) :is(button,input,select,textarea,[role=button],[role=option],[role=menuitem],[role=tab]):is(:disabled,[aria-disabled=true],.disabled){cursor:not-allowed!important}
+:is(.sf-app,.sf-auth-body) input::-webkit-calendar-picker-indicator{cursor:pointer}
+:is(.sf-app,.sf-auth-body) input:disabled::-webkit-calendar-picker-indicator{cursor:not-allowed}
+:is(.sf-app,.sf-auth-body) label:has(input[type=checkbox]:disabled,input[type=radio]:disabled){cursor:not-allowed!important}
+:is(.sf-app,.sf-auth-body) input[type=file]:not(:disabled)::file-selector-button{cursor:pointer}
+:is(.sf-app,.sf-auth-body) input[type=file]:disabled::file-selector-button{cursor:not-allowed}
+
+/* A selection trigger is not a text-entry area. Keep its focus ring, hide its caret. */
+:root{caret-color:transparent}
+:is(.sf-app,.sf-auth-body) :is(.sf-select-trigger,.sf-address-search,input[readonly],textarea[readonly],input:disabled,textarea:disabled){caret-color:transparent!important}
+:is(.sf-app,.sf-auth-body) .sf-select-query{caret-color:auto}

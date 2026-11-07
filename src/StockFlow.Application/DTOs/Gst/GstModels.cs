@@ -4,6 +4,10 @@ namespace StockFlow.Application.DTOs.Gst;
 
 public sealed class GstBusiness
 {
+    [StringLength(250)] public string? AddressLine1 { get; set; }
+    [StringLength(250)] public string? AddressLine2 { get; set; }
+    [StringLength(100)] public string? City { get; set; }
+    [StringLength(100)] public string? District { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public long BusinessId { get; set; }
     public int? CompanySettingsId { get; set; }
@@ -11,7 +15,7 @@ public sealed class GstBusiness
     [StringLength(200)] public string? TradeName { get; set; }
     [StringLength(80)] public string? Constitution { get; set; }
     [StringLength(10)] public string? Pan { get; set; }
-    [Required, StringLength(1000, MinimumLength = 3)] public string Address { get; set; } = "";
+    [StringLength(1000)] public string Address { get; set; } = "";
     [Required] public string StateCode { get; set; } = "";
     [Required] public string PinCode { get; set; } = "";
     [RegularExpression("^[6-9][0-9]{9}$")] public string? Mobile { get; set; }

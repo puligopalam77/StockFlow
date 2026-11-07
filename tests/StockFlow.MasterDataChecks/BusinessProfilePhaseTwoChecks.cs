@@ -26,6 +26,7 @@ internal static class BusinessProfilePhaseTwoChecks
         var root = new DirectoryInfo(AppContext.BaseDirectory); while (root is not null && !File.Exists(Path.Combine(root.FullName, "StockFlow.sln"))) root = root.Parent;
         var output = Path.Combine(root!.FullName, "tests/bin/business-profile-phase2-fixtures"); Directory.CreateDirectory(output);
         await File.WriteAllTextAsync(Path.Combine(output, "Settings.html"), await client.GetStringAsync("/Settings/BusinessProfile"));
+        await File.WriteAllTextAsync(Path.Combine(output, "Settings-data.json"), await client.GetStringAsync("/api/business-profile"));
         await File.WriteAllTextAsync(Path.Combine(output, "Electrical.html"), await client.GetStringAsync("/Products"));
         foreach (var code in new[] { BusinessProfiles.Clothing, BusinessProfiles.Footwear, BusinessProfiles.BikeAccessories })
         {
@@ -38,7 +39,7 @@ internal static class BusinessProfilePhaseTwoChecks
             var html = await client.GetStringAsync("/Products");
             var navStart = html.IndexOf("<nav class=\"sf-nav sf-shop-nav\""); var navEnd = html.IndexOf("</nav>", navStart);
             var nav = html[navStart..navEnd];
-            Check(!nav.Contains("/Warranty/") && !nav.Contains("/Service") && nav.Contains("/Purchases/Create") && nav.Contains("/Settings/BusinessProfile"), "profile filters specialist menus while keeping common menus");
+            Check(!nav.Contains("/Warranty/") && !nav.Contains("/Service") && nav.Contains("/StockInflow") && nav.Contains("/Purchases") && nav.Contains("/Settings/BusinessProfile"), "profile filters specialist menus while keeping common menus");
             await File.WriteAllTextAsync(Path.Combine(output, code + ".html"), html);
             await File.WriteAllTextAsync(Path.Combine(output, "Settings-" + code + ".html"), await client.GetStringAsync("/Settings/BusinessProfile"));
             foreach (var url in new[] { "/api/service", "/api/warranty/1", "/api/dashboard/recent-services", "/api/operations/service/1" })

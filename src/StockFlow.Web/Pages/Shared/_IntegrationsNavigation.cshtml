@@ -1,0 +1,10 @@
+@if (Access.Can("EWAY_BILLS", "CONFIGURE_PROVIDER"))
+{
+    var active = Context.Request.Path.Value?.TrimEnd('/').Equals("/EWayBills/Provider", StringComparison.OrdinalIgnoreCase) == true;
+    <details class="sf-nav-group sf-integration-nav" open="@active" data-nav-group="Integrations">
+        <summary class="sf-nav-child @(active ? "sf-nav-group-active" : "")">Integrations <span class="sf-nav-chevron" aria-hidden="true">&#8250;</span></summary>
+        <div class="sf-nav-children" aria-label="Integrations">
+            <a href="/EWayBills/Provider" class="sf-nav-child @(active ? "active" : "")" aria-current="@(active ? "page" : null)">E-Way Bill Provider</a>
+        </div>
+    </details>
+}

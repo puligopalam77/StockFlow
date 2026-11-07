@@ -77,8 +77,7 @@ window.StockFlowMaster = {
                 return;
             }
             button.className = 'btn configuration-row-action me-1';
-            button.setAttribute('aria-label', action);
-            button.title = action;
+            button.setAttribute('aria-label', action + ' ' + config.singular);
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('viewBox', '0 0 24 24');
             svg.setAttribute('aria-hidden', 'true');
@@ -153,7 +152,7 @@ window.StockFlowMaster = {
                             ? Object.values(content.errors).flat().join(' ')
                             : 'Unable to complete the request. Please try again.')
                 );
-                error.status=response.status;throw error;
+                error.status=response.status;error.fields=content?.errors;throw error;
             }
             return content;
         }
@@ -356,7 +355,7 @@ window.StockFlowMaster = {
                 message.classList.add('d-none');
                 editorMessage?.classList.add('d-none');
                 setEditorVisible(true);
-                (isProductRegistration&&screen?.mode==='edit'?controls.productName:controls[config.fields[0].name]).focus();
+                (config.initialFocus?.()||(isProductRegistration&&screen?.mode==='edit'?controls.productName:controls[config.fields[0].name])).focus();
             } catch (error) {
                 show(error.message, true);
             } finally {
@@ -515,6 +514,7 @@ window.StockFlowMaster = {
             submit.disabled = true;
             saving = true;
             form.dataset.saving='true';
+            config.onSaving?.(true);
             const dismissButtons = [
                 document.getElementById('cancel-edit'),
                 document.getElementById('close-editor')
@@ -558,6 +558,7 @@ window.StockFlowMaster = {
             } finally {
                 saving = false;
                 form.dataset.saving='false';
+                config.onSaving?.(false);
                 submit.disabled = false;
                 dismissButtons.forEach((button) => {
                     return (button.disabled = false);

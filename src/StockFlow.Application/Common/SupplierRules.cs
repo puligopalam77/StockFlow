@@ -31,6 +31,14 @@ public static class SupplierRules
         r.ContactPerson = Clean(r.ContactPerson);
         r.Email = Clean(r.Email);
         r.Address = Clean(r.Address);
+        r.AddressLine1 = Clean(r.AddressLine1);
+        r.AddressLine2 = Clean(r.AddressLine2);
+        r.District = Clean(r.District);
+        if (r.UseStructuredAddress == true || r.AddressLine1 is not null || r.AddressLine2 is not null)
+        {
+            r.UseStructuredAddress = true;
+            r.Address = Clean(PostalAddress.Format(r.AddressLine1, r.AddressLine2));
+        }
         r.State = Clean(r.State);
         r.City = Clean(r.City);
         r.PostalCode = Clean(r.PostalCode)?.ToUpperInvariant();

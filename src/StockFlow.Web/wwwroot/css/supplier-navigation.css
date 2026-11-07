@@ -1,0 +1,5 @@
+.supplier-navigation-hint{color:#9f1753;background:#fff0f6;border-radius:6px;padding:10px;font-size:12px;line-height:1.5}
+#product-edit-wizard .supplier-navigation-target{background:#fff!important;border-color:#ff007f!important;outline:2px solid #ff007f;outline-offset:3px;box-shadow:0 0 0 4px #ff007f15;scroll-margin-block:100px}
+.supplier-navigation-dock{position:relative;z-index:0;isolation:isolate;display:flex;justify-content:flex-end;padding-top:24px}
+.supplier-navigation-dock .sf-help-open{position:relative!important;inset:auto!important}
+body:has(.supplier-navigation-dock) #product-edit-wizard .registration-footer{position:relative;z-index:1;background:#fff}

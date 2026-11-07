@@ -2,7 +2,10 @@
 @model StockFlow.Web.Pages.Suppliers.IndexModel
 @{ ViewData["Title"] = "Suppliers"; }
 <partial name="_ConfigurationMaster" model='@("Suppliers")' />
+@section Styles {<link rel="stylesheet" href="~/css/supplier-form.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/supplier-list.css" asp-append-version="true" />}
 @section Scripts {
+    <script src="~/js/supplier-navigation.js" asp-append-version="true"></script>
     <script src="~/js/master-data.js" asp-append-version="true"></script>
+    <script src="~/js/supplier-list.js" asp-append-version="true"></script>
     <script src="~/js/supplier.js" asp-append-version="true"></script>
 }

@@ -1,5 +1,6 @@
 @if (Access.Can("SUPPLIERS") && Access.Can("SUPPLIERS", "CREATE"))
 {
+    <link rel="stylesheet" href="~/css/supplier-form.css" asp-append-version="true" />
     <div id="master-data" data-module="suppliers" data-create-only="true" data-can-edit="false" data-can-disable="false">
         <div id="master-message" class="alert d-none" role="status" aria-live="polite"></div>
         <partial name="_MasterEditor" model='@("Suppliers")' />

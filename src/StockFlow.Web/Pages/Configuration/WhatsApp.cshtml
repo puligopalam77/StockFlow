@@ -7,7 +7,7 @@
 <div class="sf-notification-console" id="whatsapp-settings" data-app-id="@(Model.Ready && Model.Configured?Model.AppId:"")" data-graph-version="@Model.GraphVersion">
 @Html.AntiForgeryToken()
 @if(Model.Message is not null){<div class="alert alert-info" role="status">@Model.Message</div>}
-<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+<div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
 <p id="whatsapp-signup-status" role="status" aria-live="polite"></p>
 @if(!Model.Ready){<div class="sf-notice">Database setup is pending. Apply migration 076 manually, then return here.</div>}
 else {
@@ -42,11 +42,11 @@ else {
  <p>WhatsApp messaging charges are paid by your business to Meta, separately from your StockFlow subscription. Add an eligible payment method in your own WhatsApp account before enabling delivery.</p>
  <p><a href="https://business.facebook.com/wa/manage/" target="_blank" rel="noopener noreferrer">Open WhatsApp Manager</a></p>
  <form method="post" asp-page-handler="Save">
- <div class="mb-3"><label><input asp-for="Input.BillingConfirmed"/> I have completed and confirmed my business's direct billing setup with Meta.</label><p class="small">This records your confirmation; StockFlow does not independently verify the payer or payment method.</p></div>
- <div class="mb-3"><label><input asp-for="Input.InvoiceEnabled"/> Send invoice notifications for new completed sales</label></div>
- <div class="mb-3"><label><input asp-for="Input.PaymentEnabled"/> Send payment confirmations for new recorded sale payments</label></div>
+ <div class="mb-3"><label><input asp-for="Input.BillingConfirmed"/><span asp-validation-for="Input.BillingConfirmed" class="text-danger small"></span> I have completed and confirmed my business's direct billing setup with Meta.</label><p class="small">This records your confirmation; StockFlow does not independently verify the payer or payment method.</p></div>
+ <div class="mb-3"><label><input asp-for="Input.InvoiceEnabled"/><span asp-validation-for="Input.InvoiceEnabled" class="text-danger small"></span> Send invoice notifications for new completed sales</label></div>
+ <div class="mb-3"><label><input asp-for="Input.PaymentEnabled"/><span asp-validation-for="Input.PaymentEnabled" class="text-danger small"></span> Send payment confirmations for new recorded sale payments</label></div>
  <div class="mb-3"><label asp-for="Input.DailyLimit">Daily send attempt limit (UTC)</label><input asp-for="Input.DailyLimit" class="form-control" type="number" min="1" max="10000"/><span asp-validation-for="Input.DailyLimit"></span></div>
- <div class="mb-3"><label><input asp-for="Input.Enabled"/> Enable WhatsApp notifications for this shop and business setup</label></div>
+ <div class="mb-3"><label><input asp-for="Input.Enabled"/><span asp-validation-for="Input.Enabled" class="text-danger small"></span> Enable WhatsApp notifications for this shop and business setup</label></div>
  <button class="btn btn-primary">Save WhatsApp preferences</button>
  </form>
  <p class="small mt-3">Customer WhatsApp consent must be recorded in <a asp-page="/Configuration/Notifications" asp-fragment="customer-consent">Notification settings</a>. Contact preferences do not count as consent. STOP, UNSUBSCRIBE and CANCEL replies block future queued notifications; record fresh consent only after the customer agrees again.</p>

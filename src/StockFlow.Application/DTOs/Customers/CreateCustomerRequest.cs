@@ -4,6 +4,8 @@ namespace StockFlow.Application.DTOs.Customers;
 
 public class CreateCustomerRequest
 {
+    public StockFlow.Application.Common.AddressComponents? AddressDetails { get; set; }
+    public bool? UseStructuredAddress { get; set; }
     [Required]
     [StringLength(150, MinimumLength = 2)]
     public string CustomerName { get; set; } = string.Empty;

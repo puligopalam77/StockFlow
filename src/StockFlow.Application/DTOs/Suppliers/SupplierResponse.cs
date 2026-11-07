@@ -2,6 +2,10 @@ namespace StockFlow.Application.DTOs.Suppliers;
 
 public class SupplierResponse
 {
+    public bool UseStructuredAddress { get; set; }
+    public string? AddressLine1 { get; set; }
+    public string? AddressLine2 { get; set; }
+    public string? District { get; set; }
     public int SupplierId
     {
         get; set;

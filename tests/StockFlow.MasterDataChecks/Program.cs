@@ -19,6 +19,15 @@ public static class Checks
 {
     public static async Task Main(string[] args)
     {
+        if(args.Contains("--supplier-directory-checks")){using var directory=new Factory();await SupplierDirectoryChecks.Run(directory);return;}
+        if(args.Contains("--supplier-address-database-checks")){await SupplierAddressDatabaseChecks.Run();return;}
+        if(args.Contains("--customer-address-checks")){using var customers=new Factory();await CustomerAddressChecks.Run(customers);return;}
+        if(args.Contains("--expense-modern-checks")){await ExpenseModernChecks.Run();return;}
+        if(args.Contains("--company-views-checks")){await CompanyViewsChecks.Run();return;}
+        if(args.Contains("--store-management-checks")){await StoreManagementChecks.Run();return;}
+        if(args.Contains("--company-settings-database-checks")){await CompanySettingsDatabaseChecks.Run();return;}
+        if(args.Contains("--replenishment-checks")){await ReplenishmentChecks.Run();return;}
+        if(args.Contains("--low-stock-checks")){await LowStockChecks.Run();return;}
         if(args.Contains("--private-shop-checks")){await PrivateShopExpenseChecks.Run(false);return;}
         if(args.Contains("--expense-checks")){await PrivateShopExpenseChecks.Run(true);return;}
         if(args.Contains("--p0-reconciliation-checks")){await ReliabilityChecks.Run();return;}
@@ -139,10 +148,10 @@ public static class Checks
         if(args.Contains("--navigation-checks")){await NavigationChecks.Run(factory);await ConfigurationChecks.Run(factory);return;}
         if(args.Contains("--store-assignment-checks")){await StoreAssignmentChecks.Run(factory);return;}
         if(args.Contains("--reports-checks")){await ReportsChecks.Run(factory);return;}
+        if (args.Contains("--supplier-checks")) { await SupplierRegistrationChecks.Run(factory); await ConfigurationChecks.Run(factory); await VariantUiFixtures.Write(factory); return; }
         await StoreAssignmentChecks.Run(factory);
         if(args.Contains("--admin-action-checks")){await AdminActionChecks.Run(factory);await SecurityChecks.Run(factory);await SecurityChecks.Fixtures(factory);return;}
         if (args.Contains("--catalog-checks")) { await CatalogRegistrationChecks.Run(factory); await ConfigurationChecks.Run(factory); return; }
-        if (args.Contains("--supplier-checks")) { await SupplierRegistrationChecks.Run(factory); await ConfigurationChecks.Run(factory); await VariantUiFixtures.Write(factory); return; }
         if (args.Contains("--registration-checks")) { await ProductRegistrationChecks.Run(factory); await ConfigurationChecks.Run(factory); return; }
         if (args.Contains("--variant-ui-fixtures")) { await VariantUiFixtures.Write(factory); return; }
         await SecurityChecks.Run(factory);

@@ -1,3 +1,4 @@
+const {fillAddress}=require('./address-test-helpers.cjs');
 // Real rendered Razor + local scripts/styles; mocked HTTP isolates browser behavior.
 const fs=require('fs'),path=require('path'),assert=require('assert');
 const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
@@ -11,6 +12,7 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  let loseSaleResponse=false;const committedRequests=new Map(),recoveredRequests=[];
  const customer={customerId:10,customerName:'Counter customer',mobileNumber:'9876543210'};
  let customerResults=[customer];
+ let paginationTestTotal=null;
  await page.route('**/*',async route=>{const req=route.request(),url=new URL(req.url()),json=body=>route.fulfill({contentType:'application/json',body:JSON.stringify(body)});
   if(url.pathname==='/Sales/Create')return route.fulfill({contentType:'text/html',body:fs.readFileSync(fixture,'utf8')});
   if(url.pathname.startsWith('/Sales/Invoice/'))return route.fulfill({contentType:'text/html',body:'<h1>Invoice saved</h1>'});
@@ -25,6 +27,7 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
   if(url.pathname==='/api/customers/search')return json(url.searchParams.has('mobileNumber')||url.searchParams.has('gstNumber')?duplicate?[customer]:[]:customerResults);
   if(url.pathname==='/api/customers'){if(failCustomer)return route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({message:'Customer save unavailable'})});created.push(req.postDataJSON());assert.equal(url.searchParams.get('requireMobile'),'true');return json({...customer,...req.postDataJSON(),customerId:11});}
   if(url.pathname.endsWith('/approval')){approvalStatus='PENDING';return json({});}
+  if(paginationTestTotal!==null&&req.method()==='GET'&&url.pathname==='/api/sales/billing/drafts')return json({total:paginationTestTotal,items:Array.from({length:paginationTestTotal},(_,n)=>({draftId:'pagination-'+n,draftNumber:'DRF-'+n,draftStatus:'HELD',customerName:'Pagination fixture',itemCount:1,units:1,estimatedTotal:100,createdAt:'2026-11-04T10:00:00Z',updatedAt:'2026-11-04T10:00:00Z'}))});
   if(url.pathname.startsWith('/api/sales/billing/drafts'))return handleDraft(req,url,route,json);
   if(url.pathname==='/api/sales/quote'){
    const b=req.postDataJSON();quoteRequests.push(b);if(delayTax&&b.items[0]?.discountPercent===6)await new Promise(resolve=>setTimeout(resolve,900));if(failQuote)return route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({message:quoteFailureMessage})});const money=n=>Math.round((n+Number.EPSILON)*100)/100;let remainingBase=b.items.reduce((s,i)=>s+i.quantity*i.sellingPrice-(i.discountPercent!=null?money(i.quantity*i.sellingPrice*i.discountPercent/100):i.discountAmount),0),remainingDiscount=b.allocateInvoiceDiscount?b.discountAmount:0;const items=b.items.map(i=>{const tax=i.manualItem?(i.manualItem.taxRuleId?5:0):(i.taxOverride??18),discount=i.discountPercent!=null?Math.round(i.quantity*i.sellingPrice*i.discountPercent)/100:i.discountAmount,gross=i.quantity*i.sellingPrice-discount,allocation=remainingBase?money(remainingDiscount*gross/remainingBase):0;remainingBase-=gross;remainingDiscount-=allocation;const net=gross-allocation,taxAmount=Math.round(net*tax)/100;return {discountAmount:discount,taxPercentage:tax,taxAmount,lineTotal:net+taxAmount,currentStock:i.manualItem?0:3,catalogPrice:i.manualItem?i.sellingPrice:100,mrp:i.manualItem?i.manualItem.mrp:120};});
@@ -38,6 +41,11 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  async function fillReason(index,value){const dialog=page.locator('#line-reason-panel-'+index);await dialog.evaluate(n=>{if(!n.open)n.showModal();});const field=page.locator('#line-reason-'+index);if(await field.isVisible())await field.fill(value);else assert((await field.inputValue()).trim(),'Hidden completed reason must already be saved');await dialog.getByRole('button',{name:'Done',exact:true}).click();await page.waitForFunction(()=>document.querySelector('#billing-calculation-status').hidden);}
  async function editTax(index,value){await page.locator('#sale-cart tr').nth(index).locator('button[data-tax-correction]').click();await page.locator('#line-tax-override-'+index).fill(value);await page.locator('#line-reason-panel-'+index).getByRole('button',{name:'Done',exact:true}).click();}
  await page.goto('http://stockflow.test/Sales/Create');await page.waitForFunction(()=>!document.querySelector('#sale-editor').disabled);
+ for(const total of [0,1,10,11]){
+  paginationTestTotal=total;await page.locator('#show-held').click();await page.waitForFunction(total=>document.querySelector('#saved-bills-count').textContent===total+' '+(total===1?'Draft':'Drafts'),total);
+  assert.equal(await page.locator('.billing-saved-pagination').isVisible(),total>10,'Saved Bills threshold '+total);await page.keyboard.press('Escape');
+ }
+ paginationTestTotal=null;console.log('PASS Saved Bills pagination hidden at 0/1/10 and visible at 11');
  assert(!await page.locator('#customer-current').innerText().then(t=>t.includes('Walk-in')));
  assert.equal(await page.locator('#billing-draft-pill').count(),0);assert(await page.locator('#billing-notes').isVisible());assert(await page.locator('#cash-change-field').isHidden());assert.equal(await page.locator('#payment-amount').count(),0);assert.equal(await page.locator('.billing-scan-row #quick-add-item').count(),1);
  assert.equal(await page.locator('.billing-payment-tile').count(),5);assert.equal(await page.locator('#billing-split-toggle').isVisible(),false);
@@ -131,7 +139,7 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  const nameBox=await page.locator('#new-customer-name').boundingBox(),phoneBox=await page.locator('#new-customer-mobile').boundingBox();assert(Math.abs(nameBox.width-phoneBox.width)<1,'Both mandatory fields have equal full width');
  await page.locator('#quick-customer-additional summary').click();await page.locator('#new-customer-email').fill('bad-email');await page.locator('#new-customer-mobile').fill('9861200066');await page.locator('#create-customer').click();assert.equal(created.length,0);
  await page.locator('#new-customer-email').fill('accounts@example.test');await page.locator('#new-customer-gst').fill('29ABCDE1234F1Z5');await page.locator('#create-customer').click();assert.equal(created.length,0,'Bad GST checksum cannot create customer');
- await page.locator('#new-customer-gst').fill('29abcde1234f1zw');await page.locator('#new-customer-address').fill('Main Road, Bengaluru, Karnataka 560001');
+ await page.locator('#new-customer-gst').fill('29abcde1234f1zw');const enteredCustomerAddress=await fillAddress(page.locator('#new-customer-address'),'Main Road, Bengaluru, Karnataka 560001');
  // Optional fields and both footer actions stay reachable across small screens.
  for(const [width,height] of [[1280,650],[1280,600],[1024,768],[768,1024],[390,844],[375,667],[320,640]]){
   await page.setViewportSize({width,height});const dialog=page.locator('#customer-quick-add-dialog');
@@ -141,7 +149,7 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  }
  await page.setViewportSize({width:1366,height:768});
  failCustomer=true;await page.locator('#create-customer').click();await page.waitForFunction(()=>document.querySelector('#quick-customer-alert').textContent.includes('Customer save unavailable'));
- assert(await page.locator('#customer-quick-add-dialog').isVisible());assert.equal(await page.locator('#new-customer-email').inputValue(),'accounts@example.test');assert.equal(await page.locator('#new-customer-address').inputValue(),'Main Road, Bengaluru, Karnataka 560001');assert.equal(created.length,0);failCustomer=false;
+ assert(await page.locator('#customer-quick-add-dialog').isVisible());assert.equal(await page.locator('#new-customer-email').inputValue(),'accounts@example.test');assert.equal(await page.locator('#new-customer-address').inputValue(),enteredCustomerAddress);assert.equal(created.length,0);failCustomer=false;
  await page.locator('#new-customer-mobile').fill('9861200066');await page.locator('#create-customer').click();await page.waitForFunction(()=>!document.querySelector('#customer-quick-add')?.open && document.querySelector('#sale-customer').value==='11');
  assert.equal(created.length,1);assert.equal(created[0].email,'accounts@example.test');assert.equal(created[0].gstNumber,'29ABCDE1234F1ZW');assert(created[0].address.includes('560001'));assert.equal(await page.locator('#billing-draft-reference').textContent(),customerDraftReference);assert.equal(await page.locator('#sale-cart tr').count(),1);
  await page.locator('#quick-add-item').click();
@@ -165,7 +173,10 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  await page.locator('#show-held').click();await page.getByRole('button',{name:/Resume Bill/}).first().click();await page.waitForFunction(()=>document.querySelectorAll('#sale-cart tr').length===2&&!document.querySelector('#sale-editor').disabled&&!document.querySelector('#saved-bills-drawer').open);
  assert.equal(await page.locator('#sale-notes').inputValue(),'Held mixed bill');assert.equal(await page.locator('#sale-customer').inputValue(),'11');assert.equal(await page.locator('#sale-cart tr').nth(1).locator('.billing-quantity input').inputValue(),'3');
  for(const [width,height]of [[1920,1080],[1366,768],[1280,720],[1280,650],[1280,600],[1024,768],[768,1024],[390,844],[375,667],[320,640]]){
-  await page.setViewportSize({width,height});await page.locator('#quick-add-item').scrollIntoViewIfNeeded();if(width===1366||width===320)await page.screenshot({path:path.join(output,'billing-layout-'+width+'.png'),fullPage:true});
+  await page.setViewportSize({width,height});
+  // Wait for the existing sidebar margin transition before measuring container-query rows.
+  await page.waitForFunction(()=>innerWidth>991||(Math.abs(parseFloat(getComputedStyle(document.querySelector('.sf-workspace')).marginLeft))<1&&document.querySelector('.sf-sidebar').getBoundingClientRect().right<=1),null,{timeout:3000});
+  await page.locator('#quick-add-item').scrollIntoViewIfNeeded();if(width===1366||width===320)await page.screenshot({path:path.join(output,'billing-layout-'+width+'.png'),fullPage:true});
   const quick=await page.locator('#quick-add-item').boundingBox(),searchAction=await page.locator('#scan-sale').boundingBox();assert(quick.x>=searchAction.x+searchAction.width-1&&Math.abs(quick.y-searchAction.y)<3,'Quick Add Item beside search '+width+' '+JSON.stringify({quick,searchAction}));
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'page overflow '+width+'x'+height);
   assert(await page.locator('#sale-discount').isVisible());await page.locator('#calculate-change').check();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Expanded checkout fits '+width);await page.locator('#calculate-change').uncheck();

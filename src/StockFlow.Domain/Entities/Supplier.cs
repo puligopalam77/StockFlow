@@ -2,6 +2,10 @@ namespace StockFlow.Domain.Entities;
 
 public class Supplier
 {
+    public bool UseStructuredAddress { get; set; }
+    public string? AddressLine1 { get; set; }
+    public string? AddressLine2 { get; set; }
+    public string? District { get; set; }
     public int SupplierId
     {
         get; set;

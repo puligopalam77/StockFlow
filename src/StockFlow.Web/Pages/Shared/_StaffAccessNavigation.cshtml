@@ -1,0 +1,6 @@
+@{var staffPath=Context.Request.Path.Value??"";}
+<details class="sf-nav-group" open="@(staffPath.StartsWith("/Admin/Users",StringComparison.OrdinalIgnoreCase)||staffPath.StartsWith("/Admin/Roles",StringComparison.OrdinalIgnoreCase))" data-nav-group="Staff &amp; Access">
+<summary class="sf-nav-link">Staff &amp; Access<span class="sf-nav-chevron" aria-hidden="true">›</span></summary><div class="sf-nav-children">
+@if(Access.Can("USER_MANAGEMENT")){<a class="sf-nav-child @(staffPath=="/Admin/Users"?"active":"")" href="/Admin/Users" aria-current="@(staffPath=="/Admin/Users"?"page":null)">User Management</a>}
+@if(Access.Can("ROLE_MANAGEMENT")){<a class="sf-nav-child @(staffPath=="/Admin/Roles"?"active":"")" href="/Admin/Roles" aria-current="@(staffPath=="/Admin/Roles"?"page":null)">Roles &amp; Permissions</a>}
+</div></details>

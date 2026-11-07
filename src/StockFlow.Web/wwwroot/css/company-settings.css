@@ -4,3 +4,59 @@
 .company-logo-field{grid-column:span 2}.company-logo-controls{display:flex;align-items:center;gap:14px}.company-logo-preview{display:grid;place-items:center;width:120px;height:110px;border:1px solid #dfe8f6;border-radius:6px;background:#f5f8ff;flex-shrink:0;padding:10px}.company-logo-preview img{max-width:100%;max-height:90px;object-fit:contain}.company-logo-preview span{font-size:12px;color:var(--sf-muted);text-align:center}.company-logo-controls .btn{font-size:12px;padding:6px 10px;min-height:32px;display:inline-block}.company-logo-controls .btn+button{margin-left:5px}.company-logo-controls [hidden]{display:none!important}.company-logo-controls .field-validation-error{display:block}
 @media(max-width:575px){.company-logo-field{grid-column:auto}.company-logo-controls{flex-wrap:wrap}.company-logo-preview{width:95px;height:95px}}
 .company-field>label[for^="Input_"]{display:flex;align-items:center;gap:8px}.company-field>label>.sf-icon{width:16px;height:16px;color:#30486f;flex-shrink:0}
+
+/* Company workspace; company and active-shop policy remain separate forms. */
+#company-settings-workspace{width:100%;max-width:1440px;margin-inline:auto;container:company-workspace / inline-size;min-width:0}
+#company-settings-workspace #company-settings-form,#company-settings-workspace #billing-policy-form{width:100%;max-width:none!important;margin:0}
+#company-settings-workspace .company-edit-fields{padding:0;margin:0;border:0;min-width:0}
+#company-settings-workspace .company-page-heading h1{font-size:24px}
+#company-settings-workspace .company-page-heading{margin-bottom:8px}
+#company-settings-workspace .company-page-heading h1{margin-bottom:0}
+#company-settings-workspace .company-scope{font-size:13px;color:#596b84;margin:0 0 12px}
+#company-settings-workspace .company-settings-card{border-radius:10px;overflow:visible}
+#company-settings-workspace .company-settings-card>header{background:#fff;border-radius:10px 10px 0 0;border-bottom:1px solid #e1e7f0;gap:10px}
+#company-settings-workspace .company-step{background:#ff007f}
+#company-settings-workspace .company-card-body{padding:16px;min-width:0}
+#company-settings-workspace h3{font-size:14px;color:#172d48;margin:14px 0 10px}
+#company-settings-workspace .company-settings-grid{grid-template-columns:minmax(0,1fr);padding:0;gap:12px;margin:0}
+#company-settings-workspace .company-wide{grid-column:auto}
+#company-settings-workspace .company-full{grid-column:1/-1}
+#company-settings-workspace .company-identity-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+#company-settings-workspace .company-logo-field{grid-column:auto;border:1px solid #dfe6ef;border-radius:8px;padding:12px;min-width:0}
+#company-settings-workspace .company-logo-field h3{margin-top:0}
+#company-settings-workspace .company-logo-controls{flex-wrap:wrap;gap:10px}
+#company-settings-workspace .company-logo-controls small{display:block;font-size:12px;color:#596b84;margin-top:7px}
+#company-settings-workspace .company-logo-preview{width:96px;height:96px}
+#company-settings-workspace .company-help,#company-settings-workspace .company-legacy-review{font-size:12px;line-height:1.6;color:#596b84;margin:8px 0 12px;overflow-wrap:anywhere}
+#company-settings-workspace .company-legacy-review{white-space:pre-wrap}
+#company-settings-workspace :is(input:not([type=checkbox]):not([type=hidden]),textarea,select){background:#fff;min-width:0;max-width:100%;border:1px solid #d3ddeb;border-radius:6px}
+#company-settings-workspace :is(input,textarea,select,button,a,summary):focus-visible{outline:2px solid #ff007f!important;outline-offset:2px}
+#company-settings-workspace :is(input,textarea,select):focus{outline:2px solid #ff007f!important;outline-offset:2px;border-color:#ff007f}
+#company-settings-workspace .company-field input,#company-settings-workspace .company-field select{min-height:38px}
+#company-settings-workspace .company-tax-identity{margin-top:16px;padding:12px;border:1px solid #dfe6ef;border-radius:8px;background:#f8faff}
+#company-settings-workspace .company-identity-summary{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:10px 0;font-size:13px}
+#company-settings-workspace .company-identity-summary dt{color:#596b84;font-weight:400;font-size:12px}
+#company-settings-workspace .company-identity-summary dd{margin:3px 0;overflow-wrap:anywhere}
+#company-settings-workspace details{margin-top:12px}
+#company-settings-workspace summary{cursor:pointer;font-size:13px;font-weight:600;padding:6px 0}
+#company-settings-workspace .company-number-preview,#company-settings-workspace .company-footer-preview{background:#f6f8fc;border:1px solid #e1e7ef;border-radius:8px;padding:12px;font-size:13px;overflow-wrap:anywhere}
+#company-settings-workspace .company-footer-preview p:not(.company-help){white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0}
+#company-settings-workspace .company-footer-preview{margin-top:14px}
+#company-settings-workspace .company-footer-preview small{color:#596b84;font-size:12px}
+#company-settings-workspace .company-settings-actions{margin:12px 0 16px;align-items:center;flex-wrap:wrap}
+#company-settings-workspace .company-settings-actions small{display:block;margin-top:6px;font-size:12px;color:#596b84}
+#company-settings-workspace .btn-primary{--sf-action-bg:#ff007f;background:#ff007f!important;color:#fff!important;border-color:#ff007f!important}
+#company-settings-workspace .company-policy-limit{max-width:440px;margin:14px 0}
+#company-settings-workspace .company-policy-options{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+#company-settings-workspace .form-check{display:flex;gap:10px;align-items:flex-start;margin:0;padding:8px;border:1px solid #e1e7ef;border-radius:6px;min-height:40px}
+#company-settings-workspace .form-check input{position:static;float:none;flex-shrink:0;margin:3px 0 0;width:17px;height:17px}
+#company-settings-workspace .form-check label{font-size:13px;margin:0;cursor:pointer}
+#company-settings-workspace .company-policy-explanation{font-size:13px;line-height:1.6;padding:10px;background:#f6f8fc;border-radius:6px}
+#company-settings-workspace .company-policy-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#company-settings-workspace [hidden]{display:none!important}
+#company-settings-workspace .company-assistant-dock{display:flex;justify-content:flex-end;position:relative;isolation:isolate;padding:14px 0}
+#company-settings-workspace .company-assistant-dock .sf-help-open{position:relative!important;inset:auto!important}
+@container company-workspace (min-width:540px){#company-settings-workspace .company-settings-grid,#company-settings-workspace .company-policy-options,#company-settings-workspace .company-identity-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container company-workspace (min-width:950px){#company-settings-workspace .company-identity-layout{grid-template-columns:minmax(0,1fr) 290px}}
+@container company-workspace (min-width:950px){#company-settings-workspace[data-section="business"] .company-logo-controls{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:start}#company-settings-workspace[data-section="business"] .company-logo-preview{width:72px;height:72px;padding:6px}#company-settings-workspace[data-section="business"] .company-logo-preview img{max-height:60px}}
+@media(max-width:575px){#company-settings-workspace .company-card-body{padding:12px}#company-settings-workspace .company-settings-actions .btn,#company-settings-workspace .company-policy-actions .btn{width:100%;min-width:0}#company-settings-workspace .company-page-heading h1{font-size:22px}}

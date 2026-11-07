@@ -22,11 +22,17 @@
         <meta name="stockflow-location" content="@(User.FindFirst("LocationId")?.Value ?? "0")" />
     <script src="~/js/common/display-text.js" asp-append-version="true"></script>
     <script src="~/js/common/form-validation.js" asp-append-version="true"></script>
+    <link rel="stylesheet" href="~/css/select.css" asp-append-version="true" />
+    <script src="~/js/common/select.js" asp-append-version="true"></script>
+    <script src="~/js/common/select-migrations.js" asp-append-version="true"></script>
+    <script src="~/js/address-fields.js" asp-append-version="true"></script>
+    <link rel="stylesheet" href="~/css/address-fields.css" asp-append-version="true" />
     <script src="~/js/common/screen-language-catalog.js" asp-append-version="true"></script>
     <script src="~/js/common/language.js" asp-append-version="true"></script>
     <script src="~/js/branch-context.js" asp-append-version="true"></script>
     @if (User.Identity?.IsAuthenticated == true) { <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" /> }
-        <title>@ViewData["Title"] - StockFlow</title>
+        <title>@ViewData["Title"] @(currentPage=="/Settings/Company"?"—":"-") StockFlow</title>
+        @if(currentPage=="/Settings/Company"){<script src="~/js/company-settings-route.js" asp-append-version="true"></script>}
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
         <link rel="stylesheet" href="~/css/stockflow.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/css/document-brand.css" asp-append-version="true" />
@@ -136,20 +142,6 @@
         </header>
         <main id="main-content" class="sf-main @(currentPage == "/Index" ? "sf-dashboard-main" : "sf-module-main") @(!isConfiguration ? "sf-operational-main" : "") @(IsSectionDefined("PageHeader") ? "sf-caption-first" : "") @(isListScreen ? "sf-list-screen" : "")">
             @await RenderSectionAsync("DashboardWelcome", required: false)
-            @if (BusinessScope.ProfileCatalogSwitchingAvailable && !isListScreen && currentPage is not ("/Index" or "/Sales/Create" or "/Purchases/Create" or "/Admin/Gst"))
-            {
-                <p class="small text-muted mb-2" id="active-shop-profile">
-                    @StockFlow.Application.Common.BusinessProfiles.Name(BusinessScope.BusinessProfileCode) setup ·
-                    @if (BusinessScope.ProfileDataVisibilityAvailable)
-                    {
-                        <span>Products, transactions and totals follow this setup. Switch back to view another setup's saved records.</span>
-                    }
-                    else
-                    {
-                        <span>Catalog and current stock follow this setup. Apply migration 051 to also filter transactions and totals.</span>
-                    }
-                </p>
-            }
             @if (User.Identity?.IsAuthenticated == true && (isBusinessDocument || isPrintableReport))
             {
                 <div class="@(isPrintableReport ? "sf-report-brand" : "sf-document-heading")"><partial name="_DocumentBrand" /></div>
@@ -169,7 +161,7 @@
                 }
                 @RenderBody()
             }
-            @if (!isListScreen && currentPage is not ("/Index" or "/Sales/Create")) { <partial name="_RetailScreenGuide" /> }
+            @if (!isListScreen && currentPage is not ("/Index" or "/Sales/Create") && !(currentPage=="/Settings/Company" && ViewData["CompanySection"]?.ToString()=="business")) { <partial name="_RetailScreenGuide" /> }
         </main>
         <footer class="sf-app-footer">© @DateTime.Now.Year StockFlow <span>Smart inventory. Better business.</span>
         </footer>

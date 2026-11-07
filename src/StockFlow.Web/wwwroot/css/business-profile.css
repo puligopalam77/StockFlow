@@ -1,8 +1,74 @@
-#business-profile-workspace { max-width:1000px; }
-#business-profile-workspace dl { display:grid; grid-template-columns:minmax(140px,1fr) minmax(0,2fr); margin:0; gap:8px; }
-#business-profile-workspace dd { margin:0; overflow-wrap:anywhere; }
-.business-profile-preview { background:#f5f8ff; border:1px solid #dfe7f3; padding:16px; border-radius:8px; }
-.business-profile-preview h3 { font-size:16px; }
-.business-profile-preview p { margin:6px 0; }
-#business-profile-workspace :is(label,input,select,textarea) { max-width:100%; }
-@media(max-width:575px) { #business-profile-workspace dl { grid-template-columns:minmax(0,1fr); gap:4px; } #business-profile-workspace dd { margin-bottom:10px; } }
+#business-profile-workspace{color:#14253c;min-width:0;width:100%;--bp-muted:#52647d}
+#business-profile-workspace [hidden]{display:none!important}
+#business-profile-workspace .bp-heading{align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+#business-profile-workspace .bp-heading h1{font-size:20px;margin-bottom:0}
+#business-profile-workspace .bp-heading p{font-size:13px;max-width:none;margin:0;color:var(--bp-muted)}
+#business-profile-workspace .bp-card{padding:18px;background:#fff;border:1px solid #dce3ee;border-radius:12px;margin-bottom:14px;min-width:0}
+#business-profile-workspace h2{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:650;margin:0 0 14px}
+#business-profile-workspace h3{font-size:13px;font-weight:600;margin:12px 0 8px}
+#business-profile-workspace p,#business-profile-workspace li,#business-profile-workspace label{font-size:13px;line-height:1.6}
+#business-profile-workspace .bp-icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;flex:none}
+#business-profile-workspace .bp-current dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0}
+#business-profile-workspace dt{font-size:12px;color:var(--bp-muted);font-weight:400;margin-bottom:5px}
+#business-profile-workspace dd{font-size:14px;font-weight:600;margin:0;overflow-wrap:anywhere}
+#business-profile-workspace .bp-columns{align-items:start;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#business-profile-fields{min-width:0;margin:0;padding:0;border:0}
+#business-profile-workspace :is(select,textarea){background-color:#fff;min-height:38px;border:1px solid #d3ddeb;border-radius:6px;font-size:13px;max-width:100%}
+#business-profile-workspace :is(button,a,select,textarea,summary,input):focus-visible{outline:2px solid #ff007f;outline-offset:3px}
+#business-profile-workspace :is(select,textarea):focus{border-color:#ff007f;box-shadow:0 0 0 2px #ff007f15}
+#business-profile-workspace .bp-muted{color:var(--bp-muted);font-size:12px;margin:9px 0}
+#business-profile-workspace .bp-capability{display:flex;gap:9px;padding:10px 0;border-bottom:1px solid #edf0f5;font-size:13px;line-height:1.5}
+#business-profile-workspace .bp-capability strong{display:block;font-size:12px}
+#business-profile-workspace .bp-indicator{width:8px;height:8px;flex:none;background:#61738b;border-radius:50%;margin-top:6px}
+#business-profile-workspace .bp-enabled{background:#047857}
+#business-profile-workspace .bp-profile-name{font-size:17px;color:#14253c;margin:0 0 10px}
+#business-profile-workspace .bp-chips{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;padding:0}
+#business-profile-workspace .bp-chips li{padding:4px 9px;background:#f6f8fb;border:1px solid #e1e7ef;border-radius:6px;font-size:12px;overflow-wrap:anywhere;max-width:100%}
+#business-profile-workspace .bp-table-scroll{overflow-x:auto;max-width:100%}
+#business-profile-workspace table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
+#business-profile-workspace :is(th,td){padding:10px;text-align:left;border-bottom:1px solid #e5eaf1;overflow-wrap:anywhere;vertical-align:top}
+#business-profile-workspace th{background:#f6f8fb;font-size:12px;font-weight:600}
+#business-profile-workspace td.bp-changed{background:#fff0f6}
+#business-profile-workspace .bp-change-pending{color:#be185d;font-weight:600}
+#business-profile-workspace .bp-preservation,#business-profile-workspace .bp-impact{background:#f6f8fb;border-radius:7px;padding:12px;font-size:13px}
+#business-profile-workspace .bp-impact{margin-bottom:14px}
+#business-profile-workspace .bp-impact h3{margin-top:0}
+#business-profile-workspace ul:not(.bp-chips){padding-left:20px;margin-bottom:8px}
+#business-profile-workspace summary{cursor:pointer;font-size:12px;font-weight:600;padding:8px 0}
+#business-profile-workspace .bp-category-option,#business-profile-workspace .bp-acknowledge{display:flex;align-items:start;gap:8px;margin-top:12px}
+#business-profile-workspace input[type=checkbox]{accent-color:#ff007f;flex:none;margin-top:4px;width:17px;height:17px}
+#business-profile-workspace .bp-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;padding:2px 0 16px}
+#business-profile-workspace .bp-actions .btn{min-height:38px;padding:9px 14px;font-size:13px}
+#business-profile-workspace .bp-primary{--sf-action-bg:#ff007f;background:#ff007f!important;border:1px solid #ff007f!important;color:#fff!important}
+#business-profile-workspace .bp-primary:disabled{background:#e3e6ea!important;border-color:#d5dae2!important;color:#535e6e!important;opacity:1;cursor:not-allowed}
+#business-profile-workspace .bp-error{border:1px solid #f4bacd;background:#fff0f6;color:#9b2148;border-radius:8px;padding:12px;font-size:13px;margin-bottom:12px}
+#business-profile-workspace .bp-status{font-size:12px;color:var(--bp-muted);margin:8px 0}
+#business-profile-workspace .bp-assistant-dock{display:flex;justify-content:flex-end;padding:8px 0}
+#business-profile-workspace .bp-assistant-dock .sf-help-open{position:relative!important;inset:auto!important}
+body:has(#business-profile-workspace) #sf-confirm-dialog{max-height:90vh;max-height:90dvh;overflow:auto}
+body:has(#business-profile-workspace) #sf-confirm-description{white-space:pre-line;text-align:left;font-size:13px}
+body:has(#business-profile-workspace) #sf-confirm-accept{--sf-action-bg:#ff007f;background:#ff007f!important;border-color:#ff007f!important;color:#fff!important}
+@media(max-width:900px){#business-profile-workspace .bp-columns{grid-template-columns:1fr}#business-profile-workspace .bp-current dl{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){#business-profile-workspace .bp-card{padding:13px}#business-profile-workspace .bp-current dl{grid-template-columns:1fr}#business-profile-workspace .bp-actions .btn{width:100%}#business-profile-workspace :is(td,th){padding:7px;font-size:12px}}
+
+#business-profile-workspace .bp-current{padding:12px 18px}
+#business-profile-workspace .bp-current h2{margin-bottom:10px}
+#business-profile-workspace .bp-comparison>p{margin-bottom:0}
+#business-profile-workspace .bp-comparison>p span{display:block;color:var(--bp-muted);font-weight:400}
+#business-profile-workspace #business-profile-comparison-details{margin-top:10px}
+#business-profile-workspace .bp-scope{font-weight:600;margin:8px 0}
+#business-profile-workspace .bp-preservation{padding:9px 12px;margin-bottom:8px}
+#business-profile-workspace .bp-impact{padding:6px 12px;margin-bottom:8px}
+#business-profile-workspace .bp-impact summary{padding:4px 0}
+#business-profile-workspace #business-profile-preview .bp-capability{padding:6px 0}
+
+#business-profile-workspace .bp-unchanged{padding:12px 18px}
+#business-profile-workspace .bp-unchanged h2{font-size:14px;margin-bottom:6px}
+#business-profile-workspace .bp-unchanged p{font-size:12px;margin:4px 0;line-height:1.6}
+#business-profile-workspace #business-profile-preview :is(p,.bp-capability){font-size:12px;line-height:1.6}
+#business-profile-workspace #business-profile-unchanged-counts{font-weight:600}
+
+#business-profile-workspace .bp-check-icon{width:18px;height:18px;flex:none;fill:none;stroke:#527467;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#business-profile-workspace .bp-pending{display:inline-block;margin:8px 0 0;padding:3px 8px;border:1px solid #dce3ee;border-radius:5px;background:#f6f8fb;color:var(--bp-muted);font-size:12px}
+#business-profile-code:hover:not(:focus):not(:disabled):not(.is-invalid):not([aria-invalid=true]){border-color:#9eacc0}
+#business-profile-code:focus:not(.is-invalid):not(.input-validation-error):not([aria-invalid=true]){border-color:#ff007f!important;outline:2px solid #ff007f!important;outline-offset:2px}

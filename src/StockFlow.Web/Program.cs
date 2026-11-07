@@ -138,6 +138,7 @@ builder.Services.AddScoped<IScreenLanguageRepository, ScreenLanguageRepository>(
 builder.Services.AddScoped<IOperationsRepository, OperationsRepository>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IReplenishmentRepository, ReplenishmentRepository>();
 builder.Services.AddScoped<IStockReceiptHistoryRepository, StockReceiptHistoryRepository>();
 builder.Services.AddScoped<ISalesRepository, SalesRepository>();
 builder.Services.AddScoped<ISalesEnquiryRepository, SalesEnquiryRepository>();

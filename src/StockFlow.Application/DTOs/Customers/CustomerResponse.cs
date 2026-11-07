@@ -2,6 +2,7 @@ namespace StockFlow.Application.DTOs.Customers;
 
 public class CustomerResponse
 {
+    public StockFlow.Application.Common.AddressComponents? AddressDetails { get; set; }
     public int CustomerId
     {
         get; set;

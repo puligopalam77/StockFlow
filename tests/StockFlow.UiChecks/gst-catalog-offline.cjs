@@ -34,10 +34,10 @@ const settings={available:true,catalogAvailable:true,today:'2026-11-01',company:
   if(p==='/api/notifications')return json({unread:0,items:[]});if(p.startsWith('/api/'))return json([]);
   const file=path.resolve(assets,'.'+p.replace(/\.[a-z0-9]{10}(?=\.(js|css|png)$)/,''));if(file.startsWith(assets+path.sep)&&fs.existsSync(file)&&fs.statSync(file).isFile())return route.fulfill({path:file});return route.fulfill({status:404,body:''});
  });
- async function mapping(){await page.goto('http://stockflow.test/Admin/Gst');await page.getByRole('button',{name:'Manage Tax Configuration',exact:true}).click();await page.locator('.gst-mapping-table').waitFor();}
+ async function mapping(wizard=false){await page.goto('http://stockflow.test/Admin/Gst');if(wizard){await page.getByRole('button',{name:'Continue GST Setup',exact:true}).click();await page.locator('#gst-stepper').getByRole('button',{name:/Tax Configuration/}).click();}else await page.getByRole('button',{name:'Manage Tax Configuration',exact:true}).click();await page.locator('.gst-mapping-table').waitFor();}
  async function closeModal(){await page.locator('.gst-tax-dialog[open]>header button').click();if(await page.locator('#sf-confirm-modal[open]').count())await page.locator('#sf-confirm-accept').click();}
  for(const [width,height]of [[1920,1080],[1366,768],[1280,720],[1280,650],[1280,600],[1024,768],[768,1024],[390,844],[375,667],[320,640]]){
-  await page.setViewportSize({width,height});await mapping();
+  await page.setViewportSize({width,height});await mapping(true);assert.equal(await page.locator('#gst-stepper button').count(),5);assert(await page.getByRole('button',{name:'Save & Continue',exact:true}).isVisible());
   assert.equal(await page.locator('.gst-mapping-table th').count(),6);assert(!await page.locator('.gst-selection-bar').isVisible());assert.equal(await page.getByRole('button',{name:'Apply Filters',exact:true}).count(),0);
   assert((await page.locator('.gst-configuration-status').textContent()).includes('50 of 51 configured'));
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Mapping overflow '+width);await page.screenshot({path:path.join(screens,'mapping-'+width+'x'+height+'.png'),fullPage:true});

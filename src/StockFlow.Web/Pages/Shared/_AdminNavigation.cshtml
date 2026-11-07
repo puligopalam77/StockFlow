@@ -1,8 +1,10 @@
 @inject StockFlow.Application.Common.BusinessScope BusinessScope
 <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Administration sections">
-@foreach(var item in new[]{("USER_MANAGEMENT","/Admin/Users","User management"),("ROLE_MANAGEMENT","/Admin/Roles","Roles & permissions"),("STORES","/Admin/Stores","Store management"),("SECURITY","/Admin/Security","Security settings"),("AUDIT_LOGS","/Admin/AuditLogs","Audit logs")})
+@foreach(var item in new[]{("USER_MANAGEMENT","/Admin/Users","Staff & access"),("ROLE_MANAGEMENT","/Admin/Roles","Roles & permissions"),("STORES","/Admin/Stores","Stores & locations"),("SECURITY","/Admin/Security","Security settings"),("AUDIT_LOGS","/Admin/AuditLogs","Audit logs")})
 {if(Access.Can(item.Item1)){<a class="btn btn-sm @(Context.Request.Path==item.Item2?"btn-primary":"btn-outline-secondary")" href="@item.Item2">@item.Item3</a>}}
 </nav>
 @if(BusinessScope.IsOwner && Access.Can("COMPANY_SETTINGS","EDIT")){<p><a class="btn btn-sm btn-outline-secondary" href="/Admin/ShopData">Shop data ownership &amp; sharing</a></p>}
 @if(Access.Can("GST_SETTINGS")){<p><a class="btn btn-sm btn-outline-secondary" href="/Admin/Gst">GST Settings</a></p>}
 @if (Access.Can("SECURITY") && BusinessScope.CanReviewStores) { <p><a class="btn btn-sm btn-outline-secondary" href="/Admin/Pilot">Shop pilot checklist</a></p> }
+
+@if(Access.Can("EWAY_BILLS","CONFIGURE_PROVIDER")){<p><a class="btn btn-sm btn-outline-secondary" href="/EWayBills/Provider">Integrations: E-Way Bill Provider</a></p>}

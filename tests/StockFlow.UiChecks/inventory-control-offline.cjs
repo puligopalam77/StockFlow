@@ -1,3 +1,4 @@
+const {selectValue}=require('./address-test-helpers.cjs');
 const fs=require('fs'),path=require('path'),assert=require('assert');
 const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
 const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/inventory-control-ui-fixtures');
@@ -26,7 +27,13 @@ const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/inve
     if(url.pathname.includes('/receive')){transfer.status='RECEIVED';transfer.items[0].receivedQuantity=1;unit.resolution='RECEIVED';}
     return json(url.pathname.includes('adjustments')?{adjustmentId:7}:{transferId:1});
    }
-   if(url.pathname==='/api/inventory')return json(balances);
+   if(url.pathname==='/api/inventory'){
+    if(url.searchParams.get('paged')==='true'){
+     const rows=balances.map(r=>({...r,quantityNeeded:Math.max(0,r.minimumStockLevel-r.currentStock),stockStatus:r.currentStock===0?'OUT':'LOW'}));
+     return json({rows,total:rows.length,summary:{lowStockVariants:rows.length,outOfStock:0,unitsToReplenish:4}});
+    }
+    return json(balances);
+   }
    if(url.pathname==='/api/inventory/units')return json([unit]);
    if(url.pathname==='/api/inventory/history')return json([{inventoryTransactionId:1,productName:'Battery',serialNumber:'BAT-42',transactionType:'TRANSFER_OUT',quantity:1,referenceType:'TRANSFER',referenceId:1,createdAt:'2026-10-03T12:00:00',createdByName:'Owner'}]);
    if(url.pathname==='/api/transfers/locations')return json([{locationId:1,storeName:'Main',locationName:'Counter'},{locationId:2,storeName:'Second',locationName:'Counter'}]);
@@ -45,7 +52,7 @@ const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/inve
   assert.equal(await page.locator('.stock-status.low').count(),2);
   const panels=await page.locator('.stock-tools>.card').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().top));assert.equal(panels[0],panels[1],'Stock correction and count must sit side by side on desktop');
   await page.locator('#balances tr').filter({hasText:'Battery'}).locator('button').click();await page.waitForSelector('#history a[href="/Transfers?id=1"]');assert((await page.locator('#history').textContent()).includes('BAT-42'));
-  await page.locator('#adjust-product').selectOption('2');await page.locator('#adjust-type').selectOption('DAMAGED');await page.waitForSelector('#adjust-units input');
+  await selectValue(page.locator('#adjust-product'),'2');await selectValue(page.locator('#adjust-type'),'DAMAGED');await page.waitForSelector('#adjust-units input');
   await page.locator('#adjust-unit-scan').fill('MAKER42');await page.locator('#adjust-unit-scan').press('Enter');await page.waitForFunction(()=>document.querySelector('#adjust-quantity').value==='1');
   await page.locator('#adjust-reason').fill('Counted damaged battery');await page.locator('#post-adjustment').click();await page.waitForFunction(()=>!document.querySelector('#adjustment-pending').hidden&&!document.querySelector('#adjustment-retry').disabled);
   assert.deepEqual(posts[0].body.productUnitIds,[42]);assert.equal(posts[0].body.locationId,1);
@@ -53,9 +60,9 @@ const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/inve
   await page.locator('#adjustment-retry').click();await page.waitForFunction(()=>document.querySelector('#adjustment-message').textContent.includes('revoked'));assert(await page.locator('#adjustment-editor').evaluate(n=>n.disabled));
   deny=false;await page.locator('#adjustment-retry').click();await page.waitForFunction(()=>document.querySelector('#adjustment-message').textContent.includes('#7'));
   assert.deepEqual(posts[0].body,posts[1].body);assert.deepEqual(posts[0].body,posts[2].body);
-  await page.goto('http://stockflow.test/Inventory/LowStock');await page.waitForSelector('#low-stock-results a');assert((await page.locator('#low-stock-results').textContent()).includes('5'));
+  await page.goto('http://stockflow.test/Inventory/LowStock');await page.waitForSelector('.low-stock-action');assert((await page.locator('#low-stock-results').textContent()).includes('5'));
   for(const url of ['/Inventory','/Inventory/LowStock'])for(const width of [1440,1024,768,390,320]){
-   await page.setViewportSize({width,height:1000});await page.goto('http://stockflow.test'+url);await page.waitForSelector(url==='/Inventory'?'#balances button':'#low-stock-results a');
+   await page.setViewportSize({width,height:1000});await page.goto('http://stockflow.test'+url);await page.waitForSelector(url==='/Inventory'?'#balances button':'.low-stock-action');
    await page.waitForFunction(()=>innerWidth>991||(parseFloat(getComputedStyle(document.querySelector('.sf-workspace')).marginLeft)===0&&document.querySelector('.sf-sidebar').getBoundingClientRect().right<=0));
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),url+' fits '+width);
    await page.screenshot({path:path.join(output,(url==='/Inventory'?'inventory':'low-stock')+'-'+width+'.png'),fullPage:true});

@@ -168,7 +168,7 @@
         if (query.has('id')) await load(); else await sources();
     }
     run(async () => {
-        if ($('eway-provider-status')) { const d = await api('/api/ewaybills/provider'); $('eway-provider-status').textContent = d.name + ' · ' + d.status; return; }
+        if ($('eway-provider-status')) { const launcher=document.querySelector('.sf-help-open');if(launcher){const dock=node('div',null,'eway-provider-assistant-dock');root.append(dock);dock.append(launcher);} const d = await api('/api/ewaybills/provider'); $('eway-provider-status').textContent = d.name + ' · ' + d.status; return; }
         options = await api('/api/ewaybills/options');
         if ($('eway-form')) await editor(); else await register();
     });

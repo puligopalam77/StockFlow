@@ -66,6 +66,7 @@ internal static class HelpStockChecks
     static void Check(bool ok,string message) {if(!ok)throw new Exception(message);Console.WriteLine("PASS: "+message);}
     internal class ScopedStock(BusinessScope scope) : IInventoryRepository
     {
+        public Task<LowStockPage> GetLowStockPageAsync(string? term,string? stockStatus,int page,int pageSize)=>throw new NotSupportedException("This enquiry fake does not serve paged low-stock reports.");
         public Task<IEnumerable<InventoryBalance>> GetBalancesAsync(string? term,bool lowStockOnly,bool includeInactive)
         {
             if(includeInactive)throw new Exception("Inactive stock included");

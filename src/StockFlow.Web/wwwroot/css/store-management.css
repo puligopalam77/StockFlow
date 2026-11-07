@@ -1,0 +1,45 @@
+#stores-workspace{max-width:none;min-width:0;--sf-action-bg:#ff007f}
+#stores-workspace [hidden]{display:none!important}
+#stores-workspace .stores-heading,#stores-workspace .stores-actions,#stores-workspace .stores-setup-links{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#stores-workspace .stores-setup-links{justify-content:flex-start;margin:16px 0;padding:14px;background:#fff;border:1px solid #dbe3ee;border-radius:12px}
+#stores-workspace .stores-help{color:#506780;font-size:.875rem;margin:10px 0;overflow-wrap:anywhere}
+#stores-workspace .stores-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+#stores-workspace .stores-kpi{border:1px solid #ffc5df;border-radius:14px;padding:18px;background:#fff0f7;color:#a20f50}
+#stores-workspace .stores-kpi h2{font-size:.9rem;margin:0 0 12px;line-height:1.5}
+#stores-workspace .stores-kpi strong{font-size:1.8rem}
+#stores-workspace .stores-kpi.blue{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+#stores-workspace .stores-kpi.green{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+#stores-workspace .stores-kpi.orange{background:#fff5eb;border-color:#fed7aa;color:#a53b12}
+#stores-workspace .sf-filter-bar{display:flex;align-items:end;flex-wrap:wrap;gap:12px;padding:16px;background:#fff;border:1px solid #dbe3ee;border-radius:12px;margin-bottom:16px}
+#stores-workspace .store-field{min-width:0;display:flex;flex-direction:column;gap:6px}
+#stores-workspace .store-field label{font-weight:600;font-size:.875rem}
+#stores-workspace .store-field small{color:#506780;line-height:1.5;overflow-wrap:anywhere}
+#stores-workspace .sf-filter-bar .store-field:first-child{flex:1 1 260px}
+#stores-workspace .stores-directory{background:#fff;border:1px solid #dbe3ee;border-radius:12px;padding:16px;min-width:0}
+#stores-workspace .stores-table-scroll{max-width:100%;overflow-x:auto}
+#stores-workspace table{min-width:1050px;width:100%}
+#stores-workspace th{background:#1b2d43;color:#fff;white-space:nowrap;padding:14px 10px}
+#stores-workspace td{padding:14px 10px;vertical-align:middle;overflow-wrap:anywhere;max-width:240px}
+#stores-workspace td button{margin:3px}
+#stores-workspace .stores-notice{background:#f3f7fc;border:1px solid #dbe3ee;border-radius:8px;padding:12px;margin:12px 0;overflow-wrap:anywhere}
+#stores-workspace dialog{border:1px solid #dbe3ee;border-radius:14px;padding:0;width:min(960px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);overflow:auto;color:#172c46}
+#stores-workspace dialog::backdrop{background:rgb(15 30 50 / 50%)}
+#stores-workspace dialog header,#stores-workspace dialog footer{display:flex;align-items:center;gap:12px;background:#fff;padding:16px 20px;position:sticky;z-index:2}
+#stores-workspace dialog header{top:0;justify-content:space-between;border-bottom:1px solid #dbe3ee}
+#stores-workspace dialog footer{bottom:0;justify-content:flex-end;border-top:1px solid #dbe3ee;flex-wrap:wrap}
+#stores-workspace dialog h2{font-size:1.25rem;margin:0}
+#stores-workspace dialog h3{font-size:1rem;margin:20px 0 12px}
+#stores-workspace .stores-close{border:0;background:#1b2d43;color:white;border-radius:6px;min-width:36px;min-height:36px;font-size:1.4rem}
+#stores-workspace .stores-dialog-body{padding:4px 20px 20px;overflow-wrap:anywhere}
+#stores-workspace .stores-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:12px 0}
+#stores-workspace .stores-full{grid-column:1/-1}
+#stores-workspace input,#stores-workspace select,#stores-workspace textarea{min-width:0;max-width:100%;width:100%}
+#stores-workspace .btn-primary{--sf-action-bg:#ff007f;background:#ff007f!important;border-color:#ff007f!important;color:white!important}
+#stores-workspace .btn-outline-secondary{--sf-action-bg:#1b2d43;background:#1b2d43!important;border-color:#1b2d43!important;color:white!important}
+#stores-workspace :is(button,a,input,select,textarea):focus-visible{outline:2px solid #ff007f!important;outline-offset:3px!important}
+#stores-workspace .stores-details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#stores-workspace .stores-assistant-dock{display:flex;justify-content:flex-end;margin:16px 0}
+#stores-workspace .stores-assistant-dock .sf-help-open{position:static!important}
+@media(max-width:1100px){#stores-workspace .stores-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){#stores-workspace .stores-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:575px){#stores-workspace .stores-kpis,#stores-workspace .stores-form-grid,#stores-workspace .stores-details-grid{grid-template-columns:minmax(0,1fr)}#stores-workspace .stores-heading,#stores-workspace .stores-actions{align-items:stretch}#stores-workspace .stores-directory{padding:10px}#stores-workspace dialog{width:calc(100vw - 16px);max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}#stores-workspace dialog header,#stores-workspace dialog footer,#stores-workspace .stores-dialog-body{padding-left:12px;padding-right:12px}#stores-workspace dialog footer .btn{flex:1 1 130px;white-space:normal}#stores-workspace .stores-setup-links a{overflow-wrap:anywhere}}

@@ -23,6 +23,7 @@ public sealed class QuotationRow
     public Guid QuotationId { get; set; }
     public string QuotationNumber { get; set; } = "";
     public string CustomerName { get; set; } = "";
+    public string? CustomerMobile { get; set; }
     public string Status { get; set; } = "";
     public DateTime DocumentDate { get; set; }
     public DateTime ValidUntil { get; set; }

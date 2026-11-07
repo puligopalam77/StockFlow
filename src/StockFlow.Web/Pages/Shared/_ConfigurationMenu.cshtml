@@ -1,15 +1,14 @@
 @{
     var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     var groups = new[] {
-        ("Product Catalog", new[] { ("CATEGORIES", "Categories"), ("BRANDS", "Brands"), ("PRODUCTS", "Products") }),
-        ("Business Partners", new[] { ("SUPPLIERS", "Suppliers"), ("CUSTOMERS", "Customers") })
+        ("Product Catalog", new[] { ("PRODUCTS", "Products"), ("CATEGORIES", "Categories"), ("BRANDS", "Brands") })
     };
 }
 @foreach (var (name, items) in groups)
 {
     var visible = items.Where(item => Access.Can(item.Item1)).ToArray();
     if (visible.Length == 0) { continue; }
-    var active = visible.Any(item => page.StartsWith($"/{item.Item2}/", StringComparison.OrdinalIgnoreCase));
+    var active = visible.Any(item => page.Equals($"/{item.Item2}", StringComparison.OrdinalIgnoreCase) || page.StartsWith($"/{item.Item2}/", StringComparison.OrdinalIgnoreCase));
     <details class="sf-nav-group sf-catalog-nav" open="@active">
         <summary class="sf-nav-child @(active ? "sf-nav-group-active" : "")">@name <span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
         <div class="sf-nav-children" aria-label="@name">
@@ -17,7 +16,7 @@
     {
         if (Access.Can(module))
         {
-            var selected = page.StartsWith($"/{label}/", StringComparison.OrdinalIgnoreCase);
+            var selected = page.Equals($"/{label}", StringComparison.OrdinalIgnoreCase) || page.StartsWith($"/{label}/", StringComparison.OrdinalIgnoreCase);
     <a href="/@label" class="sf-nav-child @(selected ? "active" : "")" aria-current="@(selected ? "page" : null)">@label</a>
         }
     }

@@ -1,3 +1,4 @@
+const {selectValue}=require('./address-test-helpers.cjs');
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
@@ -11,7 +12,7 @@ const fixtures = path.join(root, 'tests/bin/screen-language-fixtures');
     let rejectSave = false;
     async function openPage() {
         const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-        page.on('pageerror', (error) => errors.push(error.message));
+        page.on('pageerror', (error) => errors.push(error.stack || error.message));
         await page.route('**/*', async (route) => {
             const request = route.request();
             const url = new URL(request.url());
@@ -76,9 +77,9 @@ const fixtures = path.join(root, 'tests/bin/screen-language-fixtures');
         assert.equal(await page.locator('#language-choice option').count(), 23);
         for (const id of ['language-screen', 'language-caption-rows', 'language-preview', 'language-add-caption'])
             assert.equal(await page.locator('#' + id).count(), 0, 'removed ' + id);
-        await page.locator('#language-choice').selectOption('te');
+        await selectValue(page.locator('#language-choice'),'te');
         
-        await page.waitForFunction(() => document.querySelector('h1').textContent.startsWith('New stock receipt ('));
+        await page.waitForFunction(() => document.querySelector('h1').textContent.startsWith('Receive Stock ('));
         assert.equal(settings.get('application').language, 'te');
         assert.equal(settings.size, 1);
         assert.equal(await page.locator('#business-location').count(), 0);
@@ -86,28 +87,45 @@ const fixtures = path.join(root, 'tests/bin/screen-language-fixtures');
         assert.equal(await page.locator('#language-save').count(), 0);
         await page.waitForFunction(() => !document.querySelector('#language-choice').disabled);
         rejectSave = true;
-        await page.locator('#language-choice').selectOption('hi');
+        await selectValue(page.locator('#language-choice'),'hi');
         await page.locator('#language-message').waitFor({state:'visible'});
         assert.equal(await page.locator('#language-choice').inputValue(), 'te');
         assert.equal(settings.get('application').language, 'te');
-        assert((await page.locator('h1').textContent()).startsWith('New stock receipt ('));
+        assert((await page.locator('h1').textContent()).startsWith('Receive Stock ('));
         rejectSave = false;
         await page.goto('http://stockflow.test/Purchases/Create');
-        await page.waitForFunction(() => document.querySelector('label[for="supplierId"]').textContent.startsWith('Supplier ('));
-        assert((await page.locator('h1').textContent()).startsWith('New stock receipt ('));
-        assert((await page.locator('.sf-nav a[href="/"]').textContent()).includes('Dashboard ('));
-        assert((await page.locator('#productScanner').getAttribute('placeholder')).startsWith('Click here, then scan ('));
+        await page.waitForFunction(() => {
+            const label = document.querySelector('label[for="goods-supplier"]');
+            return label?.textContent === window.StockFlowLanguage.text('Supplier *');
+        });
+        assert((await page.locator('h1').textContent()).startsWith('Receive Stock ('));
+        assert((await page.locator('.sf-nav a[href="/"]').textContent()).includes('Home ('));
+        assert.equal(await page.locator('#goods-search').getAttribute('placeholder'),
+            await page.evaluate(() => window.StockFlowLanguage.text('Search by barcode, product name, SKU, code or model...')));
+        // Current search copy has no bundled translation. Keep placeholder translation
+        // coverage using a supported caption, as with the dynamic validation field below.
+        const translatedPlaceholder = await page.evaluate(() => {
+            const input = document.createElement('input');
+            input.placeholder = 'Click here, then scan';
+            document.querySelector('#main-content').append(input);
+            window.StockFlowLanguage.refresh();
+            const placeholder = input.placeholder;
+            input.remove();
+            return placeholder;
+        });
+        assert(translatedPlaceholder.startsWith('Click here, then scan ('));
+        assert(/[\u0c00-\u0c7f]/.test(translatedPlaceholder));
         const validation = await page.evaluate(() => window.StockFlowLanguage.fieldError('phone',
             {label:'Phone'}, undefined, true, 'Phone must contain exactly 10 digits.'));
         assert(validation.startsWith('Phone must contain exactly 10 digits. ('));
         assert(/[\u0c00-\u0c7f]/.test(validation));
         const billing = await openPage();
         await billing.goto('http://stockflow.test/Sales/Create');
-        await billing.waitForFunction(() => document.querySelector('h1').textContent.startsWith('Counter billing ('));
+        await billing.waitForFunction(() => document.querySelector('h1').textContent.startsWith('New Sale ('));
         await page.goto('http://stockflow.test/Purchases/Create');
         await page.waitForFunction(() => document.querySelector('#language-choice option[value="ur"]'));
         await page.waitForFunction(() => document.querySelector('#language-choice').value === 'te');
-        await page.locator('#language-choice').selectOption('hi');
+        await selectValue(page.locator('#language-choice'),'hi');
         
         await page.waitForFunction(() => /[\u0900-\u097f]/.test(document.querySelector('h1').textContent));
         await billing.evaluate(() => window.dispatchEvent(new Event('focus')));
@@ -115,7 +133,7 @@ const fixtures = path.join(root, 'tests/bin/screen-language-fixtures');
         const customer = await openPage();
         await customer.goto('http://stockflow.test/Customers');
         await customer.waitForFunction(() => /[\u0900-\u097f]/.test(document.querySelector('h1').textContent));
-        await page.locator('#language-choice').selectOption('mr');
+        await selectValue(page.locator('#language-choice'),'mr');
         
         await page.waitForFunction(() => document.querySelector('#language-choice').value === 'mr' && !document.querySelector('#language-choice').disabled);
         assert.equal(settings.get('application').language, 'mr');
@@ -132,11 +150,11 @@ const fixtures = path.join(root, 'tests/bin/screen-language-fixtures');
                 for (const token of english.match(/\{\w+\}/g) || [])
                     assert(pack[key].includes(token), code + ':' + key + ' loses ' + token);
             }
-            await page.locator('#language-choice').selectOption(code);
+            await selectValue(page.locator('#language-choice'),code);
             
             await page.waitForFunction((translation) =>
                 document.querySelector('h1').textContent ===
-                    'New stock receipt (' + translation + ')', pack['new stock receipt']);
+                    'Receive Stock (' + translation + ')', pack['receive stock']);
             const message = await page.evaluate(() => window.StockFlowLanguage.fieldError('maximum',
                 {label:'Phone', limit:10}, undefined, true, 'Phone: enter no more than 10 characters.'));
             assert(message.startsWith('Phone: enter no more than 10 characters. ('), code);
@@ -173,11 +191,11 @@ const fixtures = path.join(root, 'tests/bin/screen-language-fixtures');
             }
         }
         await page.screenshot({ path: path.join(root, 'tests/bin/all-languages-urdu.png'), fullPage: true });
-        await page.locator('#language-choice').selectOption('en');
+        await selectValue(page.locator('#language-choice'),'en');
         
         await page.waitForFunction(() => !document.querySelector('#language-choice').disabled);
         await billing.evaluate(() => window.dispatchEvent(new Event('focus')));
-        await billing.waitForFunction(() => document.querySelector('h1').textContent === 'Counter billing');
+        await billing.waitForFunction(() => document.querySelector('h1').textContent === 'New Sale');
         for (const width of [320, 390]) {
             await page.setViewportSize({width, height:900});
             // Wait for the shell's sidebar transition after changing viewport size.

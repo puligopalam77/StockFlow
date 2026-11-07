@@ -7,6 +7,7 @@ namespace StockFlow.Application.Services;
 
 public class CustomerService : ICustomerService
 {
+    private static readonly System.Text.Json.JsonSerializerOptions AddressJson = new(System.Text.Json.JsonSerializerDefaults.Web);
     private readonly ICustomerRepository repository;
     // ASP.NET supplies these services when it creates this class.
     public CustomerService(ICustomerRepository repository)
@@ -39,13 +40,17 @@ public class CustomerService : ICustomerService
 
     public async Task<bool> UpdateAsync(int id, UpdateCustomerRequest request)
     {
-        if (await repository.GetByIdAsync(id) is null)
+        if (await repository.GetByIdAsync(id) is not {} existing)
         {
             return false;
         }
 
         await ValidateAsync(request, id);
         var entity = ToEntity(request);
+        if(request.UseStructuredAddress != true && request.AddressDetails is null && (request.Address is null || request.Address==existing.Address))
+        {
+            entity.Address=existing.Address;entity.AddressDetailsJson=existing.AddressDetailsJson;
+        }
         entity.CustomerId = id;
         entity.IsActive = request.IsActive;
         return await repository.UpdateAsync(entity);
@@ -59,6 +64,7 @@ public class CustomerService : ICustomerService
     private Task ValidateAsync(CreateCustomerRequest request, int? id)
     {
         request.CustomerName = request.CustomerName?.Trim() ?? "";
+        if(request.AddressDetails is not null || request.UseStructuredAddress==true) request.Address=request.AddressDetails?.NormalizeAndFormat();
         if (!request.CustomerName.Any(char.IsLetter))
         {
             throw new ValidationException("Customer name must contain letters.");
@@ -75,6 +81,7 @@ public class CustomerService : ICustomerService
             MobileNumber = string.IsNullOrWhiteSpace(request.MobileNumber) ? null : request.MobileNumber.Trim(),
             Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
             Address = string.IsNullOrWhiteSpace(request.Address) ? null : request.Address.Trim(),
+            AddressDetailsJson = request.AddressDetails is null || request.Address is null ? null : System.Text.Json.JsonSerializer.Serialize(request.AddressDetails,AddressJson),
             GstNumber = string.IsNullOrWhiteSpace(request.GstNumber) ? null : request.GstNumber.Trim(),
             IsActive = true
         };
@@ -89,6 +96,7 @@ public class CustomerService : ICustomerService
             MobileNumber = entity.MobileNumber,
             Email = entity.Email,
             Address = entity.Address,
+            AddressDetails = string.IsNullOrWhiteSpace(entity.AddressDetailsJson) ? null : System.Text.Json.JsonSerializer.Deserialize<StockFlow.Application.Common.AddressComponents>(entity.AddressDetailsJson,AddressJson),
             GstNumber = entity.GstNumber,
             IsActive = entity.IsActive,
             CreatedAt = entity.CreatedAt

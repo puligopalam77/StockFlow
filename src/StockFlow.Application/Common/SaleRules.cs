@@ -236,8 +236,7 @@ public static class SaleRules
             quote.ItemSubtotal += item.Quantity * item.SellingPrice;
             quote.ItemDiscountAmount += item.DiscountAmount;
             gross -= allocation;
-            var subtotal = inclusive ? Money(gross / (1 + tax / 100)) : gross;
-            var lineTax = inclusive ? gross - subtotal : Money(subtotal * tax / 100);
+            var (subtotal, lineTax) = inclusive ? GstRules.InclusiveAmounts(gross, tax) : (gross, Money(gross * tax / 100));
             var netUnitPrice = inclusive ? decimal.Ceiling(item.SellingPrice / (1 + tax / 100) * 100) / 100 : item.SellingPrice;
             CheckMoney(subtotal + lineTax, "Line total");
             quote.Subtotal += subtotal;

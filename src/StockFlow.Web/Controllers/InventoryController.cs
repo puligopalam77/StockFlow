@@ -23,8 +23,12 @@ public class InventoryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Balances(string? term, bool lowStockOnly = false, bool includeInactive = false)
+    public async Task<IActionResult> Balances(string? term, bool lowStockOnly = false, bool includeInactive = false,bool paged=false,string? stockStatus=null,int page=1,int pageSize=10)
     {
+        if(paged){
+            if(!lowStockOnly||includeInactive)throw new ValidationException("Paged shortage monitoring requires active low-stock items.");
+            return Ok(await repository.GetLowStockPageAsync(term,stockStatus,page,pageSize));
+        }
         return Ok(await repository.GetBalancesAsync(term, lowStockOnly, includeInactive));
     }
 

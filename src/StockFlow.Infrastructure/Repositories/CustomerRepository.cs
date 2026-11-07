@@ -14,7 +14,7 @@ public class CustomerRepository : ICustomerRepository
         this.factory = factory;
     }
 
-    private const string SelectSql = "SELECT t.customer_id AS CustomerId, t.customer_name AS CustomerName, t.mobile_number AS MobileNumber, t.email AS Email, t.address AS Address, t.gst_number AS GstNumber, t.is_active AS IsActive, t.created_at AS CreatedAt, t.updated_at AS UpdatedAt FROM customers t";
+    private const string SelectSql = "SELECT t.customer_id AS CustomerId, t.customer_name AS CustomerName, t.mobile_number AS MobileNumber, t.email AS Email, t.address AS Address,to_jsonb(t)->>'address_details' AS AddressDetailsJson, t.gst_number AS GstNumber, t.is_active AS IsActive, t.created_at AS CreatedAt, t.updated_at AS UpdatedAt FROM customers t";
     private const string InsertSql = "INSERT INTO customers (customer_name, mobile_number, email, address, gst_number, is_active) VALUES (@CustomerName, @MobileNumber, @Email, @Address, @GstNumber, TRUE) RETURNING customer_id;";
     public async Task<IEnumerable<Customer>> GetAllAsync(bool activeOnly = false, string? term = null)
     {
@@ -39,7 +39,8 @@ new
     public async Task<int> CreateAsync(Customer entity, bool preventIdentifierDuplicates = false)
     {
         await using var connection = factory.CreateConnection();
-        if (!preventIdentifierDuplicates) return await connection.ExecuteScalarAsync<int>(InsertSql, entity);
+        var sql=await AddressColumns(connection,entity)?InsertSql.Replace("address,", "address,address_details,").Replace("@Address,", "@Address,CAST(@AddressDetailsJson AS jsonb),"):InsertSql;
+        if (!preventIdentifierDuplicates) return await connection.ExecuteScalarAsync<int>(sql, entity);
         await connection.OpenAsync();
         await using var transaction = await connection.BeginTransactionAsync();
         if (preventIdentifierDuplicates)
@@ -52,7 +53,7 @@ new
             if (await connection.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM customers WHERE (@MobileNumber IS NOT NULL AND btrim(mobile_number)=@MobileNumber) OR (@GstNumber IS NOT NULL AND upper(btrim(gst_number))=upper(@GstNumber)))", entity, transaction))
                 throw new System.ComponentModel.DataAnnotations.ValidationException("A customer with this mobile number or GSTIN already exists. Select the existing customer instead.");
         }
-        var id = await connection.ExecuteScalarAsync<int>(InsertSql, entity, transaction);
+        var id = await connection.ExecuteScalarAsync<int>(sql, entity, transaction);
         await transaction.CommitAsync();
         return id;
     }
@@ -60,10 +61,17 @@ new
     public async Task<bool> UpdateAsync(Customer entity)
     {
         using var connection = factory.CreateConnection();
-        return await connection.ExecuteAsync("UPDATE customers SET customer_name = @CustomerName, mobile_number = @MobileNumber, email = @Email, address = @Address, gst_number = @GstNumber, is_active = @IsActive, updated_at = CURRENT_TIMESTAMP WHERE customer_id = @CustomerId;",
-entity) > 0;
+        var sql="UPDATE customers SET customer_name = @CustomerName, mobile_number = @MobileNumber, email = @Email, address = @Address, gst_number = @GstNumber, is_active = @IsActive, updated_at = CURRENT_TIMESTAMP WHERE customer_id = @CustomerId;";
+        if(await AddressColumns(connection,entity))sql=sql.Replace("address = @Address,", "address = @Address,address_details=CAST(@AddressDetailsJson AS jsonb),");
+        return await connection.ExecuteAsync(sql,entity)>0;
     }
 
+    private static async Task<bool> AddressColumns(System.Data.IDbConnection connection,Customer entity)
+    {
+        var ready=await connection.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='customers' AND column_name='address_details')");
+        if(!ready && entity.AddressDetailsJson is not null)throw new System.ComponentModel.DataAnnotations.ValidationException("Customer address setup is pending. Ask your administrator to complete setup, then retry; entered details are retained.");
+        return ready;
+    }
     public async Task<bool> DeleteAsync(int id)
     {
         using var connection = factory.CreateConnection();
