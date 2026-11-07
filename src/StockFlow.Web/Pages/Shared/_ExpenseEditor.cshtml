@@ -4,7 +4,7 @@
     var paymentMethods = new[] { (Code: "CASH", Label: "Cash"), (Code: "UPI", Label: "UPI"), (Code: "DEBIT_CARD", Label: "Debit Card"), (Code: "CREDIT_CARD", Label: "Credit Card"), (Code: "BANK_TRANSFER", Label: "Bank Transfer") };
 }
 <div id="expenses" class="@(createExpense ? "expense-create" : null)" data-mode="editor" data-id="@Context.Request.Query["id"]" data-scope="@Scope.TenantId.@Scope.UserId.@Scope.StoreId.@Scope.LocationId.@Scope.BusinessProfileCode">
-<header class="expense-heading"><div><h1>@(Context.Request.Path=="/Expenses/Create"?"New Operating Expense":"Expense Details")</h1><p>Record and manage everyday business expenses.</p></div><strong id="expense-state" class="expense-badge" role="status">Loading...</strong></header>
+<header class="expense-heading"><div><h1>@(Context.Request.Path=="/Expenses/Create"?"New Operating Expense":"Expense Details")</h1><p>Record and manage everyday business expenses.</p></div><strong id="expense-state" class="@(createExpense ? null : "expense-badge")" role="status" hidden="@createExpense">Loading...</strong></header>
 <div id="expense-message" role="alert" data-keep-banner hidden></div><button type="button" id="expense-retry" class="btn btn-dark" hidden>Retry unchanged request</button>
 @if(!createExpense){<p class="expense-notice">Operating expenses do not affect stock.</p>}
 <div class="expense-workspace"><div class="expense-main">

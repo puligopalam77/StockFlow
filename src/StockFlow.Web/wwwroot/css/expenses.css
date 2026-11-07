@@ -82,7 +82,7 @@
 #expenses.expense-create .expense-back-link{display:inline-flex;justify-content:center;align-items:center;gap:6px;min-height:28px;font-size:13px;color:#52647d}
 #expenses.expense-create .expense-back-link:hover{color:#cf0068;text-decoration:underline}
 @media(max-width:1050px){#expenses.expense-create .expense-workspace{grid-template-columns:minmax(0,1fr)}#expenses.expense-create .expense-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}}
-@media(max-width:575px){#expenses.expense-create .expense-sidebar{grid-template-columns:minmax(0,1fr)}#expenses.expense-create .expense-workspace{gap:14px}#expenses.expense-create .expense-badge{font-size:11px;padding:4px 9px}}
+@media(max-width:575px){#expenses.expense-create .expense-sidebar{grid-template-columns:minmax(0,1fr)}#expenses.expense-create .expense-workspace{gap:14px}}
 @container expense-entry (min-width:560px){
  #expenses.expense-create .expense-fields-grid,#expenses.expense-create .expense-payment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
