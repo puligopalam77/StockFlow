@@ -47,6 +47,11 @@ static class SecurityChecks
         lifetime.Stamp(ticket);
         Check(lifetime.Accepts(ticket),"development accepts cookies from the current debug run");
         Check(!new DevelopmentLoginLifetime(dev).Accepts(ticket),"development restart rejects previous debug cookies");
+        var rememberedTicket=new Microsoft.AspNetCore.Authentication.AuthenticationProperties { IsPersistent=true };
+        lifetime.Stamp(rememberedTicket);
+        Check(new DevelopmentLoginLifetime(dev).Accepts(rememberedTicket),"Remember Me survives development app restarts for shared-session validation");
+        rememberedTicket.IsPersistent=false;
+        Check(!new DevelopmentLoginLifetime(dev).Accepts(rememberedTicket),"nonpersistent login still requires the current debug run");
         Check(new DevelopmentLoginLifetime(new Microsoft.Extensions.Hosting.Internal.HostingEnvironment { EnvironmentName="Production" }).Accepts(ticket),"production restart preserves normal session validity");
         var usersHtml=await admin.GetStringAsync("/Admin/Users");
         Check(!usersHtml.Contains("id=\"login-email-otp\"") && usersHtml.Contains("id=\"primary-store\"")&&!usersHtml.Contains("id=\"permission-matrix\"") && !usersHtml.Contains("Authenticator settings (optional)")&&!usersHtml.Contains("Select all view permissions"),"user creation has assigned shop without authenticator or screen access editors");
