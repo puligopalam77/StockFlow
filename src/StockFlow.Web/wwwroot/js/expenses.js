@@ -93,13 +93,13 @@
    const paymentState=$('expense-initial-payment').hidden?'UNPAID':$('expense-initial-state').value;
    const paid=total===0?0:paymentState==='PAID'?total:paymentState==='PARTIAL'?Math.max(0,Math.round((Number($('expense-initial-amount').value)||0)*100)):0;
    const balance=paid<=total?money((total-paid)/100):'—';
-   $('expense-summary-title').textContent='Expense Preview';const hint=expense?'Saved draft; payment is not recorded.':'Not saved yet.';if($('expense-summary-state').textContent!==hint)$('expense-summary-state').textContent=hint;
+   $('expense-summary-title').textContent='Expense Preview';
    $('expense-summary-amount').textContent=money(total/100);$('expense-summary-paid').textContent=money(paid/100);$('expense-summary-outstanding').textContent=balance;
    $('expense-summary-payment').textContent=total===0?'Not set':paymentState==='PAID'?'Paid':paymentState==='PARTIAL'?'Partially Paid':'Unpaid';
    $('expense-initial-balance').textContent=balance;return;
   }
   if(createMode)$('expense-summary-title').textContent='Expense Summary';
-  $('expense-summary-state').textContent=preview?'Unsaved preview; recorded balances below are unchanged.':'Saved expense balances';
+  if($('expense-summary-state'))$('expense-summary-state').textContent=preview?'Unsaved preview; recorded balances below are unchanged.':'Saved expense balances';
   $('expense-summary-amount').textContent=money($('expense-amount').value||0);
   $('expense-summary-paid').textContent=expense?money(expense.paid):'Not recorded';
   $('expense-summary-outstanding').textContent=expense?.status==='POSTED'?money(Number(expense.amount)-Number(expense.paid)):'Not recorded';

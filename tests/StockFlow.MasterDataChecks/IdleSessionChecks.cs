@@ -53,6 +53,8 @@ internal static class IdleSessionChecks
             { ["Input.Username"] = "Admin", ["Input.Password"] = "Example password 123", ["Input.TenantCode"] = "DEFAULT", ["Input.RememberMe"] = remember.ToString(), ["__RequestVerificationToken"] = token }));
             Check(response.StatusCode == HttpStatusCode.Redirect, "real cookie login succeeds");
             var cookie = response.Headers.GetValues("Set-Cookie").Single(value => value.StartsWith("StockFlow.Auth="));
+            Check(cookie.Contains("expires=", StringComparison.OrdinalIgnoreCase)==remember,
+                remember?"Remember Me creates a persistent browser cookie":"unchecked Remember Me creates a browser-session cookie");
             var csrf = await client.GetFromJsonAsync<JsonObject>("/api/antiforgery");
             client.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", csrf!["requestToken"]!.GetValue<string>());
             sessionId = Regex.Match(await client.GetStringAsync("/Products"), "data-session=\"([^\"]+)\"").Groups[1].Value;
