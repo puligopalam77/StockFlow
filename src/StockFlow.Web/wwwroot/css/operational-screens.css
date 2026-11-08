@@ -38,3 +38,22 @@
  .sf-operational-main .table :is(th,td){padding:10px 12px}
 }
 @media print{.sf-operational-main .sf-filter-bar{display:none}.sf-operational-main .card{box-shadow:none}}
+
+/* Match the expense module density on screen; printed documents keep the base rules. */
+@media screen {
+ .sf-operational-main .sf-page-heading{gap:12px;margin-bottom:12px}
+ .sf-operational-main .sf-page-heading h1{font-size:24px}
+ .sf-operational-main .sf-page-heading p{margin-top:4px;line-height:1.5}
+ .sf-operational-main .card{box-shadow:none}
+ .sf-operational-main .card-body{padding:16px}
+ .sf-operational-main .card h2{margin-bottom:12px;font-size:16px}
+ .sf-operational-main :is(.form-control,.form-select){min-height:38px}
+ .sf-operational-main .btn{min-height:38px;font-size:13px;padding:7px 14px}
+ .sf-operational-main .btn-sm{padding:5px 10px}
+ .sf-operational-main .sf-filter-bar{padding:12px 16px;margin-bottom:12px}
+ .sf-operational-main .table :is(th,td){padding:10px 12px}
+ @media(max-width:575px){
+  .sf-operational-main .sf-page-heading h1{font-size:21px}
+  .sf-operational-main .sf-filter-bar{padding:12px}
+ }
+}

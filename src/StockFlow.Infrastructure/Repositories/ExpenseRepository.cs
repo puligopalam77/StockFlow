@@ -21,6 +21,7 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
           SELECT jsonb_build_object('categories',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',category_id,'name',name) ORDER BY name),'[]') FROM expense_categories),
           'payees',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',payee_id,'name',name) ORDER BY name),'[]') FROM expense_payees),
           'taxRules',sf_expense_tax_options(),
+          'businessDate',to_char((now() AT TIME ZONE 'Asia/Kolkata')::date,'YYYY-MM-DD'),
           'permissions',(SELECT jsonb_object_agg(act,sf_expense_allowed(act)) FROM unnest(ARRAY['CREATE','EDIT','POST','PAY','REVERSE','CANCEL','ATTACH','EXPORT']) act))::text
           """));
     }
@@ -29,6 +30,9 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
         if(request.Amount is <=0 or >9999999999.99m||SaleRules.Money(request.Amount)!=request.Amount||request.IncurredDate==default||request.IncurredDate.TimeOfDay!=TimeSpan.Zero||request.Gst.ValueKind!=JsonValueKind.Object)
             throw new ValidationException("Enter an expense amount, date and configured GST rate.");
         await using var c=factory.CreateConnection();await Require(c);
+        var businessDate=await c.ExecuteScalarAsync<DateTime>("SELECT (now() AT TIME ZONE 'Asia/Kolkata')::date");
+        if(request.IncurredDate.Date>businessDate)
+            throw new ValidationException($"Expense date cannot be after the database business date ({businessDate:dd-MM-yyyy}). Check the database server clock if this date is incorrect.");
         JsonElement result;
         try{result=Read(await c.ExecuteScalarAsync<string>("SELECT sf_expense_gst(@gst::jsonb,@amount,@day::date,NULL::jsonb)::text",new{gst=request.Gst.GetRawText(),amount=request.Amount,day=request.IncurredDate}));}
         catch(Npgsql.PostgresException error)when(error.SqlState=="23514"){throw new ValidationException(error.MessageText);}
@@ -44,10 +48,11 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
         SELECT e.*,c.name category,p.name payee,coalesce((SELECT sum(amount) FROM expense_payments x WHERE x.tenant_id=e.tenant_id AND x.expense_id=e.expense_id{(cutoff?" AND x.paid_date<=@to::date":"")}),0) paid
         FROM expenses e JOIN expense_categories c USING(tenant_id,category_id) JOIN expense_payees p USING(tenant_id,payee_id)
         """;
-    public async Task<JsonElement> ListAsync(string? term,DateTime? from,DateTime? to,int page,int pageSize,Guid? category=null,Guid? payee=null,string? status=null,string? paymentStatus=null)
+    public async Task<JsonElement> ListAsync(string? term,DateTime? from,DateTime? to,int page,int pageSize,Guid? category=null,Guid? payee=null,string? status=null,string? paymentStatus=null,string sort="newest")
     {
         if(page<1||page>100000||pageSize<1||pageSize>100||term?.Length>150||from>to)throw new ValidationException("Invalid expense filters or page.");
         if(status is not(null or "" or "DRAFT" or "POSTED" or "CANCELLED")||paymentStatus is not(null or "" or "UNPAID" or "PARTIAL" or "PAID"))throw new ValidationException("Choose valid expense lifecycle and payment filters.");
+        var ordering=sort switch { "newest"=>"incurred_date DESC,expense_id", "oldest"=>"incurred_date,expense_id", "amount-desc"=>"amount DESC,incurred_date DESC,expense_id", "amount-asc"=>"amount,incurred_date DESC,expense_id", _=>throw new ValidationException("Choose a valid expense sort order.") };
         await using var c=factory.CreateConnection();await Require(c);
         return Read(await c.ExecuteScalarAsync<string>("""
           WITH filtered AS (
@@ -55,9 +60,15 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
           WHERE (@term IS NULL OR e.description ILIKE '%'||@term||'%' OR p.name ILIKE '%'||@term||'%' OR c.name ILIKE '%'||@term||'%')
            AND (@from::date IS NULL OR e.incurred_date>=@from::date) AND (@to::date IS NULL OR e.incurred_date<=@to::date)
            AND (@category::uuid IS NULL OR e.category_id=@category) AND (@payee::uuid IS NULL OR e.payee_id=@payee)
-           AND (@status IS NULL OR e.status=@status)
-          ), selected AS(SELECT * FROM filtered WHERE @paymentStatus IS NULL OR status='POSTED' AND CASE @paymentStatus WHEN 'UNPAID' THEN paid=0 WHEN 'PARTIAL' THEN paid>0 AND paid<amount WHEN 'PAID' THEN paid=amount ELSE false END), paged AS(SELECT * FROM selected ORDER BY incurred_date DESC,expense_id OFFSET @offset LIMIT @pageSize)
-          SELECT jsonb_build_object('total',(SELECT count(*) FROM selected),'page',@page,'pageSize',@pageSize,'rows',(SELECT coalesce(jsonb_agg(to_jsonb(paged)),'[]') FROM paged))::text
+           AND ((@status IS NULL AND e.status<>'DRAFT') OR e.status=@status)
+          ), selected AS(SELECT * FROM filtered WHERE @paymentStatus IS NULL OR status='POSTED' AND CASE @paymentStatus WHEN 'UNPAID' THEN paid=0 WHEN 'PARTIAL' THEN paid>0 AND paid<amount WHEN 'PAID' THEN paid=amount ELSE false END), paged AS(SELECT * FROM selected ORDER BY
+          """+" "+ordering+" "+"""
+           OFFSET @offset LIMIT @pageSize)
+          SELECT jsonb_build_object('total',(SELECT count(*) FROM selected),'page',@page,'pageSize',@pageSize,
+           'hasExpenses',EXISTS(SELECT 1 FROM expenses),
+           'legacyDraftCount',(SELECT count(*) FROM expenses WHERE status='DRAFT'),
+           'summary',(SELECT jsonb_build_object('totalExpenses',coalesce(sum(amount),0),'amountPaid',coalesce(sum(paid),0),'outstanding',coalesce(sum(amount-paid),0)) FROM selected WHERE status='POSTED'),
+           'rows',(SELECT coalesce(jsonb_agg(to_jsonb(paged)||jsonb_build_object('receiptId',(SELECT a.attachment_id FROM expense_attachments a WHERE a.tenant_id=paged.tenant_id AND a.expense_id=paged.expense_id ORDER BY a.created_at,a.attachment_id LIMIT 1))),'[]') FROM paged))::text
           """,new{term=string.IsNullOrWhiteSpace(term)?null:term.Trim(),from,to,page,pageSize,category,payee,status=string.IsNullOrEmpty(status)?null:status,paymentStatus=string.IsNullOrEmpty(paymentStatus)?null:paymentStatus,offset=(page-1)*pageSize}));
     }
     public async Task<JsonElement> GetAsync(Guid id)
@@ -73,6 +84,8 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
     }
     public async Task<long> WriteAsync(Guid id,string action,ExpenseOperation operation)
     {
+        // RECORD retains its internal SAVE/POST transaction; standalone drafts are retired.
+        if(string.Equals(action,"SAVE",StringComparison.OrdinalIgnoreCase))throw new ValidationException("Saving expense drafts is no longer supported. Use Record Expense.");
         if(id==Guid.Empty||operation.OperationId==Guid.Empty||operation.ExpectedVersion<0||operation.Body.ValueKind!=JsonValueKind.Object)throw new ValidationException("A valid expense, operation identity, version and structured body are required.");
         await using var c=factory.CreateConnection();await Require(c);
         return await c.ExecuteScalarAsync<long>("SELECT sf_expense_write(@id,@op,@expected,@action,@body::jsonb)",new{id,op=operation.OperationId,expected=operation.ExpectedVersion,action,body=operation.Body.GetRawText()});
@@ -110,7 +123,11 @@ public sealed class ExpenseRepository(DbConnectionFactory factory):IExpenseRepos
         if(from==default||to==default||from>to||to-from>TimeSpan.FromDays(3660))throw new ValidationException("Choose a valid expense report period (up to ten years).");
         await using var c=factory.CreateConnection();await Require(c,export?"EXPORT":"VIEW");
         return Read(await c.ExecuteScalarAsync<string>("""
+          WITH period_expenses AS (
+          """+Rows()+"""
+           WHERE e.status='POSTED' AND e.incurred_date BETWEEN @from::date AND @to::date)
           SELECT jsonb_build_object('from',@from::date,'to',@to::date,'storeId',sf_store(),'locationId',sf_location(),'profile',sf_visible_business_profile(),
+           'summary',(SELECT jsonb_build_object('totalExpenses',coalesce(sum(amount),0),'amountPaid',coalesce(sum(paid),0),'outstanding',coalesce(sum(amount-paid),0)) FROM period_expenses),
            'incurred',(SELECT coalesce(sum(amount),0) FROM expenses WHERE status='POSTED' AND incurred_date BETWEEN @from::date AND @to::date),
            'paid',(SELECT coalesce(sum(amount),0) FROM expense_payments WHERE paid_date BETWEEN @from::date AND @to::date),
            'outstandingAtCutoff',(SELECT coalesce(sum(e.amount-coalesce((SELECT sum(p.amount) FROM expense_payments p WHERE p.expense_id=e.expense_id AND p.paid_date<=@to::date),0)),0) FROM expenses e WHERE e.status='POSTED' AND e.incurred_date<=@to::date),

@@ -7,13 +7,16 @@
 <div id="master-data" data-module="@Model.ToLowerInvariant()" data-can-edit="@Access.Can(module,"EDIT").ToString().ToLowerInvariant()" data-can-disable="@Access.Can(module,"DELETE").ToString().ToLowerInvariant()">
     <div class="configuration-heading">
         <h2>@Model</h2>
+        <div class="d-flex align-items-center flex-wrap gap-2">
+        @if(Model=="Products" && Access.Can("BARCODES","VIEW")){<a href="/Labels" class="btn btn-outline-secondary">Barcode Labels</a>}
         @if (Access.Can(module,"CREATE")) {
         @if (Model == "Categories") {
         <div class="category-create-actions"><button id="add-record" class="btn category-primary" type="button"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#plus" /></svg> Add Parent Category</button><button id="category-add-subcategory" class="btn category-secondary" type="button"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#plus" /></svg> Add Subcategory</button></div>
         } else {
-        <button id="add-record" class="btn btn-dark" type="button" aria-haspopup="dialog" aria-controls="@(Model == "Products" ? "purchase-registration" : "editor")">+ Add @singular</button>
+        <button id="add-record" class="btn btn-primary" type="button" aria-haspopup="dialog" aria-controls="@(Model == "Products" ? "purchase-registration" : "editor")">+ Add @singular</button>
         }
         }
+        </div>
     </div>
     <div id="master-message" class="alert d-none" role="status" aria-live="polite">
     </div>
@@ -45,12 +48,12 @@
         </div>
     </section>
     <partial name="_MasterEditor" model="Model" />
-    <dialog id="deactivate-dialog" class="configuration-dialog" aria-labelledby="deactivate-title">
+    <dialog data-sf-dialog="compact" id="deactivate-dialog" class="configuration-dialog" aria-labelledby="deactivate-title">
         <h2 id="deactivate-title">@(Model == "Categories" ? "Deactivate Category?" : "Stop using this " + singular.ToLowerInvariant() + "?")</h2>
         <p>@(Model == "Categories" ? "This category will no longer be available for new product registration." : "This record will no longer be available for new entries. Its saved history will stay.")</p>
         <div class="configuration-dialog-actions">
-            <button type="button" id="cancel-deactivate" class="btn btn-dark">Cancel</button>
-            <button type="button" id="confirm-deactivate" class="btn btn-primary">@(Model == "Categories" ? "Deactivate Category" : "Stop using this record")</button>
+            <button type="button" id="cancel-deactivate" class="btn btn-outline-secondary">Cancel</button>
+            <button type="button" id="confirm-deactivate" class="btn btn-dark">@(Model == "Categories" ? "Deactivate Category" : "Stop using this record")</button>
         </div>
     </dialog>
 </div>

@@ -1,7 +1,7 @@
 ﻿@page
-@{ ViewData["Title"] = "Shop Business Profile"; }
+@{ ViewData["Title"] = "Shop Profile"; }
 <div id="business-profile-workspace">
-    <header class="sf-page-heading bp-heading"><div><h1>Shop Business Profile</h1></div></header>
+    <header class="sf-page-heading bp-heading"><div><h1>Shop Profile</h1></div></header>
     <div id="business-profile-message" class="bp-error" role="alert" hidden></div>
     <p id="business-profile-status" class="bp-status" role="status" aria-live="polite">Loading current configuration…</p>
     <section class="bp-card bp-current"><h2><svg aria-hidden="true" class="bp-icon"><use href="/images/icons.svg#grid" /></svg>Current Configuration</h2><dl id="business-profile-current"></dl></section>
@@ -14,7 +14,7 @@
             <section id="business-profile-unchanged" class="bp-card bp-unchanged" role="status" hidden><h2><svg class="bp-check-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span id="business-profile-unchanged-title"></span></h2><p>No profile change selected. Your current setup remains unchanged.</p><p id="business-profile-unchanged-counts"></p><p>Applies to: This company and all its branches.</p></section>
             <section id="business-profile-comparison-card" class="bp-card bp-comparison" hidden><h2>Before &amp; After</h2><p id="business-profile-change" role="status"></p><div id="business-profile-comparison-details" hidden><div class="bp-table-scroll" tabindex="0" role="region" aria-label="Current and selected profile comparison"><table><thead><tr><th scope="col">Setting</th><th scope="col">Current Profile</th><th scope="col">Selected Profile</th></tr></thead><tbody id="business-profile-comparison"></tbody></table></div><details id="business-profile-category-details"><summary>View category comparison</summary><div id="business-profile-category-comparison" class="bp-columns"></div></details></div></section>
             <section id="business-profile-review" class="bp-card" hidden><h2>Review Before Applying</h2><p id="business-profile-impact"></p><p class="bp-preservation">Existing products, categories, transactions and stock records remain associated with their original profile. Changing the active profile does not convert historical records.</p><p class="bp-scope">This change applies to the company and all branches.</p><details class="bp-impact"><summary>View Details</summary><h3>What happens when you apply?</h3><ul><li>The active configuration changes for this company and all its branches.</li><li>Menus and features follow profile capabilities; existing permission checks still apply.</li><li>Historical records remain saved under their original profile.</li></ul><p id="business-profile-preservation"></p><p id="business-profile-seeding"></p></details><label for="business-profile-reason" class="form-label">Reason for change *</label><textarea id="business-profile-reason" class="form-control" minlength="5" maxlength="500" rows="2" required></textarea><label class="bp-acknowledge"><input id="business-profile-acknowledge" type="checkbox" required /> I have reviewed the categories and enabled features for this business.</label></section>
-            <footer class="bp-actions"><a href="/Settings/Company?section=business" class="btn btn-dark">Back to Business Information</a><button id="business-profile-save" class="btn bp-primary" type="submit" disabled>Apply Shop Setup</button></footer>
+            <footer class="bp-actions"><a href="/Settings/Company?section=business" class="btn btn-outline-secondary">Back to Business Details</a><button id="business-profile-save" class="btn bp-primary" type="submit" disabled>Apply Shop Setup</button></footer>
         </fieldset>
     </form>
 </div>

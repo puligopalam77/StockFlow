@@ -293,7 +293,7 @@
         },
         async onReady(controls) {
             modernize(controls);
-            if(window.StockFlowMasterScreens&&!StockFlowMasterScreens.page){try{const saved=JSON.parse(sessionStorage.getItem('stockflow.supplier-saved')||'null');sessionStorage.removeItem('stockflow.supplier-saved');if(saved?.id){const response=await fetch('/api/suppliers/'+saved.id,{credentials:'same-origin'});if(response.ok){const record=await response.json(),note=element('section');note.className='supplier-success';note.setAttribute('role','status');note.append(element('strong','Supplier saved: '+record.supplierCode),element('p',record.supplierName));const c=saved.context;if(c){const href=StockFlowSupplierNavigation.editUrl(c.productId,c.variantId,c.from);if(href){const link=element('a','Return to Product Edit');link.href=href;link.className='btn btn-dark';note.append(link,element('p','Select this supplier explicitly and enter its item code. No product association or planning policy has been saved.'));}}document.getElementById('master-data').prepend(note);}}}catch{}}
+            if(window.StockFlowMasterScreens&&!StockFlowMasterScreens.page){try{const saved=JSON.parse(sessionStorage.getItem('stockflow.supplier-saved')||'null');sessionStorage.removeItem('stockflow.supplier-saved');if(saved?.id){const response=await fetch('/api/suppliers/'+saved.id,{credentials:'same-origin'});if(response.ok){const record=await response.json(),note=element('section');note.className='supplier-success';note.setAttribute('role','status');note.append(element('strong','Supplier saved: '+record.supplierCode),element('p',record.supplierName));const c=saved.context;if(c){const href=StockFlowSupplierNavigation.editUrl(c.productId,c.variantId,c.from);if(href){const link=element('a','Return to Product Edit');link.href=href;link.className='btn btn-outline-secondary';note.append(link,element('p','Select this supplier explicitly and enter its item code. No product association or planning policy has been saved.'));}}document.getElementById('master-data').prepend(note);}}}catch{}}
 
             const response = await fetch('/api/suppliers/options');
             if (!response.ok) {
@@ -372,7 +372,7 @@
                 return true;
             }
             const dialog = document.createElement('dialog');
-            dialog.className = 'configuration-dialog supplier-duplicate-dialog';
+            dialog.className = 'configuration-dialog supplier-duplicate-dialog';dialog.dataset.sfDialog='large';
             dialog.setAttribute('aria-labelledby', 'supplier-duplicate-title');
             const title = document.createElement('h2');
             title.id = 'supplier-duplicate-title';

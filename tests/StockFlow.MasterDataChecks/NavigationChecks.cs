@@ -14,10 +14,12 @@ static class NavigationChecks
         foreach(var (url,file) in new[]{("/Sales","Sales"),("/Sales/Create","NewSale"),("/Purchases","Receipts"),("/Labels","Labels"),("/Inventory","Inventory"),("/Customers","Customers"),("/Reports/Activity","Reports"),("/Products","Products"),("/Categories","Categories"),("/Brands","Brands"),("/Suppliers","Suppliers"),("/Products/Create","ProductCreate"),("/Products/Variants","Variants"),("/Categories/Attributes","Attributes")})
         {
             var html=await admin.GetStringAsync(url);var nav=Nav(html);
-            foreach(var label in new[]{"Home","Purchases","Sales &amp; Billing","Inventory Overview","Reports","Administration","Service &amp; Warranty","Customer Relationships"})Check(nav.Contains(label),"navigation includes "+label+" on "+url);
+            foreach(var label in new[]{"Home","Purchases","Sales","Stock Overview","Expenses","Reports","Settings","Service &amp; Warranty","Customers","Barcode Labels"})Check(nav.Contains(label),"navigation includes "+label+" on "+url);
             Check(Regex.Matches(nav,"aria-current=\"page\"").Count==1,"exactly one current navigation link on "+url);
             foreach(var moved in new[]{"Products","Categories","Brands","Suppliers","Customers"})Check(Regex.Matches(nav,"href=\"/"+moved+"\"").Count==1,"one sidebar link for "+moved+" on "+url);
             Check(!nav.Contains("Business Partners")&&!nav.Contains("href=\"/Configuration\""),"old Administration groups removed on "+url);
+            Check(Regex.Matches(nav,"href=\"/Labels\"").Count==1&&Regex.IsMatch(nav,"sf-catalog-nav[\\s\\S]*href=\"/Labels\""),"one central Barcode Labels link inside Product Catalog on "+url);
+            Check(Regex.Matches(nav,"href=\"/Inventory(?:\\?|\")").Count==1&&Regex.Matches(nav,"href=\"/Inventory/LowStock(?:\\?|\")").Count==1,"operational stock and low-stock links are not duplicated in Reports");
             var family=url.Split('/')[1];
             var expected=family switch{"Products" or "Categories" or "Brands"=>"Inventory","Suppliers"=>"Receive Stock","Customers"=>"Customer Relationships",_=>null};
             if(expected is not null){
@@ -33,7 +35,7 @@ static class NavigationChecks
         var sales=await reader.GetStringAsync("/Sales");
         Check(!Nav(sales).Contains("href=\"/Sales/Create\"")&&!sales.Contains(">New sale</a>"),"view-only billing hides create links and button");
         reader.DefaultRequestHeaders.Remove("Test-Deny-Action");
-        reader.DefaultRequestHeaders.Add("Test-Deny","PURCHASES,STOCK_INFLOW,BARCODES,SALES,SERVICE,PENDING_SERVICES,WARRANTY_LOOKUP,WARRANTY_CLAIMS,EXPIRING_WARRANTIES,PRODUCTS,CATEGORIES,BRANDS,SUPPLIERS,CUSTOMERS,CRM,USER_MANAGEMENT,ROLE_MANAGEMENT,STORES,SECURITY,AUDIT_LOGS,COMPANY_SETTINGS,GST_SETTINGS,EWAY_BILLS");
+        reader.DefaultRequestHeaders.Add("Test-Deny","PURCHASES,STOCK_INFLOW,BARCODES,SALES,QUOTATIONS,SERVICE,PENDING_SERVICES,WARRANTY_LOOKUP,WARRANTY_CLAIMS,EXPIRING_WARRANTIES,PRODUCTS,CATEGORIES,BRANDS,SUPPLIERS,CUSTOMERS,CRM,USER_MANAGEMENT,ROLE_MANAGEMENT,STORES,SECURITY,AUDIT_LOGS,COMPANY_SETTINGS,GST_SETTINGS,EWAY_BILLS");
         var restricted=Nav(await reader.GetStringAsync("/Inventory"));
         foreach(var group in new[]{"Receive Stock","Sell / Billing","Service &amp; Warranty","Setup","Customer Relationships"})Check(!restricted.Contains(group),"empty unauthorized group hidden: "+group);
         Check((await reader.GetAsync("/Admin/Users")).Headers.Location?.OriginalString=="/Account/AccessDenied","direct unauthorized setup route still denied");
@@ -46,6 +48,15 @@ static class NavigationChecks
         using var supplier=factory.CreateClient(new(){AllowAutoRedirect=false});supplier.DefaultRequestHeaders.Add("Test-Role","Admin");supplier.DefaultRequestHeaders.Add("Test-Deny","PURCHASES,STOCK_INFLOW,BARCODES,CRM");
         var supplierNav=Nav(await supplier.GetStringAsync("/Suppliers"));
         Check(supplierNav.Contains("data-nav-group=\"Receive Stock\"")&&supplierNav.Contains("href=\"/Suppliers\"")&&!supplierNav.Contains("href=\"/Purchases\""),"Supplier-only access opens Purchases without purchase-order rights");
+        using var barcodeOnly=factory.CreateClient(new(){AllowAutoRedirect=false});barcodeOnly.DefaultRequestHeaders.Add("Test-Role","Admin");barcodeOnly.DefaultRequestHeaders.Add("Test-Deny","PRODUCTS,CATEGORIES,BRANDS,INVENTORY,PURCHASES,STOCK_INFLOW,SUPPLIERS");
+        var barcodeNav=Nav(await barcodeOnly.GetStringAsync("/Labels"));Check(barcodeNav.Contains("href=\"/Labels\"")&&!barcodeNav.Contains("href=\"/Products\""),"barcode-only permissions retain the Product Catalog destination without granting product access");
+        barcodeOnly.DefaultRequestHeaders.Add("Test-Deny-Action","BARCODES:VIEW");Check((await barcodeOnly.GetAsync("/Labels")).Headers.Location?.OriginalString=="/Account/AccessDenied","moved barcode route still rejects users without view permission");
+        using var settings=factory.CreateClient();settings.DefaultRequestHeaders.Add("Test-Role","Admin");
+        foreach(var url in new[]{"/Expenses/Report","/CashClosing","/Inventory?fromReports=1","/Inventory/Index?fromReports=1","/Inventory/LowStock?fromReports=1","/Settings/Company?section=business","/Settings/Company?section=billing","/Settings/BusinessProfile"}){
+            var html=await settings.GetStringAsync(url);Check(Regex.Matches(Nav(html),"aria-current=\"page\"").Count==1,"one active destination on direct and legacy link "+url);
+            await File.WriteAllTextAsync(Path.Combine(output,url.Replace('/','_').Replace('?','_').Replace('=','_')+".html"),html);
+        }
+        settings.DefaultRequestHeaders.Add("Test-Deny","REPORTS");Check(Regex.Matches(Nav(await settings.GetStringAsync("/Expenses/Report")),"aria-current=\"page\"").Count==1,"GST-enabled Reports navigation does not duplicate the Expenses active state");
         Console.WriteLine("Navigation and operational screen checks passed; no database accessed.");
     }
 }

@@ -1,23 +1,99 @@
-/* Shared action colors. Navigation, tabs and disclosure controls keep their own states. */
-:root{--sf-action-bg:#171b22;--sf-action-hover:#ff007f}
-:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action,button[type=submit],input[type=submit],input[type=button]):not([role=tab]){
- --bs-btn-bg:var(--sf-action-bg);--bs-btn-border-color:var(--sf-action-bg);--bs-btn-color:#fff;
- --bs-btn-hover-bg:var(--sf-action-hover);--bs-btn-hover-border-color:var(--sf-action-hover);--bs-btn-hover-color:#fff;
- --bs-btn-active-bg:var(--sf-action-bg);--bs-btn-active-border-color:var(--sf-action-bg);--bs-btn-active-color:#fff;
- --bs-btn-disabled-bg:var(--sf-action-bg);--bs-btn-disabled-border-color:var(--sf-action-bg);--bs-btn-disabled-color:#fff;
- background-color:var(--sf-action-bg)!important;background-image:none!important;border-color:var(--sf-action-bg)!important;color:#fff!important;
- transition:background-color .18s ease,border-color .18s ease,color .18s ease;
+/* Semantic action variants. Dimensions stay with their owning components.
+   One compatibility layer beats legacy page !important colors; use these
+   variants instead of adding page-specific color overrides. */
+:root {
+ --sf-action-bg:#171b22;
+ --sf-action-hover:var(--sf-pink-dark,#df0063);
+ --sf-action-danger:var(--bs-danger,#dc3545);
+ --sf-action-danger-dark:#b02a37;
+ --sf-action-neutral:#f1f4fa;
+ --sf-action-neutral-active:#e6ebf3;
+ --sf-action-border:#d3ddeb;
+ --sf-action-focus:var(--sf-pink-dark,#df0063);
 }
-:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action,button[type=submit],input[type=submit],input[type=button]):not([role=tab]):hover:not(:disabled):not(.disabled):not([aria-disabled=true]){
- background-color:var(--sf-action-hover)!important;border-color:var(--sf-action-hover)!important;color:#fff!important;
+@media screen {
+ @layer stockflow-action-hierarchy {
+  /* Bootstrap's explicit .btn base is a neutral supporting action. Native buttons,
+     tabs, pagination and menu items never enter this component styling. */
+  :is(.sf-app,.sf-auth-body) .btn {
+   --sf-btn-bg:#fff; --sf-btn-ink:var(--sf-ink,#101d38); --sf-btn-border:var(--sf-action-border);
+   --sf-btn-hover:var(--sf-action-neutral); --sf-btn-active:var(--sf-action-neutral-active);
+  }
+  :is(.sf-app,.sf-auth-body) :is(.btn-primary,.category-primary,.rp-primary,.bp-primary,.gst-primary,.gst-setup-primary,.sf-signin,.sf-dialog-confirm) {
+   --sf-btn-bg:var(--sf-pink,#ff087d); --sf-btn-ink:#fff; --sf-btn-border:var(--sf-btn-bg);
+   --sf-btn-hover:var(--sf-pink-dark,#df0063); --sf-btn-active:#c6005a;
+  }
+  :is(.sf-app,.sf-auth-body) :is(.btn-outline-primary,.btn-outline-secondary,.btn-outline-dark,.btn-secondary,.category-secondary,.sf-dialog-cancel) {
+   --sf-btn-bg:#fff; --sf-btn-ink:var(--sf-ink,#101d38); --sf-btn-border:var(--sf-action-border);
+   --sf-btn-hover:var(--sf-action-neutral); --sf-btn-active:var(--sf-action-neutral-active);
+  }
+  .sf-app .btn-dark {
+   --sf-btn-bg:var(--sf-action-bg); --sf-btn-ink:#fff; --sf-btn-border:var(--sf-btn-bg);
+   --sf-btn-hover:#303640; --sf-btn-active:#090e18;
+  }
+  .sf-app :is(.btn-link,.sf-btn-text) {
+   --sf-btn-bg:transparent; --sf-btn-ink:var(--sf-ink,#101d38); --sf-btn-border:transparent;
+   --sf-btn-hover:var(--sf-action-neutral); --sf-btn-active:var(--sf-action-neutral-active);
+  }
+  .sf-app .btn-danger {
+   --sf-btn-bg:var(--sf-action-danger); --sf-btn-ink:#fff; --sf-btn-border:var(--sf-btn-bg);
+   --sf-btn-hover:var(--sf-action-danger-dark); --sf-btn-active:#842029;
+  }
+  .sf-app .btn-outline-danger {
+   --sf-btn-bg:#fff; --sf-btn-ink:var(--sf-action-danger-dark); --sf-btn-border:var(--sf-action-danger);
+   --sf-btn-hover:#f8d7da; --sf-btn-active:#f1aeb5;
+  }
+  .sf-app :is(.sf-dialog-cancel,.sf-dialog-confirm) { border:1px solid var(--sf-btn-border)!important; }
+  :is(.sf-app,.sf-auth-body) :is(.btn,.sf-btn-text,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm):where(:not(.sf-action-icon,[role=tab],.page-link,.dropdown-item)) {
+   background-color:var(--sf-btn-bg)!important; background-image:none!important;
+   border-color:var(--sf-btn-border)!important; color:var(--sf-btn-ink)!important;
+   border-radius:6px!important; gap:6px;
+   transition:background-color 120ms ease,border-color 120ms ease,color 120ms ease!important;
+   box-shadow:none!important;
+  }
+  :is(.sf-app,.sf-auth-body) :is(.btn,.sf-btn-text,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm):where(:not(.sf-action-icon,[role=tab],.page-link,.dropdown-item)):hover:not(:disabled,.disabled,[aria-disabled=true],[aria-busy=true]) {
+   background-color:var(--sf-btn-hover,var(--sf-btn-bg))!important;
+   border-color:var(--sf-btn-border)!important; color:var(--sf-btn-ink)!important;
+  }
+  :is(.sf-app,.sf-auth-body) :is(.btn,.sf-btn-text,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm):where(:not(.sf-action-icon,[role=tab],.page-link,.dropdown-item)):active:not(:disabled,.disabled,[aria-disabled=true],[aria-busy=true]) {
+   background-color:var(--sf-btn-active,var(--sf-btn-bg))!important;
+  }
+  :is(.sf-app,.sf-auth-body) :is(.btn,.sf-btn-text,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm):focus-visible {
+   outline:2px solid var(--sf-action-focus)!important; outline-offset:3px; box-shadow:none!important;
+  }
+  :is(.sf-app,.sf-auth-body) :is(.btn,.sf-btn-text,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm):is(:disabled,.disabled,[aria-disabled=true]) { opacity:.55!important; cursor:not-allowed; }
+  @media(prefers-reduced-motion:reduce) {
+   :is(.sf-app,.sf-auth-body) :is(.btn,.sf-btn-text,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm) { transition:none!important; }
+  }
+ }
 }
-:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action,button[type=submit],input[type=submit],input[type=button]):not([role=tab]):focus-visible{
- outline:3px solid var(--sf-action-hover)!important;outline-offset:3px;
+
+/* Comparable tabs and wizard steps share an accent indicator, never a primary fill.
+   Existing error borders, completion ticks, layout, roving focus and tab state stay owned by the workflow. */
+@media screen {
+ .sf-app :is(.registration-tabs,.category-registration-tabs,.history-view-tabs,.receipt-tabs,.bc-tabs) [role=tab] {
+  background:transparent; color:var(--sf-ink); position:relative;
+  transition:background-color 120ms ease,color 120ms ease;
+ }
+ .sf-app :is(.registration-tabs,.category-registration-tabs,.history-view-tabs,.receipt-tabs,.bc-tabs) [role=tab]:hover:not(:disabled) { background:var(--sf-action-neutral); }
+ .sf-app :is(.registration-tabs,.category-registration-tabs,.history-view-tabs,.receipt-tabs,.bc-tabs) [role=tab][aria-selected=true] {
+  background:var(--sf-action-neutral); color:var(--sf-ink); font-weight:650;
+  box-shadow:inset 0 -2px var(--sf-pink);
+ }
+ .sf-app :is(.history-view-tabs,.receipt-tabs) [role=tab][aria-selected=true] { box-shadow:none; }
+ .sf-app :is(.registration-tabs,.category-registration-tabs) [role=tab][aria-selected=true]::after { content:none; }
+ .sf-app :is(.registration-tabs,.category-registration-tabs,.history-view-tabs,.receipt-tabs,.bc-tabs) [role=tab]:focus-visible { outline:2px solid var(--sf-action-focus); outline-offset:2px; }
+ .sf-app .billing-customer-picker[open]>summary::after { transform:rotate(180deg); }
+ .sf-app .registration-tab-status { color:var(--sf-muted); }
+ .sf-app .has-errors .registration-tab-status { color:var(--sf-action-danger-dark); }
+ .sf-app .expense-gst-toggle input:checked+label { background:var(--sf-action-neutral); color:var(--sf-ink); box-shadow:inset 0 -2px var(--sf-pink); }
+ .sf-app .billing-payment-tile:hover:not(:disabled) { background:var(--sf-action-neutral); border-color:var(--sf-action-border); }
+ .sf-app :is(.sf-module-main details>summary,.sf-breadcrumb a):focus-visible { outline:2px solid var(--sf-action-focus); outline-offset:2px; }
+ .sf-app .sf-module-main details>summary:hover { background-color:var(--sf-action-neutral); }
+ @media(prefers-reduced-motion:reduce) {
+  .sf-app :is(.registration-tabs,.category-registration-tabs,.history-view-tabs,.receipt-tabs,.bc-tabs) [role=tab],.sf-app .billing-payment-tile { transition:none; }
+ }
 }
-:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action,button[type=submit],input[type=submit],input[type=button]):not([role=tab]):is(:disabled,.disabled,[aria-disabled=true]){
- opacity:.55;cursor:not-allowed;
-}
-@media(prefers-reduced-motion:reduce){:is(.sf-app,.sf-auth-body) :is(.btn,.sf-signin,.sf-dialog-cancel,.sf-dialog-confirm,.sales-action){transition:none}}
 
 /* Consistent hand cursor for actions and selection controls, including input-based dropdowns. */
 :is(.sf-app,.sf-auth-body) :is(a[href],button,summary,select,[role=button],[role=option],[role=menuitem],[role=tab],.sf-select-trigger,.sf-address-search,input[type=button],input[type=submit],input[type=reset],input[type=checkbox],input[type=radio],input[type=file],input[type=color],input[type=range],input[type=date],input[type=time],input[type=datetime-local],input[type=month],input[type=week],label:has(input[type=checkbox],input[type=radio])):not(:disabled):not([readonly]):not([aria-disabled=true]):not(.disabled):not(:has(input[type=checkbox]:disabled,input[type=radio]:disabled)){cursor:pointer!important}

@@ -31,7 +31,7 @@ internal static class ExpenseReportingChecks
         await Write(inclusive,"PAY",new{amount=100,paymentMode="UPI",paidDate=today.ToString("yyyy-MM-dd")});
         await Write(inclusive,"PAY",new{amount=80,paymentMode="BANK_TRANSFER",paidDate=today.ToString("yyyy-MM-dd")});
         var other=await Record(300,today,100);await Write(other,"REFUND",new{amount=25,paymentMode="CASH",paidDate=today.ToString("yyyy-MM-dd"),reason="Synthetic refund"});
-        var draft=Guid.NewGuid();await repo.WriteAsync(draft,"SAVE",new(Guid.NewGuid(),0,Element(Details(700,today))));
+        var draft=Guid.NewGuid();await ExpenseRecordingChecks.SeedLegacyAsync(setup,draft,new(Guid.NewGuid(),0,Element(Details(700,today))));
         var cancelled=await Record(90,today);await Write(cancelled,"CANCEL",new{reason="Synthetic cancelled expense"});
         var report=await repo.ReportAsync(from,today);var monthly=report.GetProperty("monthly").EnumerateArray().Single(m=>m.GetProperty("month").GetString()==today.ToString("yyyy-MM"));
         Check(report.GetProperty("incurred").GetDecimal()-baseline.GetProperty("incurred").GetDecimal()==1480m&&monthly.GetProperty("total").GetDecimal()==report.GetProperty("incurred").GetDecimal(),"Monthly totals count each recorded inclusive expense once and exclude drafts/cancellations");

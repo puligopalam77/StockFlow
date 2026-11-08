@@ -6,6 +6,13 @@
     const intersects = (a,b) => a.left < b.right + 6 && a.right > b.left - 6 && a.top < b.bottom + 6 && a.bottom > b.top - 6;
     function place() {
         scheduled = false;
+        // Module and shared docks occupy normal document space. The legacy
+        // overlap avoidance below only applies to an actual floating launcher.
+        if (getComputedStyle(launcher).position !== 'fixed') {
+            launcher.style.removeProperty('right');
+            launcher.style.removeProperty('bottom');
+            return;
+        }
         if (document.getElementById('billing-workspace')) {
             launcher.style.removeProperty('right');
             launcher.style.removeProperty('bottom');

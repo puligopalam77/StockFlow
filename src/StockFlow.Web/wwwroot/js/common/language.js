@@ -319,15 +319,25 @@ window.StockFlowLanguage = (() => {
     let activePack = {};
     const packs = new Map();
     let languageRevision = 0;
+    // Short retail navigation names reuse existing localized terminology when a
+    // language pack has not yet supplied the newer caption. Stored keys stay valid.
+    const captionAliases={
+        'sales':['sales & billing','sell / billing'], 'expenses':['operating expenses'],
+        'stock overview':['inventory overview','stock on hand'], 'stock history':['inventory history','search records'],
+        'business details':['business information'], 'invoice settings':['billing & invoice settings'],
+        'shop profile':['shop business profile'], 'expense reports':['operating expenses'],
+        'sales reports':['sales & invoices'], 'gst reports':['gst & tax reports']
+    };
     function text(value) {
         if (language === 'en') return value;
         const match = value.match(/^(\s*)(.*?)(\s*)$/s);
         const core = match[2].replace(/\s+/g, ' ');
         const suffix = core.match(/(\s*\*|:)$/)?.[0] || '';
         const words = suffix ? core.slice(0, -suffix.length) : core;
-        const custom = overrides.get(words.toLowerCase());
-        const packed = Object.hasOwn(activePack, words.toLowerCase()) ? activePack[words.toLowerCase()] : null;
-        const translated = index.get(words.toLowerCase());
+        const keys=[words.toLowerCase(),...(captionAliases[words.toLowerCase()]||[])];
+        const custom = keys.map(key=>overrides.get(key)).find(Boolean);
+        const packed = keys.map(key=>Object.hasOwn(activePack,key)?activePack[key]:null).find(Boolean);
+        const translated = keys.map(key=>index.get(key)).find(Boolean);
         const result =
             custom ||
             packed ||

@@ -10,7 +10,7 @@ public sealed class ExpensesController(IExpenseRepository repository):Controller
 {
     [HttpGet("options")]public async Task<IActionResult> Options()=>Ok(await repository.OptionsAsync());
     [HttpPost("tax-preview")]public async Task<IActionResult> TaxPreview(ExpenseTaxPreview request)=>Ok(await repository.TaxPreviewAsync(request));
-    [HttpGet]public async Task<IActionResult> List(string? term,DateTime? from,DateTime? to,int page=1,int pageSize=10,Guid? category=null,Guid? payee=null,string? status=null,string? paymentStatus=null)=>Ok(await repository.ListAsync(term,from,to,page,pageSize,category,payee,status,paymentStatus));
+    [HttpGet]public async Task<IActionResult> List(string? term,DateTime? from,DateTime? to,int page=1,int pageSize=10,Guid? category=null,Guid? payee=null,string? status=null,string? paymentStatus=null,string sort="newest")=>Ok(await repository.ListAsync(term,from,to,page,pageSize,category,payee,status,paymentStatus,sort));
     [HttpPost("{id:guid}/record")]public async Task<IActionResult> Record(Guid id,ExpenseOperation request)=>Ok(new{version=await repository.RecordAsync(id,request)});
     [HttpGet("{id:guid}")]public async Task<IActionResult> Get(Guid id)=>Ok(await repository.GetAsync(id));
     [HttpPost("{id:guid}/{command}")]public async Task<IActionResult> Write(Guid id,string command,ExpenseOperation request)

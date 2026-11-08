@@ -196,7 +196,7 @@
                 if(name==='quantity'){
                     const group=node('div','goods-quantity');f.input.before(group);
                     const adjust=delta=>{const value=Number(f.input.value)+delta;if(value<1||value>10000||item.purchaseItemId&&value>item.remaining)return;f.input.value=value;f.input.dispatchEvent(new Event('input',{bubbles:true}));};
-                    const minus=button('−','btn btn-dark',()=>adjust(-1)),plus=button('+','btn btn-dark',()=>adjust(1));
+                    const minus=button('−','btn btn-outline-secondary',()=>adjust(-1)),plus=button('+','btn btn-outline-secondary',()=>adjust(1));
                     minus.setAttribute('aria-label','Decrease quantity for '+item.productName);plus.setAttribute('aria-label','Increase quantity for '+item.productName);group.append(minus,f.input,plus);
                 }
                 row.append(f.wrap);
@@ -347,7 +347,7 @@
                 row.append(identity);
                 for(const value of [product.variantName==='DEFAULT'?'Standard':product.variantName||product.attributeSummary||'Standard',product.sku,product.barcode||product.primaryBarcode||'—',product.brandName||'—'])row.append(node('td','',value));
                 const stock=node('td'),badge=node('span','goods-stock-badge',String(product.currentStock??0)+' in stock');if(!product.currentStock)badge.classList.add('goods-stock-empty');stock.append(badge);row.append(stock);
-                const cell=node('td'),add=button('Add','btn btn-dark',()=>run(()=>{addProduct(product);el('goods-search').value='';++searchVersion;closeSuggestions();if(!el('goods-item-dialog').open)el('goods-search').focus();}));add.dataset.result='true';add.disabled=product.isActive===false;add.setAttribute('aria-label','Add '+product.productName+' SKU '+product.sku);cell.append(add);row.append(cell);body.append(row);
+                const cell=node('td'),add=button('Add','btn btn-outline-secondary',()=>run(()=>{addProduct(product);el('goods-search').value='';++searchVersion;closeSuggestions();if(!el('goods-item-dialog').open)el('goods-search').focus();}));add.dataset.result='true';add.disabled=product.isActive===false;add.setAttribute('aria-label','Add '+product.productName+' SKU '+product.sku);cell.append(add);row.append(cell);body.append(row);
             }
             table.append(body);host.append(table);
             if(!rows.length)host.append(node('p','p-2 mb-0','No registered products found. Try another name, SKU or barcode.'));

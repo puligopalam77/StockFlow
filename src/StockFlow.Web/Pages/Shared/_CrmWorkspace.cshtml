@@ -39,7 +39,7 @@
         <div class="crm-table" id="crm-list" aria-live="polite"></div><div id="crm-pager"></div>
     </section>
     <section class="crm-card" id="crm-detail" hidden aria-live="polite"></section>
-    <dialog id="crm-dialog" aria-labelledby="crm-dialog-title">
+    <dialog data-sf-dialog="large" id="crm-dialog" aria-labelledby="crm-dialog-title">
         <form id="crm-enquiry-form">
             <header class="crm-modal-header"><div><h2 id="crm-dialog-title">New Enquiry</h2><p>Record a customer request and plan the next action.</p></div><button type="button" data-close aria-label="Close">×</button></header>
             <div class="crm-dialog-body">
@@ -66,7 +66,7 @@
             <footer class="crm-modal-footer"><button type="button" data-close>Cancel</button><button type="submit" id="crm-save">Save Enquiry</button></footer>
         </form>
     </dialog>
-    <dialog id="crm-follow-dialog" aria-labelledby="crm-follow-title"><form id="crm-follow-form">
+    <dialog data-sf-dialog="medium" id="crm-follow-dialog" aria-labelledby="crm-follow-title"><form id="crm-follow-form">
         <header class="crm-modal-header"><div><h2 id="crm-follow-title">Record Follow-up</h2><p id="crm-follow-reference"></p></div><button type="button" data-close aria-label="Close">×</button></header>
         <div class="crm-dialog-body"><div id="crm-follow-error" role="alert" hidden></div><div class="crm-grid">
             <div class="crm-field"><label for="follow-date">Activity date &amp; time *</label><input id="follow-date" type="datetime-local" required /></div>

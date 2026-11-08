@@ -21,12 +21,12 @@
         </tbody>
     </table>
 </div>
-<dialog id="session-revoke-dialog" class="sf-account-dialog" aria-labelledby="session-revoke-title">
+<dialog data-sf-dialog="compact" id="session-revoke-dialog" class="sf-account-dialog" aria-labelledby="session-revoke-title">
     <h2 id="session-revoke-title" class="h5">Sign out this device?</h2>
     <p>The device must sign in again to continue.</p>
     <div class="d-flex gap-2 justify-content-end">
         <button id="session-revoke-cancel" type="button" class="btn btn-outline-secondary">Cancel</button>
-        <button id="session-revoke-confirm" type="button" class="btn btn-primary">Sign out device</button>
+        <button id="session-revoke-confirm" type="button" class="btn btn-dark">Sign out device</button>
     </div>
 </dialog>
 @section Scripts {<script src="~/js/account-sessions.js" asp-append-version="true"></script>}

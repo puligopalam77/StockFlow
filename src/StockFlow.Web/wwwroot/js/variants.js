@@ -92,7 +92,7 @@
         }
         const remove = document.createElement('button');
         remove.type = 'button';
-        remove.className = 'btn btn-dark';
+        remove.className = 'btn btn-outline-danger';
         remove.textContent = '×';
         remove.setAttribute('aria-label', 'Remove attribute');
         remove.onclick = () => {
@@ -237,7 +237,7 @@
     function actionButton(container, text, action) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'btn btn-dark btn-sm me-1';
+        button.className = 'btn btn-outline-secondary btn-sm me-1';
         button.textContent = text;
         button.onclick = () => {
             return runAction(action);

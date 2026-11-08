@@ -699,7 +699,7 @@
             if(!item.manualItem && item.hasProductImage!==false){const img=document.createElement('img');img.src='/api/products/'+item.productId+'/image';img.alt='';img.loading='lazy';img.onerror=()=>img.remove();image.append(img);}
             productCell.prepend(image);productCell.className='billing-item-product';
             const warning=document.createElement('button');warning.type='button';warning.id='line-warning-'+index;warning.className='billing-line-adjustment-indicator';warning.hidden=true;
-            const reasonPanel=document.createElement('dialog');reasonPanel.id='line-reason-panel-'+index;reasonPanel.className='billing-adjustment-dialog';
+            const reasonPanel=document.createElement('dialog');reasonPanel.id='line-reason-panel-'+index;reasonPanel.className='billing-adjustment-dialog';reasonPanel.dataset.sfDialog='medium';
             const heading=document.createElement('h2');heading.id='line-adjustment-title-'+index;reasonPanel.setAttribute('aria-labelledby',heading.id);
             const context=document.createElement('p');context.dataset.adjustmentSummary='';
             const reasonLabel=document.createElement('label');reasonLabel.id='line-reason-label-'+index;reasonLabel.htmlFor='line-reason-'+index;
@@ -1478,7 +1478,7 @@
     window.addEventListener('focus',()=>{if(cart.length&&!isSavingSale&&!pendingSale&&!isPreparingSale&&!numericInputsInvalid())Sales.run(recalculate);});
     let approvalDialog;
     function collectExceptionReasons(){
-        if(!approvalDialog){approvalDialog=document.createElement('dialog');approvalDialog.className='billing-adjustment-dialog';approvalDialog.id='billing-approval-dialog';workspace.append(approvalDialog);}
+        if(!approvalDialog){approvalDialog=document.createElement('dialog');approvalDialog.className='billing-adjustment-dialog';approvalDialog.dataset.sfDialog='medium';approvalDialog.id='billing-approval-dialog';workspace.append(approvalDialog);}
         approvalDialog.replaceChildren();const heading=document.createElement('h2');heading.id='billing-approval-title';heading.textContent='Manager Approval Required';approvalDialog.setAttribute('aria-labelledby',heading.id);approvalDialog.append(heading);
         for(const [index,item] of cart.entries()){
             const required=lineRequirements(item,index);if(!required.discount&&!required.price)continue;
@@ -1617,7 +1617,7 @@
     async function openManualItem(index=null) {
         if(pendingSale||isSavingSale||isPreparingSale||recoveryBlocked||activeLookups)return;
         if(!manualDialog){
-            manualDialog=document.createElement('dialog');manualDialog.className='billing-manual-modal';manualDialog.setAttribute('aria-labelledby','manual-title');
+            manualDialog=document.createElement('dialog');manualDialog.className='billing-manual-modal';manualDialog.setAttribute('aria-labelledby','manual-title');manualDialog.dataset.sfDialog='large';
             manualDialog.innerHTML=`<form novalidate><header><h2 id="manual-title">Quick Add Item</h2><button type="button" id="manual-close" class="billing-manual-close sf-dialog-close" aria-label="Close Quick Add Item" title="Cancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button><p>Add an item to this bill without registering a product.</p></header>
             <div class="billing-manual-fields"><label class="manual-wide">Item Name *<input id="manual-name" class="form-control" required maxlength="150" /></label>
             <label>Quantity *<input id="manual-quantity" class="form-control" type="number" min="1" max="10000" step="1" required value="1" /></label>
@@ -1627,7 +1627,7 @@
             <label class="manual-wide"><span id="manual-rule-label">GST Classification (optional)</span><input id="manual-rule" type="text" class="form-control" list="manual-rule-suggestions" autocomplete="off" placeholder="No GST, or type to search reviewed classifications" aria-describedby="manual-classification" /><datalist id="manual-rule-suggestions"></datalist></label>
             <p id="manual-classification" class="manual-wide small"></p>
             <label class="manual-wide">Notes (optional)<textarea id="manual-note" class="form-control" rows="2" maxlength="1000"></textarea></label></div>
-            <p id="manual-preview" role="status"></p><footer><button type="button" class="btn btn-dark" id="manual-cancel">Cancel</button><button id="manual-submit" class="btn btn-dark" disabled>Add to Bill</button></footer></form>`;
+            <p id="manual-preview" role="status"></p><footer><button type="button" class="btn btn-outline-secondary" id="manual-cancel">Cancel</button><button id="manual-submit" class="btn btn-primary" disabled>Add to Bill</button></footer></form>`;
             workspace.append(manualDialog);manualDialog.querySelector('form').addEventListener('input',()=>{++manualPreviewVersion;getElement('manual-submit').disabled=true;clearTimeout(manualTimer);manualTimer=setTimeout(previewManual,220);});
             getElement('manual-close').onclick=getElement('manual-cancel').onclick=()=>manualDialog.close();manualDialog.addEventListener('close',()=>{++manualPreviewVersion;clearTimeout(manualTimer);getElement('sale-scan')?.focus();});
             manualDialog.querySelector('form').onsubmit=event=>{event.preventDefault();if(getElement('manual-submit').disabled||!manualFieldsValid())return;

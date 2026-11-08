@@ -2,13 +2,11 @@
 @{
     var reportLinks = new[] {
         ("Business Summary", "/Reports/Activity", "REPORTS", true),
-        ("Sales & Invoices", "/Sales", "SALES", true),
-        ("Inventory Overview", "/Inventory", "INVENTORY", true),
-        ("Low Stock Alerts", "/Inventory/LowStock", "INVENTORY", true),
+        ("Sales Reports", "/Sales", "SALES", true),
         ("Product Performance", "/Reports/ProductSales", "REPORTS", true),
         ("Daily Cash Closing", "/CashClosing", "REPORTS", true),
-        ("Operating Expenses", "/Expenses/Report", "EXPENSES", true),
-        ("GST & Tax Reports", "/Reports/Gst", "GST_REPORTS", true),
+        ("Expense Reports", "/Expenses/Report", "EXPENSES", true),
+        ("GST Reports", "/Reports/Gst", "GST_REPORTS", true),
         ("Received Stock History", "/StockInflow", "STOCK_INFLOW", false),
         ("Stock Out History", "/StockOutflow", "STOCK_OUTFLOW", false),
         ("Warranty Expiry", "/Warranty/Expiring", "EXPIRING_WARRANTIES", false),
@@ -16,8 +14,8 @@
         ("Open Repairs", "/Service/Pending", "PENDING_SERVICES", false),
         ("Completed Repairs", "/Service?status=DELIVERED", "SERVICE", false)
     }.Where(r => Access.Can(r.Item3) && (r.Item2 != "/CashClosing" || Scope.CanReviewStores)).ToArray();
-    var path = Context.Request.Path.Value?.TrimEnd('/') ?? "";
-    var reportContext = path.StartsWith("/Reports", StringComparison.OrdinalIgnoreCase) || Context.Request.Query["fromReports"] == "1";
+    var path = StockFlow.Web.Navigation.RetailNavigation.CanonicalPath(Context.Request.Path.Value ?? "");
+    var reportContext = StockFlow.Web.Navigation.RetailNavigation.IsReportPath(path,Context.Request.Query["fromReports"] == "1");
     var active = reportContext ? reportLinks.FirstOrDefault(r => path.Equals(r.Item2.Split('?')[0], StringComparison.OrdinalIgnoreCase)).Item2 : null;
     string Link(string route) => route + (route.Contains('?') ? "&" : "?") + "fromReports=1";
 }

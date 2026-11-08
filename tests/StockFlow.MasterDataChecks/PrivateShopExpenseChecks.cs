@@ -142,7 +142,7 @@ internal static class PrivateShopExpenseChecks
         var stock=await setup.ExecuteScalarAsync<long>("SELECT count(*) FROM inventory_transactions");var gst=await setup.ExecuteScalarAsync<long>("SELECT count(*) FROM gst_documents");
         long version=0;
         async Task<long> Write(string action,object body,bool concurrent=false){var op=new ExpenseOperation(Guid.NewGuid(),version,JsonSerializer.SerializeToElement(body));var path=$"/api/expenses/{id}/{action}";var responses=concurrent?await Task.WhenAll(client.PostAsJsonAsync(path,op),client.PostAsJsonAsync(path,op)):[await client.PostAsJsonAsync(path,op)];foreach(var response in responses){var text=await response.Content.ReadAsStringAsync();Check(response.IsSuccessStatusCode,$"Expense HTTP {action}: {(int)response.StatusCode} "+(response.IsSuccessStatusCode?"":text));}var values=await Task.WhenAll(responses.Select(async r=>(await r.Content.ReadFromJsonAsync<JsonObject>())!["version"]!.GetValue<long>()));Check(values.Distinct().Count()==1,"Concurrent/retry "+action+" has one version");version=values[0];return version;}
-        await Write("save",new{categoryId=cat,payeeId=payee,incurredDate=incurred.ToString("yyyy-MM-dd"),amount=100,description="Office rent"},true);
+        version=await ExpenseRecordingChecks.SeedLegacyAsync(factory,id,new(Guid.NewGuid(),0,JsonSerializer.SerializeToElement(new{categoryId=cat,payeeId=payee,incurredDate=incurred.ToString("yyyy-MM-dd"),amount=100,description="Office rent"})));
         await Reject(()=>repo.WriteAsync(id,"PAY",new(Guid.NewGuid(),version,JsonSerializer.SerializeToElement(new{paidDate=day.ToString("yyyy-MM-dd"),amount=10,paymentMode="CASH"}))),"Draft expense cannot be paid");
         await Write("post",new{});
         var paymentId=Guid.NewGuid();var payment=new ExpenseOperation(paymentId,version,JsonSerializer.SerializeToElement(new{paidDate=day.ToString("yyyy-MM-dd"),amount=40,paymentMode="CASH",reference="Cash receipt"}));
@@ -184,7 +184,7 @@ internal static class PrivateShopExpenseChecks
         foreach(var profile in BusinessProfiles.Codes.Where(p=>p!="ELECTRICAL")){
             await setup.ExecuteAsync("UPDATE tenants SET business_profile_code=@profile WHERE tenant_id=1",new{profile});scope.BusinessProfileCode=profile;
             var profileCat=await repo.MasterAsync("CATEGORY",Guid.NewGuid(),"Utilities");var profilePayee=await repo.MasterAsync("PAYEE",Guid.NewGuid(),"Profile payee");var profileExpense=Guid.NewGuid();
-            await repo.WriteAsync(profileExpense,"SAVE",new(Guid.NewGuid(),0,JsonSerializer.SerializeToElement(new{categoryId=profileCat,payeeId=profilePayee,incurredDate=day.ToString("yyyy-MM-dd"),amount=10,description="Profile-specific fixture"})));
+            await ExpenseRecordingChecks.SeedLegacyAsync(factory,profileExpense,new(Guid.NewGuid(),0,JsonSerializer.SerializeToElement(new{categoryId=profileCat,payeeId=profilePayee,incurredDate=day.ToString("yyyy-MM-dd"),amount=10,description="Profile-specific fixture"})));
             Check((await repo.GetAsync(profileExpense)).GetProperty("business_profile_code").GetString()==profile,profile+" expense uses existing profile scope");
             await Reject(()=>repo.GetAsync(id),profile+" cannot read Electrical expense history");
             scope.StoreId=other.Store;scope.LocationId=other.Location;await Reject(()=>repo.GetAsync(profileExpense),profile+" second same-profile shop cannot read private expense");scope.StoreId=1;scope.LocationId=1;

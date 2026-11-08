@@ -11,10 +11,6 @@
     .sf-app .sf-logout-dialog { overflow:auto; }
     .sf-app dialog :is(input,select,textarea) { max-width:100%; }
     .sf-app :is(.sf-dialog-actions,.sf-account-actions,.sf-confirm-actions) { gap:10px; }
-    .sf-app .sf-confirm-dialog { text-align:center; }
-    .sf-app .sf-confirm-dialog .sf-confirm-symbol { width:64px; height:64px; margin:0 auto 18px; background:#fff4db; color:#b77909; }
-    .sf-app .sf-confirm-dialog .sf-confirm-actions { justify-content:center; flex-wrap:wrap; }
-    .sf-app .sf-confirm-dialog p { overflow-wrap:anywhere; }
     .sf-app .sf-profile-panel { max-height:calc(100dvh - 100px); overflow-y:auto; }
     .sf-app .sf-sidebar { height:100vh; height:100dvh; }
     .sf-app .sf-topbar { min-width:0; }
@@ -28,7 +24,7 @@
     .sf-app .sf-topbar-actions { min-width:0; }
     .sf-app .sf-main { scroll-margin-bottom:90px; }
     /* Reserve document space so bottom actions can scroll clear of the launcher. */
-    .sf-app:has(.sf-help-open) .sf-app-footer { padding-bottom:max(80px,env(safe-area-inset-bottom)); }
+    .sf-app:has(>.sf-help-open) .sf-app-footer { padding-bottom:max(80px,env(safe-area-inset-bottom)); }
     .sf-app .retail-daily-actions { container-type:inline-size; }
     .sf-app .retail-daily-actions nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
     @container (min-width:960px) { .sf-app .retail-daily-actions nav { grid-template-columns:repeat(4,minmax(0,1fr)); } }
@@ -43,7 +39,6 @@
     .sf-app .sf-category-legend li { flex-wrap:wrap; }
     @media (max-height:600px) {
         .sf-app .goods-workspace .goods-summary { position:static; }
-        .sf-app .sf-sidebar-brand { padding-block:14px; }
         .sf-app .sf-sidebar-bottom { padding-block:12px; }
     }
     @media (max-width:575px) {

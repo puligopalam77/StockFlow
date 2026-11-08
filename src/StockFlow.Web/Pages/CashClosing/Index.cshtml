@@ -29,7 +29,7 @@
  </fieldset></form>
  <section class="cash-panel cash-history-panel"><header class="cash-panel-heading"><span class="cash-icon pink"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#clock" /></svg></span><div><h2>Saved closing history</h2><p>Every correction is kept as a new version. Closing records a snapshot; it does not stop later sales or payments.</p></div><button id="cash-history-all" type="button" class="btn btn-outline-primary no-print" hidden>View all &#8594;</button></header><div class="table-responsive"><table class="table"><thead><tr><th>Version</th><th>Date</th><th>Opening cash</th><th>Cash added</th><th>Cash removed</th><th>Counted cash</th><th>Difference</th><th>Reason</th><th>Saved at</th><th class="no-print">Actions</th></tr></thead><tbody id="cash-history"></tbody></table></div></section>
 </div>
-<dialog id="cash-record-dialog" aria-labelledby="cash-record-title"><h2 id="cash-record-title">Saved cash closing</h2><div id="cash-record-details"></div><form method="dialog"><button class="btn btn-outline-secondary">Close</button></form></dialog>
+<dialog data-sf-dialog="medium" id="cash-record-dialog" aria-labelledby="cash-record-title"><h2 id="cash-record-title">Saved cash closing</h2><div id="cash-record-details"></div><form method="dialog"><button class="btn btn-outline-secondary">Close</button></form></dialog>
 <section id="cash-print-record" hidden></section>
 @section Styles {<link rel="stylesheet" href="~/css/shop-readiness.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/cash-closing.css" asp-append-version="true" />}
 @section Scripts {<script src="~/js/cash-closing.js" asp-append-version="true"></script>}

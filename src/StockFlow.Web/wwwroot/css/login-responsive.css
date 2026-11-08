@@ -1,65 +1,122 @@
-/* Login only. Content determines document height; short windows scroll naturally.
-   Panel clipping contains the decorative circles, never a fixed-height form. */
-.sf-auth-body:has(.sf-login) { min-height: 100vh; min-height: 100dvh; }
-.sf-login { min-height: 100vh; min-height: 100dvh; height: auto; overflow: visible; }
-.sf-login > section { min-width: 0; height: auto; }
-.sf-login-panel { overflow: clip; }
-.sf-login-panel > * { flex-shrink: 0; }
-.sf-login-content { min-width: 0; }
-.sf-login-form, .sf-login-footer { overflow-wrap: anywhere; }
-.sf-login-options { flex-wrap: wrap; }
-.sf-login-visual { gap: 32px; overflow: clip; }
-.sf-handwritten { flex-shrink: 0; margin-bottom: 24px; }
-.sf-feature-grid { flex-shrink: 0; }
+﻿/* Login-only overrides of the shared theme. The grid has a minimum viewport
+   height, never a fixed height: notifications/errors can grow the document. */
+.sf-auth-body:has(.sf-login) { min-height:100vh; min-height:100dvh; }
+.sf-login { grid-template-columns:minmax(360px,41fr) minmax(0,59fr); min-height:100vh; min-height:100dvh; height:auto; overflow:visible; }
+.sf-login > section { min-width:0; height:auto; }
+.sf-login .sf-login-panel { overflow:visible; padding:clamp(24px,4vh,48px) clamp(24px,3vw,56px); }
+.sf-login .sf-login-panel > * { flex-shrink:0; }
+/* Keep the existing corner accents inside their panel, without clipping the form. */
+.sf-login .sf-login-panel::before { width:110px; height:115px; right:0; top:0; border-radius:0 0 0 100%; }
+.sf-login .sf-login-panel::after { width:210px; height:115px; right:0; bottom:0; border-radius:100% 0 0 0; opacity:.35; }
+.sf-login .sf-login-brand { gap:14px; margin-bottom:clamp(20px,3vh,32px); }
+.sf-login .sf-login-brand .sf-brand-mark { width:64px; height:64px; border-radius:22px; }
+.sf-login .sf-login-brand .sf-brand-mark .sf-icon { width:46px; height:46px; }
+.sf-login .sf-login-brand .sf-wordmark { font-size:clamp(30px,2.6vw,42px); }
+.sf-login .sf-login-brand .sf-brand-caption { font-size:clamp(10px,.85vw,14px); }
+.sf-login .sf-login-content { min-width:0; margin-block:auto; }
+.sf-login .sf-login-content h1 { font-size:clamp(30px,2.8vw,48px); margin:12px 0; letter-spacing:-1px; }
+.sf-login .sf-login-intro { font-size:clamp(15px,1.15vw,18px); line-height:1.5; margin-bottom:16px; }
+.sf-login .sf-login-content > .alert,.sf-login .sf-login-form > .alert { padding:10px 12px; margin:0 0 12px; font-size:14px; line-height:1.5; overflow-wrap:anywhere; }
+.sf-login .sf-login-form,.sf-login .sf-login-footer { overflow-wrap:anywhere; }
+.sf-login .sf-login-form > label { font-size:14px; margin:12px 0 6px; }
+.sf-login .sf-input-wrap { min-height:48px; gap:10px; padding:0 12px; border-radius:8px; }
+.sf-login .sf-input-wrap input { height:46px; min-height:0; font-size:16px; }
+.sf-login .sf-input-wrap > .sf-icon { width:20px; height:20px; }
+.sf-login #password-toggle { width:44px; height:44px; }
+.sf-login .sf-login-options { flex-wrap:wrap; gap:4px 12px; margin:8px 0 12px; font-size:14px; }
+.sf-login :is(.sf-remember,.sf-text-button) { min-height:44px; display:inline-flex; align-items:center; }
+.sf-login .sf-signin { min-height:48px; font-size:20px; }
+.sf-login .sf-signin:hover { transform:none; filter:none; }
+.sf-login .sf-login-footer { margin-top:28px; padding-top:0; font-size:12px; }
+.sf-login .sf-login-footer p { margin-top:12px; }
+.sf-login .sf-trust { font-size:12px; }
+.sf-login .sf-login-errors:not(.validation-summary-valid) { padding:10px 12px; font-size:14px; line-height:1.5; margin:0 0 12px; }
+.sf-login .sf-login-visual { gap:24px; padding:clamp(24px,4vh,48px) clamp(24px,3vw,52px); overflow:clip; }
+.sf-login .sf-warehouse { object-fit:cover; object-position:61% center; }
+.sf-login .sf-handwritten { flex-shrink:0; margin:8px 0 0 clamp(0px,1vw,24px); font-size:clamp(26px,2.4vw,43px); line-height:1.05; }
+.sf-login .sf-feature-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); flex-shrink:0; }
+.sf-login .sf-feature { padding:clamp(14px,1.2vw,22px); }
+.sf-login .sf-feature-icon { width:52px; height:52px; margin-bottom:10px; }
+.sf-login .sf-feature-icon .sf-icon { width:32px; height:32px; }
+.sf-login .sf-feature h2 { font-size:clamp(15px,1.1vw,20px); }
+.sf-login .sf-feature p { font-size:clamp(13px,.95vw,16px); }
 
-/* Reduce whitespace before reducing usable controls on scaled laptop displays. */
-@media (max-height: 800px) {
-    .sf-login-panel { padding-block: 24px; }
-    .sf-login-brand { margin-bottom: 22px; }
-    .sf-login-content h1 { margin-block: 12px; }
-    .sf-login-intro { margin-bottom: 16px; }
-    .sf-login-form > label { margin-block: 12px 7px; }
-    .sf-login-options { margin-block: 12px 16px; }
-    .sf-login-footer { margin-top: 24px; }
-    .sf-login-footer p { margin-top: 12px; }
-    .sf-login-visual { padding-block: 28px; gap: 24px; }
-    .sf-handwritten { margin-bottom: 12px; }
-    .sf-feature { padding-block: 15px; }
-    .sf-feature-icon { margin-bottom: 9px; }
+/* Compact the composition using the available CSS height, including browser
+   chrome, zoom and display-scaling deductions. No device model assumptions. */
+@media(max-height:900px) {
+ .sf-login .sf-login-panel { padding-block:24px; }
+ .sf-login .sf-login-brand { margin-bottom:16px; }
+ .sf-login .sf-login-brand .sf-brand-mark { width:52px; height:52px; border-radius:18px; }
+ .sf-login .sf-login-brand .sf-brand-mark .sf-icon { width:38px; height:38px; }
+ .sf-login .sf-login-content h1 { font-size:clamp(28px,2.7vw,40px); margin:8px 0 12px; }
+ .sf-login .sf-login-intro { margin-bottom:12px; }
+ .sf-login .sf-login-form > label { margin-top:10px; }
+ .sf-login .sf-login-footer { margin-top:20px; }
+ .sf-login .sf-login-footer p { margin-top:8px; }
+ .sf-login .sf-feature { padding:14px; }
+ .sf-login .sf-feature-icon { width:44px; height:44px; }
+ .sf-login .sf-feature-icon .sf-icon { width:28px; height:28px; }
+ .sf-login .sf-feature p { font-size:13px; }
 }
-@media (max-height: 600px) {
-    .sf-login-panel { padding-block: 20px; }
-    .sf-login-brand { margin-bottom: 16px; }
-    .sf-login-content h1 { font-size: 32px; }
-    .sf-login-intro { font-size: 15px; margin-bottom: 12px; }
-    .sf-input-wrap { min-height: 48px; }
-    .sf-input-wrap input { height: 48px; min-height: 48px; }
-    .sf-signin { min-height: 52px; font-size: 21px; }
-    .sf-login-footer { margin-top: 20px; }
-    .sf-login-visual { padding-block: 24px; }
-    .sf-feature { padding-block: 12px; }
+@media(max-height:767px) {
+ .sf-login .sf-login-panel { padding-block:20px; }
+ .sf-login .sf-login-content h1 { font-size:30px; }
+ .sf-login .sf-input-wrap { min-height:44px; }
+ .sf-login .sf-input-wrap input { height:42px; }
+ .sf-login .sf-signin { min-height:44px; }
+ .sf-login .sf-handwritten { font-size:30px; }
+ .sf-login .sf-feature { padding:12px; }
+ .sf-login .sf-feature h2 { font-size:15px; }
 }
-@media (max-width: 699px) {
-    .sf-login-panel {
-        flex-shrink: 0;
-        min-height: 100vh;
-        min-height: 100dvh;
-        padding-top: max(24px, env(safe-area-inset-top));
-        padding-bottom: max(24px, env(safe-area-inset-bottom));
-        padding-left: max(24px, env(safe-area-inset-left));
-        padding-right: max(24px, env(safe-area-inset-right));
-    }
-    .sf-login-visual {
-        flex-shrink: 0;
-        min-height: 0;
-        padding-bottom: max(28px, env(safe-area-inset-bottom));
-    }
-    .sf-handwritten { margin-bottom: 24px; }
+@media(max-height:650px) {
+ .sf-login .sf-login-panel { padding-block:16px; }
+ .sf-login .sf-login-brand { margin-bottom:12px; }
+ .sf-login .sf-login-brand .sf-brand-mark { width:44px; height:44px; border-radius:15px; }
+ .sf-login .sf-login-brand .sf-brand-mark .sf-icon { width:32px; height:32px; }
+ .sf-login .sf-eyebrow { font-size:11px; }
+ .sf-login .sf-login-content h1 { font-size:28px; margin-block:8px; }
+ .sf-login .sf-login-intro { font-size:14px; margin-bottom:10px; }
+ .sf-login .sf-login-footer { margin-top:16px; }
 }
-@media (max-width: 480px) {
-    .sf-feature-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-    .sf-feature { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 0 12px; }
-    .sf-feature-icon { grid-row: 1 / 3; margin: 0; }
-    .sf-feature h2 { font-size: 15px; }
-    .sf-feature p { font-size: 13px; }
+
+/* The promotional panel sizes itself independently of login errors/notifications.
+   Its content may grow naturally in exceptionally short windows, never disappear. */
+@media(min-width:992px) {
+ .sf-login .sf-login-visual { position:sticky; top:0; align-self:start; min-height:100vh; min-height:100dvh; container-type:inline-size; }
+ .sf-login .sf-feature { display:block; }
+}
+/* Three cards need compact spacing when their own panel is below 700px wide. */
+@container(max-width:700px) {
+ .sf-login .sf-handwritten { font-size:26px; }
+ .sf-login .sf-feature-grid { gap:8px; }
+ .sf-login .sf-feature { padding:12px; }
+ .sf-login .sf-feature-icon { width:36px; height:36px; margin-bottom:8px; }
+ .sf-login .sf-feature-icon .sf-icon { width:24px; height:24px; }
+ .sf-login .sf-feature h2 { font-size:14px; line-height:1.3; }
+ .sf-login .sf-feature p { font-size:13px; line-height:1.4; }
+}
+
+/* Tablet and mobile: keep authentication prominent and omit promotional panels. */
+@media(max-width:991px) {
+ .sf-login { display:block; }
+ .sf-login .sf-login-visual { display:none; }
+ .sf-login .sf-login-panel {
+  min-height:100vh; min-height:100dvh;
+  padding-left:max(24px,env(safe-area-inset-left));
+  padding-right:max(24px,env(safe-area-inset-right));
+  padding-top:max(24px,env(safe-area-inset-top));
+  padding-bottom:max(24px,env(safe-area-inset-bottom));
+ }
+ .sf-login :is(.sf-login-brand,.sf-login-content,.sf-login-footer) { width:100%; max-width:520px; margin-inline:auto; }
+ .sf-login .sf-login-brand .sf-brand-mark { width:52px; height:52px; border-radius:18px; }
+ .sf-login .sf-login-brand .sf-wordmark { font-size:32px; }
+ .sf-login .sf-login-content h1 { font-size:clamp(28px,5vw,36px); }
+ .sf-login .sf-login-intro { font-size:15px; }
+ .sf-login .sf-input-wrap { min-height:48px; }
+ .sf-login .sf-input-wrap input { height:46px; }
+ .sf-login .sf-signin { min-height:48px; }
+}
+@media(max-width:379px) {
+ .sf-login .sf-login-panel { padding-inline:max(20px,env(safe-area-inset-left)) max(20px,env(safe-area-inset-right)); }
+ .sf-login .sf-login-options { column-gap:8px; font-size:13px; }
 }

@@ -49,7 +49,7 @@ internal static class ConfigurationChecks
         Check((await reader.GetAsync("/Products")).Headers.Location?.OriginalString == "/Account/AccessDenied", "Direct module URL still protected");
         using var customerOnly = factory.CreateClient(new() { AllowAutoRedirect = false });
         customerOnly.DefaultRequestHeaders.Add("Test-Role", "Admin");
-        customerOnly.DefaultRequestHeaders.Add("Test-Deny", "PRODUCTS,CATEGORIES,BRANDS,SUPPLIERS");
+        customerOnly.DefaultRequestHeaders.Add("Test-Deny", "PRODUCTS,CATEGORIES,BRANDS,SUPPLIERS,BARCODES");
         Check((await customerOnly.GetAsync("/Configuration")).Headers.Location?.OriginalString == "/Customers", "Customer-only user can open Configuration");
         var customers = await customerOnly.GetStringAsync("/Customers");
         Check(customers.Contains("configuration-layout") && customers.Contains("class=\"sf-nav-child active\" href=\"/Customers\"") && customers.Contains("/css/configuration.") && !customers.Contains("/css/operational-screens."), "Customers retains its full-width layout and active workflow link");

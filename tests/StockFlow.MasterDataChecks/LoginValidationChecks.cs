@@ -61,6 +61,8 @@ internal static class LoginValidationChecks
         await File.WriteAllTextAsync(Path.Combine(output,"login-empty.html"),empty);
         await File.WriteAllTextAsync(Path.Combine(output,"login-invalid.html"),invalid);
         await File.WriteAllTextAsync(Path.Combine(output,"login-inactive.html"),inactiveHtml);
+        await File.WriteAllTextAsync(Path.Combine(output,"login-session.html"),
+            await client.GetStringAsync("/Account/Login?reason=absolute&returnUrl=%2FExpenses"));
         Console.WriteLine("PASS: login server required-field messages, invalid-credentials placement and no password redisplay.");
         using var passwordApp=factory.WithWebHostBuilder(builder=>builder.ConfigureServices(services=>
         {

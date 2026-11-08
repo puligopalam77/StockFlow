@@ -12,7 +12,7 @@ internal static class ExpenseSettlementChecks
         Console.WriteLine("PASS: " + name);
     }
 
-    public static async Task Run(IExpenseRepository repo, HttpClient client, Guid category, Guid payee, DateTime today)
+    public static async Task Run(Npgsql.NpgsqlConnection setup,IExpenseRepository repo, HttpClient client, Guid category, Guid payee, DateTime today)
     {
         var day = today.ToString("yyyy-MM-dd");
         var id = Guid.NewGuid();
@@ -51,7 +51,7 @@ internal static class ExpenseSettlementChecks
             "A fully settled expense cannot receive an overpayment");
 
         var draft = Guid.NewGuid();
-        await repo.WriteAsync(draft, "SAVE", new(Guid.NewGuid(), 0, record.Body.GetProperty("expense")));
+        await ExpenseRecordingChecks.SeedLegacyAsync(setup,draft,new(Guid.NewGuid(),0,record.Body.GetProperty("expense")));
         var pdf = "%PDF-1.4 synthetic expense evidence"u8.ToArray();
         var png = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3 };
         var jpeg = new byte[] { 255, 216, 255, 1, 2, 3 };

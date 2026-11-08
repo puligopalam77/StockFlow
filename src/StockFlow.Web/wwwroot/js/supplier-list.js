@@ -29,7 +29,7 @@ window.StockFlowSupplierDirectory = (() => {
             add.onclick = () => { persist(); screen.navigate('Create'); };
         }
         const filter = search.closest('.row'); filter.classList.add('supplier-filter-card');
-        const reset = node('button', 'Reset Filters', 'btn btn-dark'); reset.type = 'button'; filter.append(reset);
+        const reset = node('button', 'Reset Filters', 'btn btn-outline-secondary'); reset.type = 'button'; filter.append(reset);
         const empty = node('section', null, 'supplier-empty'); empty.hidden = true; empty.setAttribute('role', 'status'); table.after(empty);
         const host = node('div'); host.id = 'supplier-pager'; list.append(host);
         list.dataset.sfPaginationRemote = 'true';
@@ -68,7 +68,7 @@ window.StockFlowSupplierDirectory = (() => {
         }
         function emptyState(title, description, label, callback) {
             empty.replaceChildren(node('h2', title)); if (description) empty.append(node('p', description));
-            if (callback) { const button = node('button', label, 'btn btn-dark' + (label === '+ Add Supplier' ? ' supplier-add' : '')); button.type = 'button'; button.onclick = callback; empty.append(button); }
+            if (callback) { const button = node('button', label, (label === '+ Add Supplier' ? 'btn btn-primary supplier-add' : 'btn btn-outline-secondary')); button.type = 'button'; button.onclick = callback; empty.append(button); }
             empty.hidden = false; table.hidden = true;
         }
         function render(records) {
@@ -98,7 +98,7 @@ window.StockFlowSupplierDirectory = (() => {
         }
         function confirm(record, submit) {
             if (confirmation) return Promise.resolve(false);
-            const dialog = node('dialog', null, 'supplier-status-dialog'); dialog.tabIndex = -1; dialog.setAttribute('aria-labelledby', 'supplier-confirm-title'); dialog.setAttribute('aria-describedby', 'supplier-confirm-name supplier-confirm-copy');
+            const dialog = node('dialog', null, 'supplier-status-dialog'); dialog.dataset.sfDialog='compact'; dialog.tabIndex = -1; dialog.setAttribute('aria-labelledby', 'supplier-confirm-title'); dialog.setAttribute('aria-describedby', 'supplier-confirm-name supplier-confirm-copy');
             const title = node('h2', 'Deactivate Supplier?'); title.id = 'supplier-confirm-title';
             const header = node('div', null, 'supplier-dialog-header'), warning = icon('report-warning'), close = node('button', null, 'supplier-dialog-close');
             close.type = 'button'; close.setAttribute('aria-label', 'Close dialog'); header.append(warning, title, close);
@@ -107,7 +107,7 @@ window.StockFlowSupplierDirectory = (() => {
             const note = node('p', 'Editing or completing draft purchases requires an active supplier. Saved receipts follow the existing receiving rules.', 'supplier-dialog-note'); note.id = 'supplier-confirm-note';
             dialog.setAttribute('aria-describedby', 'supplier-confirm-name supplier-confirm-copy supplier-confirm-note');
             const error = node('p', null, 'supplier-dialog-error'); error.setAttribute('role', 'alert'); error.hidden = true;
-            const buttons = node('div', null, 'configuration-dialog-actions'), cancel = node('button', 'Cancel', 'btn btn-dark'), proceed = node('button', 'Deactivate Supplier', 'btn btn-primary');
+            const buttons = node('div', null, 'configuration-dialog-actions'), cancel = node('button', 'Cancel', 'btn btn-outline-secondary'), proceed = node('button', 'Deactivate Supplier', 'btn btn-dark');
             cancel.type = proceed.type = 'button'; proceed.dataset.confirm = 'true'; buttons.append(cancel, proceed); dialog.append(header, name, copy, note, error, buttons); root.append(dialog); confirmation = dialog;
             return new Promise(resolve => {
                 let saving = false;
@@ -181,7 +181,7 @@ window.StockFlowSupplierDirectory = (() => {
                 notify('success', 'Supplier saved: ' + record.supplierCode);
                 if (item.context) {
                     const link = StockFlowSupplierNavigation.editUrl(item.context.productId, item.context.variantId, item.context.from);
-                    if (link) { const note = node('section', null, 'supplier-success'), back = node('a', 'Return to Product Edit', 'btn btn-dark'); back.href = link; note.append(node('p', record.supplierName), back, node('p', 'Select this supplier explicitly. No product mapping or planning policy has been changed.')); root.prepend(note); }
+                    if (link) { const note = node('section', null, 'supplier-success'), back = node('a', 'Return to Product Edit', 'btn btn-outline-secondary'); back.href = link; note.append(node('p', record.supplierName), back, node('p', 'Select this supplier explicitly. No product mapping or planning policy has been changed.')); root.prepend(note); }
                 }
             } catch (error) { notify('error', error.message); }
         }

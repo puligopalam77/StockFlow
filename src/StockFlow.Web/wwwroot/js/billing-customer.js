@@ -4,7 +4,7 @@ window.StockFlowQuickCustomer = {
         const byId = id => document.getElementById(id);
         const dialog = document.createElement('dialog');
         dialog.id = 'customer-quick-add-dialog';
-        dialog.className = 'billing-customer-dialog';
+        dialog.className = 'billing-customer-dialog';dialog.dataset.sfDialog='medium';
         dialog.setAttribute('aria-labelledby', 'customer-quick-add-title');
         dialog.setAttribute('aria-describedby', 'customer-quick-add-subtitle');
         dialog.innerHTML = `<header class="billing-customer-header">
@@ -16,7 +16,7 @@ window.StockFlowQuickCustomer = {
             <div id="quick-customer-alert" class="billing-customer-alert" role="alert" hidden></div>
             <div id="quick-customer-matches" class="billing-customer-matches" role="status" aria-live="polite" hidden></div>
             <div class="billing-customer-body"></div>
-            <footer class="billing-customer-footer"><button type="button" id="quick-customer-cancel" class="btn btn-dark"><span aria-hidden="true">×</span> Cancel</button></footer>
+            <footer class="billing-customer-footer"><button type="button" id="quick-customer-cancel" class="btn btn-outline-secondary"><span aria-hidden="true">×</span> Cancel</button></footer>
         </form>`;
         workspace.append(dialog);
         if(options.subtitle)dialog.querySelector('#customer-quick-add-subtitle').textContent=options.subtitle;
@@ -26,7 +26,7 @@ window.StockFlowQuickCustomer = {
         original.replaceWith(customer);
         const form = dialog.querySelector('form'), body = dialog.querySelector('.billing-customer-body');
         const save = byId('create-customer');
-        save.type = 'submit';save.className = 'btn btn-dark';
+        save.type = 'submit';save.className = 'btn btn-primary';
         save.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg><span>Save &amp; Select Customer</span>';
         dialog.querySelector('footer').append(save);
         for (const [id, name, label, full] of [
@@ -63,7 +63,7 @@ window.StockFlowQuickCustomer = {
         }else customer.append(emailField);
         gst.pattern = '[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]';
         gst.autocapitalize = 'characters';gst.spellcheck = false;
-        const open = document.createElement('button');open.type = 'button';open.className = 'btn btn-dark';open.textContent = '+ Add Customer';picker.append(open);
+        const open = document.createElement('button');open.type = 'button';open.className = 'btn btn-outline-secondary';open.textContent = '+ Add Customer';picker.append(open);
         let busy = false, lookupVersion = 0, lookupTimer, returnFocus, uncertain = false;
         const alert = byId('quick-customer-alert'), matches = byId('quick-customer-matches');
         const closeButtons = [byId('quick-customer-cancel'), dialog.querySelector('.billing-customer-x')];
@@ -128,7 +128,7 @@ window.StockFlowQuickCustomer = {
                 for (const record of exact) {
                     const row = document.createElement('div'), text = document.createElement('span'), button = document.createElement('button');
                     text.textContent = [record.customerName, record.mobileNumber, record.gstNumber, record.isActive === false ? 'Inactive — ask an administrator to reactivate' : ''].filter(Boolean).join(' · ');
-                    button.type = 'button';button.className = 'btn btn-dark';button.textContent = 'Select Existing Customer';button.disabled = busy || record.isActive === false;
+                    button.type = 'button';button.className = 'btn btn-outline-secondary';button.textContent = 'Select Existing Customer';button.disabled = busy || record.isActive === false;
                     button.dataset.inactive = String(record.isActive === false);
                     button.onclick = () => { if (!busy) selectCustomer(record); };row.append(text,button);matches.append(row);
                 }
@@ -178,7 +178,7 @@ window.StockFlowQuickCustomer = {
                 if (submitted && !payload().mobileNumber && !payload().gstNumber && (!failure.status || failure.status >= 500)) uncertain = true;
                 error(failure.message + (uncertain ? ' Check existing customers before creating this customer again.' : ''));
                 if (uncertain) {
-                    const find = document.createElement('button');find.type = 'button';find.className = 'btn btn-dark';find.textContent = 'Find Existing Customer';
+                    const find = document.createElement('button');find.type = 'button';find.className = 'btn btn-outline-secondary';find.textContent = 'Find Existing Customer';
                     find.onclick = () => { if (!busy) { const name = payload().customerName;close();workspace.dispatchEvent(new CustomEvent('billing-customer-find',{detail:name})); } };alert.append(find);
                 }
             } finally { setBusy(false); }

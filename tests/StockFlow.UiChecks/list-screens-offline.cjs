@@ -27,7 +27,7 @@ const root=path.resolve(__dirname,'../..'),fixtures=path.join(root,'tests/bin/li
     table.remove();return result;
    });
    const dashboard=url==='/Reports/Activity';
-   if(!dashboard)assert.deepEqual(result.rowHeights,[37,49],url+' compact plain rows preserve larger touchscreen action targets: '+JSON.stringify(result.rowHeights));
+   if(!dashboard){assert.equal(result.rowHeights[0],37,url+' compact plain rows');assert(result.rowHeights[1]>=57,url+' preserves at least 44px touchscreen buttons with cell padding: '+JSON.stringify(result.rowHeights));}
    delete result.rowHeights;
    assert.deepEqual(result,{title:'20px',breadcrumbAfter:true,body:dashboard?'11px':'12px',padding:dashboard?'4px':'6px',header:dashboard?'11px':'12px',headerPadding:dashboard?'4px':'6px'},url);
    if(url==='/Sales')await page.screenshot({path:path.join(fixtures,'sales-compact-desktop.png'),fullPage:true});
