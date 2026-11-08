@@ -1,22 +1,30 @@
-// Check the shared action colors against actual rendered list-page styles.
-const fs=require('fs'),path=require('path'),assert=require('assert');
+﻿// Semantic component states against 26 real Razor list-page style combinations.
+const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
 const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/StockFlow.Web/wwwroot'),fixtures=path.join(root,'tests/bin/list-screen-fixtures');
 (async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
- const page=await browser.newPage({viewport:{width:1440,height:900}});
+ const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});
  await page.route('**/*',route=>{const p=new URL(route.request().url()).pathname,fixture=path.join(fixtures,p.slice(1).replaceAll('/','-')+'.html');if(fs.existsSync(fixture))return route.fulfill({path:fixture,contentType:'text/html'});if(p.endsWith('.js'))return route.fulfill({contentType:'text/javascript',body:''});const file=path.resolve(assets,'.'+p.replace(/\.[a-z0-9]{10}(?=\.(js|css|png)$)/,''));return file.startsWith(assets+path.sep)&&fs.existsSync(file)&&fs.statSync(file).isFile()?route.fulfill({path:file}):route.fulfill({status:404,body:''});});
- const charcoal='rgb(23, 27, 34)',pink='rgb(255, 0, 127)';
- for(const file of ['Sales','Purchases','StockInflow','StockOutflow','Inventory','Inventory-LowStock','Products','Products-Variants','Categories','Brands','Suppliers','Customers','Admin-Users','Admin-AuditLogs','Admin-Stores','Service','Service-Pending','Warranty-Lookup','Warranty-Claims','Warranty-Expiring','Transfers','Account-Sessions','Search','Reports-Stores','Reports-Activity','Reports-ProductSales'].map(name=>name+'.html')){
-  await page.goto('http://stockflow.test/'+file.replace(/\.html$/,'').replaceAll('-','/'));
-  assert.equal(await page.locator('link[href*="button-theme."]').count(),1,file+' loads shared theme');
-  await page.evaluate(()=>{const host=document.createElement('div');host.id='button-theme-check';host.innerHTML='<button class="btn btn-primary">Primary</button><button class="btn btn-outline-secondary">Secondary</button><a href="#" class="btn btn-dark">Action link</a><button class="btn btn-danger">Destructive</button><button type="submit">Submit</button><button class="btn" disabled>Disabled</button><button role="tab">Tab</button>';document.querySelector('.sf-main').prepend(host);});
-  const actions=page.locator('#button-theme-check :is(.btn,button[type=submit])');
-  for(const color of await actions.evaluateAll(nodes=>nodes.map(n=>getComputedStyle(n).backgroundColor)))assert.equal(color,charcoal,file+' default');
-  const button=actions.first();await button.hover();await page.waitForTimeout(200);assert.equal(await button.evaluate(n=>getComputedStyle(n).backgroundColor),pink,file+' hover');await page.mouse.move(0,0);await page.waitForTimeout(200);assert.equal(await button.evaluate(n=>getComputedStyle(n).backgroundColor),charcoal,file+' hover-out');
-  await actions.last().hover({force:true});assert.equal(await actions.last().evaluate(n=>getComputedStyle(n).backgroundColor),charcoal,file+' disabled');
-  await button.focus();await page.keyboard.press('Tab');const focused=actions.nth(1);assert(await focused.evaluate(n=>n.matches(':focus-visible')&&parseFloat(getComputedStyle(n).outlineWidth)>=2),file+' keyboard focus');
-  assert.notEqual(await page.locator('#button-theme-check [role=tab]').evaluate(n=>getComputedStyle(n).backgroundColor),charcoal,file+' tab unchanged');
+ const white='rgb(255, 255, 255)',pink='rgb(255, 8, 125)',neutral='rgb(241, 244, 250)',ink='rgb(16, 29, 56)';
+ const variants=[['btn-primary',pink,'rgb(223, 0, 99)','rgb(198, 0, 90)'],['btn-outline-secondary',white,neutral,'rgb(230, 235, 243)'],['btn-outline-primary',white,neutral,'rgb(230, 235, 243)'],['btn-dark','rgb(23, 27, 34)','rgb(48, 54, 64)','rgb(9, 14, 24)'],['btn-danger','rgb(220, 53, 69)','rgb(176, 42, 55)','rgb(132, 32, 41)'],['btn-outline-danger',white,'rgb(248, 215, 218)','rgb(241, 174, 181)'],['btn-link','rgba(0, 0, 0, 0)',neutral,'rgb(230, 235, 243)']];
+ const names=['Sales','Purchases','StockInflow','StockOutflow','Inventory','Inventory-LowStock','Products','Products-Variants','Categories','Brands','Suppliers','Customers','Admin-Users','Admin-AuditLogs','Admin-Stores','Service','Service-Pending','Warranty-Lookup','Warranty-Claims','Warranty-Expiring','Transfers','Account-Sessions','Search','Reports-Stores','Reports-Activity','Reports-ProductSales'];
+ for(const name of names){
+  await page.goto('http://stockflow.test/'+name.replaceAll('-','/'));
+  await page.evaluate(variants=>{const host=document.createElement('div');host.id='button-theme-check';host.innerHTML=variants.map(([c])=>`<button class="btn ${c}">${c}</button>`).join('')+'<button id="native-submit" type="submit">Native</button><button role="tab">Tab</button><button class="sf-select-option">Option</button><input type="file"><input type="checkbox">';document.querySelector('.sf-main').prepend(host);},variants);
+  const buttons=page.locator('#button-theme-check .btn');
+  for(let i=0;i<variants.length;i++){
+   const [cls,base,hover,active]=variants[i],b=buttons.nth(i),color=()=>b.evaluate(n=>getComputedStyle(n).backgroundColor);
+   await page.mouse.move(0,0);assert.equal(await color(),base,`${name} ${cls} base`);
+   const box=await b.boundingBox();await b.hover();assert.equal(await color(),hover,`${name} ${cls} hover`);
+   await page.mouse.down();assert.equal(await color(),active,`${name} ${cls} active`);await page.mouse.up();
+   assert.deepEqual(await b.boundingBox(),box,`${name} ${cls} no layout shift`);
+   await b.evaluate(n=>n.disabled=true);assert.equal(await color(),base);assert.equal(await b.evaluate(n=>getComputedStyle(n).opacity),'0.55');await b.evaluate(n=>{n.disabled=false;n.setAttribute('aria-busy','true');});assert.equal(await color(),base,'Busy control retains its base color');await b.evaluate(n=>n.removeAttribute('aria-busy'));
+   assert.equal(await b.evaluate(n=>getComputedStyle(n).transitionDuration),'0s','Reduced motion');
+  }
+  await buttons.first().focus();await page.keyboard.press('Tab');assert(await buttons.nth(1).evaluate(n=>n.matches(':focus-visible')&&parseFloat(getComputedStyle(n).outlineWidth)>=2));
+  assert.notEqual(await page.locator('#native-submit').evaluate(n=>getComputedStyle(n).backgroundColor),pink,'Native submit is not assigned primary semantics');
+  assert.notEqual(await page.locator('#button-theme-check [role=tab]').evaluate(n=>getComputedStyle(n).backgroundColor),pink,'Tab excluded');
  }
- await page.setContent('<body class="sf-auth-body"><button type="submit" class="sf-signin">Sign in</button></body>');await page.addStyleTag({path:path.join(assets,'css/button-theme.css')});await page.waitForTimeout(200);assert.equal(await page.locator('.sf-signin').evaluate(n=>getComputedStyle(n).backgroundColor),charcoal);await page.locator('.sf-signin').hover();await page.waitForTimeout(200);assert.equal(await page.locator('.sf-signin').evaluate(n=>getComputedStyle(n).backgroundColor),pink);
- console.log('PASS: charcoal defaults, pink hover, hover-out, disabled and keyboard focus across list-screen styles; navigation/tab styling excluded; sign-in action included. No APIs or database accessed.');
+ await page.setContent('<body class="sf-auth-body"><button class="sf-signin">Sign in</button></body>');await page.addStyleTag({path:path.join(assets,'css/button-theme.css')});assert.equal(await page.locator('.sf-signin').evaluate(n=>getComputedStyle(n).backgroundColor),pink);await page.locator('.sf-signin').hover();assert.equal(await page.locator('.sf-signin').evaluate(n=>getComputedStyle(n).backgroundColor),'rgb(223, 0, 99)');
+ console.log('PASS: seven semantic variants across 26 real list-page style combinations; hover, active, disabled, busy, keyboard focus, reduced motion, stable geometry and control exclusions. No APIs or database accessed.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

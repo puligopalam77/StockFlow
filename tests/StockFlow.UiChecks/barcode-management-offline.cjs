@@ -1,5 +1,6 @@
 // Real Razor/CSS/scripts with API fixtures only; no application database access.
 const fs=require('fs'),path=require('path'),assert=require('assert');
+const {selectValue}=require('./address-test-helpers.cjs');
 const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
 const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/barcode-management-fixtures');
 (async()=>{
@@ -64,11 +65,11 @@ const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/barc
   assert(await page.locator('#barcode-print').isDisabled());
   await screenshot('barcode-details-desktop.png');
   assert.equal(await page.locator('#breadcrumb-current').textContent(),lot.lotNumber);
-  await page.locator('#barcode-group-mode').selectOption('variant');assert.equal(await page.locator('.bc-group-row').count(),4);
+  await selectValue(page.locator('#barcode-group-mode'),'variant');assert.equal(await page.locator('.bc-group-row').count(),4);
   await page.getByRole('button',{name:'Hide units',exact:true}).first().click();assert.equal(await page.locator('#barcode-piece-rows tr[data-key]').count(),4);
-  await page.locator('#barcode-group-mode').selectOption('units');assert.equal(await page.locator('#barcode-piece-rows tr[data-key]').count(),6);
+  await selectValue(page.locator('#barcode-group-mode'),'units');assert.equal(await page.locator('#barcode-piece-rows tr[data-key]').count(),6);
   await page.locator('#barcode-select-all').click();assert((await page.locator('#barcode-selection-count').textContent()).startsWith('4 of 6'));
-  await page.locator('#barcode-layout').selectOption('sheet');assert(await page.locator('#barcode-a4-settings').isVisible());
+  await selectValue(page.locator('#barcode-layout'),'sheet');assert(await page.locator('#barcode-a4-settings').isVisible());
   await page.locator('[aria-label="Copies for 17:2"]').fill('0');assert(await page.locator('#barcode-print').isDisabled());await page.locator('[aria-label="Copies for 17:2"]').fill('1');
   failPrepare=true;await page.locator('#barcode-preview').click();await page.waitForFunction(()=>!document.querySelector('#barcode-preview').disabled);
   assert(!(await page.locator('#barcode-preview-dialog').evaluate(n=>n.open)));assert.equal(prints.length,0,'generation failure blocks printing');assert((await page.locator('#barcode-message').textContent()).includes('Unable to save'));
@@ -84,7 +85,7 @@ const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/barc
   await page.emulateMedia({media:'print'});const a4=await page.pdf({preferCSSPageSize:true});fs.writeFileSync(path.join(output,'barcode-preview-a4.pdf'),a4);assert.equal((a4.toString('latin1').match(/\/Type \/Page\b/g)||[]).length,1);
   await page.emulateMedia({media:'screen'});await page.locator('[data-close="barcode-preview-dialog"]').first().click();
   await page.locator('#barcode-history-all').click();assert.equal(await page.locator('#barcode-history-rows tr').count(),6);
-  await page.locator('#barcode-reprint-tab').click();await page.locator('#barcode-layout').selectOption('thermal50x30');await page.locator('#barcode-reprint-open').click();await page.waitForSelector('#barcode-reprint-dialog[open]');
+  await page.locator('#barcode-reprint-tab').click();await selectValue(page.locator('#barcode-layout'),'thermal50x30');await page.locator('#barcode-reprint-open').click();await page.waitForSelector('#barcode-reprint-dialog[open]');
   await page.locator('#barcode-reprint-search').fill('SFR18X1');assert.equal(await page.locator('#barcode-reprint-rows tr').count(),1);
   await page.getByRole('checkbox',{name:'Reprint SFR18X1',exact:true}).check();await page.locator('#barcode-reprint-copies').fill('2');
   await screenshot('barcode-reprint-desktop.png');
@@ -94,7 +95,7 @@ const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/barc
   const box=thermal.toString('latin1').match(/\/MediaBox\s*\[0 0 ([\d.]+) ([\d.]+)\]/);assert(box&&Math.abs(Number(box[1])-50*72/25.4)<1&&Math.abs(Number(box[2])-30*72/25.4)<1);
   await page.emulateMedia({media:'screen'});await page.locator('[data-close="barcode-preview-dialog"]').first().click();
   for(const [format,width,height] of [['thermal40x25',40,25],['thermal30x20',30,20]]) {
-   await page.locator('#barcode-layout').selectOption(format);
+   await selectValue(page.locator('#barcode-layout'),format);
    if(format==='thermal30x20'){
     const count=prints.length;await page.locator('#barcode-preview').click();await page.waitForFunction(()=>!document.querySelector('#barcode-preview').disabled);
     assert(!(await page.locator('#barcode-preview-dialog').evaluate(n=>n.open)));assert.equal(prints.length,count);assert((await page.locator('#barcode-message').textContent()).includes('scan test'));
@@ -108,14 +109,14 @@ const root=path.resolve(__dirname,'../..'),output=path.join(root,'tests/bin/barc
    assert.equal((pdf.toString('latin1').match(/\/Type \/Page\b/g)||[]).length,2);
    await page.emulateMedia({media:'screen'});await page.locator('[data-close="barcode-preview-dialog"]').first().click();
   }
-  await page.locator('#barcode-layout').selectOption('sheet');await page.locator('#barcode-sheet-template').selectOption('custom');
+  await selectValue(page.locator('#barcode-layout'),'sheet');await selectValue(page.locator('#barcode-sheet-template'),'custom');
   await page.locator('#barcode-sheet-columns').fill('8');await page.locator('#barcode-preview').click();await page.waitForFunction(()=>!document.querySelector('#barcode-preview').disabled);assert(!(await page.locator('#barcode-preview-dialog').evaluate(n=>n.open)),'invalid sheet geometry blocks preview');
   for(const [id,value] of [['width',50],['height',30],['columns',3],['rows',8],['left',10],['top',15],['column-gap',5],['row-gap',3]])await page.locator('#barcode-sheet-'+id).fill(String(value));
   await page.locator('#barcode-preview').click();await page.waitForSelector('#barcode-preview-dialog[open]');await page.locator('#barcode-preview-print').click();await page.waitForFunction(()=>!document.querySelector('#barcode-preview-print').disabled);
   assert.equal(prints.at(-1).sheetTemplate.widthMm,50);assert.equal(prints.at(-1).sheetTemplate.columnGapMm,5);
   await page.emulateMedia({media:'print'});const custom=await page.pdf({preferCSSPageSize:true});fs.writeFileSync(path.join(output,'barcode-custom-a4.pdf'),custom);assert.equal((custom.toString('latin1').match(/\/Type \/Page\b/g)||[]).length,1);
   await page.emulateMedia({media:'screen'});await page.locator('[data-close="barcode-preview-dialog"]').first().click();
-  await page.locator('#barcode-sheet-template').selectOption('21');await page.locator('#barcode-default-copies').fill('22');await page.locator('#barcode-default-copies').dispatchEvent('change');
+  await selectValue(page.locator('#barcode-sheet-template'),'21');await page.locator('#barcode-default-copies').fill('22');await page.locator('#barcode-default-copies').dispatchEvent('change');
   await page.locator('#barcode-preview').click();await page.waitForSelector('#barcode-preview-dialog[open]');assert.equal(await page.locator('#label-preview-area .stock-label').count(),22);
   await page.emulateMedia({media:'print'});const sheets=await page.pdf({preferCSSPageSize:true});fs.writeFileSync(path.join(output,'barcode-a4-21-template.pdf'),sheets);assert.equal((sheets.toString('latin1').match(/\/Type \/Page\b/g)||[]).length,2,'22 labels continue to a second 21-label A4 sheet');
   await page.emulateMedia({media:'screen'});await page.locator('[data-close="barcode-preview-dialog"]').first().click();await page.setViewportSize({width:390,height:1000});await screenshot('barcode-details-mobile.png');assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));

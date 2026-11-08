@@ -147,10 +147,10 @@
         <h2>Stock received successfully</h2><p id="receipt-success-number"></p><p id="receipt-success-summary"></p>
         <div class="d-flex gap-2"><a id="receipt-view" class="btn btn-primary">View Receipt</a><a href="/Purchases/Create" class="btn btn-outline-primary">Receive More Stock</a></div>
     </section>
-    <dialog id="receipt-confirm" aria-labelledby="receipt-confirm-title">
+    <dialog data-sf-dialog="workflow" id="receipt-confirm" aria-labelledby="receipt-confirm-title">
         <h2 id="receipt-confirm-title" class="h5">Confirm Stock Receipt</h2><dl id="receipt-confirm-summary"></dl>
         <p>This action will update inventory.</p>
-        <div class="d-flex justify-content-end gap-2"><button id="receipt-confirm-cancel" type="button" class="btn btn-outline-secondary">Cancel</button><button id="receipt-confirm-save" type="button" class="btn btn-primary">Confirm &amp; Receive</button></div>
+        <div class="d-flex justify-content-end gap-2"><button id="receipt-confirm-cancel" type="button" class="btn btn-outline-secondary">Cancel</button><button id="receipt-confirm-save" type="button" class="btn btn-dark">Confirm &amp; Receive</button></div>
     </dialog>
 </div>
 }

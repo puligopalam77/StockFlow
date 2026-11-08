@@ -1,4 +1,5 @@
 const fs=require('fs'),path=require('path'),assert=require('assert');
+const {fillAddress}=require('./address-test-helpers.cjs');
 const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
 const output=path.resolve(__dirname,'../bin/responsive-audit');
 (async()=>{
@@ -22,10 +23,14 @@ const output=path.resolve(__dirname,'../bin/responsive-audit');
    await page.screenshot({path:path.join(output,'shared-components-'+width+'.png'),fullPage:true});
    console.log('PASS: navigation, profile, long confirmation/Escape and unobstructed primary action at '+width+'x'+height);
   }
+  // The read-only server has no live billing policy repository. Supply only the
+  // GET context needed to exercise the customer modal; never submit the form.
+  await page.route('**/api/sales/billing/policy',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({canOverridePrice:true,canOverrideTax:true,canDiscount:true,canApproveDiscount:false,discountLimitPercent:10})}));
+  await page.route('**/api/sales/gst-context',route=>route.fulfill({contentType:'application/json',body:'{"mapped":false}'}));
   await page.setViewportSize({width:390,height:600});await page.goto('http://127.0.0.1:55863/Sales/Create');
-  await page.locator('#customer-current').click();await page.getByRole('button',{name:'+ Add Customer',exact:true}).click();
+  await page.getByRole('button',{name:'+ Add Customer',exact:true}).click();
   await page.locator('#new-customer-name').fill('Unsaved customer');
-  await page.locator('#new-customer-address').fill('Long optional address '.repeat(20));
+  await page.locator('#quick-customer-additional summary').click();await fillAddress(page.locator('#new-customer-address'),'Long optional address '.repeat(20));
   for(const [width,height]of[[1280,600],[390,600],[320,400]]){
    await page.setViewportSize({width,height});const modal=page.locator('#customer-quick-add-dialog');
    assert(await modal.evaluate(n=>{const r=n.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&n.scrollWidth<=n.clientWidth;}));

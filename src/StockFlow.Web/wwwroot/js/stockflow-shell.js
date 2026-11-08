@@ -116,6 +116,18 @@
     const navigation = sidebar?.querySelector('.sf-nav');
     if (navigation) {
         const scrollKey = 'stockflow.sidebar.scrollTop';
+        const groupsKey = 'stockflow.sidebar.groups';
+        let savedGroups={};try{const stored=JSON.parse(sessionStorage.getItem(groupsKey)||'{}');if(stored&&typeof stored==='object'&&!Array.isArray(stored))savedGroups=stored;}catch{}
+        for(const group of navigation.querySelectorAll('details[data-nav-group]')){
+            const active=!!group.querySelector('[aria-current="page"]');
+            if(active)group.open=true;
+            else if(typeof savedGroups[group.dataset.navGroup]==='boolean')group.open=savedGroups[group.dataset.navGroup];
+        }
+        navigation.addEventListener('toggle',event=>{
+            const group=event.target;if(!group.matches('details[data-nav-group]'))return;
+            savedGroups[group.dataset.navGroup]=group.open;
+            try{sessionStorage.setItem(groupsKey,JSON.stringify(savedGroups));}catch{}
+        },true);
         // Full-page navigation (including /Configuration redirects) recreates the menu.
         // Keep its position within this tab independently of the page content.
         try {
@@ -138,6 +150,8 @@
         });
         navigation.addEventListener('click', saveScroll);
         window.addEventListener('pagehide', saveScroll);
+        // Scroll only the sidebar, and only when the active path is outside it.
+        requestAnimationFrame(()=>{const selected=navigation.querySelector('[aria-current="page"]');if(!selected)return;const link=selected.getBoundingClientRect(),viewport=navigation.getBoundingClientRect();if(link.top<viewport.top)navigation.scrollTop-=viewport.top-link.top;else if(link.bottom>viewport.bottom)navigation.scrollTop+=link.bottom-viewport.bottom;});
     }
     const backdrop = document.getElementById('sidebar-backdrop');
     const mobile = window.matchMedia('(max-width: 991px)');

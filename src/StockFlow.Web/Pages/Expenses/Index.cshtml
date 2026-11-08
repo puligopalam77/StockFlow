@@ -1,17 +1,35 @@
 @page
 @{ViewData["Title"]="Operating Expenses";}
-<div id="expenses" data-mode="list" class="sf-list-screen">
-<header class="sf-page-heading"><div><h1>Operating Expenses</h1><p>Record shop overheads separately from stock purchases.</p></div><div><a class="btn btn-primary d-inline-flex align-items-center gap-2" href="/Expenses/Create" permission-module="EXPENSES" permission-action="CREATE"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><use href="/images/icons.svg#plus" /></svg><span>Add Expense</span></a> <a class="btn btn-outline-secondary" href="/Expenses/Report">Expense Report</a></div></header>
+<div id="expenses" data-mode="list" class="sf-list-screen expense-list">
+<header class="sf-page-heading"><div><h1>Operating Expenses</h1><p>Track shop expenses and payments.</p></div><div class="expense-header-actions"><a class="btn btn-primary d-inline-flex align-items-center gap-0" href="/Expenses/Create" permission-module="EXPENSES" permission-action="CREATE"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><use href="/images/icons.svg#plus" /></svg><span>Add Expense</span></a><a class="btn btn-outline-secondary" href="/Expenses/Report">Expense Report</a></div></header>
 <div id="expense-message" role="alert" hidden></div>
-<form id="expense-filters" class="card card-body expense-filters sf-filter-bar">
-<label for="expense-term">Search<input id="expense-term" class="form-control" maxlength="150" placeholder="Category, payee or description" /></label>
-<label for="expense-from">From<input id="expense-from" class="form-control" type="date" /></label><label for="expense-to">To<input id="expense-to" class="form-control" type="date" /></label>
-<label for="expense-filter-category">Category<select id="expense-filter-category" class="form-select"><option value="">All categories</option></select></label>
-<label for="expense-filter-payment">Payment Status<select id="expense-filter-payment" class="form-select"><option value="">All payment states</option><option value="UNPAID">Unpaid</option><option value="PARTIAL">Partially Paid</option><option value="PAID">Paid</option></select></label>
-<div class="expense-filter-actions"><button class="btn btn-primary" type="submit">Apply</button><button id="expense-filter-reset" class="btn btn-outline-secondary" type="button">Reset</button></div>
-<details class="expense-extra-filters"><summary>More Filters</summary><div><label for="expense-filter-payee">Payee<select id="expense-filter-payee" class="form-select"><option value="">All payees</option></select></label><label for="expense-filter-status">Expense Status<select id="expense-filter-status" class="form-select"><option value="">All states</option><option value="DRAFT">Draft</option><option value="POSTED">Recorded</option><option value="CANCELLED">Cancelled</option></select></label></div></details>
-</form>
-<div class="card card-body"><div class="table-responsive"><table class="table expense-list-table"><thead><tr><th>Date</th><th>Category / Description</th><th>Payee</th><th>Amount</th><th>Balance Due</th><th>Payment Status</th><th>Actions</th></tr></thead><tbody id="expense-rows"></tbody></table></div><p id="expense-list-empty" hidden>No matching expenses. Adjust the filters or create an expense.</p><div id="expense-pager"></div></div>
+<p id="expense-legacy-notice" class="expense-notice" hidden><span id="expense-legacy-count"></span> <button id="expense-legacy-review" type="button" class="expense-add">Review saved expenses</button></p>
+<section class="card expense-list-controls" aria-label="Search and filter expenses">
+ <form id="expense-search" class="expense-list-toolbar" role="search">
+  <div class="expense-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="/images/icons.svg#search" /></svg><input id="expense-term" class="form-control" type="search" maxlength="150" placeholder="Search expenses..." aria-label="Search expenses" /><button id="expense-search-clear" type="button" aria-label="Clear search" hidden>×</button></div>
+  <button id="expense-filter-toggle" class="btn btn-outline-secondary" type="button" aria-controls="expense-filter-panel" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6m8 4v6" /></svg>Filters <span id="expense-filter-count" hidden></span></button>
+  <button id="expense-filter-reset" class="btn btn-outline-secondary" type="button">Reset</button>
+ </form>
+ <div id="expense-filter-chips" class="expense-filter-chips" aria-label="Applied filters" hidden></div>
+ <aside id="expense-filter-panel" aria-labelledby="expense-filter-title" hidden>
+  <div class="expense-filter-heading"><h2 id="expense-filter-title">Filter Expenses</h2><button id="expense-filter-close" type="button" aria-label="Close filters">×</button></div>
+  <form id="expense-filters">
+   <div class="expense-filter-body">
+    <label for="expense-filter-category">Category<select id="expense-filter-category" class="form-select" data-sf-select="native"><option value="">All Categories</option></select></label>
+    <label for="expense-filter-payment">Payment Status<select id="expense-filter-payment" class="form-select" data-sf-select="native"><option value="">All</option><option value="UNPAID">Unpaid</option><option value="PARTIAL">Partially Paid</option><option value="PAID">Paid</option></select></label>
+    <label for="expense-filter-payee">Payee<select id="expense-filter-payee" class="form-select" data-sf-select="native"><option value="">All Payees</option></select></label>
+    <label for="expense-filter-status">Expense Status<select id="expense-filter-status" class="form-select" data-sf-select="native"><option value="">Recorded and cancelled</option><option value="POSTED">Recorded</option><option value="CANCELLED">Cancelled</option><option id="expense-legacy-option" value="DRAFT" hidden>Saved expenses needing review</option></select></label>
+    <section class="expense-date-range" aria-labelledby="expense-date-range-title"><h3 id="expense-date-range-title">Date Range</h3><fieldset aria-labelledby="expense-date-range-title"><label for="expense-from">From Date<input id="expense-from" class="form-control" type="date" /></label><label for="expense-to">To Date<input id="expense-to" class="form-control" type="date" /></label></fieldset></section>
+   </div>
+   <div class="expense-filter-footer"><button class="btn btn-primary" type="submit">Apply Filters</button><button id="expense-filter-clear" class="btn btn-outline-secondary" type="button">Clear All</button></div>
+  </form>
+ </aside>
+</section>
+<section class="card card-body expense-results" aria-label="Expenses">
+ <div class="table-responsive"><table class="table expense-list-table"><thead><tr><th>Date</th><th>Expense</th><th>Payee</th><th class="expense-currency">Amount</th><th class="expense-currency">Balance Due</th><th>Payment Status</th><th>Actions</th></tr></thead><tbody id="expense-rows"></tbody></table></div>
+ <div id="expense-list-empty" class="expense-empty" hidden><strong id="expense-empty-title"></strong><p id="expense-empty-copy"></p><a id="expense-empty-add" class="btn btn-primary" href="/Expenses/Create" permission-module="EXPENSES" permission-action="CREATE" hidden>Add Expense</a><button id="expense-empty-clear" class="btn btn-outline-secondary" type="button" hidden>Clear Filters</button></div>
+ <div id="expense-pager"></div>
+</section>
 </div>
 @section Scripts {<script src="~/js/expenses.js" asp-append-version="true"></script>}
 @section Styles {<link rel="stylesheet" href="~/css/expenses.css" asp-append-version="true" />}

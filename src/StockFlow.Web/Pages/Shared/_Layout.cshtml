@@ -54,6 +54,7 @@
         <link rel="stylesheet" href="~/css/responsive-foundations.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/css/action-icons.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/css/list-pagination.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/dialog-standard.css" asp-append-version="true" />
 </head>
     <body class="sf-app sf-retail-ui @(new[]{"/Products/Index","/Categories/Index","/Brands/Index","/Suppliers/Index","/Customers/Index"}.Contains(currentPage) && ViewContext.RouteData.Values["mode"] is not null ? "master-form-page" : "")" data-shop-type="@(BusinessScope.BusinessProfileCode == "ELECTRICAL" ? "battery-geyser" : BusinessScope.BusinessProfileCode.ToLowerInvariant())" data-business-profile="@BusinessScope.BusinessProfileCode" data-catalog-registration-enhancements="@BusinessScope.CatalogRegistrationEnhancementsAvailable.ToString().ToLowerInvariant()" data-product-image-gallery="@BusinessScope.ProductImageGalleryAvailable.ToString().ToLowerInvariant()">
         <a href="#main-content" class="sf-skip-link">Skip to main content</a>
@@ -163,12 +164,13 @@
             }
             @if (!isListScreen && currentPage is not ("/Index" or "/Sales/Create") && !(currentPage=="/Settings/Company" && ViewData["CompanySection"]?.ToString()=="business")) { <partial name="_RetailScreenGuide" /> }
         </main>
+        @if (User.Identity?.IsAuthenticated == true) { <div class="sf-assistant-dock"><partial name="_HelpPanel" /></div> }
         <footer class="sf-app-footer">© @DateTime.Now.Year StockFlow <span>Smart inventory. Better business.</span>
         </footer>
     </div>
     @if (User.Identity?.IsAuthenticated == true)
     {
-    <dialog id="profile-details-dialog" class="sf-account-dialog" aria-labelledby="profile-details-title">
+    <dialog data-sf-dialog="medium" id="profile-details-dialog" class="sf-account-dialog" aria-labelledby="profile-details-title">
         <button class="sf-dialog-close" type="button" data-close-account aria-label="Close profile details">×</button>
         <h2 id="profile-details-title">Profile Details</h2>
         <div class="sf-profile-identity">
@@ -198,10 +200,10 @@
             </dd>
         </div>}
     </dl>            <div class="sf-account-actions">
-        <button type="button" class="btn btn-dark" data-close-account>Close</button>
+        <button type="button" class="btn btn-outline-secondary" data-close-account>Close</button>
     </div>
 </dialog>
-<dialog id="change-password-dialog" class="sf-account-dialog" aria-labelledby="change-password-title" aria-describedby="change-password-help">
+<dialog data-sf-dialog="medium" id="change-password-dialog" class="sf-account-dialog" aria-labelledby="change-password-title" aria-describedby="change-password-help">
     <button class="sf-dialog-close" type="button" data-close-account aria-label="Close change password">×</button>
     <h2 id="change-password-title">Change Password</h2>
     <p id="change-password-help">Use 8–128 characters. Spaces and passphrases are allowed; your business may require a longer minimum. Sign in again after saving.</p>
@@ -215,11 +217,11 @@
         <label for="profile-confirm-password">Confirm new password</label>
         <input id="profile-confirm-password" name="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" minlength="8" maxlength="128" required />
         <div class="sf-account-actions">
-            <button type="button" class="btn btn-dark" data-close-account>Cancel</button>
+            <button type="button" class="btn btn-outline-secondary" data-close-account>Cancel</button>
             <button type="submit" class="btn btn-primary">Save Password</button>
         </div>
     </form>
-</dialog>        <dialog id="logout-confirmation" class="sf-logout-dialog" aria-labelledby="logout-title" aria-describedby="logout-description">
+</dialog>        <dialog data-sf-dialog="compact" id="logout-confirmation" class="sf-logout-dialog" aria-labelledby="logout-title" aria-describedby="logout-description">
     <button id="logout-close" class="sf-dialog-close" type="button" aria-label="Close logout confirmation">×</button>
     <div class="sf-dialog-symbol" aria-hidden="true">!</div>
     <h2 id="logout-title">Are you sure?</h2>
@@ -228,7 +230,7 @@
         <button id="logout-cancel" class="sf-dialog-cancel" type="button" autofocus>Cancel</button>
         <form method="post" asp-page="/Account/Logout">
             <input type="hidden" name="SessionId" value="@User.FindFirst(StockFlow.Web.Security.IdleSessionService.ClaimType)?.Value" />
-            <button class="sf-dialog-confirm" type="submit">Sign out</button>
+            <button class="sf-dialog-confirm btn btn-dark" type="submit">Sign out</button>
         </form>
     </div>
 </dialog>
@@ -242,7 +244,6 @@
     <script src="~/js/stockflow-shell.js" asp-append-version="true"></script>
     <script src="~/js/language-selector.js" asp-append-version="true"></script>
     @if (User.Identity?.IsAuthenticated == true) { <script src="~/js/notifications.js" asp-append-version="true"></script> }
-    @if (User.Identity?.IsAuthenticated == true) { <partial name="_HelpPanel" /> }
     <script src="~/js/help-panel.js" asp-append-version="true"></script>
     <script src="~/js/help-voice.js" asp-append-version="true"></script>
 <partial name="_IdleSession" />

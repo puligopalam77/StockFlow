@@ -6,8 +6,8 @@
    var drawerTimeZone = TimeZoneInfo.TryConvertWindowsIdToIanaId(ShopTime.Value.TimeZoneId, out var ianaTimeZone) ? ianaTimeZone : ShopTime.Value.TimeZoneId;
 }
 <header class="sf-page-heading">
-    <div>
-        <h1>New Sale</h1><p id="billing-draft-reference" class="small text-muted mb-0">Provisional draft</p>
+    <div class="billing-title-row">
+        <h1>New Sale</h1><span id="billing-draft-reference" class="billing-draft-reference" role="status" aria-live="polite">New Draft</span>
     </div>
 </header>
 <div id="billing-workspace" data-can-gst-edit="@Access.Can("GST_SETTINGS","EDIT").ToString().ToLowerInvariant()" data-can-scan="@Access.Can("SCAN","SCAN").ToString().ToLowerInvariant()" data-can-search="@Access.Can("PRODUCT_VARIANTS").ToString().ToLowerInvariant()" data-tax-inclusive="@((Model.Company.DefaultTaxMode == "INCLUSIVE").ToString().ToLowerInvariant())" data-payment-terms="@Model.Company.DefaultPaymentTermsDays" data-storage-key="stockflow.sale.@BusinessScope.TenantId.@BusinessScope.UserId.@BusinessScope.LocationId@BusinessScope.DraftProfileSuffix" data-can-invoice="@Access.Can("INVOICES","PRINT").ToString().ToLowerInvariant()" data-can-units="@Access.Can("INVENTORY").ToString().ToLowerInvariant()">
@@ -18,7 +18,7 @@
 @if(BusinessScope.Consolidated){<p class="alert alert-info">Choose one location in the administrator's top bar before billing.</p>}
     <section class="card card-body mb-3">
         <div class="d-flex flex-wrap gap-2">
-            <button id="hold-bill" type="button" class="btn btn-outline-primary">Hold Bill</button>
+            <button id="hold-bill" type="button" class="btn btn-dark">Hold Bill</button>
             <button id="show-held" type="button" class="btn btn-outline-secondary">Saved bills</button>
             <span id="draft-status" role="status" class="small align-self-center">
             </span>
@@ -38,12 +38,12 @@
         <div id="saved-bills-list" class="billing-saved-list" aria-label="Saved bills"></div>
         <footer class="billing-saved-pagination"><button id="saved-bills-prev" type="button" class="btn btn-outline-secondary">Previous</button><span id="saved-bills-page"></span><button id="saved-bills-next" type="button" class="btn btn-outline-secondary">Next</button></footer>
     </dialog>
-    <dialog id="resume-bill-confirm" class="sf-confirm-dialog billing-resume-confirm" aria-labelledby="resume-bill-title" aria-describedby="resume-bill-message">
+    <dialog data-sf-dialog="compact" id="resume-bill-confirm" class="sf-confirm-dialog billing-resume-confirm" aria-labelledby="resume-bill-title" aria-describedby="resume-bill-message">
         <button type="button" class="sf-confirm-close" id="resume-bill-close" aria-label="Cancel resume">&times;</button>
         <div class="sf-confirm-symbol" aria-hidden="true">!</div>
         <h2 id="resume-bill-title">Resume saved bill?</h2>
         <p id="resume-bill-message">Your current unfinished bill contains items or entered details. Choose what to do before opening the saved bill.</p>
-        <div class="sf-confirm-actions"><button type="button" id="resume-bill-cancel" class="btn btn-dark">Cancel</button><button type="button" id="resume-bill-hold" class="btn btn-primary">Hold Current Bill &amp; Resume</button><button type="button" id="resume-bill-discard" class="btn btn-outline-danger">Discard Current Draft &amp; Resume</button></div>
+        <div class="sf-confirm-actions"><button type="button" id="resume-bill-cancel" class="btn btn-outline-secondary">Cancel</button><button type="button" id="resume-bill-hold" class="btn btn-dark">Hold Current Bill &amp; Resume</button><button type="button" id="resume-bill-discard" class="btn btn-outline-danger">Discard Current Draft &amp; Resume</button></div>
     </dialog>
     <form id="sale-form" novalidate>
         <fieldset id="sale-editor">
@@ -247,7 +247,7 @@
 </div>
 </fieldset>
 </form>
-<div id="payment-confirmation-modal" class="modal fade" tabindex="-1" aria-labelledby="payment-confirmation-title" aria-describedby="payment-confirmation-message payment-confirmation-help" aria-hidden="true">
+<div id="payment-confirmation-modal" data-sf-dialog="medium" class="modal fade" tabindex="-1" aria-labelledby="payment-confirmation-title" aria-describedby="payment-confirmation-message payment-confirmation-help" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -261,7 +261,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button id="confirm-payment" type="button" class="btn btn-primary">Yes, Payment Received</button>
+                <button id="confirm-payment" type="button" class="btn btn-dark">Yes, Payment Received</button>
             </div>
         </div>
     </div>

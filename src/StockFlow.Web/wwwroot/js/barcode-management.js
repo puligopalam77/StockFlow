@@ -160,7 +160,7 @@
         const lot=workspace.lot,withCode=workspace.rows.filter(r=>r.barcode).length;
         const crumb=$('breadcrumb-current');
         if(crumb) {
-            if(!$('barcode-breadcrumb-parent')){const li=document.createElement('li'),link=document.createElement('a');li.id='barcode-breadcrumb-parent';link.href='/Labels';link.textContent='Barcodes';li.append(link);crumb.parentElement.before(li);}
+            if(!$('barcode-breadcrumb-parent')){const li=document.createElement('li'),link=document.createElement('a');li.id='barcode-breadcrumb-parent';link.href='/Labels';link.textContent='Barcode Labels';li.append(link);crumb.parentElement.before(li);}
             crumb.textContent=lot.lotNumber;
             const back=$('breadcrumb-back');if(back)back.href='/Labels';
         }

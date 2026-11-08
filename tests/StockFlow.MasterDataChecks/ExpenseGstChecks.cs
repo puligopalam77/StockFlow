@@ -58,7 +58,7 @@ internal static class ExpenseGstChecks
         Check((int)invalidPreview.StatusCode==400&&(await invalidPreview.Content.ReadAsStringAsync()).Contains("valid supplier GSTIN"),"GST preview gives a clear validation message for an invalid optional GSTIN");
         var noGst=Guid.NewGuid();await repo.RecordAsync(noGst,new(Guid.NewGuid(),0,Element(new{expense=Details(1180m,null),payment=(object?)null})));
         Check((await repo.GetAsync(noGst)).GetProperty("gst_details").ValueKind==JsonValueKind.Null,"No GST records the entered total with no tax snapshot or payment");
-        var draft=Guid.NewGuid();await repo.WriteAsync(draft,"SAVE",new(Guid.NewGuid(),0,Element(Details(1180m,Tax(normal)))));var savedDraft=await repo.GetAsync(draft);
+        var draft=Guid.NewGuid();await ExpenseRecordingChecks.SeedLegacyAsync(setup,draft,new(Guid.NewGuid(),0,Element(Details(1180m,Tax(normal)))));var savedDraft=await repo.GetAsync(draft);
         Check(savedDraft.GetProperty("status").GetString()=="DRAFT"&&savedDraft.GetProperty("paid").GetDecimal()==0&&savedDraft.GetProperty("payments").GetArrayLength()==0&&savedDraft.GetProperty("gst_details").GetProperty("gstAmount").GetDecimal()==180m,"Saving GST information in a draft creates no payment or claim");
         var overpaid=Guid.NewGuid();await Reject(()=>repo.RecordAsync(overpaid,new(Guid.NewGuid(),0,Element(new{expense=Details(1180m,Tax(normal)),payment=new{amount=1180.01m,paymentMode="UPI",paidDate=day,confirmed=true}}))),"GST-inclusive initial overpayment is rejected against the unchanged total");
         Check(await setup.ExecuteScalarAsync<int>("SELECT count(*) FROM expenses WHERE expense_id=@overpaid",new{overpaid})==0,"Failed GST payment rolls back expense, GST snapshot, posting and payment atomically");

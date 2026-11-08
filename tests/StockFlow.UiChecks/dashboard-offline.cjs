@@ -17,7 +17,7 @@ const fixtures=path.join(root,'tests/bin/phase13-ui-fixtures'),base='http://loca
                 return json(Array.from({length:count},(_,i)=>({period:'Day '+(i+1),inflow:i+10,outflow:i+2})));
             }
             if(p==='/api/dashboard/movements') return json([{createdAt:'2026-09-29T10:00:00',productName:'Fuse',quantity:2,transactionType:'SERVICE_OUT',movementLabel:'SERVICE OUT SRV-1',referenceUrl:'/Service/Details/1',partyName:'Customer'}]);
-            if(p==='/api/inventory') return json([{productId:1,productName:'Battery',categoryName:'Battery',currentStock:2,minimumStockLevel:5,required:3}]);
+            if(p==='/api/inventory') return json({rows:[{productId:1,variantId:1,productName:'Battery',categoryName:'Battery',currentStock:2,minimumStockLevel:5,quantityNeeded:3,stockStatus:'LOW'}],total:1,summary:{lowStockVariants:1,outOfStock:0,unitsToReplenish:3}});
             if(p==='/api/dashboard/search') return json([{kind:'SERIAL',title:'BAT001',detail:'Battery / SOLD',url:'/Scan?code=BAT001'}]);
             const names={'/':'dashboard','/StockOutflow':'outflow','/Inventory/LowStock':'low-stock','/Search':'search'};
             if(names[p]) return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(fixtures,role+'-'+names[p]+'.html'),'utf8')});
@@ -27,16 +27,22 @@ const fixtures=path.join(root,'tests/bin/phase13-ui-fixtures'),base='http://loca
             return route.fulfill({status:404,body:''});
         });
         await page.goto(base);
+        const choosePeriod=async value=>{
+            const native=page.locator('#chart-period');
+            if(await native.isVisible())return native.selectOption(value);
+            await page.locator('#chart-period-search').click();
+            await page.locator(`#chart-period-options [data-value="${value}"]`).click();
+        };
         assert.strictEqual(await page.locator('.sf-business-kpis .sf-kpi').count(),8);
         assert.strictEqual(await page.locator('a.sf-kpi[href="/Sales?status=OUTSTANDING"]').count(),1);
         assert.strictEqual(await page.locator('a.sf-kpi[href="/Sales?status=OVERDUE"]').count(),1);
         assert.strictEqual(await page.locator('#recent-sales').count(),1);
         assert.strictEqual(await page.locator('a.sf-kpi[href="/StockOutflow"]').count(),1);
         for(const [period,count] of [['7days',7],['30days',30],['12months',12],['6months',6]]) {
-            await page.locator('#chart-period').selectOption(period);
+            await choosePeriod(period);
             await page.waitForFunction(n=>document.querySelectorAll('#chart-months .sf-chart-month').length===n&&document.getElementById('trend-message').hidden,count);
         }
-        fail=true; await page.locator('#chart-period').selectOption('7days');
+        fail=true; await choosePeriod('7days');
         await page.waitForFunction(()=>document.getElementById('trend-message').textContent.includes('Unable'));
         assert.strictEqual(await page.locator('#chart-period').inputValue(),'6months');
         assert.strictEqual(await page.locator('#chart-months .sf-chart-month').count(),6); fail=false;
@@ -45,12 +51,12 @@ const fixtures=path.join(root,'tests/bin/phase13-ui-fixtures'),base='http://loca
             await page.waitForFunction(()=>document.documentElement.scrollWidth<=innerWidth+2,null,{timeout:3000});
             assert(await page.locator('.sf-hero').evaluate(hero=>{
                 const bounds=hero.getBoundingClientRect();
-                return [...hero.querySelectorAll('.sf-hero-content,.sf-hero-stat')].every(node=>{
+                return [...hero.querySelectorAll('.sf-eyebrow,h1,.sf-hero-content>p,.sf-hero-note,.sf-hero-stat')].every(node=>{
                     const r=node.getBoundingClientRect();return r.left>=bounds.left&&r.right<=bounds.right&&r.bottom<=bounds.bottom;
                 });
             }),'dashboard banner grows with readable content and reflowed statistic chips');
         }
-        await page.locator('#chart-period').selectOption('30days');
+        await choosePeriod('30days');
         await page.waitForFunction(()=>document.querySelectorAll('#chart-months .sf-chart-month').length===30);
         assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'daily chart viewport overflow');
         await page.goto(base+'/StockOutflow');

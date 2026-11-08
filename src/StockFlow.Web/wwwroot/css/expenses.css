@@ -1,7 +1,7 @@
 
 #expenses{color:#142b45;max-width:none;min-width:0;width:100%}#expenses [hidden]{display:none!important}
 #expenses .expense-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}#expenses h1{font-size:24px;margin:0 0 6px}#expenses h2{font-size:16px;font-weight:700;margin:0 0 16px}#expenses h1+p{margin:0;color:#596b84;font-size:13px}
-#expenses .card{background:#fff;border:1px solid #dce4ef;border-radius:12px;margin-bottom:14px;min-width:0;max-width:100%;padding:18px}#expenses fieldset{min-inline-size:0;border:0;margin:0;padding:0}
+#expenses .card{background:#fff;border:1px solid #dce4ef;border-radius:12px;margin-bottom:14px;min-width:0;max-width:100%;padding:16px}#expenses fieldset{min-inline-size:0;border:0;margin:0;padding:0}
 #expenses .expense-workspace{display:grid;grid-template-columns:minmax(0,7fr) minmax(270px,3fr);gap:16px;align-items:start}#expenses .expense-main,#expenses .expense-sidebar{min-width:0}
 #expenses .expense-fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}#expenses .expense-fields-grid>div{min-width:0}#expenses .expense-full{grid-column:1/-1}
 #expenses label{display:block;font-size:13px;font-weight:600;margin:0 0 6px}#expenses .expense-label-action{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:6px}#expenses .expense-label-action label{margin:0}
@@ -11,27 +11,25 @@
 #expenses .expense-badge{padding:6px 12px;background:#fff0f7;border:1px solid #ffc4df;color:#a30d4b;border-radius:20px;font-size:12px}#expenses .expense-summary-values{margin:0;font-size:13px}#expenses .expense-summary-values>div{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #edf0f6}#expenses .expense-summary-values dt{font-weight:400}#expenses .expense-summary-values dd{margin:0;text-align:right;font-weight:600;overflow-wrap:anywhere;min-width:0}
 #expenses .expense-draft-badge{padding:4px 9px;background:#f1f5fb;border-color:#dce4ef;color:#596b84;font-weight:500}
 #expenses .expense-actions{display:flex;flex-direction:column;gap:10px}#expenses .expense-actions h2{margin-bottom:0}#expenses .expense-actions .btn{width:100%;margin:0;white-space:normal}#expenses .expense-actions details button{margin-top:10px}
-#expenses .btn{margin-top:10px}#expenses :is(.btn-dark,.btn-outline-secondary){--sf-action-bg:#202328;background:#202328!important;border-color:#202328!important;color:#fff!important}#expenses .btn-primary{--sf-action-bg:#ff007f;background:#ff007f!important;border-color:#ff007f!important;color:#fff!important}#expenses :is(input,select,textarea,button,a,summary):not(:is(#expense-master-dialog,#expense-payment-dialog) input,.sf-select-trigger,.sf-select-query):focus-visible{outline:2px solid #ff007f!important;outline-offset:3px!important}
+#expenses .btn{margin-top:10px;min-height:38px;font-size:13px}#expenses .btn-dark{--sf-action-bg:#202328;background:#202328!important;border-color:#202328!important;color:#fff!important}#expenses .btn-outline-secondary{--sf-action-bg:#fff;background:#fff!important;border-color:#d3ddeb!important;color:#142b45!important}#expenses .btn-outline-secondary:hover:not(:disabled){background:#f1f5fb!important;border-color:#91a2b9!important}#expenses .btn-primary{--sf-action-bg:#ff007f;background:#ff007f!important;border-color:#ff007f!important;color:#fff!important}#expenses :is(input,select,textarea,button,a,summary):not(:is(#expense-master-dialog,#expense-payment-dialog) input,.sf-select-trigger,.sf-select-query):focus-visible{outline:2px solid #ff007f!important;outline-offset:3px!important}
 #expenses .expense-confirm{display:flex;align-items:start;gap:8px;margin-top:12px;font-weight:400}#expenses .expense-confirm input{margin-top:2px}
 #expenses .table-responsive{max-width:100%;overflow-x:auto}#expenses table{width:100%;min-width:700px;font-size:13px}#expenses th{background:#1b2d43;color:#fff;white-space:nowrap}#expenses td{vertical-align:middle;overflow-wrap:anywhere;max-width:240px}#expenses :is(th,td){padding:12px 10px}
 #expense-message,#expenses .expense-error{padding:12px;background:#fff0f7;border:1px solid #ffc4df;border-radius:8px;margin:12px 0;overflow-wrap:anywhere}
 #expenses dialog{border:1px solid #dce4ef;border-radius:12px;width:440px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:20px;overflow:auto}#expenses dialog::backdrop{background:#142b4570}
-#expenses :is(#expense-master-dialog,#expense-payment-dialog){width:500px;padding:0;border:0;border-radius:18px;box-shadow:0 20px 65px #142b4533;color:#14243c}
-:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-heading{display:flex;align-items:center;gap:14px;padding:22px 24px;background:linear-gradient(115deg,#fff0f8,#fff8fc);position:relative;padding-right:58px}
-#expenses :is(#expense-master-dialog,#expense-payment-dialog) h2{font-size:24px;line-height:1.25;margin:0;font-weight:700;letter-spacing:-.5px}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog){width:500px;padding:0;border:1px solid #dce4ef;border-radius:12px;box-shadow:0 8px 24px #142b451a;color:#14243c}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-heading{display:flex;align-items:center;gap:12px;padding:16px;background:var(--sf-surface);border-bottom:1px solid #edf0f6;position:relative;padding-right:58px}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog) h2{font-size:18px;line-height:1.4;margin:0;font-weight:700;letter-spacing:normal}
 :is(#expense-master-dialog,#expense-payment-dialog) .expense-master-heading p{margin:5px 0 0;font-size:13px;line-height:1.5}
-:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-icon{display:grid;place-items:center;flex-shrink:0;width:50px;height:50px;border-radius:50%;background:#ffd5ec;color:#e00070}
-:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-icon svg{width:29px;height:29px}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-icon{display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;color:#596b84}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-icon svg{width:22px;height:22px}
 :is(#expense-master-dialog,#expense-payment-dialog) .expense-master-x{--sf-action-bg:transparent;--sf-action-hover:transparent;--sf-action-standard:36px;--sf-action-standard-icon:18px;position:absolute;top:14px;right:14px;display:grid;place-items:center;width:36px;height:36px;padding:9px;border:0;border-radius:0;background:transparent;color:#25334b;box-shadow:none}
 :is(#expense-master-dialog,#expense-payment-dialog) .expense-master-x svg{width:18px;height:18px}:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-x:is(:hover,:focus-visible) svg{stroke:#b3005a}
-:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-body{display:grid;gap:16px;padding:20px 28px}
-#expenses :is(#expense-master-dialog,#expense-payment-dialog) input{min-height:44px;padding:10px 12px;font-size:14px;border-radius:8px}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-body{display:grid;gap:12px;padding:16px}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog) input{min-height:38px;padding:8px 12px;font-size:14px;border-radius:6px}
 #expenses :is(#expense-master-dialog,#expense-payment-dialog) .expense-error{margin:0;padding:10px 12px;font-size:13px}
-:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-actions{display:flex;justify-content:flex-end;gap:12px;padding:14px 28px 18px;border-top:1px solid #edf0f6}
-#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn{margin:0;min-height:42px;min-width:100px;border-radius:9px;font-size:13px;font-weight:600;padding:10px 18px}
-#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn-outline-secondary{--sf-action-bg:#fff;background:#fff!important;border-color:#d3ddeb!important;color:#14243c!important}
-#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn-outline-secondary:hover{background:#fff0f7!important;border-color:#ff007f!important}
-@media(max-width:575px){:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-heading{padding:20px 50px 20px 20px;gap:10px}#expenses :is(#expense-master-dialog,#expense-payment-dialog) h2{font-size:22px}:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-icon{width:42px;height:42px}:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-body{padding:18px 20px;gap:16px}:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-actions{padding:14px 20px 18px}#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn{flex:1;min-width:0;padding-inline:12px;white-space:nowrap}}
+:is(#expense-master-dialog,#expense-payment-dialog) .expense-master-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid #edf0f6}
+#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn{margin:0;min-height:38px;min-width:100px;border-radius:6px;font-size:13px;font-weight:600;padding:8px 16px}
+@media(max-width:575px){#expenses :is(#expense-master-dialog,#expense-payment-dialog) .btn{flex:1;min-width:0;padding-inline:12px;white-space:nowrap}}
 #expenses .expense-filters{display:flex;flex-flow:row wrap;align-items:end;gap:12px}#expenses .expense-filters label{min-width:140px;flex:1;margin:0}#expenses .expense-filters .btn{margin:0}
 #expenses .sf-page-heading>div{min-width:0;max-width:100%;overflow-wrap:anywhere}#expenses .sf-page-heading .btn{white-space:normal}
 #expense-pager .sf-pagination-size{display:inline-flex;align-items:center;white-space:normal;gap:7px;margin:0}#expense-pager .sf-pagination-jump input{width:58px}#expense-pager .sf-pagination-info{max-width:100%}
@@ -63,12 +61,11 @@
 #expenses.expense-create .expense-gst-choice legend{float:none;width:auto;font-size:13px;font-weight:600;margin:0 0 6px}
 #expenses.expense-create .expense-gst-toggle{display:inline-flex;max-width:100%;gap:4px;padding:3px;border:1px solid #d3ddeb;border-radius:8px}
 #expenses.expense-create .expense-gst-toggle label{margin:0;padding:7px 14px;border-radius:5px;line-height:20px;cursor:pointer}
-#expenses.expense-create .expense-gst-toggle input:checked+label{background:#ff007f;color:#fff}
+
 #expenses.expense-create .expense-gst-toggle:has(input:focus-visible){border-color:#ff007f}
 #expenses.expense-create .expense-gst-toggle input:focus-visible+label{text-decoration:underline;text-underline-offset:3px}
 #expenses.expense-create .expense-gst-choice:disabled label{opacity:.6;cursor:default}
 @media(forced-colors:active){#expenses.expense-create .expense-gst-toggle input:checked+label{outline:1px solid Highlight;outline-offset:-2px}}
-#expenses.expense-create .expense-draft-note{margin:8px 0 0;line-height:1.4}
 #expenses.expense-create .expense-live-balance{margin:5px 0 0;line-height:1.4}
 #expenses.expense-create .expense-live-balance output{font-weight:600;color:#142b45}
 #expenses.expense-create #expense-receipt-section h2{margin-bottom:6px}
@@ -115,7 +112,7 @@
 #expenses .expense-receipt-action:disabled{opacity:.5;cursor:default}
 #expenses #expense-receipt-error{color:#ad1649;margin-bottom:0}
 #expenses #expense-receipt-saved{display:inline-block;margin-top:8px;font-size:13px}
-#expenses #expense-payment-dialog select{min-height:44px;font-size:14px}
+#expenses #expense-payment-dialog select{min-height:38px;font-size:14px}
 #expenses #expense-later-balance{font-size:13px}
 #expenses #expense-payment-dialog .expense-master-body{gap:12px}
 #expenses #expense-settlement p{margin-bottom:0;font-size:13px}
@@ -137,11 +134,6 @@
 #expenses .expense-list-table td:nth-child(2){min-width:200px;max-width:340px}
 #expenses .expense-list-table small{margin:4px 0 0;line-height:1.45}
 #expenses .expense-currency{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
-#expenses .expense-filter-actions{display:flex;gap:8px;align-items:end}
-#expenses .expense-extra-filters{flex-basis:100%;font-size:13px}
-#expenses .expense-extra-filters summary{cursor:pointer;color:#52647d}
-#expenses .expense-extra-filters>div{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
-#expenses .expense-extra-filters label{max-width:280px}
 #expenses .expense-report-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
 #expenses .expense-report-groups>.card{min-width:0}
 #expenses .expense-group-table{min-width:320px}
@@ -151,3 +143,83 @@
 #expenses .expense-report-detail>summary{font-size:14px;font-weight:600;cursor:pointer}
 #expenses .expense-report-detail[open]>summary{margin-bottom:14px}
 @media(max-width:900px){#expenses .expense-report-groups{grid-template-columns:minmax(0,1fr)}}
+/* Expense list: SchoolERP's search toolbar and applied-state filter drawer. */
+#expenses.expense-list .sf-page-heading{align-items:center;margin-bottom:14px;gap:12px}
+#expenses.expense-list .expense-header-actions{display:flex;gap:8px;flex-wrap:wrap}
+#expenses.expense-list .btn{margin:0;min-height:38px;font-size:13px}
+#expenses .expense-report-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
+#expenses .expense-report-totals .card{display:flex;flex-direction:column;gap:4px;padding:13px 16px;margin:0}
+#expenses .expense-report-totals span{font-size:12px;color:#596b84}
+#expenses .expense-report-totals strong{font-size:20px;font-variant-numeric:tabular-nums}
+#expenses .expense-list-controls{padding:12px 16px}
+#expenses .expense-list-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0;margin:0}
+#expenses .expense-search-box{display:flex;align-items:center;gap:8px;flex:1;min-width:200px;max-width:560px;border:1px solid #d3ddeb;border-radius:6px;padding:0 10px;background:#fff}
+#expenses .expense-search-box>svg,#expense-filter-toggle>svg{width:17px;height:17px;flex-shrink:0}
+#expenses .expense-search-box #expense-term{border:0;min-height:38px;background:transparent;padding-inline:0;box-shadow:none}
+#expenses .expense-search-box>button{border:0;background:none;color:#596b84;font-size:22px;padding:0 3px}
+#expense-filter-toggle{display:inline-flex;gap:7px;align-items:center}
+#expense-filter-count{border-radius:12px;background:#f1f5fb;padding:1px 6px;font-size:11px}
+#expenses .expense-filter-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+#expenses .expense-filter-chip{border:1px solid #dce4ef;background:#f1f5fb;color:#344a65;border-radius:16px;padding:4px 10px;font-size:12px;max-width:100%;overflow-wrap:anywhere;text-align:left}
+#expenses.expense-list.expense-filters-open{width:calc(100% - 332px);margin-right:332px}
+#expenses #expense-filter-panel{position:fixed;inset:90px 16px 20px auto;width:300px;z-index:1040;display:flex;flex-direction:column;background:#fff;border:1px solid #dce4ef;border-radius:12px;overflow:hidden;color:#142b45}
+#expenses .expense-filter-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid #edf0f6}
+#expenses .expense-filter-heading h2{margin:0;font-size:15px}
+#expenses .expense-filter-heading>button{border:0;background:none;color:#596b84;font-size:24px;line-height:1;width:32px;height:32px}
+#expenses.expense-list #expense-filters{display:flex;flex-direction:column;min-height:0;flex:1}
+#expenses .expense-filter-body{padding:12px 14px;overflow:auto;display:grid;gap:12px;min-height:0}
+#expenses .expense-filter-body label{margin:0}
+#expenses .expense-filter-body label>:is(input,select){margin-top:5px;font-size:13px}
+#expenses .expense-filter-body fieldset{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#expenses .expense-date-range{border-top:1px solid #dce4ef;padding-top:12px;margin-top:2px}
+#expenses .expense-date-range h3{font-size:13px;font-weight:600;margin:0 0 10px}
+#expenses .expense-filter-footer{display:flex;gap:8px;border-top:1px solid #edf0f6;padding:12px 14px;margin-top:auto}
+#expenses .expense-filter-footer .btn{flex:1;padding-inline:8px}
+#expenses .expense-list-table :is(td,th){padding:10px;font-size:13px}
+#expenses .expense-list-table tbody tr:hover{background:#f8fafd}
+#expenses .expense-list-table td{border-bottom:1px solid #edf0f6}
+#expenses .expense-list-badge{display:inline-block;font-size:11px;padding:3px 8px;border-radius:12px;white-space:nowrap}
+#expenses .expense-status-paid{color:#216142;background:#edf8f1}
+#expenses .expense-status-partial{color:#845f12;background:#fff6df}
+#expenses .expense-status-neutral{color:#52647d;background:#f1f5fb}
+#expenses .expense-row-menu{border:1px solid #dce4ef;border-radius:6px;background:#fff;color:#142b45;font-size:20px;line-height:1;width:34px;height:30px}
+#expenses .expense-list-table .dropdown-menu{font-size:13px}
+#expenses .expense-empty{text-align:center;padding:22px 12px}
+#expenses .expense-empty strong{display:block;font-size:15px}
+#expenses .expense-empty p{font-size:13px;color:#596b84;margin:6px 0 12px}
+@media(max-width:900px){#expenses.expense-list.expense-filters-open{width:100%;margin-right:0}#expenses #expense-filter-panel{position:static;width:100%;max-height:60dvh;margin-top:12px}}
+@media(max-width:575px){#expenses .expense-report-totals{grid-template-columns:minmax(0,1fr);gap:8px}#expenses .expense-report-totals .card{flex-direction:row;align-items:center;justify-content:space-between;gap:12px}#expenses .expense-report-totals strong{font-size:18px}#expenses .expense-search-box{flex-basis:100%;max-width:none}#expenses .expense-filter-footer{flex-wrap:wrap}}
+
+#expenses .expense-report-totals-note{margin:-6px 0 14px}
+
+#expenses .expense-cancel-link{display:block;text-align:center;font-size:13px;color:#596b84;padding:6px}
+#expenses .expense-payment-validation{color:#ad1649;margin:6px 0 0}
+
+/* Compact expense list; the server retains newest-first ordering. */
+.sf-main:has(>#expenses.expense-list){padding-top:12px}
+#expenses.expense-list .sf-page-heading{margin-bottom:6px;gap:8px}
+#expenses.expense-list .sf-list-caption+.sf-breadcrumb{margin:4px 0 8px}
+#expenses.expense-list .expense-list-controls{padding:10px 12px;margin-bottom:10px}
+#expenses.expense-list .expense-results{padding:12px;margin-bottom:10px}
+#expenses.expense-list .expense-empty{padding:16px 10px}
+#expenses.expense-list .expense-empty p{margin:4px 0 10px}
+
+/* Expense module standards: retain the shared shell and existing list density. */
+.sf-main:has(>#expenses){padding-top:12px}
+.sf-main:has(>#expenses)>.sf-breadcrumb{margin-bottom:8px}
+#expenses .btn{min-height:38px!important}
+#expenses table{margin-bottom:0}
+#expenses table:has(>#expense-payments) :is(th,td):nth-child(4),
+#expenses table:has(>#expense-history) :is(th,td):nth-child(6),
+#expenses table:has(>#expense-report-outstanding) :is(th,td):is(:nth-child(4),:nth-child(5),:nth-child(6)),
+#expenses.expense-reports table:has(>#expense-rows) :is(th,td):is(:nth-child(4),:nth-child(5)),
+#expenses table:has(>#expense-report-payments) :is(th,td):nth-child(5){text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+#expenses.expense-reports .expense-filters label{flex:0 1 210px}
+#expenses.expense-reports .expense-report-groups>.card{margin-bottom:0}
+#expenses.expense-reports .expense-report-groups{margin-bottom:14px}
+@media(max-width:575px){
+ #expenses :is(input.form-control,select.form-select,.sf-select-trigger,.btn){min-height:44px!important}
+ #expenses :is(#expense-master-dialog,#expense-payment-dialog) :is(input,select,.btn){min-height:44px!important}
+ #expenses.expense-list .expense-search-box #expense-term{min-height:44px}
+ #expenses.expense-reports .expense-filters label{flex-basis:auto}
+}

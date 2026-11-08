@@ -10,7 +10,7 @@
  const id=new URL(location.href).searchParams.get('id');let options;
  if($('quotation-form'))for(const control of $('quotation-form').elements)control.disabled=true;
  function summary(target,q){target.replaceChildren();for(const [label,value]of [['Item subtotal',q.itemSubtotal],['Item discounts',-q.itemDiscountAmount],['Quotation discount',-q.invoiceDiscountAmount],['Taxable amount',q.taxableAmount],['GST',q.taxAmount],['Estimated total',q.totalAmount]]){const p=node('p');p.append(node('span',label+' '),node('strong',money(value)));target.append(p);}}
- function action(label,url){const a=node('a',label,'btn btn-sm btn-dark');a.href=url;return a;}
+ function action(label,url){const a=node('a',label,'btn btn-sm btn-outline-secondary');a.href=url;return a;}
  const detailUrl=(value,revision)=>'/Quotations/Details?id='+encodeURIComponent(value)+(revision?'&revision='+revision:'');
  async function list(){
   return window.StockFlowQuotationList(root,options);

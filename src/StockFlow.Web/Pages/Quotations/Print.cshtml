@@ -7,7 +7,7 @@
  string Text(JsonElement o,string name)=>o.TryGetProperty(name,out var v)?v.ToString():"";
  string Money(JsonElement o,string name)=>o.TryGetProperty(name,out var v)&&v.ValueKind==JsonValueKind.Number?v.GetDecimal().ToString("N2",CultureInfo.InvariantCulture):"—";
 }
-<div class="no-print invoice-actions"><a href="/Quotations/Details?id=@d.Header.QuotationId&amp;revision=@d.Selected.Revision" class="btn btn-dark">Back to Quotation</a><button id="quotation-print-document" class="btn btn-primary">Print / Download PDF</button><p>Choose Save as PDF in the browser print dialog. Share the saved revision using your authorized channel, then explicitly record Sent in Quotation Details.</p></div>
+<div class="no-print invoice-actions"><a href="/Quotations/Details?id=@d.Header.QuotationId&amp;revision=@d.Selected.Revision" class="btn btn-outline-secondary">Back to Quotation</a><button id="quotation-print-document" class="btn btn-primary">Print / Download PDF</button><p>Choose Save as PDF in the browser print dialog. Share the saved revision using your authorized channel, then explicitly record Sent in Quotation Details.</p></div>
 <article class="invoice-paper quotation-paper">
 <p>@Text(b.GetProperty("shop"),"StoreName") · @Text(b.GetProperty("shop"),"LocationName")</p>
 @if(company.TryGetProperty("LogoDataUrl",out var logo)&&logo.ValueKind==JsonValueKind.String&&logo.GetString()!.StartsWith("data:image/",StringComparison.Ordinal)){<img src="@logo.GetString()" alt="Business logo" style="max-width:100px;max-height:70px" />}

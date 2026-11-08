@@ -41,6 +41,9 @@ window.StockFlowActionIcons = (() => {
         if(label&&!node.hasAttribute('aria-label'))node.setAttribute('aria-label',label);
         if(!name(node))return node;
         node.classList.add('sf-action-icon');
+        // Retain the existing glyph, label and handler; only mark destructive intent.
+        if(/^(delete|remove|discard)\b/i.test(name(node)))node.dataset.actionTone='danger';
+        else if(node.dataset.actionTone==='danger')delete node.dataset.actionTone;
         if(!node.dataset.actionSize)node.dataset.actionSize=size;
         if(!node.hasAttribute('aria-label'))node.setAttribute('aria-label',name(node));
         const sharedTooltip=!node.matches('.category-icon-action')&&!node.onpointerenter&&!window.bootstrap?.Tooltip?.getInstance(node);

@@ -2,7 +2,7 @@
 @inject StockFlow.Application.Common.BusinessScope ShopScope
 @inject Microsoft.Extensions.Configuration.IConfiguration FeatureConfiguration
 @{
-    var path = Context.Request.Path.Value?.TrimEnd('/') ?? "";
+    var path = StockFlow.Web.Navigation.RetailNavigation.CanonicalPath(Context.Request.Path.Value ?? "");
     var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     var navigation = Access.User?.NavigationModules.Where(m => m.IsActive).OrderBy(m => m.SortOrder).ThenBy(m => m.ModuleId).ToArray() ?? [];
 
@@ -16,14 +16,15 @@
             return parts.Length == 2 && Access.Can(parts[0], parts[1]);
         });
     }
+    var reportsVisible=navigation.Any(m=>m.Route=="/Reports"&&Allowed(m));
     bool Matches(string? url)
     {
-        if (Access.Can("REPORTS") && Context.Request.Query["fromReports"] == "1") return false;
+        if (reportsVisible && StockFlow.Web.Navigation.RetailNavigation.IsReportPath(path,Context.Request.Query["fromReports"] == "1")) return false;
         if (string.IsNullOrWhiteSpace(url)) return false;
         if (url == "/") return path == "";
         return path.Equals(url, StringComparison.OrdinalIgnoreCase) || path.StartsWith(url + "/", StringComparison.OrdinalIgnoreCase);
     }
-    bool MovedLink(string? route) => route is "/Configuration" or "/Products" or "/Categories" or "/Brands" or "/Suppliers" or "/Customers";
+    bool MovedLink(string? route) => route is "/Configuration" or "/Products" or "/Categories" or "/Brands" or "/Suppliers" or "/Customers" or "/Labels";
     var roots = navigation.Where(m => m.ParentModuleId is null && !MovedLink(m.Route)).ToList();
     // Older navigation metadata may predate CRM. The container still exposes only
     // the existing Customers page to users who already have customer permission.
@@ -33,19 +34,22 @@
     string Caption(string name) => name switch
     {
         "Dashboard" => "Home",
-        "Sell / Billing" => "Sales & Billing",
+        "Sell / Billing" or "Sales & Billing" => "Sales",
         "Receive Stock" => "Purchases",
-        "Setup" => "Administration",
+        "Setup" or "Administration" => "Settings",
+        "Customer Relationships" => "Customers",
+        "Operating Expenses" => "Expenses",
         "Users" => "Staff & Access",
         "Roles & permissions" => "Roles & Permissions",
         "Stores" => "Stores & Locations",
         "Security settings" => "Security",
         "Inventory" => "Inventory",
-        "Current stock" => "Inventory Overview",
-        "Low stock" => "Low Stock Alerts",
+        "Current stock" or "Inventory Overview" => "Stock Overview",
+        "Low stock" or "Low Stock Alerts" => "Low Stock",
         "Stock transfers" => "Stock Transfers",
         "Scan product / serial" => "Scan & Lookup",
-        "Search records" => "Inventory History",
+        "Search records" or "Inventory History" => "Stock History",
+        "Quotations & Estimates" => "Quotations",
         "Service & Warranty" => "Service & Warranty",
         "Warranty lookup" => "Warranty Lookup",
         "Warranty claims" => "Warranty Claims",
@@ -71,7 +75,7 @@
         continue;
     }
     var children = navigation.Where(m => m.ParentModuleId == root.ModuleId && Allowed(m) && !MovedLink(m.Route)).ToArray();
-    var showCatalog = root.ModuleCode == "INVENTORY_CONTROL" && new[] { "PRODUCTS", "CATEGORIES", "BRANDS" }.Any(module => Access.Can(module));
+    var showCatalog = root.ModuleCode == "INVENTORY_CONTROL" && new[] { "PRODUCTS", "CATEGORIES", "BRANDS", "BARCODES" }.Any(module => Access.Can(module));
     if (root.ModuleCode == "RECEIVE_STOCK" && Access.Can("SUPPLIERS"))
         children = children.Append(new NavigationModule { ModuleCode = "SUPPLIERS", ModuleName = "Suppliers", Route = "/Suppliers", IsActive = true }).ToArray();
     if (root.ModuleCode == "CRM" && Access.Can("CUSTOMERS"))
@@ -124,7 +128,7 @@
         if(showStaffAccess && (Matches("/Admin/Users") || Matches("/Admin/Roles"))) activeUrl=path;
         if (showIntegrations && path.Equals("/EWayBills/Provider", StringComparison.OrdinalIgnoreCase)) activeUrl = "/EWayBills/Provider";
         if (showCatalog)
-            activeUrl ??= new[] { ("PRODUCTS", "/Products"), ("CATEGORIES", "/Categories"), ("BRANDS", "/Brands") }
+            activeUrl ??= new[] { ("PRODUCTS", "/Products"), ("CATEGORIES", "/Categories"), ("BRANDS", "/Brands"), ("BARCODES", "/Labels") }
                 .Where(item => Access.Can(item.Item1) && Matches(item.Item2)).Select(item => item.Item2).FirstOrDefault();
         if (path.Equals("/Purchases/Create", StringComparison.OrdinalIgnoreCase) && children.Any(m => m.Route == "/StockInflow")) activeUrl = "/StockInflow";
         if (showNotificationCenter && page == "/Configuration/Notifications") activeUrl = "/Configuration/Notifications";

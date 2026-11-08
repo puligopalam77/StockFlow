@@ -194,10 +194,10 @@ window.StockFlowQuotationEditor = async function(root, options) {
     async function selectProduct(v){
         let productUnitId=null;
         if(v.isSerialTracked){
-            const units=await api('/api/inventory/units?productId='+v.productId+'&availableOnly=true'),dialog=element('dialog',null,'quote-dialog');
+            const units=await api('/api/inventory/units?productId='+v.productId+'&availableOnly=true'),dialog=element('dialog',null,'quote-dialog');dialog.dataset.sfDialog='medium';dialog.setAttribute('aria-label','Choose an available serial');
             dialog.append(element('h2','Choose an available serial'));const select=element('select',null,'form-select');
             select.setAttribute('aria-label','Available serial');for(const u of units.filter(u=>u.variantId===v.variantId))select.add(new Option(u.serialNumber,u.productUnitId));
-            const choose=element('button','Use serial','btn btn-dark'),cancel=element('button','Cancel','btn btn-dark');choose.type=cancel.type='button';choose.disabled=!select.options.length;
+            const choose=element('button','Use serial','btn btn-primary'),cancel=element('button','Cancel','btn btn-outline-secondary');choose.type=cancel.type='button';choose.disabled=!select.options.length;
             dialog.append(select,choose,cancel);root.append(dialog);productUnitId=await new Promise(resolve=>{choose.onclick=()=>{resolve(Number(select.value)||null);dialog.close();};cancel.onclick=()=>dialog.close();dialog.onclose=()=>{resolve(null);dialog.remove();};dialog.showModal();});
             if(!productUnitId)return;
         }
@@ -245,7 +245,7 @@ window.StockFlowQuotationEditor = async function(root, options) {
         $('quotation-notes').value=request.notes||'';$('quotation-discount').value=request.discountAmount;$('quotation-reason').value=request.adjustmentReason||'';
         $('quotation-pos').value=request.gstPlaceOfSupplyStateCode||'';$('quotation-delivery').value=request.gstDeliveryAddress||'';deliveryTouched=true;deliveryPreview();
         $('quotation-save').textContent='Save New Revision';
-        const link=(label,url)=>{const a=element('a',label,'btn btn-sm btn-dark');a.href=url;$('quotation-saved-actions').append(a);};
+        const link=(label,url)=>{const a=element('a',label,'btn btn-sm btn-outline-secondary');a.href=url;$('quotation-saved-actions').append(a);};
         link('View saved revision','/Quotations/Details?id='+id+'&revision='+h.currentRevision);
         if(options.permissions.print)link('Print saved revision','/Quotations/Print?id='+id+'&revision='+h.currentRevision);
         if(h.status==='ACCEPTED'&&options.permissions.convert)link('Open saved revision in New Sale','/Sales/Create?quotationId='+id);

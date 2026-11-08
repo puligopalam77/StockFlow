@@ -142,7 +142,7 @@
         <a href="/Purchases" class="btn btn-outline-secondary">Purchase orders &amp; deliveries</a>@if(Access.Can("PURCHASES","CREATE")){<a href="/Purchases/Create?mode=order" class="btn btn-outline-secondary">Create purchase order</a>}</div>
 </details>}
 </div>
-<dialog id="intake-registration" class="receiving-dialog" aria-labelledby="intake-registration-title">
+<dialog data-sf-dialog="workflow" id="intake-registration" class="receiving-dialog" aria-labelledby="intake-registration-title">
     <h2 id="intake-registration-title">Add new product</h2>
     <p class="small text-muted">Enter the product details, then add it to this receipt. Stock is added only when you save the receipt.</p>
     <div id="intake-registration-message" class="alert alert-danger" role="alert" hidden>

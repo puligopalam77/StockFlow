@@ -29,7 +29,7 @@ public class CompanyModel : PageModel
     [BindProperty(SupportsGet=true)] public string Section { get; set; }=CompanySettingsViews.Business;
     [BindProperty] public string EditVersion { get; set; }="";
     public bool IsBusiness=>Section==CompanySettingsViews.Business;
-    public string Title=>IsBusiness?"Business Information":"Billing & Invoice Settings";
+    public string Title=>IsBusiness?"Business Details":"Invoice Settings";
     public string Subtitle=>IsBusiness?"Manage your company identity, contact details, address and branding.":"Manage invoice numbering, billing defaults, printing and checkout discount policies.";
     public CompanyGstIdentity? GstIdentity { get; private set; }
     public IReadOnlyList<CompanySalesperson> Salespeople { get; private set; } = [];

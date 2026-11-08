@@ -1,23 +1,23 @@
 @{
     var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     var groups = new[] {
-        ("Product Catalog", new[] { ("PRODUCTS", "Products"), ("CATEGORIES", "Categories"), ("BRANDS", "Brands") })
+        ("Product Catalog", new[] { ("PRODUCTS", "Products", "/Products"), ("CATEGORIES", "Categories", "/Categories"), ("BRANDS", "Brands", "/Brands"), ("BARCODES", "Barcode Labels", "/Labels") })
     };
 }
 @foreach (var (name, items) in groups)
 {
     var visible = items.Where(item => Access.Can(item.Item1)).ToArray();
     if (visible.Length == 0) { continue; }
-    var active = visible.Any(item => page.Equals($"/{item.Item2}", StringComparison.OrdinalIgnoreCase) || page.StartsWith($"/{item.Item2}/", StringComparison.OrdinalIgnoreCase));
-    <details class="sf-nav-group sf-catalog-nav" open="@active">
+    var active = visible.Any(item => page.Equals(item.Item3, StringComparison.OrdinalIgnoreCase) || page.StartsWith(item.Item3+"/", StringComparison.OrdinalIgnoreCase));
+    <details class="sf-nav-group sf-catalog-nav" open="@active" data-nav-group="Product Catalog">
         <summary class="sf-nav-child @(active ? "sf-nav-group-active" : "")">@name <span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
         <div class="sf-nav-children" aria-label="@name">
-    @foreach (var (module, label) in visible)
+    @foreach (var (module, label, route) in visible)
     {
         if (Access.Can(module))
         {
-            var selected = page.Equals($"/{label}", StringComparison.OrdinalIgnoreCase) || page.StartsWith($"/{label}/", StringComparison.OrdinalIgnoreCase);
-    <a href="/@label" class="sf-nav-child @(selected ? "active" : "")" aria-current="@(selected ? "page" : null)">@label</a>
+            var selected = page.Equals(route, StringComparison.OrdinalIgnoreCase) || page.StartsWith(route+"/", StringComparison.OrdinalIgnoreCase);
+    <a href="@route" class="sf-nav-child @(selected ? "active" : "")" aria-current="@(selected ? "page" : null)">@label</a>
         }
     }
         </div>

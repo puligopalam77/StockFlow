@@ -7,7 +7,7 @@
 } else if(Model == "Brands") {
     <partial name="_BrandRegistration" />
 } else {
-<dialog id="editor" class="configuration-dialog @(Model == "Products" ? "configuration-dialog-wide" : "") @(Model == "Suppliers" ? "supplier-registration-dialog" : "")" aria-labelledby="editor-title" aria-describedby="editor-help">
+<dialog data-sf-dialog="workflow" id="editor" class="configuration-dialog @(Model == "Products" ? "configuration-dialog-wide" : "") @(Model == "Suppliers" ? "supplier-registration-dialog" : "")" aria-labelledby="editor-title" aria-describedby="editor-help">
     <button id="close-editor" class="configuration-close" type="button" aria-label="Close registration">&times;</button>
     <h2 id="editor-title">Add @singular</h2>
     <p id="editor-help">Enter the @singular.ToLowerInvariant() details for your business.</p>
@@ -15,7 +15,7 @@
     <form id="master-form">
         <div id="form-fields" class="row g-3"></div>
         <div class="configuration-dialog-actions">
-            <button type="button" id="cancel-edit" class="btn btn-dark">Cancel</button>
+            <button type="button" id="cancel-edit" class="btn btn-outline-secondary">Cancel</button>
             <button type="submit" class="btn btn-primary">Save @singular</button>
         </div>
     </form>

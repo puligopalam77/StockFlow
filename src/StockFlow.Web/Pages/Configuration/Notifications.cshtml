@@ -80,6 +80,6 @@ else {
 @if(Model.DeliveryReady){<section class="sf-notification-settings mt-3"><h2>Email delivery history</h2><p>Accepted means provider acceptance. Check the provider before resending Unknown deliveries.</p><div class="table-responsive"><table class="table"><thead><tr><th>Reference</th><th>Recipient</th><th>Status</th><th>Attempts</th><th>Provider ID</th><th>Diagnostic</th></tr></thead><tbody>@foreach(var email in Model.Emails){<tr><td>@email.Reference</td><td>@email.Recipient</td><td>@email.Status</td><td>@email.Attempts</td><td>@email.ProviderId</td><td>@email.Diagnostic</td></tr>}</tbody></table></div></section>}
 </section>
 }
-<dialog id="notification-preview-dialog" class="sf-notification-settings"><h2>Message preview</h2><h3 id="notification-preview-title"></h3><p id="notification-preview-body"></p><p class="small">Sample values only; this preview does not send a message.</p><button type="button" class="btn btn-outline-primary" id="notification-preview-close">Close</button></dialog>
+<dialog data-sf-dialog="medium" id="notification-preview-dialog" aria-label="Message preview" class="sf-notification-settings"><h2>Message preview</h2><h3 id="notification-preview-title"></h3><p id="notification-preview-body"></p><p class="small">Sample values only; this preview does not send a message.</p><button type="button" class="btn btn-outline-primary" id="notification-preview-close">Close</button></dialog>
 </div>
 @section Scripts {<script src="~/js/notification-settings.js" asp-append-version="true"></script>}

@@ -1,5 +1,6 @@
 // Purchase-order authoring remains available separately from physical receiving.
 const fs=require('fs'),path=require('path'),assert=require('assert');
+const {selectValue}=require('./address-test-helpers.cjs');
 const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
 const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/StockFlow.Web/wwwroot');
 (async()=>{
@@ -36,19 +37,19 @@ const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/StockFlow.
   const ready=()=>page.locator('#purchase-fields:not([disabled])').waitFor();
   await page.goto('http://stockflow.test/Purchases/Create?mode=order');await ready();
   assert.equal(await page.locator('#purchase-registration').count(),0);assert.equal(await page.locator('#purchase-register').getAttribute('href'),'/Products');
-  await page.locator('#supplierId').selectOption('1');await page.locator('#purchase-items select').first().selectOption('11');
+  await selectValue(page.locator('#supplierId'),'1');await selectValue(page.locator('#purchase-items select').first(),'11');
   await page.locator('#purchase-items').getByLabel('Expected quantity *',{exact:true}).fill('3');
   assert(await page.locator('#purchase-as-order').isChecked());
   await page.locator('#purchase-save').click();await page.waitForURL('**/Purchases/Details/1');
   assert.equal(writes[0].completeImmediately,false);assert.equal(writes[0].items[0].receivedQuantity,0);assert.equal(completeCount,0,'Ordering creates no stock');
-  await page.goto('http://stockflow.test/Purchases/Create?mode=order');await ready();await page.locator('#supplierId').selectOption('1');await page.locator('#purchase-items select').first().selectOption('11');
+  await page.goto('http://stockflow.test/Purchases/Create?mode=order');await ready();await selectValue(page.locator('#supplierId'),'1');await selectValue(page.locator('#purchase-items select').first(),'11');
   await page.locator('#purchase-as-order').uncheck();await page.locator('#purchase-items').getByLabel('Accepted Quantity *',{exact:true}).fill('1');interrupt=true;
-  await page.locator('#purchase-save').click();await page.getByText('Response interrupted after posting',{exact:true}).waitFor();assert.equal(completeCount,1);
+  await page.locator('#purchase-save').click();await page.getByText('Response interrupted after posting',{exact:true}).last().waitFor();assert.equal(completeCount,1);
   await page.reload();await page.locator('#purchase-retry').click();await page.waitForURL('**/Purchases/Details/2');assert.equal(completeCount,1,'Recovery checks completed state instead of posting again');
   await page.goto('http://stockflow.test/Purchases/Create?id=99');await ready();
   const rows=page.locator('.purchase-line');assert.equal(await rows.count(),2);assert.equal(await rows.nth(1).getByLabel('Unit Price (INR) *',{exact:true}).inputValue(),'110');
   assert.equal(await rows.nth(1).getByLabel('Item Discount (INR)',{exact:true}).inputValue(),'2','Different prices and discounts remain separate while editing');
-  await page.locator('#draft-change-reason').fill('Correct draft price');page.once('dialog',dialog=>dialog.accept());await page.locator('#purchase-save').click();await page.waitForURL('**/Purchases/Details/99');assert.equal(writes.at(-1).items.length,2);assert.equal(completeCount,1);
+  await page.locator('#draft-change-reason').fill('Correct draft price');await page.locator('#purchase-save').click();await page.locator('#sf-confirm-accept').click();await page.waitForURL('**/Purchases/Details/99');assert.equal(writes.at(-1).items.length,2);assert.equal(completeCount,1);
   assert.deepEqual(errors,[]);
   console.log('PASS: existing purchase-order entry, Product Registration navigation, draft quantities, completed-stock recovery and draft editing.');
  }finally{await browser.close();}

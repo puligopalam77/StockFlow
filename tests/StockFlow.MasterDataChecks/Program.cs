@@ -19,6 +19,9 @@ public static class Checks
 {
     public static async Task Main(string[] args)
     {
+        if(args.Contains("--expense-list-checks")){await ExpenseListChecks.Run();return;}
+        if(args.Contains("--expense-recording-checks")){await ExpenseRecordingChecks.Run();return;}
+        if(args.Contains("--expense-list-fixtures")){using var expenseList=new Factory();await ExpenseListChecks.Fixtures(expenseList);return;}
         if(args.Contains("--supplier-directory-checks")){using var directory=new Factory();await SupplierDirectoryChecks.Run(directory);return;}
         if(args.Contains("--supplier-address-database-checks")){await SupplierAddressDatabaseChecks.Run();return;}
         if(args.Contains("--customer-address-checks")){using var customers=new Factory();await CustomerAddressChecks.Run(customers);return;}

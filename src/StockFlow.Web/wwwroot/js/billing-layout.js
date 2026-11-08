@@ -4,6 +4,7 @@
     const layout=workspace.querySelector('.billing-layout'), heading=document.querySelector('.sf-page-heading');
     const toolbar=workspace.querySelector(':scope > section.card');
     const actions=toolbar.querySelector(':scope > .d-flex');actions.classList.add('billing-header-actions');heading.append(actions);
+    toolbar.remove();
     const back=workspace.querySelector('.billing-checkout > a');if(back)actions.insertBefore(back,byId('draft-status'));
     workspace.dataset.billingLayout='single-page';
     ['billing-customer-card','billing-add-card','billing-cart-card','billing-payment-card'].forEach(id=>layout.append(byId(id)));

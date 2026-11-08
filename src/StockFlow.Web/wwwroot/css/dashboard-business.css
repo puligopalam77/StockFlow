@@ -6,13 +6,77 @@
 .sf-chart-months.dense .sf-bar-pair{gap:1px}
 .sf-chart-months.dense .sf-chart-month>span:not(.visually-hidden){font-size:9px;white-space:nowrap}
 .sf-recent-grid>.sf-panel{min-width:0}
-.sf-hero{min-height:0;padding:20px 28px}
-.sf-hero h1{font-size:clamp(26px,2.4vw,38px);line-height:1.12;margin:10px 0}
-.sf-hero-content>p{margin:8px 0 16px}
-.sf-hero-note{font-size:24px;top:20px}
-.sf-hero-stat{padding:10px 12px}
 .sf-kpi-link:focus-visible{outline:3px solid var(--sf-pink);outline-offset:3px}
 .sf-business-kpis .sf-kpi:last-child{grid-column:auto}
-@media(max-width:699px){.sf-hero{min-height:0;padding:18px}.sf-hero h1{font-size:28px}.sf-hero-content>p{margin:8px 0 12px}}
 @media(max-width:767px){.sf-business-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:380px){.sf-business-kpis{grid-template-columns:1fr}}
+
+/* Preserve the former dashboard print sizing; compact layout is screen-only. */
+@media print{
+ .sf-dashboard-main .sf-hero{min-height:0;padding:20px 28px}
+ .sf-dashboard-main .sf-hero h1{font-size:clamp(26px,2.4vw,38px);line-height:1.12;margin:10px 0}
+ .sf-dashboard-main .sf-hero-content>p{margin:8px 0 16px}
+ .sf-dashboard-main .sf-hero-stat{padding:10px 12px}
+}
+@media print and (max-width:699px){.sf-dashboard-main .sf-hero{padding:18px}.sf-dashboard-main .sf-hero h1{font-size:28px}.sf-dashboard-main .sf-hero-content>p{margin:8px 0 12px}}
+
+/* Home only. Content determines height; foreground text never depends on image offsets. */
+@media screen{
+ .sf-app .sf-dashboard-main{container:dashboard / inline-size;padding:16px}
+ .sf-dashboard-main .sf-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,.45fr);grid-template-areas:"eyebrow slogan" "heading slogan" "description slogan" "stats stats";gap:8px 20px;align-content:space-between;min-height:240px;padding:16px 20px;margin-bottom:12px}
+ .sf-dashboard-main .sf-hero-content{display:contents}
+ .sf-dashboard-main .sf-hero .sf-eyebrow{grid-area:eyebrow;min-width:0;font-size:11px;line-height:1.4;letter-spacing:1.2px}
+ .sf-dashboard-main .sf-hero h1{grid-area:heading;max-width:none;min-width:0;font-size:28px;line-height:1.2;letter-spacing:-.6px;margin:0}
+ .sf-dashboard-main .sf-hero h1 em{font-size:1em}
+ .sf-dashboard-main .sf-hero-content>p{grid-area:description;max-width:none;min-width:0;font-size:13px;line-height:1.5;margin:0}
+ .sf-dashboard-main .sf-hero-note{display:block;position:relative;inset:auto;grid-area:slogan;align-self:start;justify-self:start;max-width:100%;font-size:24px;line-height:1.03;margin:12px 16px;padding-bottom:5px}
+ .sf-dashboard-main .sf-hero-stats{grid-area:stats;width:100%;max-width:1000px;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:12px}
+ .sf-dashboard-main .sf-hero-stat{min-height:60px;padding:8px 10px;gap:8px}
+ .sf-dashboard-main .sf-stat-icon{width:32px;height:32px;flex-shrink:0}
+ .sf-dashboard-main .sf-stat-icon .sf-icon{width:22px;height:22px}
+ .sf-dashboard-main .sf-hero-stat>span:last-child{min-width:0;overflow-wrap:anywhere}
+ .sf-dashboard-main .sf-hero-stat small{font-size:11px;line-height:1.35;white-space:normal}
+ .sf-dashboard-main .sf-hero-stat strong{font-size:15px;line-height:1.2;white-space:normal;overflow-wrap:anywhere;margin-top:3px}
+ .sf-dashboard-main .sf-hero-stat strong span{font-size:11px}
+
+ .sf-dashboard-main .retail-daily-actions{padding:10px 12px;margin:0 0 14px}
+ .sf-dashboard-main .retail-daily-actions>h2{font-size:16px;line-height:1.3;font-weight:600;margin:0 0 10px}
+ .sf-dashboard-main h2.retail-overview-title{font-size:18px;line-height:1.3;font-weight:600;margin:0 0 10px}
+ .sf-dashboard-main .retail-daily-actions nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+ .sf-dashboard-main .retail-daily-actions nav:has(>a:nth-child(5)){grid-template-columns:repeat(3,minmax(0,1fr))}
+ .sf-dashboard-main .retail-daily-actions a{min-width:0;min-height:70px;padding:10px 12px;gap:10px}
+ .sf-dashboard-main .retail-daily-actions a>span{min-width:0;overflow-wrap:anywhere}
+ .sf-dashboard-main .retail-daily-actions .sf-icon{width:24px;height:24px}
+ .sf-dashboard-main .retail-daily-actions strong{font-size:14px;line-height:1.3}
+ .sf-dashboard-main .retail-daily-actions small{font-size:12px;line-height:1.4}
+
+ .sf-dashboard-main>.sf-kpi-grid{gap:12px;margin:0 0 14px}
+ .sf-dashboard-main .sf-kpi{flex-direction:row;align-items:center;min-height:96px;padding:12px;gap:10px}
+ .sf-dashboard-main .sf-kpi-icon{width:38px;height:38px}
+ .sf-dashboard-main .sf-kpi-icon .sf-icon{width:22px;height:22px}
+ .sf-dashboard-main .sf-kpi>div{min-width:0}
+ .sf-dashboard-main .sf-kpi h2{font-size:12px;line-height:1.35}
+ .sf-dashboard-main .sf-kpi strong{font-size:22px;overflow-wrap:anywhere}
+ .sf-dashboard-main .sf-kpi p{font-size:11px}
+ .sf-dashboard-main .sf-kpi:last-child{grid-column:auto}
+ @container dashboard (max-width:1000px){.sf-dashboard-main>.sf-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+ @container dashboard (max-width:900px){
+  .sf-dashboard-main .retail-daily-actions nav,.sf-dashboard-main .retail-daily-actions nav:has(>a:nth-child(5)){grid-template-columns:repeat(2,minmax(0,1fr))}
+ }
+ @container dashboard (max-width:720px){
+  .sf-dashboard-main .sf-hero{grid-template-columns:minmax(0,1fr) minmax(130px,.55fr);padding:16px;column-gap:12px}
+  .sf-dashboard-main .sf-hero-note{font-size:22px;margin:12px 8px 20px}
+  .sf-dashboard-main .sf-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ }
+ @container dashboard (max-width:600px){.sf-dashboard-main>.sf-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+ @container dashboard (max-width:480px){
+  .sf-dashboard-main .sf-hero{grid-template-columns:minmax(0,1fr);grid-template-areas:"eyebrow" "heading" "description" "slogan" "stats";row-gap:10px;min-height:0}
+  .sf-dashboard-main .sf-hero h1{font-size:26px}
+  .sf-dashboard-main .sf-hero-note{justify-self:center;margin:12px 16px 20px}
+  .sf-dashboard-main .retail-daily-actions nav,.sf-dashboard-main .retail-daily-actions nav:has(>a:nth-child(5)){grid-template-columns:minmax(0,1fr)}
+  .sf-dashboard-main .sf-kpi-icon{width:32px;height:32px}
+  .sf-dashboard-main .sf-kpi{gap:8px}
+ }
+ @container dashboard (max-width:300px){.sf-dashboard-main>.sf-kpi-grid{grid-template-columns:minmax(0,1fr)}}
+ @media(max-width:480px){.sf-app .sf-dashboard-main{padding:12px}}
+}

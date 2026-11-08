@@ -7,24 +7,24 @@
     string? parentUrl = null;
     if (page.StartsWith("/Admin/", StringComparison.OrdinalIgnoreCase))
     {
-        parentLabel = page == "/Admin/Gst" ? "Administration" : "Admin & Security";
+        parentLabel = "Settings";
         parentUrl = Access.Can("USER_MANAGEMENT") ? "/Admin/Users" : Access.Can("ROLE_MANAGEMENT") ? "/Admin/Roles" : Access.Can("STORES") ? "/Admin/Stores" : Access.Can("SECURITY") ? "/Admin/Security" : "/Admin/AuditLogs";
         if (page == "/Admin/Users") title = "User list";
     }
-    else if (page.StartsWith("/Labels/")) { parentLabel = "Purchases"; parentUrl = "/Purchases"; }
+    else if (page.StartsWith("/Labels/")) { parents.Add(("Inventory",Access.CanVisit("/Inventory")?"/Inventory":null));parentLabel = "Product Catalog"; }
     else if (page == "/Purchases/Details") { parentLabel = "Purchase Orders"; parentUrl = "/Purchases"; }
     else if (page.StartsWith("/Purchases/")) { parentLabel = "Receive Stock"; parentUrl = "/Purchases"; }
     else if (page.StartsWith("/StockInflow")) { parentLabel = "Receive Stock"; parentUrl = "/StockInflow"; }
-    else if (page.StartsWith("/Sales/")) { parentLabel = "Sales & Billing"; parentUrl = "/Sales"; }
+    else if (page.StartsWith("/Sales/")) { parentLabel = "Sales"; parentUrl = "/Sales"; }
     else if (page.StartsWith("/Service/")) { parentLabel = "Repairs"; parentUrl = "/Service"; }
     else if (page.StartsWith("/Warranty/")) { parentLabel = "Warranty"; parentUrl = "/Warranty/Lookup"; }
-    else if (page.StartsWith("/Inventory/")) { parentLabel = "Stock on hand"; parentUrl = "/Inventory"; }
+    else if (page.StartsWith("/Inventory/")) { parentLabel = "Stock Overview"; parentUrl = "/Inventory"; }
     else if (page == "/Configuration/WhatsApp") { parentLabel = "Notifications"; parentUrl = "/Configuration/Notifications"; }
-    else if (page.StartsWith("/Settings/") || page == "/Configuration/Notifications") { parentLabel = "Setup"; }
-    else if (page.StartsWith("/Expenses/")) { parentLabel="Operating Expenses";parentUrl="/Expenses"; }
+    else if (page.StartsWith("/Settings/") || page == "/Configuration/Notifications") { parentLabel = "Settings"; }
+    else if (page.StartsWith("/Expenses/")) { parentLabel="Expenses";parentUrl="/Expenses"; }
     else if (page.StartsWith("/Account/") && page != "/Account/Home") { parentLabel = "My account"; parentUrl = "/Account/Home"; }
     if (page == "/Purchases/Create" && Context.Request.Query.ContainsKey("id")) title = "Edit draft";
-    if (Access.Can("REPORTS") && (page.StartsWith("/Reports/") && page != "/Reports/Index" || Context.Request.Query["fromReports"] == "1"))
+    if ((Access.Can("REPORTS")||Access.Can("GST_REPORTS")) && StockFlow.Web.Navigation.RetailNavigation.IsReportPath(Context.Request.Path.Value?.TrimEnd('/')??"",Context.Request.Query["fromReports"] == "1") && page!="/Reports/Index")
     {
         parentLabel = "Reports";
         parentUrl = "/Reports";
@@ -36,7 +36,7 @@
     if(page=="/Settings/Company")
     {
         parentLabel=null;
-        parents.Add(("Administration",null));
+        parents.Add(("Settings",null));
         parents.Add(("Business Setup",null));
     }
     if (parentLabel is not null && (parentUrl != currentUrl || page.StartsWith("/Admin/")))

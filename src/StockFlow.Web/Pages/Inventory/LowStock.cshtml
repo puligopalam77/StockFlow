@@ -4,15 +4,15 @@
 @{ ViewData["Title"]="Low Stock"; }
 @section PageHeader {
 <header class="sf-page-heading low-stock-heading"><div><div class="low-stock-title"><h1>Low Stock</h1><button type="button" id="low-stock-help-button" class="low-stock-help-button" popovertarget="low-stock-help" aria-label="How Low Stock Works">?</button></div><p>Monitor stock shortages and identify items that need replenishment.</p><p class="low-stock-location">Location: @Scope.LocationName</p></div><div class="low-stock-header-actions">
-@if(Access.Can("PURCHASES","CREATE")){<a href="/Purchases/Create" class="btn btn-dark">+ Receive Stock</a>}
-@if(Access.Can("STOCK_TRANSFER","VIEW")){<a href="/Transfers" class="btn btn-dark">Review Transfers</a>}
+@if(Access.Can("PURCHASES","CREATE")){<a href="/Purchases/Create" class="btn btn-primary">+ Receive Stock</a>}
+@if(Access.Can("STOCK_TRANSFER","VIEW")){<a href="/Transfers" class="btn btn-outline-secondary">Review Transfers</a>}
 </div></header>
 }
 <div id="low-stock-workspace" data-sf-pagination-remote="true" data-can-receive="@Access.Can("PURCHASES","CREATE").ToString().ToLowerInvariant()" data-can-transfer="@Access.Can("STOCK_TRANSFER","VIEW").ToString().ToLowerInvariant()">
 <aside id="low-stock-help" class="low-stock-help" popover="auto" aria-labelledby="low-stock-help-title" tabindex="-1">
 <h2 id="low-stock-help-title">How Low Stock Works</h2>
 <ul><li>Active variants at or below the effective location minimum are included.</li><li>Quantity needed reaches the minimum: maximum of zero and minimum minus ledger stock. Items exactly at minimum need zero; zero stock with zero minimum is included.</li><li>Figures belong to the selected authorized shop and location. Search and status filters update the summary across all pages.</li><li>Ledger quantity follows recorded stock movements; available serialized units can differ. Review marked discrepancies.</li><li>Barcode and serial search uses existing authorized records where supported.</li><li>An empty list does not confirm that every product has a configured minimum.</li></ul>
-<button type="button" class="btn btn-dark" popovertarget="low-stock-help" popovertargetaction="hide">Close help</button></aside>
+<button type="button" class="btn btn-outline-secondary" popovertarget="low-stock-help" popovertargetaction="hide">Close help</button></aside>
 <div class="low-stock-metrics" aria-label="Filtered shortage summary">
 <section class="card"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#report-warning" /></svg><h2>Low Stock Variants</h2><strong id="low-stock-total">—</strong><p>At or below minimum</p></section>
 <section class="card"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#box" /></svg><h2>Out of Stock</h2><strong id="low-stock-out">—</strong><p>Zero ledger quantity</p></section>
@@ -20,12 +20,12 @@
 </div>
 <form id="low-stock-search" class="low-stock-filters sf-filter-bar" novalidate>
 <label for="low-stock-term">Search<input id="low-stock-term" class="form-control" type="search" maxlength="150" placeholder="Search product, variant, SKU or barcode" /></label>
-<label for="low-stock-status">Stock Status<select id="low-stock-status" class="form-select"><option value="">All Shortages</option><option value="OUT">Out of Stock</option><option value="LOW">At / Below Minimum</option></select></label><button type="button" id="low-stock-reset" class="btn btn-dark">Reset Filters</button>
+<label for="low-stock-status">Stock Status<select id="low-stock-status" class="form-select"><option value="">All Shortages</option><option value="OUT">Out of Stock</option><option value="LOW">At / Below Minimum</option></select></label><button type="button" id="low-stock-reset" class="btn btn-outline-secondary">Reset Filters</button>
 </form>
 <section class="card low-stock-card">
 <p id="low-stock-summary" role="status" aria-live="polite">Loading low-stock information…</p>
-<div id="low-stock-message" class="low-stock-state" role="alert" hidden><h2>Unable to load low-stock information</h2><p id="low-stock-error"></p><button type="button" id="low-stock-retry" class="btn btn-dark">Retry</button></div>
-<div id="low-stock-empty" class="low-stock-state" hidden><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#box" /></svg><h2 id="low-stock-empty-title"></h2><p id="low-stock-empty-text"></p><button type="button" id="low-stock-empty-reset" class="btn btn-dark" hidden>Reset Filters</button></div>
+<div id="low-stock-message" class="low-stock-state" role="alert" hidden><h2>Unable to load low-stock information</h2><p id="low-stock-error"></p><button type="button" id="low-stock-retry" class="btn btn-outline-secondary">Retry</button></div>
+<div id="low-stock-empty" class="low-stock-state" hidden><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#box" /></svg><h2 id="low-stock-empty-title"></h2><p id="low-stock-empty-text"></p><button type="button" id="low-stock-empty-reset" class="btn btn-outline-secondary" hidden>Reset Filters</button></div>
 <div id="low-stock-table" class="table-responsive low-stock-scroll" tabindex="0" role="region" aria-label="Low-stock items; scroll horizontally for all columns" hidden><table class="table"><thead><tr><th>Product / Variant</th><th>SKU</th><th>Available (Ledger)</th><th>Minimum</th><th>Qty to Minimum</th><th>Stock Status</th><th>Actions</th></tr></thead><tbody id="low-stock-results"></tbody></table></div>
 <footer id="low-stock-footer" hidden><p id="low-stock-range" role="status"></p><div id="low-stock-pagination"></div></footer>
 </section></div>

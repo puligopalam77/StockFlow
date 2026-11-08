@@ -10,7 +10,7 @@ const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
  });
  await p.goto('http://127.0.0.1:55863/Admin/Users');await p.locator('#user-rows .sf-action-icon').first().waitFor();
  const actions=p.locator('#user-rows .sf-action-icon');assert.equal(await actions.getByText('View / edit').count(),0);assert.equal(await p.getByRole('button',{name:'View / edit',exact:true}).count(),1,'No duplicate edit control');
- for(const n of await actions.all()){assert.equal((await n.boundingBox()).width,26);assert.equal(await n.locator('svg').evaluate(n=>n.getBoundingClientRect().width),13);}
+ for(const n of await actions.all()){assert.equal((await n.boundingBox()).width,32);assert.equal(await n.locator('svg').evaluate(n=>n.getBoundingClientRect().width),16);}
  await p.getByRole('button',{name:'Deactivate',exact:true}).click();await p.locator('#sf-confirm-dialog').waitFor({state:'visible'});await p.keyboard.press('Escape');await p.locator('#sf-confirm-dialog').waitFor({state:'hidden'});assert.deepEqual(writes,[]);
  await p.getByRole('button',{name:'View / edit',exact:true}).click();await p.locator('#user-editor').waitFor({state:'visible'});assert.equal(await p.locator('#full-name').inputValue(),'Synthetic Staff');
  await p.goto('http://127.0.0.1:55863/Admin/Users');await p.getByRole('button',{name:'Reset password',exact:true}).click();await p.locator('#reset-form').waitFor({state:'visible'});assert((await p.locator('#reset-title').textContent()).includes(user.username));assert.deepEqual(writes,[]);

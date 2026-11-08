@@ -43,9 +43,9 @@ internal static class CompanyViewsChecks
    using var client=web.CreateClient(new(){AllowAutoRedirect=false});client.DefaultRequestHeaders.Add("Test-Role","Admin");client.DefaultRequestHeaders.Add("Test-Version",(await c.ExecuteScalarAsync<long>("SELECT security_version FROM users WHERE user_id=1")).ToString());var csrf=await client.GetFromJsonAsync<JsonObject>("/api/antiforgery");client.DefaultRequestHeaders.Add("X-CSRF-TOKEN",csrf!["requestToken"]!.GetValue<string>());
    var fixtures="tests/bin/company-views-fixtures";Directory.CreateDirectory(fixtures);
    foreach(var section in new[]{"business","billing"}){
-    var html=await client.GetStringAsync("/Settings/Company?section="+section);await File.WriteAllTextAsync(fixtures+"/"+section+".html",html);var title=section=="business"?"Business Information":"Billing &amp; Invoice Settings";
+    var html=await client.GetStringAsync("/Settings/Company?section="+section);await File.WriteAllTextAsync(fixtures+"/"+section+".html",html);var title=section=="business"?"Business Details":"Invoice Settings";
     Check(html.Contains(title)&&!html.Contains("Shop Details &amp; Bill Settings"),"Distinct heading and document title for "+section);
-    Check(html.Contains(">Administration</span>")&&html.Contains(">Business Setup</span>"),"Shared breadcrumbs include non-link Administration/Business Setup for "+section);
+    Check(html.Contains(">Settings</span>")&&html.Contains(">Business Setup</span>"),"Shared breadcrumbs include non-link Settings/Business Setup for "+section);
     var nav=Regex.Match(html,"<nav class=\"sf-nav sf-shop-nav\"[\\s\\S]*?</nav>").Value;Check(Regex.Matches(nav,"aria-current=\"page\"").Count==1&&Regex.IsMatch(nav,"href=\"/Settings/Company\\?section="+section+"\" aria-current=\"page\""),"Only correct sidebar destination is current for "+section);
     Check(section=="business"?!html.Contains("id=\"Input_InvoicePrefix\"")&&!html.Contains("id=\"billing-policy-form\""):!html.Contains("id=\"Input_CompanyName\"")&&!html.Contains("id=\"LogoUpload\""),"Unrelated form controls are absent from "+section);
    }

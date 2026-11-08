@@ -1,0 +1,77 @@
+/* Opt-in dialog presentation. Drawers, camera, dropdowns and printed labels keep
+   their own layouts. Workflow widths are retained; only short forms are resized. */
+@media screen {
+ .sf-app [data-sf-dialog] { --sf-dialog-padding:22px; --sf-button-min-height:40px; --sf-button-font-size:13px; }
+ /* This layer is the dimension owner for opted-in dialogs, including legacy
+    ID selectors. Keep all size variants here instead of adding page overrides. */
+ @layer stockflow-dialog-layout {
+  .sf-app dialog[data-sf-dialog] {
+   box-sizing:border-box!important; min-width:0!important;
+   max-width:calc(100dvw - 24px)!important; max-height:calc(100dvh - 24px)!important;
+   height:fit-content!important; overflow:auto!important; border:1px solid #dce2ee!important;
+   border-radius:13px!important; color:var(--sf-ink,#10233f); background:#fff;
+   box-shadow:0 18px 60px #10233f35;
+  }
+  .sf-app dialog[data-sf-dialog="compact"] { width:440px!important; padding:var(--sf-dialog-padding)!important; }
+  .sf-app dialog[data-sf-dialog="medium"] { width:520px!important; }
+  .sf-app dialog[data-sf-dialog="large"] { width:800px!important; }
+  .sf-app [data-sf-dialog] :is(h2,.modal-title) { font-size:18px!important; line-height:1.35!important; font-weight:600!important; }
+ }
+ .sf-app dialog[data-sf-dialog]::backdrop { background:#10233f66; }
+ .sf-app [data-sf-dialog] { font-size:14px; line-height:1.5; }
+ .sf-app [data-sf-dialog] :is(h2,.modal-title) { margin-block:0 10px; }
+ .sf-app [data-sf-dialog] :is(p,label,small) { overflow-wrap:anywhere; }
+ .sf-app [data-sf-dialog] p { font-size:13px; line-height:1.5; }
+ .sf-app [data-sf-dialog] label { font-size:13px; }
+ .sf-app [data-sf-dialog] :is(small,.small) { font-size:12px; }
+ .sf-app [data-sf-dialog] :is(input.form-control,select.form-select,.sf-select-trigger) { font-size:14px; min-height:40px; }
+ .sf-app [data-sf-dialog] .btn:not(.sf-action-icon) { min-height:40px; padding:8px 16px; font-size:13px; line-height:22px; white-space:normal; }
+ .sf-app [data-sf-dialog] :is(footer,.configuration-dialog-actions,.goods-dialog-actions,.sf-account-actions) { gap:12px; }
+ .sf-app [data-sf-dialog] :is(.sf-confirm-close,.sf-dialog-close,.configuration-close,.billing-customer-x,.pd-dialog-close,.goods-close,.bc-close,.stores-close,#close-editor,#manual-close,#quotation-manual-close,#gst-preview-close,#purchase-registration-close) {
+  box-sizing:border-box; display:grid; place-items:center; width:36px; height:36px;
+  min-width:36px; min-height:36px; padding:8px; border:0; border-radius:6px;
+  background:transparent; color:#46536a; font-size:20px; line-height:1;
+  --sf-action-standard:36px; --sf-action-standard-icon:18px;
+ }
+ .sf-app [data-sf-dialog] :is(.sf-confirm-close,.sf-dialog-close,.configuration-close) { position:absolute; top:8px; right:8px; }
+ .sf-app [data-sf-dialog] :is(.sf-confirm-close,.sf-dialog-close,.configuration-close,.billing-customer-x,.pd-dialog-close,.goods-close,.bc-close,.stores-close,#close-editor,#manual-close,#quotation-manual-close,#gst-preview-close,#purchase-registration-close):hover { background:#fff0f7; color:#b3005a; }
+ .sf-app [data-sf-dialog] :is(.sf-confirm-close,.sf-dialog-close,.configuration-close,.billing-customer-x,.pd-dialog-close,.goods-close,.bc-close,.stores-close,#close-editor,#manual-close,#quotation-manual-close,#gst-preview-close,#purchase-registration-close) svg { width:18px; height:18px; }
+ .sf-app [data-sf-dialog] :is(button,a,input,select,textarea):focus-visible { outline:2px solid var(--sf-pink,#ff087d); outline-offset:2px; }
+ .sf-app :is(.sf-confirm-dialog,.sf-logout-dialog)[data-sf-dialog] { text-align:center; }
+ .sf-app [data-sf-dialog] :is(.sf-confirm-symbol,.sf-dialog-symbol) { display:grid; place-items:center; width:44px; height:44px; border:0; border-radius:50%; margin:0 auto 14px; background:#fff4db; color:#a56b08; font-size:22px; font-weight:600; }
+ .sf-app [data-sf-dialog] .sf-confirm-symbol svg { width:22px; height:22px; }
+ .sf-app [data-sf-dialog][data-tone="danger"] .sf-confirm-symbol { background:#fbe9ec; color:#b02a37; }
+ .sf-app [data-sf-dialog][data-tone="information"] .sf-confirm-symbol { background:#eef3fa; color:#465b78; }
+ .sf-app .sf-confirm-dialog h2 { margin:0 16px 10px; }
+ .sf-app .sf-confirm-dialog p { margin:0; color:#536078; white-space:pre-wrap; overflow-wrap:anywhere; }
+ .sf-app [data-sf-dialog] :is(.sf-confirm-actions,.sf-dialog-actions) { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:22px; }
+ .sf-app [data-sf-dialog] :is(.sf-confirm-actions,.sf-dialog-actions) > * { flex:0 1 auto; min-width:0; }
+ .sf-app [data-sf-dialog] .sf-dialog-actions form { margin:0; }
+ .sf-app [data-sf-dialog] .sf-dialog-actions button { width:auto; }
+ /* Sectioned forms already own their header/body/footer padding. Remove the
+    category/brand fixed height, and let their existing field grids grow. */
+ .sf-app dialog[data-sf-dialog]:is(.category-registration,.brand-registration) { padding:0; }
+ .sf-app [data-sf-dialog] :is(.category-registration-heading,.brand-registration-heading) { padding:20px 22px 10px; }
+ .sf-app [data-sf-dialog] :is(.category-registration-content,.brand-registration-content) { padding:10px 22px 20px; overflow:visible; }
+ .sf-app [data-sf-dialog] :is(.category-registration-footer,.brand-registration-footer) { padding:14px 22px; }
+ .sf-app [data-sf-dialog="medium"] .billing-customer-header h2 { font-size:18px; }
+ .sf-app [data-sf-dialog="medium"] .billing-customer-header { grid-template-columns:40px minmax(0,1fr) 36px; padding:20px 22px 16px; }
+ .sf-app [data-sf-dialog="medium"] .billing-customer-body { padding:16px 22px; }
+ .sf-app [data-sf-dialog="medium"] .billing-customer-footer { padding:14px 22px; }
+ .sf-app [data-sf-dialog="medium"] .billing-customer-icon { width:40px; height:40px; }
+ .sf-app [data-sf-dialog] .billing-customer-fields { gap:14px; }
+ .sf-app .modal[data-sf-dialog] .modal-dialog { max-width:520px; margin-inline:auto; width:calc(100% - 24px); }
+ .sf-app .modal[data-sf-dialog] .modal-content { border-radius:13px; max-height:calc(100dvh - 24px); overflow:auto; }
+ .sf-app .modal[data-sf-dialog] :is(.modal-header,.modal-body,.modal-footer) { padding:16px 22px; }
+ .sf-app .modal[data-sf-dialog] .modal-title { margin:0; }
+ @media (max-width:575px), (pointer:coarse) {
+  .sf-app [data-sf-dialog] { --sf-dialog-padding:20px; --sf-button-min-height:44px; }
+  .sf-app [data-sf-dialog] .btn:not(.sf-action-icon) { min-height:44px; }
+  .sf-app [data-sf-dialog] :is(.sf-confirm-close,.sf-dialog-close,.configuration-close,.billing-customer-x,.pd-dialog-close,.goods-close,.bc-close,.stores-close,#close-editor,#manual-close,#quotation-manual-close,#gst-preview-close,#purchase-registration-close) { width:44px; height:44px; --sf-action-standard:44px; }
+  .sf-app [data-sf-dialog] :is(input.form-control,select.form-select,.sf-select-trigger) { min-height:44px; }
+ }
+ @media (max-width:400px) {
+  .sf-app [data-sf-dialog] :is(.sf-confirm-actions,.sf-dialog-actions) { flex-direction:column; }
+  .sf-app [data-sf-dialog] :is(.sf-confirm-actions,.sf-dialog-actions) button { width:100%; }
+ }
+}

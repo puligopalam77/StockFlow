@@ -6,7 +6,7 @@ public interface IExpenseRepository
 {
     Task<JsonElement> OptionsAsync();
     Task<JsonElement> TaxPreviewAsync(ExpenseTaxPreview request);
-    Task<JsonElement> ListAsync(string? term,DateTime? from,DateTime? to,int page,int pageSize,Guid? category=null,Guid? payee=null,string? status=null,string? paymentStatus=null);
+    Task<JsonElement> ListAsync(string? term,DateTime? from,DateTime? to,int page,int pageSize,Guid? category=null,Guid? payee=null,string? status=null,string? paymentStatus=null,string sort="newest");
     Task<JsonElement> GetAsync(Guid id);
     Task<long> WriteAsync(Guid id,string action,ExpenseOperation operation);
     Task<long> RecordAsync(Guid id,ExpenseOperation operation);

@@ -11,6 +11,8 @@ window.StockFlowUnsaved = (() => {
     const changed=()=>[...states.keys()].filter(dirty);
     // Only the copy varies by feature; snapshots and navigation replay stay shared.
     function discardMessage(roots){
+        const custom=[...new Set(roots.map(root=>root.dataset.unsavedMessage))];
+        if(custom.length===1&&custom[0])return custom[0];
         const contexts=[...new Set(roots.map(root=>{
             const labelledBy=root.getAttribute('aria-labelledby');
             return (root.dataset.unsavedContext||root.getAttribute('aria-label')||
@@ -21,6 +23,7 @@ window.StockFlowUnsaved = (() => {
         }).filter(Boolean))];
         return contexts.length===1?`You have unsaved changes in ${contexts[0]}. Leaving now will discard them.`:'You have unsaved changes. Leaving now will discard them.';
     }
+    function confirmDiscard(roots){const titles=[...new Set(roots.map(root=>root.dataset.unsavedTitle))];return StockFlowDialog.discard(discardMessage(roots),titles.length===1&&titles[0]?{title:titles[0]}:{});}
     function discover(){document.querySelectorAll('form').forEach(form=>{if(!states.has(form)&&eligible(form))remember(form);});}
     document.addEventListener('focusin',event=>{const form=event.target.closest('form');if(!form||!eligible(form))return;const state=states.get(form);if(!state?.changed)remember(form);});
     for(const type of ['input','change'])document.addEventListener(type,event=>{const form=event.target.closest('form');if(!form||!eligible(form)||event.target.dataset.sfAddressTransient||event.target.disabled||event.target.readOnly||event.target.type==='hidden')return;if(!states.has(form))remember(form);states.get(form).changed=true;});
@@ -38,15 +41,15 @@ window.StockFlowUnsaved = (() => {
         if(!roots.length)return;
         event.preventDefault();event.stopImmediatePropagation();
         if(roots.some(root=>root.dataset.saving==='true'))return;
-        if(!await StockFlowDialog.discard(discardMessage(roots)))return;
+        if(!await confirmDiscard(roots))return;
         roots.forEach(discard);replaying=true;try{control.click();}finally{replaying=false;}
     },true);
     document.addEventListener('cancel',async event=>{
         const roots=changed().filter(root=>event.target.contains(root));if(!roots.length||event.target.id==='sf-confirm-dialog')return;
-        event.preventDefault();event.stopImmediatePropagation();if(roots.some(root=>root.dataset.saving==='true'))return;if(await StockFlowDialog.discard(discardMessage(roots))){roots.forEach(discard);event.target.close();}
+        event.preventDefault();event.stopImmediatePropagation();if(roots.some(root=>root.dataset.saving==='true'))return;if(await confirmDiscard(roots)){roots.forEach(discard);event.target.close();}
     },true);
     document.addEventListener('submit',event=>queueMicrotask(()=>{if(!event.defaultPrevented&&event.target.method.toLowerCase()==='post')approved=true;}));
     window.addEventListener('beforeunload',event=>{if(!approved&&changed().length){event.preventDefault();event.returnValue='';}});
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',discover);else discover();
-    return {markClean:remember,markSaved:remember,register(root,getDirty,onDiscard){remember(root);Object.assign(states.get(root),{getDirty,onDiscard});},allowNavigation(){approved=true;},hasChanges:root=>dirty(root),async confirmNavigation(){const roots=changed();if(roots.some(root=>root.dataset.saving==='true'))return false;return !roots.length||await StockFlowDialog.discard(discardMessage(roots));}};
+    return {markClean:remember,markSaved:remember,register(root,getDirty,onDiscard){remember(root);Object.assign(states.get(root),{getDirty,onDiscard});},allowNavigation(){approved=true;},hasChanges:root=>dirty(root),async confirmNavigation(){const roots=changed();if(roots.some(root=>root.dataset.saving==='true'))return false;return !roots.length||await confirmDiscard(roots);}};
 })();

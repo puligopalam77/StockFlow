@@ -1,6 +1,9 @@
 /* New Sale only. Available content width includes the space used by the sidebar. */
+.sf-page-heading:has(+ #billing-workspace) .billing-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;min-width:0}
+.billing-title-row .billing-draft-reference{display:inline-flex;align-items:center;min-height:24px;max-width:100%;padding:3px 8px;border:1px solid var(--sf-border);border-radius:6px;background:transparent;color:var(--sf-muted);font-size:11px;font-weight:400;line-height:16px;overflow-wrap:anywhere}
+.billing-customer-row,.billing-scan-row:has(#sale-scan){--sf-input-min-height:40px;--sf-pos-action-height:40px}
 #billing-workspace{container-type:inline-size;min-width:0;color:#172842;--sf-action-bg:#191d23;--sf-action-hover:#ff007f}
-.sf-page-heading:has(+ #billing-workspace){display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px}.sf-page-heading:has(+ #billing-workspace) h1{font-size:26px;margin:0 0 4px}.billing-header-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px;margin-left:auto}.billing-header-actions .btn{font-size:11px;min-height:34px}.billing-header-actions #draft-status{flex-basis:100%;font-size:10px;color:#718098;text-align:right}.billing-draft-pill{background:#ffe6f2;color:#ec0076;font-size:12px;font-weight:700;border-radius:20px;padding:6px 14px}
+.sf-page-heading:has(+ #billing-workspace){display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px}.sf-page-heading:has(+ #billing-workspace) h1{font-size:var(--sf-page-title-size,22px);margin:0}.billing-header-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px;margin-left:auto}.billing-header-actions .btn{font-size:11px;min-height:34px}.billing-header-actions #draft-status{flex-basis:100%;font-size:10px;color:#718098;text-align:right}.billing-draft-pill{background:#ffe6f2;color:#ec0076;font-size:12px;font-weight:700;border-radius:20px;padding:6px 14px}
 #billing-workspace>section.card{background:none;border:0;padding:0}#billing-workspace>section.card:has(#held-bills[hidden]){margin:0!important}.billing-stepper{display:none}
 #billing-workspace .billing-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}.billing-catalog-pane,.billing-checkout-pane{display:flex;flex-direction:column;gap:12px;min-width:0}
 #billing-workspace .billing-lookup-card,#billing-workspace #billing-cart-card,#billing-workspace #billing-summary,#billing-workspace #billing-payment-card{background:#fff;border:1px solid #e1e7f0;border-radius:10px;padding:12px;margin:0!important;min-width:0;box-shadow:0 2px 8px #17284204}
@@ -37,14 +40,14 @@
 /* Keep the assistant in the header rather than covering payment or checkout. */
 @media(prefers-reduced-motion:reduce){#billing-workspace *{transition:none!important;animation:none!important}}
 /* Compact spacing retains readable controls on the common 768px-high laptop. */
-.sf-main:has(#billing-workspace){padding-top:12px}.sf-main:has(#billing-workspace) .sf-breadcrumb{margin-bottom:10px}
+.sf-main:has(#billing-workspace){padding-top:12px}.sf-main:has(#billing-workspace) .sf-breadcrumb{margin-bottom:6px}
 #billing-workspace #billing-summary,#billing-workspace #billing-payment-card{padding:10px}
 #billing-summary>h2,#billing-payment-card>h2{margin:-10px -10px 6px;padding:6px 10px}
 #billing-summary dl>div{padding:2px 0;line-height:1.35}#billing-summary .billing-summary-total{padding:8px;margin-top:5px}#billing-summary .billing-summary-total dd{font-size:22px}
 #billing-payment-card{gap:6px}.billing-notes textarea{height:42px;min-height:42px!important}
 
 .billing-actions-toggle{display:none}
-@media(min-width:1000px){.sf-main:has(#billing-workspace){padding-top:8px}.sf-main:has(#billing-workspace) .sf-breadcrumb{margin-bottom:6px}.sf-main:has(#billing-workspace) .sf-breadcrumb-back{height:24px}.sf-page-heading:has(+ #billing-workspace){margin-bottom:8px}.billing-notes textarea{height:38px;min-height:38px!important}}
+@media(min-width:1000px){.sf-main:has(#billing-workspace){padding-top:8px}.sf-main:has(#billing-workspace) .sf-breadcrumb{margin-bottom:4px}.sf-main:has(#billing-workspace) .sf-breadcrumb-back{height:24px}.sf-page-heading:has(+ #billing-workspace){margin-bottom:8px}.billing-notes textarea{height:38px;min-height:38px!important}}
 #sale-empty{display:grid;place-items:center;gap:5px}#sale-empty[hidden]{display:none}
 @container(max-width:820px){#billing-workspace .billing-quantity .btn{min-width:40px;min-height:44px}#billing-workspace .billing-quantity input{min-height:44px}#billing-workspace .billing-cart td:last-child>.btn{min-width:44px;min-height:44px!important}#billing-workspace .billing-scan-row>.btn{min-width:44px;min-height:44px}}
 
@@ -109,7 +112,7 @@
 #billing-workspace .billing-notes textarea{margin-top:8px}
 .billing-customer-row{display:flex;align-items:flex-start;gap:8px;min-width:0}
 .billing-customer-row>.billing-customer-picker{flex:1;min-width:0}
-.billing-customer-row>.btn{flex:none;min-height:40px;margin-top:5px}
+.billing-customer-row>.btn{flex:none;min-height:40px;margin-top:0}
 #billing-customer-card:not(:has(#customer-picker[open])) #customer-search-status{display:none}
 
 .billing-summary-discount{align-items:center;gap:10px}
@@ -208,7 +211,7 @@ html:has(.billing-saved-drawer[open]){overflow:hidden}
 /* Customer selection and search share one compact field; results overlay the bill. */
 #billing-customer-card>label[for="customer-current"]{position:static;display:block;margin:0 0 6px;font-size:12px}
 #billing-workspace #customer-picker{position:relative;padding:0;border:0;background:none;min-width:0}
-#billing-workspace #customer-search{margin:0;width:100%;min-height:48px;padding:10px 12px}
+#billing-workspace #customer-search{margin:0;width:100%;min-height:40px;padding:8px 10px}
 #billing-workspace #customer-search:enabled{background:#fff;border-color:#9baec6;color:#172842;cursor:text}
 #billing-workspace #customer-search:enabled::placeholder{color:#526780;opacity:1}
 #billing-workspace #customer-search:enabled:hover{border-color:#ff007f}
@@ -225,7 +228,6 @@ html:has(.billing-saved-drawer[open]){overflow:hidden}
 #customer-results [role="option"]:hover,#customer-results [aria-selected="true"]{background:#fff0f7;color:#b90060}
 #billing-customer-card #customer-search-status{display:block;font-size:12px}
 #billing-customer-card #customer-search-status:empty{display:none}
-.billing-customer-row>.btn{margin-top:4px}
 /* Keep quick entry next to the lookup action, with room reserved for its label. */
 #billing-workspace .billing-scan-row:has(#sale-scan)>#quick-add-item{width:auto;min-width:112px;flex:none;display:block;white-space:nowrap;min-height:40px;padding:6px 10px;margin:0}
 @container(max-width:420px){
