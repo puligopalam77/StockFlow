@@ -30,12 +30,12 @@ public sealed class BankAccountsRepository(IOptions<BankAccountsOptions> options
         }catch{await c.DisposeAsync();throw;}
     }
     private string Profile()=>BusinessProfiles.IsSupported(scope.BusinessProfileCode)?scope.BusinessProfileCode:throw new UnauthorizedAccessException();
-    public async Task<JsonElement> ReadAsync(Guid? accountId,DateTime date,int page,string? search)
+    public async Task<JsonElement> ReadAsync(Guid? accountId,DateTime date,int page,string? search,long? shopId=null)
     {
-        if(page<1||page>100000||date.Year<2000||(search?.Length??0)>150)throw new ValidationException("Choose a valid date, search and page.");
+        if(page<1||page>100000||date.Year<2000||(search?.Length??0)>150||shopId is <=0)throw new ValidationException("Choose a valid date, search, shop and page.");
         await using var c=await Open();await using var t=await c.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
         await c.ExecuteAsync("SET TRANSACTION READ ONLY",transaction:t);
-        var json=await c.ExecuteScalarAsync<string>("SELECT sf_bank_read(@accountId,@date::date,@page,@search)::text",new{accountId,date=date.Date,page,search=search?.Trim()??""},t);
+        var json=await c.ExecuteScalarAsync<string>("SELECT sf_bank_read(@accountId,@date::date,@page,@search,@shopId)::text",new{accountId,date=date.Date,page,search=search?.Trim()??"",shopId},t);
         await t.CommitAsync();return JsonSerializer.Deserialize<JsonElement>(json!);
     }
     public async Task<JsonElement> WriteAsync(string action,Guid accountId,Guid requestId,JsonElement body)
