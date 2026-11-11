@@ -1,0 +1,23 @@
+@page "/Settings/BankAccounts/{accountId:guid?}"
+@model StockFlow.Web.Pages.Settings.BankAccounts.IndexModel
+@inject StockFlow.Application.Common.BusinessScope BankScope
+@{ViewData["Title"]=Model.AccountId.HasValue?"Bank Account":"Bank Accounts";}
+@section PageHeader {
+<header class="sf-page-heading bank-heading"><div><h1 id="bank-title">@ViewData["Title"]</h1><p id="bank-subtitle">Manage your business bank accounts and track transactions.</p></div><div class="bank-actions"><a id="bank-back" href="/Settings/BankAccounts" class="btn btn-outline-secondary" hidden>Back to Bank Accounts</a><button id="bank-add" type="button" class="btn btn-primary" hidden>+ Add Bank Account</button></div></header>
+}
+<div id="bank-workspace" data-account="@Model.AccountId" data-posting="@Model.PostingEnabled.ToString().ToLowerInvariant()" data-storage-key="stockflow.bank-request.@BankScope.TenantId.@BankScope.UserId">
+ <p class="bank-notice">Balances are recorded from verified bank evidence. Actual/live bank balance is unavailable. Transfers and provider synchronization are not enabled.</p>
+ <p id="bank-message" class="alert alert-danger" data-keep-banner role="status" hidden></p>
+ <section id="bank-list" class="bank-panel"><p>Loading authorized accounts…</p></section>
+ <div id="bank-detail" hidden>
+  <div id="bank-settings" class="bank-actions"></div>
+  <section id="bank-initialize" class="bank-panel bank-initialize" hidden><div><strong>Opening balance not initialized</strong><p>Set the evidenced account balance at the tracking boundary once. Earlier bank movements already reflected in that balance must not be counted again.</p></div><button id="bank-open" type="button" class="btn btn-primary" hidden>Set Opening Balance</button></section>
+  <div id="bank-kpis" class="bank-kpis"></div>
+  <section class="bank-panel"><header class="bank-toolbar"><h2>Bank Transactions</h2><div class="bank-actions"><label>Bank-effective date<input id="bank-date" type="date" /></label><label>Search<input id="bank-search" type="search" maxlength="150" placeholder="Reference or transaction type" /></label></div></header><p id="bank-scope" class="bank-secondary"></p><div class="bank-table-wrap"><table><thead><tr><th>Date</th><th>Reference</th><th>Type</th><th>Money In (₹)</th><th>Money Out (₹)</th><th id="bank-running-head" hidden>Running Balance (₹)</th><th>Status / Audit</th><th>Action</th></tr></thead><tbody id="bank-rows"></tbody></table></div><footer class="bank-toolbar"><span id="bank-count" role="status"></span><nav aria-label="Bank transaction pages"><button id="bank-prev" type="button" class="btn btn-outline-secondary">Previous</button><span id="bank-page"></span><button id="bank-next" type="button" class="btn btn-outline-secondary">Next</button></nav></footer></section>
+  <section class="bank-panel"><header class="bank-toolbar"><div><h2>Recorded Payments / Pending Settlement</h2><p>Link an existing payment to this account. Linking does not post bank money or change customer/supplier outstanding.</p></div><button id="bank-verify" type="button" class="btn btn-primary" hidden>Verify Selected</button></header><label class="bank-candidate-label">Eligible recorded payment<select id="bank-candidate" data-sf-select="native"><option value="">Choose a recorded payment</option></select></label><button id="bank-link" type="button" class="btn btn-outline-primary">Link Payment to This Account</button><div class="bank-table-wrap"><table><thead><tr><th>Select</th><th>Source</th><th>Recorded Date</th><th>Direction</th><th>Unsettled (₹)</th></tr></thead><tbody id="bank-sources"></tbody></table></div></section>
+  <details id="bank-opening-audit" class="bank-panel" hidden><summary>Opening balance audit</summary><p></p></details>
+ </div>
+</div>
+<dialog id="bank-dialog" data-sf-dialog="small" aria-labelledby="bank-dialog-title"><form id="bank-form"><header><h2 id="bank-dialog-title"></h2><button id="bank-close" type="button" aria-label="Close bank dialog">×</button></header><div class="bank-dialog-body"><p id="bank-help" class="bank-secondary"></p><fieldset id="bank-fields"></fieldset><p id="bank-form-error" class="alert alert-danger" data-keep-banner role="alert" tabindex="-1" hidden></p></div><footer><button id="bank-cancel" type="button" class="btn btn-outline-secondary">Cancel</button><button id="bank-save" type="submit" class="btn btn-primary">Save</button></footer></form></dialog>
+@section Styles {<link rel="stylesheet" href="~/css/bank-accounts.css" asp-append-version="true" />}
+@section Scripts {<script src="~/js/bank-accounts.js" asp-append-version="true"></script>}

@@ -4,7 +4,7 @@ window.StockFlowQuickCustomer = {
         const byId = id => document.getElementById(id);
         const dialog = document.createElement('dialog');
         dialog.id = 'customer-quick-add-dialog';
-        dialog.className = 'billing-customer-dialog';dialog.dataset.sfDialog='medium';
+        dialog.className = 'billing-customer-dialog';dialog.dataset.sfDialog=workspace.id==='billing-workspace'?'large':'medium';
         dialog.setAttribute('aria-labelledby', 'customer-quick-add-title');
         dialog.setAttribute('aria-describedby', 'customer-quick-add-subtitle');
         dialog.innerHTML = `<header class="billing-customer-header">

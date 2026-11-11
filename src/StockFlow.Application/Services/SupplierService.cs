@@ -55,7 +55,7 @@ public class SupplierService : ISupplierService
             return false;
         }
 
-        await ValidateAsync(request, id);
+        SupplierRules.Validate(request, existing.CountryCode);
         var entity = ToEntity(request);
         if (request.UseStructuredAddress is null && request.District is null) entity.District = existing.District;
         if (request.UseStructuredAddress != true && !existing.UseStructuredAddress &&

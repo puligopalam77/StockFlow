@@ -15,10 +15,10 @@
   <div class="expense-filter-heading"><h2 id="expense-filter-title">Filter Expenses</h2><button id="expense-filter-close" type="button" aria-label="Close filters">×</button></div>
   <form id="expense-filters">
    <div class="expense-filter-body">
-    <label for="expense-filter-category">Category<select id="expense-filter-category" class="form-select" data-sf-select="native"><option value="">All Categories</option></select></label>
-    <label for="expense-filter-payment">Payment Status<select id="expense-filter-payment" class="form-select" data-sf-select="native"><option value="">All</option><option value="UNPAID">Unpaid</option><option value="PARTIAL">Partially Paid</option><option value="PAID">Paid</option></select></label>
-    <label for="expense-filter-payee">Payee<select id="expense-filter-payee" class="form-select" data-sf-select="native"><option value="">All Payees</option></select></label>
-    <label for="expense-filter-status">Expense Status<select id="expense-filter-status" class="form-select" data-sf-select="native"><option value="">Recorded and cancelled</option><option value="POSTED">Recorded</option><option value="CANCELLED">Cancelled</option><option id="expense-legacy-option" value="DRAFT" hidden>Saved expenses needing review</option></select></label>
+    <label for="expense-filter-category">Category<select id="expense-filter-category" class="form-select" data-sf-select="auto"><option value="">All Categories</option></select></label>
+    <label for="expense-filter-payment">Payment Status<select id="expense-filter-payment" class="form-select" data-sf-select="auto"><option value="">All</option><option value="UNPAID">Unpaid</option><option value="PARTIAL">Partially Paid</option><option value="PAID">Paid</option></select></label>
+    <label for="expense-filter-payee">Payee<select id="expense-filter-payee" class="form-select" data-sf-select="auto"><option value="">All Payees</option></select></label>
+    <label for="expense-filter-status">Expense Status<select id="expense-filter-status" class="form-select" data-sf-select="auto"><option value="">Recorded and cancelled</option><option value="POSTED">Recorded</option><option value="CANCELLED">Cancelled</option><option id="expense-legacy-option" value="DRAFT" hidden>Saved expenses needing review</option></select></label>
     <section class="expense-date-range" aria-labelledby="expense-date-range-title"><h3 id="expense-date-range-title">Date Range</h3><fieldset aria-labelledby="expense-date-range-title"><label for="expense-from">From Date<input id="expense-from" class="form-control" type="date" /></label><label for="expense-to">To Date<input id="expense-to" class="form-control" type="date" /></label></fieldset></section>
    </div>
    <div class="expense-filter-footer"><button class="btn btn-primary" type="submit">Apply Filters</button><button id="expense-filter-clear" class="btn btn-outline-secondary" type="button">Clear All</button></div>

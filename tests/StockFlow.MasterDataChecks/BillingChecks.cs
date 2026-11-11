@@ -8,6 +8,13 @@ static class BillingChecks
     public static async Task Run(Factory factory)
     {
         static void Check(bool value,string message){if(!value)throw new Exception("FAIL: "+message);Console.WriteLine("PASS: "+message);}
+        foreach(var tendered in new[]{850m,1000m}){
+            var cash=new CreateSaleRequest{RequestId=Guid.NewGuid(),LocationId=1,CustomerId=1,CashTendered=tendered,Items=[new(){ProductId=1,Quantity=1,SellingPrice=850}],Payments=[new(){PaymentMode="CASH",Amount=850}]};
+            Check(StockFlow.Application.Common.SaleRules.CalculateLines(cash,[0m],true).TotalAmount==850&&cash.Payments.Single().Amount==850,"cash tendered "+tendered+" preserves the 850 invoice and recorded payment");
+            cash.CashTendered=849;
+            var rejected=false;try{StockFlow.Application.Common.SaleRules.CalculateLines(cash,[0m],true);}catch(System.ComponentModel.DataAnnotations.ValidationException){rejected=true;}
+            Check(rejected,"insufficient cash remains rejected by server validation");
+        }
         foreach(var type in new string?[]{null," debit ","credit"}){
             var card=new CreateSaleRequest{RequestId=Guid.NewGuid(),LocationId=1,Items=[new(){ProductId=1,VariantId=1,Quantity=1,SellingPrice=100}],Payments=[new(){PaymentMode="CARD",CardType=type,Amount=118}]};
             Check(StockFlow.Application.Common.SaleRules.CalculateLines(card,[18m],true).TotalAmount==118 && card.Payments[0].PaymentMode=="CARD","generic/debit/credit card preserve CARD accounting");

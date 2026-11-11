@@ -33,7 +33,7 @@ const fixtures=path.join(root,'tests/bin/phase13-ui-fixtures'),base='http://loca
             await page.locator('#chart-period-search').click();
             await page.locator(`#chart-period-options [data-value="${value}"]`).click();
         };
-        assert.strictEqual(await page.locator('.sf-business-kpis .sf-kpi').count(),8);
+        assert.strictEqual(await page.locator('.sf-overview-grid .sf-kpi').count(),13);
         assert.strictEqual(await page.locator('a.sf-kpi[href="/Sales?status=OUTSTANDING"]').count(),1);
         assert.strictEqual(await page.locator('a.sf-kpi[href="/Sales?status=OVERDUE"]').count(),1);
         assert.strictEqual(await page.locator('#recent-sales').count(),1);
@@ -68,7 +68,7 @@ const fixtures=path.join(root,'tests/bin/phase13-ui-fixtures'),base='http://loca
         await page.waitForFunction(()=>document.getElementById('dashboard-results').textContent.includes('BAT001'));
         assert.strictEqual(await page.locator('#dashboard-results a').getAttribute('href'),'/Scan?code=BAT001');
         role='Service'; await page.goto(base);
-        assert.strictEqual(await page.locator('.sf-business-kpis .sf-kpi').count(),4);
+        assert.strictEqual(await page.locator('.sf-overview-grid .sf-kpi').count(),9);
         assert.strictEqual(await page.locator('#recent-sales').count(),0);
         assert.strictEqual(await page.locator('.sf-nav a[href="/Users"]').count(),0);
         assert.deepStrictEqual(errors,[]);

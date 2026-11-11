@@ -25,7 +25,7 @@ const screenshots=path.join(root,'tests/bin/dropdown-ui');fs.mkdirSync(screensho
   assert(await list.evaluate(e=>e.scrollHeight>e.clientHeight||getComputedStyle(e).overflowY==='auto'));
   assert.equal(await page.locator('#entity').inputValue(),'103','Searching never changes selected ID');
   await list.getByRole('option',{name:'Supplier 12',exact:true}).hover();assert.equal(await page.evaluate(()=>changes),0);
-  assert.equal(await list.getByRole('option',{name:'Supplier 12',exact:true}).evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(255, 240, 247)');
+  assert.equal(await list.getByRole('option',{name:'Supplier 12',exact:true}).evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(241, 244, 249)');
   await list.getByRole('option',{name:'Supplier 12',exact:true}).click();
   assert.equal(await page.locator('#entity').inputValue(),'112');assert.equal(await trigger.inputValue(),'Supplier 12');
   assert.equal(await page.evaluate(()=>changes),1,'Exactly one existing change event');
@@ -65,9 +65,10 @@ const screenshots=path.join(root,'tests/bin/dropdown-ui');fs.mkdirSync(screensho
   await page.locator('#modal-search').click();await page.locator('#modal-options').getByRole('option',{name:'Stock room'}).click();
   assert.equal(await page.locator('#modal').inputValue(),'48');assert.equal(await page.locator('#modal-search').evaluate(e=>e===document.activeElement),true);
   await page.locator('#dialog').getByRole('button',{name:'Close dialog'}).click();
-  for(const [width,height]of [[1920,1080],[1366,768],[1280,600],[1280,650],[1280,720],[1024,768],[768,1024],[390,844],[375,667],[320,640]]){
+  for(const [width,height]of [[1920,1080],[1536,864],[1366,768],[1280,600],[1280,650],[1280,720],[1024,768],[768,1024],[390,844],[375,667],[320,640]]){
    await page.setViewportSize({width,height});await trigger.scrollIntoViewIfNeeded();await trigger.click();
    const box=await page.locator('#entity-panel').boundingBox();assert(box.x>=0&&box.y>=0&&box.x+box.width<=width+1&&box.y+box.height<=height+1,'Popover stays in viewport '+width);
+   assert(box.height<=240,'Shared panel capped at 240px');
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No horizontal overflow '+width);
    if(width===1280||width===320)await page.screenshot({path:path.join(screenshots,'shared-select-'+width+'x'+height+'.png')});
    await search.press('Home');await search.press('ArrowDown');await search.press('ArrowUp');await search.press('Escape');
@@ -111,6 +112,6 @@ const screenshots=path.join(root,'tests/bin/dropdown-ui');fs.mkdirSync(screensho
   await page.locator('#count-0-search').click();await page.locator('#count-0-options .sf-select-empty').waitFor();await page.keyboard.press('Escape');
   await page.evaluate(()=>document.getElementById('count-0').add(new Option('Loaded later','late')));
   await page.locator('#count-0-search').click();await page.getByRole('option',{name:'Loaded later',exact:true}).click();assert.equal(await page.locator('#count-0').inputValue(),'late');
-  assert.deepEqual(errors,[]);console.log('PASS shared selectors: all single-select sizes/routes including short/empty/501-option lists, dynamic options, local product/variant selects, preserved multi-select semantics, approved design, validation, keyboard/IME, exact IDs/events, reset, disabled/readonly, modal focus, ten viewports at DPR 1.5, upward positioning and six module phases. No application database writes.');
+  assert.deepEqual(errors,[]);console.log('PASS shared selectors: all single-select sizes/routes including short/empty/501-option lists, dynamic options, local product/variant selects, preserved multi-select semantics, approved design, validation, keyboard/IME, exact IDs/events, reset, disabled/readonly, modal focus, eleven viewports at DPR 1.5, upward positioning and six module phases. No application database writes.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

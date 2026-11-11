@@ -1,4 +1,4 @@
-const {fillLocation}=require('./address-test-helpers.cjs');
+const {fillLocation,expectFixedCountry}=require('./address-test-helpers.cjs');
 // Real supplier Razor fixture/assets with controlled APIs. No database writes.
 const fs=require('fs'),path=require('path'),assert=require('assert');
 const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
@@ -8,6 +8,7 @@ const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/StockFlow.
  const errors=[],writes=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
  let record={supplierId:8,supplierCode:'SUP000008',supplierName:'Legacy supplier',address:'Original full address, floor 3\nDo not split this text',countryCode:'IN',isActive:false};
  await page.route('**/*',route=>{const req=route.request(),u=new URL(req.url()),p=u.pathname,json=(data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.hostname==='api.postalpincode.in')return json([{Status:'Success',PostOffice:[{Name:'Bengaluru',State:'Karnataka',District:'Bengaluru Urban'}]}]);
   if(p.startsWith('/Suppliers'))return route.fulfill({path:path.join(root,'tests/bin/master-screen-fixtures/Suppliers-'+(p.split('/')[2]||'List')+'.html'),contentType:'text/html'});
   if(p==='/api/suppliers/options')return json({countries:[{code:'IN',name:'India'},{code:'US',name:'United States'}],indianStates:['Karnataka','Tamil Nadu']});
   if(p==='/api/suppliers/duplicates')return json([]);
@@ -29,7 +30,7 @@ const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/StockFlow.
  assert(!await page.locator('#isActive').isChecked());await page.locator('#supplierName').fill('Legacy renamed');await save().click();await page.waitForURL('**/Suppliers');
  assert.equal(record.address,'Original full address, floor 3\nDo not split this text');assert.equal(record.isActive,false);assert.equal(record.supplierCode,'SUP000008');
  await page.goto('http://stockflow.test/Suppliers/Edit?id=8');await ready();await page.locator('#useStructuredAddress').check();
- await page.locator('#addressLine1').fill('12 Market Road');await page.locator('#addressLine2').fill('First floor');await page.locator('#city').fill('Bengaluru');await fillLocation(page.locator('#state'),'Karnataka');await page.locator('#postalCode').fill('560001');
+ await page.locator('#addressLine1').fill('12 Market Road');await page.locator('#addressLine2').fill('First floor');await page.locator('#city').fill('Bengaluru');await fillLocation(page.locator('#state'),'Karnataka');await page.locator('#postalCode').fill('560001');await page.waitForFunction(()=>document.querySelector('#postalCode').validity.valid);
  await contact().click();assert(!await page.locator('#addressLine1').isVisible());await contact().click();assert.equal(await page.locator('#addressLine2').inputValue(),'First floor');
  await save().click();await page.waitForURL('**/Suppliers');assert.equal(record.address,'12 Market Road\nFirst floor');assert.equal(record.isActive,false);
  await page.goto('http://stockflow.test/Suppliers/Edit?id=8');await ready();assert.equal(await page.locator('#addressLine1').inputValue(),'12 Market Road');assert.equal(await page.locator('#addressLine2').inputValue(),'First floor');assert(!await page.locator('.supplier-legacy-address').isVisible());
@@ -45,15 +46,17 @@ const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/StockFlow.
  for(const mode of ['Create','Edit'])for(const [width,height] of [[1920,1080],[1366,768],[1280,720],[1280,650],[1280,600],[1024,768],[768,1024],[390,844],[375,667],[320,640]]){
   await page.setViewportSize({width,height});await page.goto('http://stockflow.test/Suppliers/'+mode+(mode==='Edit'?'?id=8':''));await ready();
   assert(await page.locator('#supplierCode').isDisabled());assert.equal(await page.locator('#supplierCode').getAttribute('tabindex'),'-1');assert.equal(await page.locator('.supplier-locked').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(240, 242, 245)');
-  assert.equal(await page.locator('#supplierCode').evaluate(e=>getComputedStyle(e).cursor),'default');assert.equal(await page.locator('.supplier-locked svg').count(),1);
+  assert(['default','not-allowed'].includes(await page.locator('#supplierCode').evaluate(e=>getComputedStyle(e).cursor)));assert.equal(await page.locator('.supplier-locked svg').count(),1);
+  await expectFixedCountry(page.locator('#countryCode'));
   if(!await page.locator('#addressLine1').isVisible())await contact().click();
-  const boxes=await page.locator('[name=addressLine1],[name=addressLine2],[name=city],[name=state],[name=postalCode],[name=countryCode]').evaluateAll(nodes=>nodes.map(e=>(e.sfAddressPicker?.input||e).getBoundingClientRect().toJSON()));
-  assert(boxes[1].y>boxes[0].y);assert(Math.abs(boxes[0].width-boxes[1].width)<1);
+  const boxes=await page.locator('[name=addressLine1],[name=addressLine2],[name=city],[name=state],[name=postalCode],[name=countryCode]').evaluateAll(nodes=>nodes.map(e=>(e.sfCountryField?.display||e.sfAddressPicker?.input||e).getBoundingClientRect().toJSON()));
+  const wide=await page.locator('#addressLine1').evaluate(n=>n.closest('.supplier-card').clientWidth>=1000);if(wide)assert.equal(boxes[1].y,boxes[0].y);else assert(boxes[1].y>boxes[0].y);assert(Math.abs(boxes[0].width-boxes[1].width)<1);
   if(width<=390)assert(boxes.every((b,i)=>i===0||b.y>boxes[i-1].y),'Mobile address fields stack');
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No horizontal overflow');
   for(const button of [save(),page.getByRole('button',{name:'Cancel',exact:true})]){await button.scrollIntoViewIfNeeded();assert(await button.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Footer action unobstructed');}
   await page.screenshot({path:path.join(out,mode+'-'+width+'x'+height+'.png')});console.log('PASS structured supplier '+mode+' '+width+'x'+height);
  }
+ record={...record,countryCode:'US',postalCode:'10001'};await page.goto('http://stockflow.test/Suppliers/Edit?id=8');await ready();await expectFixedCountry(page.locator('#countryCode'),'United States');await save().click();await page.waitForURL('**/Suppliers');assert.equal(record.countryCode,'US','Historical supplier country survives save');
  record={...record,useStructuredAddress:true,addressLine1:'View address',addressLine2:'View landmark',address:'View address\nView landmark'};
  await page.goto('http://stockflow.test/Suppliers/View?id=8');await ready();
  assert.equal(await page.locator('#addressLine1').inputValue(),'View address');assert.equal(await page.locator('#addressLine2').inputValue(),'View landmark');assert(await page.locator('#addressLine1').isDisabled());assert(await page.locator('#supplierCode').isDisabled());

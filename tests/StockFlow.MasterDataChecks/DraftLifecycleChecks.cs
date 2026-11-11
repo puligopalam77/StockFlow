@@ -46,6 +46,9 @@ internal static class DraftLifecycleChecks
    var conflictingPayload=payload.DeepClone().AsObject();conflictingPayload["notes"]="Different request";
    Check((int)(await client.PutAsJsonAsync($"/api/sales/billing/drafts/{id}",new{label="Ranga",payload=conflictingPayload,editorId=editorA,revision=0,operationId=firstOperation})).StatusCode==409,"Reusing a save operation ID for different contents is rejected");
    var heldList=await client.GetFromJsonAsync<JsonObject>("/api/sales/billing/drafts?paged=true");Check(heldList!["total"]!.GetValue<int>()==0,"Held list excludes both Active and ambiguous legacy drafts");
+   async Task<JsonArray> Unified(Guid editor)=>(await client.GetFromJsonAsync<JsonObject>($"/api/sales/billing/drafts?paged=true&includeActive=true&editorId={editor}"))!["items"]!.AsArray();
+   Check((await Unified(editorA)).Count(d=>d!["draftId"]!.GetValue<Guid>()==id)==1,"Unified Saved Bills contains the current Active draft exactly once");
+   Check(!(await Unified(editorB)).Any(d=>d!["draftId"]!.GetValue<Guid>()==id),"Unified Saved Bills excludes another editor's live Active lease");
    var recovery=await client.GetFromJsonAsync<JsonObject>("/api/sales/billing/drafts?paged=true&recovery=true");Check(recovery!["total"]!.GetValue<int>()>=1,"Separate recovery view exposes legacy bills without inventing Held state");
    var held=await Act(id,"hold",editorA,Rev(active));Check(held["draftStatus"]!.GetValue<string>()=="HELD"&&held["draftNumber"]!.GetValue<string>()==number,"Hold transitions the same numbered draft to Held");
    Check((await client.GetFromJsonAsync<JsonObject>("/api/sales/billing/drafts?paged=true"))!["total"]!.GetValue<int>()==1,"Held draft appears exactly once");
@@ -60,7 +63,10 @@ internal static class DraftLifecycleChecks
    var empty=await client.GetFromJsonAsync<JsonObject>($"/api/sales/billing/drafts/{id}");Check(empty!["cart"]!.AsArray().Count==0&&empty["customerLabel"]!.GetValue<string>().StartsWith("Ranga")&&empty["notes"]!.GetValue<string>()=="Keep this note"&&empty["draftNumber"]!.GetValue<string>()==number,"Removing final item preserves customer, notes, identity, number and Active state");
    Check((int)(await client.PostAsJsonAsync($"/api/sales/billing/drafts/{id}/hold",Command(winner,Rev(active)))).StatusCode==409,"Existing empty-hold policy rejects Hold without discarding the Active bill");
    Check((await client.GetFromJsonAsync<JsonObject>("/api/sales/billing/drafts?paged=true"))!["total"]!.GetValue<int>()==0,"Empty Active draft remains excluded from Held");
+   var customerOnly=(await Unified(winner)).Single(d=>d!["draftId"]!.GetValue<Guid>()==id)!;
+   Check(customerOnly["draftStatus"]!.GetValue<string>()=="ACTIVE"&&customerOnly["itemCount"]!.GetValue<int>()==0&&customerOnly["estimatedTotal"]!.GetValue<decimal>()==0,"Customer-only Active draft remains visible with zero items and zero total after rejected Hold");
    await c.ExecuteAsync("UPDATE billing_drafts SET lease_until=clock_timestamp()-interval '1 second' WHERE draft_id=@id",new{id});
+   Check((await Unified(loser)).Any(d=>d!["draftId"]!.GetValue<Guid>()==id),"Expired Active lease is discoverable in unified Saved Bills for existing recovery");
    active=await Success(await client.PostAsJsonAsync($"/api/sales/billing/drafts/{id}/resume",new{editorId=loser,revision=Rev(active),operationId=Guid.NewGuid(),recover=true}));winner=loser;
    Check(active["draftStatus"]!.GetValue<string>()=="ACTIVE","Expired editor lease can be recovered explicitly without permanent locks");
    await Act(id,"release",winner,Rev(active));active=await Success(await client.PostAsJsonAsync($"/api/sales/billing/drafts/{id}/resume",new{editorId=editorA,revision=Rev(active),operationId=Guid.NewGuid(),recover=true}));winner=editorA;
@@ -72,6 +78,12 @@ internal static class DraftLifecycleChecks
    var switchId=Guid.NewGuid();var switchBody=new{editorId=winner,revision=Rev(held),operationId=switchId,currentDraftId=other,currentRevision=Rev(current),currentAction="HOLD"};
    active=await Success(await client.PostAsJsonAsync($"/api/sales/billing/drafts/{id}/resume",switchBody));var repeat=await Success(await client.PostAsJsonAsync($"/api/sales/billing/drafts/{id}/resume",switchBody));
    Check(Rev(active)==Rev(repeat)&&await c.ExecuteScalarAsync<string>("SELECT draft_status FROM billing_drafts WHERE draft_id=@other",new{other})=="HELD","Hold Current & Resume is atomic and idempotent after an uncertain response");
+   held=await Act(id,"hold",winner,Rev(active));
+   var keepId=Guid.NewGuid();var keepPayload=payload.DeepClone().AsObject();keepPayload["draftId"]=keepId.ToString();keepPayload["cart"]=new JsonArray();keepPayload["estimatedTotal"]=0;
+   var keep=await Save(keepId,winner,0,keepPayload);
+   active=await Success(await client.PostAsJsonAsync($"/api/sales/billing/drafts/{id}/resume",new{editorId=winner,revision=Rev(held),operationId=Guid.NewGuid(),currentDraftId=keepId,currentRevision=Rev(keep),currentAction="RELEASE"}));
+   Check(await c.ExecuteScalarAsync<bool>("SELECT draft_status='ACTIVE' AND lease_until IS NULL AND payload->>'customerId'='10' AND jsonb_array_length(payload->'cart')=0 FROM billing_drafts WHERE draft_id=@keepId",new{keepId}),"Keep Active Draft & Resume preserves the customer-only draft through existing atomic RELEASE without inventing Held state");
+   Check((await Unified(editorB)).Any(d=>d!["draftId"]!.GetValue<Guid>()==keepId),"Kept customer-only draft is immediately recoverable from unified Saved Bills");
    current=(await client.GetFromJsonAsync<JsonObject>($"/api/sales/billing/drafts/{other}"))!;
    await Success(await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete,$"/api/sales/billing/drafts/{other}"){Content=JsonContent.Create(Command(winner,Rev(current)))}));
    Check(await c.ExecuteScalarAsync<string>("SELECT draft_status FROM billing_drafts WHERE draft_id=@other",new{other})=="DISCARDED"&&(int)(await client.GetAsync($"/api/sales/billing/drafts/{other}")).StatusCode==404,"Discard retains terminal audit record and makes the selected bill non-resumable");
@@ -81,7 +93,7 @@ internal static class DraftLifecycleChecks
    var otherStore=await c.ExecuteScalarAsync<long>("INSERT INTO stores(tenant_id,store_code,store_name) VALUES(1,'LIFECYCLE2','Lifecycle second shop') RETURNING store_id");
    await c.ExecuteAsync("UPDATE store_locations SET store_id=@otherStore WHERE tenant_id=1 AND location_id=2",new{otherStore});
    var otherUser=await c.ExecuteScalarAsync<int>("SELECT user_id FROM users WHERE tenant_id=1 AND user_id<>1 LIMIT 1");
-   foreach(var scope in new[]{new BusinessScope{TenantId=1,UserId=1,StoreId=otherStore,LocationId=2},new BusinessScope{TenantId=1,UserId=otherUser,StoreId=1,LocationId=1}})
+   foreach(var scope in new[]{new BusinessScope{TenantId=1,UserId=1,StoreId=otherStore,LocationId=2},new BusinessScope{TenantId=1,UserId=otherUser,StoreId=1,LocationId=1},new BusinessScope{TenantId=2,UserId=1,StoreId=1,LocationId=1}})
    {
     await using var isolated=new DbConnectionFactory(cfg,scope).CreateConnection();
     Check(await isolated.ExecuteScalarAsync<int>("SELECT count(*) FROM billing_drafts WHERE draft_id=@id",new{id})==0,"Another shop/cashier cannot read the active draft");
@@ -95,6 +107,7 @@ internal static class DraftLifecycleChecks
    request.Items[0].ManualItem!.Mrp=1;try{await sales.CreateSaleAsync(request,1);throw new Exception("Invalid MRP accepted");}catch(System.ComponentModel.DataAnnotations.ValidationException){Console.WriteLine("PASS: Failed invoice validation leaves draft Active and recoverable");}request.Items[0].ManualItem!.Mrp=30;
    var sale=await sales.CreateSaleAsync(request,1);Check(await sales.CreateSaleAsync(request,1)==sale,"Successful checkout retry returns one invoice without duplicate posting");
    Check(await c.ExecuteScalarAsync<bool>("SELECT draft_status='COMPLETED' AND completed_sale_id=@sale FROM billing_drafts WHERE draft_id=@id",new{sale,id}),"Draft becomes Completed with invoice reference in the successful checkout transaction");
+   Check(!(await Unified(winner)).Any(d=>d!["draftId"]!.GetValue<Guid>()==id||d["draftId"]!.GetValue<Guid>()==other),"Unified Saved Bills excludes completed and discarded terminal records");
    Check((int)(await client.PostAsJsonAsync($"/api/sales/billing/drafts/{id}/resume",new{editorId=winner,revision=Rev(active),operationId=Guid.NewGuid(),recover=true})).StatusCode==409,"Completed draft cannot Resume or Recover");
    Console.WriteLine("Lifecycle HTTP/database suite passed against disposable database only.");
   }finally{NpgsqlConnection.ClearAllPools();await admin.ExecuteAsync("DROP DATABASE "+database+" WITH(FORCE)");}

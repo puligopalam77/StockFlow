@@ -1,0 +1,476 @@
+{
+    "purpose":  "Review-only source inventory; not an executable migration runner",
+    "executionApproved":  false,
+    "status":  "BLOCKED: recover authentic migration 049; authenticate/discover local schema",
+    "databaseCreation":  "Requires separate approval; never run hard-coded 001 against an existing database",
+    "baseline":  [
+                     {
+                         "path":  "database/scripts/002_create_master_tables.sql",
+                         "bytes":  4648,
+                         "sha256":  "0051e3d893b62b73e72bc746bdf08cb7902fe86308baf355c74004f5fbb914e0"
+                     },
+                     {
+                         "path":  "database/scripts/003_create_purchase_tables.sql",
+                         "bytes":  2620,
+                         "sha256":  "810c7d79a7202c2b194b97cfd6ab3cd819da1bbbe76136207d4edd840d4ed15d"
+                     },
+                     {
+                         "path":  "database/scripts/004_create_sales_tables.sql",
+                         "bytes":  2262,
+                         "sha256":  "9fa6d3b0eea30000940bf3addd0babccfe72e5550f2e91094e56967c1fad0afb"
+                     },
+                     {
+                         "path":  "database/scripts/005_create_warranty_service_tables.sql",
+                         "bytes":  2814,
+                         "sha256":  "fa2d6b0884dc8948c33d7fac43e4367fc13e14ac04eaeac8ce446d6beb8c8343"
+                     },
+                     {
+                         "path":  "database/scripts/006_seed_data.sql",
+                         "bytes":  468,
+                         "sha256":  "6b4c589b73f312cfffd2ba16440a138ed859fc53fa23192b34c67b36d9bde719"
+                     }
+                 ],
+    "migrations":  [
+                       {
+                           "path":  "database/migrations/007_phase5_master_data.sql",
+                           "bytes":  2918,
+                           "sha256":  "d6aa84d15df1f46fda215930e8b6a309431d1ac3892b40992db9b7f64e0835fc"
+                       },
+                       {
+                           "path":  "database/migrations/008_phase6_purchases.sql",
+                           "bytes":  2940,
+                           "sha256":  "f30d07592da69acb344717557cfb9892fd2408bf0301c3c1883694c9f26bffcd"
+                       },
+                       {
+                           "path":  "database/migrations/009_phase7_inventory.sql",
+                           "bytes":  1927,
+                           "sha256":  "98ee9ec4d0e50a5eeeb78b6889f389b439cceecc4ea9b53d56295b731eb5cd8a"
+                       },
+                       {
+                           "path":  "database/migrations/010_phase8_scanning.sql",
+                           "bytes":  1101,
+                           "sha256":  "6abde411ea107dd7e3625e929480e0286dfd69f2dc9c24b9a35889504ffd10a7"
+                       },
+                       {
+                           "path":  "database/migrations/011_phase9_invoice_sequence.sql",
+                           "bytes":  587,
+                           "sha256":  "c837b21db4e05f25264372e2f859fc84ce2b65139127acc160847daea585facc"
+                       },
+                       {
+                           "path":  "database/migrations/012_phase9_sales.sql",
+                           "bytes":  2082,
+                           "sha256":  "49570cb77d99b71c816dfb294c9c05d83aca936f5be43503d9613999bd82f5ae"
+                       },
+                       {
+                           "path":  "database/migrations/013_phase10_invoices.sql",
+                           "bytes":  2060,
+                           "sha256":  "a436e7259849f5a0a65c2e39ac0bb5d38161406d3af496ec05869f9ec5f54297"
+                       },
+                       {
+                           "path":  "database/migrations/014_phase11_warranty.sql",
+                           "bytes":  5018,
+                           "sha256":  "117694e64d188b8b4d0b95c29f1ff8b4c101c76d51defbb168f346ddb7da65a2"
+                       },
+                       {
+                           "path":  "database/migrations/015_phase12_service.sql",
+                           "bytes":  3930,
+                           "sha256":  "d104403c21d185d7d0267e0bf029c4532e2c5b371550d0a97bf72d876fbf84f7"
+                       },
+                       {
+                           "path":  "database/migrations/016_phase13_dashboard_indexes.sql",
+                           "bytes":  592,
+                           "sha256":  "b5487a8192093e6dce50322f5996a44b96dfaf96732d8dacedad154a17550025"
+                       },
+                       {
+                           "path":  "database/migrations/017_administration_security.sql",
+                           "bytes":  5212,
+                           "sha256":  "3f9686085479033cb23153ab9f690131f5f6a75aaf75d1145a3aa0761aa9b6b6"
+                       },
+                       {
+                           "path":  "database/migrations/018_common_inventory_variants.sql",
+                           "bytes":  9353,
+                           "sha256":  "ac53d31e7a35cf70d6eaaee8eeb24f4e173ff501c697f4cbff95f7a6e2d3f4e0"
+                       },
+                       {
+                           "path":  "database/migrations/019_purchase_receipts.sql",
+                           "bytes":  1913,
+                           "sha256":  "10625f6d74cfd3c4be08853a48d81bc550ee04a1d044b4ae733da6af5efd9643"
+                       },
+                       {
+                           "path":  "database/migrations/020_tenants_stores_locations.sql",
+                           "bytes":  20830,
+                           "sha256":  "3b992bbfce2e46a4ffb87bb7eacca044ea9b589554b5e4bb2d2387fe608dcdb5"
+                       },
+                       {
+                           "path":  "database/migrations/021_stock_transfers.sql",
+                           "bytes":  21977,
+                           "sha256":  "50ed32779b9e1d5f2a2929eac0730f6534914056484f00c9e5ee81fe40152f4e"
+                       },
+                       {
+                           "path":  "database/migrations/022_product_registration_defaults.sql",
+                           "bytes":  5961,
+                           "sha256":  "f0d1e30c62ecebba9dcc5f08e0009d8e1601c5dde791c70283bd13ae4a27407f"
+                       },
+                       {
+                           "path":  "database/migrations/023_supplier_registration.sql",
+                           "bytes":  4504,
+                           "sha256":  "fe65a08cef5edc5c4b8cb67bb403664743422d42c7983690f99565e6e9304304"
+                       },
+                       {
+                           "path":  "database/migrations/024_category_brand_registration.sql",
+                           "bytes":  7709,
+                           "sha256":  "1416a67e1549cbc1c669c09331e60cae45e5a0ffbfa512babca1063e422f7399"
+                       },
+                       {
+                           "path":  "database/migrations/025_admin_security_actions.sql",
+                           "bytes":  43068,
+                           "sha256":  "dcb9913813e9d3a8ffac658011fd11949629b004b213b8f66fbb1498075c229a"
+                       },
+                       {
+                           "path":  "database/migrations/026_guided_stock_receiving.sql",
+                           "bytes":  3353,
+                           "sha256":  "3d2db6636f4ecde027b78a558d7e6f37dfaabb7977b5c7f47fe0c9697986a36c"
+                       },
+                       {
+                           "path":  "database/migrations/027_inventory_transfer_actions.sql",
+                           "bytes":  15579,
+                           "sha256":  "10eb0c76c60ed65a3b0c4e9881cdd730ab7b80c4d40578f6ef4a1eac8590c6e2"
+                       },
+                       {
+                           "path":  "database/migrations/028_shop_operations.sql",
+                           "bytes":  15701,
+                           "sha256":  "7782c3e2ecaa1964f12e4bc3b1af8295a4e58038d35386a861c2d381a5af6628"
+                       },
+                       {
+                           "path":  "database/migrations/029_module_hierarchy.sql",
+                           "bytes":  9167,
+                           "sha256":  "75509e5169ea2fa6e48f4f2286b43568b078f4295d2f7286f0e52fb92700fa24"
+                       },
+                       {
+                           "path":  "database/migrations/030_receiving_catalog_extensions.sql",
+                           "bytes":  7584,
+                           "sha256":  "aa5f1c814488c3ce9a408b011235b5a15c8b7bd30482b66c133e6222cc1a2d24"
+                       },
+                       {
+                           "path":  "database/migrations/031_stock_receipt_history.sql",
+                           "bytes":  6610,
+                           "sha256":  "fe5e0916f768c1fe8cca4a1458fbd61368030fb1f81d47a5e80a585c81bfa673"
+                       },
+                       {
+                           "path":  "database/migrations/032_brand_categories.sql",
+                           "bytes":  3251,
+                           "sha256":  "cbfad4dc6539bc4a0e3036264f7bb84d384ca817270e8ce7de1c3cda78905e39"
+                       },
+                       {
+                           "path":  "database/migrations/033_shared_login_sessions.sql",
+                           "bytes":  5652,
+                           "sha256":  "b74ee62459ca0ef940b6343c20258a2a272465b77c5a610e5a22971ed5882560"
+                       },
+                       {
+                           "path":  "database/migrations/034_billing_workflow.sql",
+                           "bytes":  4833,
+                           "sha256":  "fefaac611b17237a6057b6d1b15156242fda3833724cedd799e8a80cb4b326f0"
+                       },
+                       {
+                           "path":  "database/migrations/035_cash_closing.sql",
+                           "bytes":  1614,
+                           "sha256":  "72fafe847346d1c297f4f356ef5e892827d656eb85b7dcd5fc7fd985f746548b"
+                       },
+                       {
+                           "path":  "database/migrations/036_screen_languages.sql",
+                           "bytes":  1029,
+                           "sha256":  "a88b12308787ebfe26f80921c574aac82a531718e30492702fc257ad14ca6640"
+                       },
+                       {
+                           "path":  "database/migrations/037_customer_payment_due_dates.sql",
+                           "bytes":  529,
+                           "sha256":  "d80ea9ed8d6e013efae4db578b3a62bf84d40c630ed0fd300968a42ba2d45ac2"
+                       },
+                       {
+                           "path":  "database/migrations/038_company_profile_and_billing_settings.sql",
+                           "bytes":  1406,
+                           "sha256":  "281ca33638d51f6b04cdf7847b95906b8b1c9fb8ea00cef1eb8a83700d1d1f8a"
+                       },
+                       {
+                           "path":  "database/migrations/039_notifications.sql",
+                           "bytes":  16179,
+                           "sha256":  "ed6f09d74d909bcf85f3a4b755e7f69444b6f134bb501704172e10b382120d43"
+                       },
+                       {
+                           "path":  "database/migrations/040_business_alerts_email.sql",
+                           "bytes":  21602,
+                           "sha256":  "7eed03d7fc6e4516037cad6e2161d118f5c90837727b6cb48a69eba515e71709"
+                       },
+                       {
+                           "path":  "database/migrations/041_login_email_otp.sql",
+                           "bytes":  7751,
+                           "sha256":  "c85863ec204d75ae947607a41b8eda65b43cf1ce25599a142fb26b23caa8634f"
+                       },
+                       {
+                           "path":  "database/migrations/042_password_minimum_eight.sql",
+                           "bytes":  925,
+                           "sha256":  "880407d97dba12661577a768bad7da0a51ff2c23964ccb14859f0c86efd7a233"
+                       },
+                       {
+                           "path":  "database/migrations/043_staff_login_email_otp.sql",
+                           "bytes":  4814,
+                           "sha256":  "db612f9f038a8ba0c506fe337e8ebf67cd0c2bf7757807f1a464e9191f5d89c0"
+                       },
+                       {
+                           "path":  "database/migrations/044_account_only_login_otp.sql",
+                           "bytes":  3356,
+                           "sha256":  "bd4267ebc58aa7db46f62c98fa67b7da3cb727a368ca5d0b5f4548c0c3bbe58f"
+                       },
+                       {
+                           "path":  "database/migrations/045_disable_login_email_otp.sql",
+                           "bytes":  1596,
+                           "sha256":  "58d4d3807d6bd93eaadfaeb4ac6df70c7346bf435ac7cdb3faaf758afead5656"
+                       },
+                       {
+                           "path":  "database/migrations/046_electrical_business_profile_baseline.sql",
+                           "bytes":  1682,
+                           "sha256":  "2351ea277d3a9560f4ba2d72c91d5241261011a1c821bd3ba9a8e5dc35786ff2"
+                       },
+                       {
+                           "path":  "database/migrations/047_shop_business_profiles.sql",
+                           "bytes":  12310,
+                           "sha256":  "bab9c4e2bbed23888103469d5fb3e3d8f3d892c3e19c004a1b113faad5606123"
+                       },
+                       {
+                           "path":  "database/migrations/048_category_attribute_schemas.sql",
+                           "bytes":  13228,
+                           "sha256":  "6e08ea96b6439081cad88d25bea2dcabd7ed231896fd464e61e543ed78b20593"
+                       },
+                       {
+                           "path":  "database/migrations/049_retail_variant_document_snapshots.sql",
+                           "bytes":  2,
+                           "sha256":  "6c179f21e6f62b629055d8ab40f454ed02e48b68563913473b857d3638e23b28"
+                       },
+                       {
+                           "path":  "database/migrations/050_bike_catalog_setup_switch.sql",
+                           "bytes":  12429,
+                           "sha256":  "a5b81629c0034bcb6c744ab7638a7755608f2be9fafd4814359e29eb6eaf3923"
+                       },
+                       {
+                           "path":  "database/migrations/051_profile_data_visibility.sql",
+                           "bytes":  48473,
+                           "sha256":  "0054a5902d17dd23c834a57abbdf73cd6e2aee7c69c95c08be341233f774b63e"
+                       },
+                       {
+                           "path":  "database/migrations/052_catalog_registration_improvements.sql",
+                           "bytes":  31135,
+                           "sha256":  "570bacb67274bad55926b25e2d07ebc7baaaed37a27c62d1e9c602d1f526771d"
+                       },
+                       {
+                           "path":  "database/migrations/053_product_image_gallery.sql",
+                           "bytes":  2662,
+                           "sha256":  "d48b4298e9c126a51adbb35f5cae1edf8b8522fdf9c7cd2cfab7b475534d6bc6"
+                       },
+                       {
+                           "path":  "database/migrations/054_unique_stock_item_labels.sql",
+                           "bytes":  4005,
+                           "sha256":  "80987f6389fd072db12231c56e4e754568a22a689532c12a23dd32e7180aa6c8"
+                       },
+                       {
+                           "path":  "database/migrations/055_category_hierarchy_inheritance.sql",
+                           "bytes":  13822,
+                           "sha256":  "9640ad6f42d4b909fc207e48fdcb1640270ddcd07625649a864b25585698238f"
+                       },
+                       {
+                           "path":  "database/migrations/056_category_registration_tabs.sql",
+                           "bytes":  6578,
+                           "sha256":  "541cc302c8075ec60c62c7684f23014147f7ca18c36626da18883067c9f6f6c1"
+                       },
+                       {
+                           "path":  "database/migrations/057_category_registration_details.sql",
+                           "bytes":  1615,
+                           "sha256":  "0e3069c928286703fcd0547ea5e621c14813d500de6e45d49552e5254920a0d5"
+                       },
+                       {
+                           "path":  "database/migrations/058_brand_registration_details.sql",
+                           "bytes":  5603,
+                           "sha256":  "0012d0127bb308f34b050830022b701a16be82b10424e9e16fe03116cd1253e9"
+                       },
+                       {
+                           "path":  "database/migrations/059_stock_barcode_workflow.sql",
+                           "bytes":  3936,
+                           "sha256":  "0d79180b1d671a51004d1ce061406c8cd09c4126e707a6031474c4f1f135c92e"
+                       },
+                       {
+                           "path":  "database/migrations/060_purchase_barcode_lots.sql",
+                           "bytes":  4249,
+                           "sha256":  "8dbf7d34745a526a66d1897f2e2b222b7cab03ba0fe5b91a59e37a0d222e180b"
+                       },
+                       {
+                           "path":  "database/migrations/061_barcode_print_requests.sql",
+                           "bytes":  3136,
+                           "sha256":  "861e776734e98fd9b47c1d47447cfba256dac113806a6194518ecdfb43e68bac"
+                       },
+                       {
+                           "path":  "database/migrations/062_barcode_label_sizes.sql",
+                           "bytes":  1335,
+                           "sha256":  "34dc4656ff17d9a0d23a2de2bd472ffbebce0e64a3ae64c47c9a1303d62e34e3"
+                       },
+                       {
+                           "path":  "database/migrations/063_purchase_corrections.sql",
+                           "bytes":  3263,
+                           "sha256":  "5c8c8ff9540ad3e20beb7210d53bfe4f96e0df8f62e4522d3d74ab594262960b"
+                       },
+                       {
+                           "path":  "database/migrations/064_product_registration_review.sql",
+                           "bytes":  3400,
+                           "sha256":  "22b51b72f364b7a9cc96b92925693bbd1935f76139632db83a02ae78b1db1583"
+                       },
+                       {
+                           "path":  "database/migrations/065_two_level_categories.sql",
+                           "bytes":  21064,
+                           "sha256":  "41b7a919b78152f2f29b129065965beab55b537e60ee29573955f0f5cea30893"
+                       },
+                       {
+                           "path":  "database/migrations/066_product_registration_integrity.sql",
+                           "bytes":  17129,
+                           "sha256":  "fc3ece6bc04988104f55c8bb4dec334b4297109e284062c7799c9d0586962c49"
+                       },
+                       {
+                           "path":  "database/migrations/067_sequential_catalog_identifiers.sql",
+                           "bytes":  25052,
+                           "sha256":  "c5b3b10f45b095a85de9abeb9965391bad62cea0b272b829291af6a4a53e39e2"
+                       },
+                       {
+                           "path":  "database/migrations/068_unit_identifier_sources.sql",
+                           "bytes":  7222,
+                           "sha256":  "d4d4368d09172b7583d639cd29572490c5deed05b2187427fd8ce6423f3ea145"
+                       },
+                       {
+                           "path":  "database/migrations/069_product_edit_integrity.sql",
+                           "bytes":  8109,
+                           "sha256":  "1f6a09f0b609b78bc585615611bafc60c8455d258f579624b5e91c52d0c0f342"
+                       },
+                       {
+                           "path":  "database/migrations/070_gst_foundation.sql",
+                           "bytes":  17404,
+                           "sha256":  "b65efc766ba870a94c82676bb034c4eded5d9bd36da7208d22ff95edaf455cc2"
+                       },
+                       {
+                           "path":  "database/migrations/071_gst_source_documents.sql",
+                           "bytes":  26944,
+                           "sha256":  "38a8a95016ffacb7e1118e941c35371d35449644eb96dffc3b065d636ff2f2b5"
+                       },
+                       {
+                           "path":  "database/migrations/072_retail_crm.sql",
+                           "bytes":  22516,
+                           "sha256":  "346c535f75fc48a783e1487a3e48a6ab85340d4e82aa17bb93115936c7f101b4"
+                       },
+                       {
+                           "path":  "database/migrations/073_gst_catalog_tax_mapping.sql",
+                           "bytes":  21108,
+                           "sha256":  "2f03f3eea26381c160ab31f1ae215d51b5fe178208a1974da4bf91314f74e668"
+                       },
+                       {
+                           "path":  "database/migrations/074_fast_billing_manual_items.sql",
+                           "bytes":  10483,
+                           "sha256":  "3a1a41914a85d0982273791c45f8f7eab4d19f834a96f42dbef6164bd660ca0a"
+                       },
+                       {
+                           "path":  "database/migrations/075_optional_gst_manual_items.sql",
+                           "bytes":  4396,
+                           "sha256":  "eb11c6f64abe679261b03e1a57c2e4f4809516d854af71de0a1f69f8a96d25c0"
+                       },
+                       {
+                           "path":  "database/migrations/076_whatsapp_business_notifications.sql",
+                           "bytes":  30508,
+                           "sha256":  "f56f25335b58ac61139058cdb4575fefb3cb885ca953734d9ba09e599bf676b6"
+                       },
+                       {
+                           "path":  "database/migrations/077_manual_bill_draft_guard.sql",
+                           "bytes":  1978,
+                           "sha256":  "4b9a19e72479e398e0a2a1cb03f5cf2e54f02c709e55466f77c887084e38e675"
+                       },
+                       {
+                           "path":  "database/migrations/078_sequential_draft_numbers.sql",
+                           "bytes":  10819,
+                           "sha256":  "8ce495333b4c3ce6c8faa3785d21c6777cd7a70823a57d78f1f98101ebe451d0"
+                       },
+                       {
+                           "path":  "database/migrations/079_bill_draft_lifecycle.sql",
+                           "bytes":  14005,
+                           "sha256":  "18bb9fe4253af796340f35c7a7dd61b1893071a192cee1590bc089862a2b10d0"
+                       },
+                       {
+                           "path":  "database/migrations/080_unused_product_variants.sql",
+                           "bytes":  2256,
+                           "sha256":  "573946e1078d630822899024f7318dd47c4fb0285d75acbc8d3b32bffe9e094b"
+                       },
+                       {
+                           "path":  "database/migrations/081_cashier_tax_override.sql",
+                           "bytes":  1406,
+                           "sha256":  "fe9ee6878f315cfe914fe37ea464b9ff823df09f6ae0186859cecbc3e3efbe00"
+                       },
+                       {
+                           "path":  "database/migrations/082_fast_billing_policy.sql",
+                           "bytes":  6451,
+                           "sha256":  "b6171ee1d8e253d029a27553f407dcec6f5e7affb829e6fc570a3176ee617132"
+                       },
+                       {
+                           "path":  "database/migrations/083_quotations.sql",
+                           "bytes":  19277,
+                           "sha256":  "14fdeb57e4103164814d58f946ef27ec342ce193cae177220d7d0b6bf51b82f0"
+                       },
+                       {
+                           "path":  "database/migrations/084_eway_preparation.sql",
+                           "bytes":  16964,
+                           "sha256":  "58e0f28e3e82f57b6a57667f9b6ed707adfab41a1e1d77d79dd1207394101455"
+                       },
+                       {
+                           "path":  "database/migrations/085_private_shop_masters.sql",
+                           "bytes":  29658,
+                           "sha256":  "87bfcd43ac07192c9c8839b7d3787971c4871a0821a66591b13bb9d3ae6ef3db"
+                       },
+                       {
+                           "path":  "database/migrations/086_operating_expenses.sql",
+                           "bytes":  19966,
+                           "sha256":  "19715de6f6f20f81c973eff50156572fdf6874cd6328059c2974548ca9dbc213"
+                       },
+                       {
+                           "path":  "database/migrations/087_cash_in_hand.sql",
+                           "bytes":  8681,
+                           "sha256":  "30a3b0c5f7fa8efbed2a90be115ed290821c9bed569bb2d6c95687acd6c562a9"
+                       },
+                       {
+                           "path":  "database/migrations/088_cash_entry_release_scope.sql",
+                           "bytes":  10692,
+                           "sha256":  "bcb5460bb5ec6f658fd4d06bc51ed678c9ffbc43d513339c52c0c788fe5928af"
+                       },
+                       {
+                           "path":  "database/migrations/089_cash_entry_reasons.sql",
+                           "bytes":  2099,
+                           "sha256":  "6cb07f179cf39d3a7737d5178c1e428982bd39c5650fee61413feeded6318452"
+                       }
+                   ],
+    "excludedUtilities":  [
+                              "database/migrations/067_reviewed_local_prefix_plan.sql",
+                              "database/migrations/067_sku_prefix_dry_run.sql"
+                          ],
+    "specialReview":  [
+                          "Generate a synthetic owner hash; do not use the committed admin hash",
+                          "Review 067 prefix suggestions using only synthetic catalog names",
+                          "090/091/092 are outside this foundation manifest and require separate gates"
+                      ],
+    "bankReview":  [
+                       {
+                           "path":  "database/review/bank-accounts/090_bank_accounts_schema.sql",
+                           "bytes":  13546,
+                           "sha256":  "992e2a48b9d024a3894ec1ac01f7e2fb5bd7d99db54f9d3c9689ff301944d331"
+                       },
+                       {
+                           "path":  "database/review/bank-accounts/091_bank_permissions.sql",
+                           "bytes":  2044,
+                           "sha256":  "e9f20f467c844b9029b550cdae6be0af63421116b3c1802dd147edb5fdaf8045"
+                       },
+                       {
+                           "path":  "database/review/bank-accounts/092_bank_development_workflows.sql",
+                           "bytes":  31813,
+                           "sha256":  "53c051b79ca2200de2e0fad91744d9fe1ae57dc3e6dc799dd6573cc99af2ad5e"
+                       }
+                   ]
+}

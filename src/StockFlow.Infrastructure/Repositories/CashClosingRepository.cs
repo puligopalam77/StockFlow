@@ -76,6 +76,15 @@ public class CashClosingRepository : ICashClosingRepository
 
     private async Task<CashTotals> Totals(IDbConnection connection, IDbTransaction transaction, DateTime date)
     {
+        if(await CashReadModel.Available(connection,transaction))
+        {
+            var tracked=await CashReadModel.Read(connection,transaction,CashReadModel.Parameters(scope,time,date));
+            if(tracked.TrackingStart is {} start && date.Date>=start.Date)
+            {
+                tracked.TrackingOpeningCash=tracked.OpeningCash;
+                return tracked;
+            }
+        }
         var hasExpenses=await connection.ExecuteScalarAsync<bool>("SELECT to_regclass('public.expense_payments') IS NOT NULL",transaction:transaction);
         // Cash Closing retains its REPORTS authority even when expense detail VIEW
         // is separately denied. The narrow function returns only cash aggregates.
@@ -115,7 +124,7 @@ public class CashClosingRepository : ICashClosingRepository
     public async Task<CashClosingRecord> SaveAsync(CashClosingRequest request)
     {
         factory.RequireLocation(request.LocationId);
-        CashClosingRules.Validate(request, time.Today(clock));
+        CashClosingRules.Validate(request, time.Today(clock), allowNegativeOpening: true);
         await using var connection = factory.CreateConnection();
         await connection.OpenAsync();
         await using var transaction = await connection.BeginTransactionAsync();
@@ -148,6 +157,12 @@ public class CashClosingRepository : ICashClosingRepository
             Date = request.Date
         }, transaction);
         var totals = await Totals(connection, transaction, request.Date);
+        if(totals.PendingReviewCount>0)
+            throw new ValidationException("Review opening-day cash expense timing in Cash in Hand before saving cash closing.");
+        if(totals.TrackingOpeningCash is null && request.OpeningCash<0)
+            throw new ValidationException("Opening cash must be non-negative unless supplied by the cash tracking history.");
+        if(totals.TrackingOpeningCash is {} opening && (request.OpeningCash!=opening || request.CashAdded!=0 || request.CashRemoved!=0))
+            throw new ValidationException("Cash tracking supplies opening and adjustments automatically. Refresh totals; record extra cash in Cash in Hand.");
         if (version != request.ExpectedVersion || totals.Fingerprint != request.Fingerprint)
             throw new ValidationException("Cash activity or the previous closing changed. Refresh, recount and try again.");
         var expected = CashClosingRules.Expected(request, totals);

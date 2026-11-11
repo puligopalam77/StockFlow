@@ -71,7 +71,10 @@
         const message = document.createElement('p');
         message.textContent = 'Session expired. Sign in to continue.';
         const link = document.createElement('a');
-        link.href = '/Account/Login?reason=' + reason;
+        let normalLogout = false;
+        try { normalLogout = localStorage.getItem(key + '.endedReason') === 'logout'; } catch {}
+        if (normalLogout) message.textContent = 'You have signed out. Sign in again to continue.';
+        link.href = '/Account/Login' + (normalLogout ? '' : '?reason=' + reason);
         link.textContent = 'Sign in';
         document.body.append(message, link);
         location.replace(link.href);
@@ -228,6 +231,7 @@
         form.addEventListener('submit', () => {
             stopped = true;
             try {
+                localStorage.setItem(key + '.endedReason', 'logout');
                 localStorage.setItem(key + '.ended', 'true');
             } catch {}
         });

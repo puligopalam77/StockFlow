@@ -4,7 +4,6 @@
     var day=b.Today.ToString("yyyy-MM-dd");
     var month=b.Today.ToString("yyyy-MM-01");
 }
-<section class="sf-kpi-grid sf-business-kpis" aria-label="Business summary">
     @if (Access.Can("SALES"))
     {
     <a class="sf-kpi sf-kpi-link" href="/Sales?from=@day&to=@day&status=COMPLETED">
@@ -43,21 +42,18 @@
         <div><h2>Overdue Payments</h2><strong>@Model.Money(b.OverduePaymentAmount)</strong><p>@Model.Count(b.OverdueInvoiceCount) unpaid invoices past their due date</p></div>
     </a>
     }
-    @if (Access.Can("INVENTORY"))
-    {
-    <a class="sf-kpi sf-kpi-link" href="/Inventory/LowStock">
-        <span class="sf-kpi-icon orange">
+    <a class="sf-kpi sf-kpi-link" href="/StockOutflow">
+        <span class="sf-kpi-icon pink">
             <svg class="sf-icon">
-                <use href="/images/icons.svg#box" />
+                <use href="/images/icons.svg#out" />
             </svg>
         </span>
         <div>
-            <h2>Low Stock</h2>
-            <strong>@Model.Count(b.LowStockCount)</strong>
-            <p>At or below minimum</p>
+            <h2>Stock leaving the shop</h2>
+            <strong>@Model.Count(Model.Data.StockOutflow)</strong>
+            <p>Units issued · all time</p>
         </div>
     </a>
-    }
     @if (Access.Can("PENDING_SERVICES"))
     {
     <a class="sf-kpi sf-kpi-link" href="/Service/Pending">
@@ -103,4 +99,3 @@
         </div>
     </a>
     }
-</section>

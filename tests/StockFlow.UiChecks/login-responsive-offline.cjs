@@ -22,7 +22,7 @@ const capture=new Set(['1920x1080','1366x768','1280x720','1536x864','1188x530','
  async function reachable(selector){const n=page.locator(selector);await n.scrollIntoViewIfNeeded();assert(await n.isVisible(),selector+' visible');assert(await n.evaluate(n=>{const r=n.getBoundingClientRect();return r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1&&r.bottom<=innerHeight+1&&n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),selector+' fully reachable');}
  for(const [width,height] of testedSizes){await page.setViewportSize({width,height});let promoBounds;
   for(const state of ['normal','session','invalid','required']){
-   await page.goto('http://stockflow.test/Account/Login?state='+state);await page.locator('.sf-warehouse').evaluate(n=>n.decode());
+   await page.goto('http://stockflow.test/Account/Login?state='+state+(state==='session'?'&reason=absolute':''));await page.locator('.sf-warehouse').evaluate(n=>n.decode());
    if(state==='required')await page.locator('.sf-signin').click();
    const layout=await page.evaluate(()=>{
     const r=s=>document.querySelector(s).getBoundingClientRect(),shown=s=>!!document.querySelector(s).getClientRects().length;
@@ -30,6 +30,12 @@ const capture=new Set(['1920x1080','1366x768','1280x720','1536x864','1188x530','
    });
    assert.equal(layout.width,width);assert.equal(layout.height,height);assert.equal(layout.scale,1,'Actual CSS viewport at default browser zoom');
    if(phase!=='before'){
+    const brand=page.locator('.sf-login-brand');assert(await brand.isVisible(),'Brand remains visible to signed-out visitors');
+    assert.equal(await brand.locator('use').getAttribute('href'),'/images/icons.svg#box');
+    assert.equal((await brand.locator('.sf-wordmark').textContent()).replace(/\s/g,''),'StockFlow');
+    assert.equal((await brand.locator('.sf-brand-caption').textContent()).trim(),'Inventory Inflow & Outflow Tracking');
+    const branding=await brand.evaluate(n=>{const r=n.getBoundingClientRect(),mark=n.querySelector('.sf-brand-mark').getBoundingClientRect(),caption=n.querySelector('.sf-brand-caption'),eyebrow=document.querySelector('.sf-eyebrow').getBoundingClientRect();return {height:mark.height,gap:eyebrow.top-r.bottom,above:r.bottom<=eyebrow.top,clipped:n.scrollWidth>n.clientWidth+1||caption.scrollWidth>caption.clientWidth+1};});
+    assert(branding.height>=40&&branding.height<=48&&branding.above&&branding.gap<=20&&!branding.clipped,'Compact shared branding above Welcome Back: '+JSON.stringify(branding));
     assert(!layout.overflow,`${width}x${height} ${state}: no horizontal overflow`);
     if(width>=1024&&height>=720){assert(layout.buttonBottom<=height+1,`${width}x${height} ${state}: Sign In above fold (${layout.buttonBottom})`);assert(layout.footerBottom<=height+1,`${width}x${height} ${state}: footer fits (${layout.footerBottom})`);}
     if(width<=991)assert(!layout.visual,'Tablet/mobile prioritize form');else {assert(layout.visual);assert(layout.cards,'All three promotional cards remain available on split layouts');}
@@ -41,6 +47,7 @@ const capture=new Set(['1920x1080','1366x768','1280x720','1536x864','1188x530','
      if(height>=465)assert(cards.every(n=>n.top>=0&&n.bottom<=height+1),width+'x'+height+' cards fit the actual viewport independently of form height');
     }
     assert(layout.inputs.every(x=>x.height>=42&&x.font>=16),'Readable inputs with 44px+ wrapper targets');
+    await brand.scrollIntoViewIfNeeded();assert(await brand.evaluate(n=>{const r=n.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;}),'Shared branding fits the viewport');
     for(const selector of ['#Input_Username','#Input_Password','#password-toggle','.sf-remember','#forgot-password-link','.sf-signin','.sf-login-footer'])await reachable(selector);
     if(layout.visual){await reachable('.sf-handwritten');if(layout.cards){for(let i=1;i<=3;i++)await reachable('.sf-feature:nth-child('+i+')');assert(await page.evaluate(()=>{const t=document.querySelector('.sf-handwritten').getBoundingClientRect(),g=document.querySelector('.sf-feature-grid').getBoundingClientRect(),v=document.querySelector('.sf-login-visual').getBoundingClientRect();return t.bottom<=g.top&&g.bottom<=v.bottom;}),'Complete cards clear of heading');}}
    }
@@ -51,7 +58,7 @@ const capture=new Set(['1920x1080','1366x768','1280x720','1536x864','1188x530','
  }
  if(phase!=='before'){
   await page.setViewportSize({width:1067,height:465});await page.goto('http://stockflow.test/Account/Login?state=invalid');
-  await reachable('.sf-login-errors');await reachable('.sf-signin');
+  await reachable('.sf-toast-error');await reachable('.sf-signin');
   assert.equal(submissions.length,0,'Required errors never submit');
   const initialAutocomplete=await page.locator('#Input_Username').getAttribute('autocomplete');
   await page.locator('#Input_Username').fill('example-user');await page.locator('#Input_Password').fill('Synthetic test password!');
@@ -71,7 +78,7 @@ const capture=new Set(['1920x1080','1366x768','1280x720','1536x864','1188x530','
    const before=await styles();await page.addStyleTag({path:path.join(assets,'css/login-responsive.css')});assert.deepEqual(await styles(),before,url+' is unaffected by login CSS');
   }
   await page.setViewportSize({width:320,height:568});await page.goto('http://stockflow.test/Account/Login?state=invalid');
-  await page.locator('.sf-login-errors').evaluate(n=>n.textContent='Sign-in is temporarily unavailable. Please try again shortly or contact your store administrator if the problem continues.');
+  await page.evaluate(()=>StockFlowNotify.show('error','Sign-in is temporarily unavailable. Please try again shortly or contact your store administrator if the problem continues.',{key:'login-error'}));
   await page.evaluate(()=>{const nodes=[...document.querySelectorAll('.sf-login-panel :is(h1,p,label,input,button,.sf-eyebrow,.sf-trust span,.sf-text-button)')];const sizes=nodes.map(n=>parseFloat(getComputedStyle(n).fontSize));nodes.forEach((n,i)=>n.style.fontSize=(sizes[i]*1.5)+'px');});
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'150% larger text wraps');for(const s of ['#Input_Username','#Input_Password','.sf-signin','.sf-login-footer'])await reachable(s);
   await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));await page.screenshot({path:path.join(out,'large-text-server-error.png'),fullPage:true});

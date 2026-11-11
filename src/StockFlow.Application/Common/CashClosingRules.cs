@@ -6,15 +6,17 @@ namespace StockFlow.Application.Common;
 
 public static class CashClosingRules
 {
-    public static void Validate(CashClosingRequest request, DateTime today)
+    public static void Validate(CashClosingRequest request, DateTime today, bool allowNegativeOpening = false)
     {
         if (request.RequestId == Guid.Empty || request.Date == default || request.Date.Date > today.Date || request.ExpectedVersion < 0)
             throw new ValidationException("Choose today or an earlier date and refresh the cash totals before saving.");
         if (!Regex.IsMatch(request.Fingerprint ?? "", "^[A-F0-9]{64}$"))
             throw new ValidationException("Refresh the cash totals before saving.");
-        foreach (var amount in new[] { request.OpeningCash, request.CashAdded, request.CashRemoved, request.CountedCash })
+        var amounts = new[] { request.OpeningCash, request.CashAdded, request.CashRemoved, request.CountedCash };
+        for (var index = 0; index < amounts.Length; index++)
         {
-            if (amount < 0 || amount > 9999999999.99m || decimal.Round(amount, 2) != amount)
+            var amount = amounts[index];
+            if (amount < (index == 0 && allowNegativeOpening ? -9999999999.99m : 0) || amount > 9999999999.99m || decimal.Round(amount, 2) != amount)
                 throw new ValidationException("Cash amounts must be between 0 and 9,999,999,999.99, with at most two decimal places.");
         }
         request.Date = request.Date.Date;

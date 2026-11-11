@@ -19,11 +19,18 @@ public static class Checks
 {
     public static async Task Main(string[] args)
     {
+        if(args.Contains("--database-unavailable-checks")){await DatabaseUnavailableChecks.Run();return;}
+        if(args.Contains("--bank-development-checks")){await BankDevelopmentChecks.Run();return;}
+        if(args.Contains("--cash-release-readonly-audit")){await CashReleaseReadOnlyChecks.Run(details:true);return;}
+        if(args.Contains("--cash-release-readonly-checks")){await CashReleaseReadOnlyChecks.Run();return;}
+        if(args.Contains("--cash-in-hand-checks")){await CashInHandChecks.Run();return;}
+        if(args.Contains("--tax-breakdown-checks")){TaxBreakdownChecks.Run();await TaxBreakdownChecks.RenderInvoice();return;}
         if(args.Contains("--expense-list-checks")){await ExpenseListChecks.Run();return;}
         if(args.Contains("--expense-recording-checks")){await ExpenseRecordingChecks.Run();return;}
         if(args.Contains("--expense-list-fixtures")){using var expenseList=new Factory();await ExpenseListChecks.Fixtures(expenseList);return;}
         if(args.Contains("--supplier-directory-checks")){using var directory=new Factory();await SupplierDirectoryChecks.Run(directory);return;}
         if(args.Contains("--supplier-address-database-checks")){await SupplierAddressDatabaseChecks.Run();return;}
+        if(args.Contains("--country-policy-checks")){using var country=new Factory();await CountryPolicyChecks.Run(country);await SupplierRegistrationChecks.Run(country);return;}
         if(args.Contains("--customer-address-checks")){using var customers=new Factory();await CustomerAddressChecks.Run(customers);return;}
         if(args.Contains("--expense-modern-checks")){await ExpenseModernChecks.Run();return;}
         if(args.Contains("--company-views-checks")){await CompanyViewsChecks.Run();return;}
@@ -46,6 +53,7 @@ public static class Checks
         if(args.Contains("--gst-catalog-large-checks")){await GstCatalogChecks.Run(true);return;}
         if(args.Contains("--crm-checks")){await CrmChecks.Run();return;}
         if(args.Contains("--gst-setup-checks")){await GstSetupChecks.Run();return;}
+        if(args.Contains("--sidebar-navigation-checks")){using var sidebar=new Factory();await NavigationChecks.Run(sidebar);return;}
         if(args.Contains("--responsive-audit-server")){await ResponsiveAuditServer.Run();return;}
         if(args.Contains("--list-pagination-database-checks")){await ListPaginationChecks.Database();return;}
         if(args.Contains("--legacy-sku-correction-checks")){await LegacySkuCorrectionChecks.Run();return;}
@@ -59,6 +67,7 @@ public static class Checks
         if(args.Contains("--saved-bills-checks")){await SavedBillsChecks.Run();return;}
         if(args.Contains("--draft-numbering-checks")){await DraftNumberingChecks.Run();return;}
         if(args.Contains("--draft-lifecycle-checks")){await DraftLifecycleChecks.Run();return;}
+        if(args.Contains("--draft-visibility-checks")){await DraftVisibilityChecks.Run();return;}
         if(args.Contains("--identifier-integration-database-checks")){await IdentifierIntegrationDatabaseChecks.Run();return;}
         if(args.Contains("--product-descriptive-details-database-checks")){await ProductDescriptiveDetailsDatabaseChecks.Run();return;}
         if(args.Contains("--sequential-sku-database-checks")){await SequentialSkuDatabaseChecks.Run();return;}

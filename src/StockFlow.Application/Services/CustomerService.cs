@@ -45,7 +45,8 @@ public class CustomerService : ICustomerService
             return false;
         }
 
-        await ValidateAsync(request, id);
+        var existingCountry = string.IsNullOrWhiteSpace(existing.AddressDetailsJson) ? null : System.Text.Json.JsonSerializer.Deserialize<StockFlow.Application.Common.AddressComponents>(existing.AddressDetailsJson, AddressJson)?.Country;
+        await ValidateAsync(request, id, existingCountry);
         var entity = ToEntity(request);
         if(request.UseStructuredAddress != true && request.AddressDetails is null && (request.Address is null || request.Address==existing.Address))
         {
@@ -61,10 +62,10 @@ public class CustomerService : ICustomerService
         return repository.DeleteAsync(id);
     }
 
-    private Task ValidateAsync(CreateCustomerRequest request, int? id)
+    private Task ValidateAsync(CreateCustomerRequest request, int? id, string? existingCountry = null)
     {
         request.CustomerName = request.CustomerName?.Trim() ?? "";
-        if(request.AddressDetails is not null || request.UseStructuredAddress==true) request.Address=request.AddressDetails?.NormalizeAndFormat();
+        if(request.AddressDetails is not null || request.UseStructuredAddress==true) request.Address=request.AddressDetails?.NormalizeAndFormat(existingCountry);
         if (!request.CustomerName.Any(char.IsLetter))
         {
             throw new ValidationException("Customer name must contain letters.");

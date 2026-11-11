@@ -24,7 +24,7 @@ public class SupplierController : ControllerBase
     {
         return Ok(new
         {
-            countries = StockFlow.Application.Common.SupplierRules.Countries.OrderBy(x => x.Value).Select(x => new { code = x.Key, name = x.Value }),
+            countries = new[] { new { code = StockFlow.Application.Common.CountryPolicy.Code, name = StockFlow.Application.Common.CountryPolicy.Name } },
             supplierTypes = StockFlow.Application.Common.SupplierRules.Types,
             indianStates = StockFlow.Application.Common.GstRules.States.Where(x => x.Key != "28").Select(x => x.Value).Distinct().OrderBy(x => x)
         });

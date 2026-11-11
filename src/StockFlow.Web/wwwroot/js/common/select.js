@@ -71,7 +71,13 @@ window.StockFlowSelect = window.StockFlowSelect || (() => {
             if (destroyed) return;
             const selected = values().find(o => o.value === String(source.value));
             if (panel.hidden) {
-                const caption = source.value ? selected?.label || (source instanceof HTMLSelectElement ? source.selectedOptions[0]?.textContent : source.value) || '' : '';
+                const emptyCaption = selected?.value === '' && !/^(?:not specified|none|n\/a|[-—–]+)$/i.test(selected.label);
+                if (!settings.placeholder && source instanceof HTMLSelectElement) {
+                    const prompt = values().find(o => o.value === '')?.label;
+                    if (prompt && !/^(?:not specified|none|n\/a|[-—–]+)$/i.test(prompt)) input.placeholder = prompt;
+                }
+                const caption = source.value || emptyCaption && !source.required
+                    ? selected?.label || (source instanceof HTMLSelectElement ? source.selectedOptions[0]?.textContent : source.value) || '' : '';
                 if (settings.button) { const text = caption || input.placeholder; if (input.textContent !== text) input.textContent = text; } else input.value = caption;
             }
             if (input.disabled !== source.disabled) input.disabled = source.disabled;
@@ -88,12 +94,41 @@ window.StockFlowSelect = window.StockFlowSelect || (() => {
         function position() {
             const viewport = window.visualViewport, left = viewport?.offsetLeft || 0, top = viewport?.offsetTop || 0;
             const width = viewport?.width || innerWidth, height = viewport?.height || innerHeight;
-            const box = input.getBoundingClientRect(), panelWidth = Math.min(Math.max(box.width, Math.min(260, width - 16)), width - 16);
+            // Opt-in boundary for pickers inside scrolling dialogs. Other selects
+            // retain their existing viewport positioning and dimensions.
+            const dialog = source.closest('dialog,.modal-content');
+            // Tiny dialogs with no sectioned body need viewport room for the
+            // search and at least one option; the top-layer panel avoids clipping.
+            const boundary = settings.boundary?.() || dialog?.querySelector('.billing-manual-body,.billing-customer-body,.stores-dialog-body')
+                || (dialog && dialog.getBoundingClientRect().height >= 260 ? dialog : null);
+            if (boundary) {
+                const bounds = boundary.getBoundingClientRect(), box = input.getBoundingClientRect();
+                const minLeft = Math.max(left, bounds.left) + 8, maxRight = Math.min(left + width, bounds.right) - 8;
+                const header = dialog?.querySelector(':scope > header,:scope > form > header,.modal-header');
+                const footer = dialog?.querySelector(':scope > footer,:scope > form > footer,.modal-footer,:scope > .configuration-dialog-actions,:scope > form > .configuration-dialog-actions');
+                const minTop = Math.max(top, bounds.top, header?.getBoundingClientRect().bottom || 0) + 8;
+                const maxBottom = Math.min(top + height, bounds.bottom, footer?.getBoundingClientRect().top || Infinity) - 8;
+                if (box.bottom <= minTop || box.top >= maxBottom) { close(); return; }
+                const panelWidth = Math.max(0, Math.min(box.width, maxRight - minLeft));
+                const below = Math.max(0, maxBottom - box.bottom - 4), above = Math.max(0, box.top - minTop - 4);
+                const limit = settings.maxHeight || 240, flip = below < limit && above > below;
+                const panelHeight = Math.max(0, Math.min(limit, flip ? above : below));
+                panel.style.width = panelWidth + 'px';
+                panel.style.left = Math.max(minLeft, Math.min(box.left, maxRight - panelWidth)) + 'px';
+                panel.style.maxHeight = panelHeight + 'px';
+                panel.style.top = (flip ? Math.max(minTop, box.top - Math.min(panel.scrollHeight, panelHeight) - 4) : Math.min(box.bottom + 4, maxBottom - panelHeight)) + 'px';
+                return;
+            }
+            // A scoped presentation token can compact a menu without changing other pickers.
+            const presentation = getComputedStyle(panel);
+            const preferredWidth = parseFloat(presentation.getPropertyValue('--sf-select-menu-width')) || 260;
+            const box = input.getBoundingClientRect(), panelWidth = Math.min(Math.max(box.width, Math.min(preferredWidth, width - 16)), width - 16);
             const below = top + height - box.bottom - 8, above = box.top - top - 8;
             const flip = below < 220 && above > below, room = Math.max(72, flip ? above : below);
-            const panelHeight = Math.min(330, room);
+            const panelHeight = Math.min(240, room);
             panel.style.width = panelWidth + 'px';
-            panel.style.left = Math.max(left + 8, Math.min(box.left, left + width - panelWidth - 8)) + 'px';
+            const anchorLeft = presentation.getPropertyValue('--sf-select-menu-align').trim() === 'end' ? box.right - panelWidth : box.left;
+            panel.style.left = Math.max(left + 8, Math.min(anchorLeft, left + width - panelWidth - 8)) + 'px';
             panel.style.maxHeight = panelHeight + 'px';
             panel.style.top = (flip ? Math.max(top + 8, box.top - Math.min(panel.scrollHeight, panelHeight) - 4) : Math.max(top + 8, Math.min(box.bottom + 4, top + height - 80))) + 'px';
         }
@@ -118,6 +153,7 @@ window.StockFlowSelect = window.StockFlowSelect || (() => {
                 button.dataset.value = option.value;
                 button.setAttribute('role', 'option'); button.setAttribute('aria-selected', String(option.value === String(source.value)));
                 button.setAttribute('aria-label', button.textContent);
+                button.title = button.textContent;
                 button.disabled = !!option.disabled; button.setAttribute('aria-disabled', String(!!option.disabled));
                 button.onmousedown = event => event.preventDefault();
                 button.onclick = () => select(option);
@@ -142,6 +178,7 @@ window.StockFlowSelect = window.StockFlowSelect || (() => {
             if (opened && opened !== api) opened.close();
             opened = api; search.value = ''; render();
             panel.hidden = false; input.setAttribute('aria-expanded', 'true'); search.setAttribute('aria-expanded', 'true'); position();
+            if (panel.hidden) return;
             if (panel.showPopover && !panel.matches(':popover-open')) panel.showPopover();
             position(); list.querySelector('[aria-selected=true]')?.scrollIntoView({ block: 'nearest' });
             if (focusSearch) search.focus({ preventScroll: true });
@@ -179,8 +216,8 @@ window.StockFlowSelect = window.StockFlowSelect || (() => {
         }
         input.addEventListener('keydown', navigate); search.addEventListener('keydown', navigate);
         input.addEventListener('click', () => { if (panel.hidden) open(); });
-        input.addEventListener('input', () => { const query = input.value; if (panel.hidden) open(false); search.value = query; render(query); position(); });
-        search.addEventListener('input', () => { render(search.value); position(); });
+        input.addEventListener('input', () => { const query = input.value; if (panel.hidden) open(false); search.value = query; settings.onQuery?.(query); render(query); position(); });
+        search.addEventListener('input', () => { settings.onQuery?.(search.value); render(search.value); position(); });
         input.addEventListener('change', () => { if (settings.allowFree?.()) select({ value: input.value.trim(), label: input.value.trim() }); });
         search.addEventListener('change', () => { if (settings.allowFree?.()) select({ value: search.value.trim(), label: search.value.trim() }); });
         host.addEventListener('focusout', () => queueMicrotask(() => { if (!host.contains(document.activeElement)) close(); }));
@@ -190,6 +227,8 @@ window.StockFlowSelect = window.StockFlowSelect || (() => {
         window.visualViewport?.addEventListener('resize', reposition, { signal: lifecycle.signal });
         document.addEventListener('scroll', reposition, { capture: true, signal: lifecycle.signal });
         source.addEventListener('change', refresh, { signal: lifecycle.signal });
+        source.closest('dialog')?.addEventListener('close', () => close(), { signal: lifecycle.signal });
+        source.closest('.modal')?.addEventListener('hidden.bs.modal', () => close(), { signal: lifecycle.signal });
         source.addEventListener('invalid', event => { event.preventDefault(); window.StockFlowValidation?.showField(source, source.validationMessage); input.focus(); }, { signal: lifecycle.signal });
         const nativeValue = Object.getOwnPropertyDescriptor(source instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype, 'value');
         const descriptor = original.value || nativeValue;

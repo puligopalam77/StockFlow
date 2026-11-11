@@ -167,6 +167,23 @@
         <dd class="grand-total">₹ @Money(invoice.TotalAmount)</dd>
     </dl>
 </section>
+@if(invoice.Gst is {} recordedTax && recordedTax.Lines.Count > 0){
+<section class="invoice-tax-breakdown" aria-labelledby="invoice-tax-breakdown-heading">
+    <h2 id="invoice-tax-breakdown-heading" class="invoice-section-heading">GST breakdown by rate</h2>
+    @foreach(var rate in StockFlow.Application.Common.GstBreakdown.ForInvoice(recordedTax.Lines)){
+        <div class="invoice-tax-rate">
+            <strong>@(rate.Rate > 0 ? $"GST {rate.Rate:0.####}%" : "Items at 0% / without GST")</strong>
+            <span>Value before GST: @Money(rate.SupplyValue)</span>
+            @if(rate.Cgst>0){<span>CGST @((rate.Rate/2).ToString("0.####"))%: @Money(rate.Cgst)</span>}
+            @if(rate.Sgst>0){<span>SGST @((rate.Rate/2).ToString("0.####"))%: @Money(rate.Sgst)</span>}
+            @if(rate.Utgst>0){<span>UTGST @((rate.Rate/2).ToString("0.####"))%: @Money(rate.Utgst)</span>}
+            @if(rate.Igst>0){<span>IGST @rate.Rate.ToString("0.####")%: @Money(rate.Igst)</span>}
+            @if(rate.Cess>0){<span>Cess: @Money(rate.Cess)</span>}
+            <span>GST total: @Money(rate.TaxAmount)</span>
+        </div>
+    }
+</section>
+}
 <section class="invoice-payments" aria-labelledby="invoice-payment-heading">
     <h2 id="invoice-payment-heading" class="invoice-section-heading">
         <span class="invoice-section-icon" aria-hidden="true">

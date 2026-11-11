@@ -5,6 +5,12 @@ exports.fillAddress=async(locator,text)=>{
  const replace=details.getByRole('button',{name:'Enter Address Details',exact:true});if(await replace.isVisible())await replace.click();
  await details.locator('input[id$="-line1"]').fill(text);return locator.inputValue();
 };
+exports.expectFixedCountry=async(source,expected='India')=>{
+ const assert=require('node:assert/strict');
+ const state=await source.evaluate(n=>{const display=n.sfCountryField?.display||n,s=getComputedStyle(display);return {value:display.value,readonly:display.readOnly,tab:display.tabIndex,bg:s.backgroundColor,color:s.color,arrow:s.backgroundImage,pointer:s.pointerEvents,sourceValue:n.value};});
+ assert.equal(state.value,expected);assert(state.readonly);assert.equal(state.tab,-1);assert.equal(state.bg,'rgb(243, 244, 246)');assert.equal(state.color,'rgb(71, 85, 105)');assert.equal(state.arrow,'none');assert.equal(state.pointer,'none');
+ return state;
+};
 exports.fillLocation=async(locator,value)=>{
  const id=await locator.evaluate(e=>e.sfAddressPicker?.input.id);if(!id){if(await locator.evaluate(e=>e.tagName==='SELECT'))await locator.selectOption(value);else await locator.fill(value);return;}
  const rawLabel=await locator.evaluate((e,value)=>e.tagName==='SELECT'?[...e.options].find(o=>o.value===value)?.textContent||value:value,value);

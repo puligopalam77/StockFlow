@@ -4,7 +4,7 @@
 #billing-workspace #billing-cart-card #sale-item-count{font-size:11px;line-height:1.4;font-weight:500}
 #billing-workspace #billing-cart-card .billing-clear{background:#191e25;border:1px solid #191e25;color:#fff;top:6px;right:8px;min-height:30px;font-size:11px;border-radius:6px;gap:5px}
 #billing-workspace #billing-cart-card .billing-clear:hover:not(:disabled){background:#ec0075;border-color:#ec0075}
-#billing-workspace #billing-cart-card .billing-cart-scroll{display:block;overflow:auto;max-height:560px;max-width:100%;overscroll-behavior-x:contain;border:1px solid #e1e5ee;border-radius:9px;scrollbar-gutter:stable}
+#billing-workspace #billing-cart-card .billing-cart-scroll{display:block;overflow:auto;max-height:none;max-width:100%;overscroll-behavior-x:contain;border:1px solid #e1e5ee;border-radius:9px;scrollbar-gutter:auto}
 #billing-workspace #billing-cart-card .billing-cart-scroll[hidden]{display:none}
 #billing-workspace #billing-cart-card .billing-cart-scroll:focus-visible{outline:2px solid #ff007f;outline-offset:2px}
 #billing-workspace #billing-cart-card #billing-cart-scroll-hint{display:block;margin:0 0 6px;font-size:10px;color:#60718b}

@@ -14,6 +14,7 @@ sealed class FakeSecurityRepository(IHttpContextAccessor context):ISecurityRepos
         perms.Add(new ModulePermission{ModuleId=1001,ModuleCode="EWAY_BILLS",ModuleName="E-Way Bills",SupportedActions=StockFlow.Application.Common.PermissionCatalog.Modules["EWAY_BILLS"],IsActive=true,CanView=admin,CanCreate=admin,CanEdit=admin,CanExport=admin});
         perms.Add(new ModulePermission{ModuleId=1002,ModuleCode="EXPENSES",ModuleName="Expenses",SupportedActions=StockFlow.Application.Common.PermissionCatalog.Modules["EXPENSES"],IsActive=true,CanView=admin,CanCreate=admin,CanEdit=admin,CanApprove=admin,CanExport=admin});
         perms.Add(new ModulePermission{ModuleId=1003,ModuleCode="REPLENISHMENT",ModuleName="Replenishment",SupportedActions=StockFlow.Application.Common.PermissionCatalog.Modules["REPLENISHMENT"],IsActive=true,CanView=admin,CanCreate=admin,CanEdit=admin,CanExport=admin});
+        perms.Add(new ModulePermission{ModuleId=1004,ModuleCode="BANK_ACCOUNTS",ModuleName="Bank Accounts",SupportedActions=StockFlow.Application.Common.PermissionCatalog.Modules["BANK_ACCOUNTS"],IsActive=true,CanView=admin,CanCreate=admin,CanEdit=admin,CanDelete=admin,CanExport=admin});
         foreach(var p in perms){if(headers["Test-Deny"].ToString().Split(',').Contains(p.ModuleCode))p.CanView=false;if(headers["Test-Grant-Create"]==p.ModuleCode){p.CanView=true;p.CanCreate=true;}if(headers["Test-Deny-Approve"]==p.ModuleCode)p.CanApprove=false;}
         foreach(var p in perms)
         {

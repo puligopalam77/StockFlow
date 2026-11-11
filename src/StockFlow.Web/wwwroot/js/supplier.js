@@ -292,7 +292,7 @@
             paymentTermsDays: 'Payment Terms (Days)'
         },
         async onReady(controls) {
-            modernize(controls);
+            modernize(controls);StockFlowAddress.fixedCountry(controls.countryCode);
             if(window.StockFlowMasterScreens&&!StockFlowMasterScreens.page){try{const saved=JSON.parse(sessionStorage.getItem('stockflow.supplier-saved')||'null');sessionStorage.removeItem('stockflow.supplier-saved');if(saved?.id){const response=await fetch('/api/suppliers/'+saved.id,{credentials:'same-origin'});if(response.ok){const record=await response.json(),note=element('section');note.className='supplier-success';note.setAttribute('role','status');note.append(element('strong','Supplier saved: '+record.supplierCode),element('p',record.supplierName));const c=saved.context;if(c){const href=StockFlowSupplierNavigation.editUrl(c.productId,c.variantId,c.from);if(href){const link=element('a','Return to Product Edit');link.href=href;link.className='btn btn-outline-secondary';note.append(link,element('p','Select this supplier explicitly and enter its item code. No product association or planning policy has been saved.'));}}document.getElementById('master-data').prepend(note);}}}catch{}}
 
             const response = await fetch('/api/suppliers/options');
@@ -330,9 +330,6 @@
                 if (record?.countryCode === 'IN' && /^\+91[0-9]{10}$/.test(controls[name].value)) {
                     controls[name].value = controls[name].value.slice(3);
                 }
-            }
-            if (record?.countryCode === 'ZZ') {
-                controls.countryCode.value = '';
             }
             for (const section of document.querySelectorAll('.supplier-optional')) {
                 section.open = !!record && [...section.querySelectorAll('input,select,textarea')].some(input =>

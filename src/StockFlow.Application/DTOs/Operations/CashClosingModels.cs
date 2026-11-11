@@ -67,7 +67,10 @@ public class CashTotals
         get; set;
     }
     public string Fingerprint { get; set; } = "";
-    public decimal NetCash => SalesCash + ServiceCash - CashRefunds - SupplierCash - ExpenseCash;
+    public decimal AdjustmentCash { get; set; }
+    public long PendingReviewCount { get; set; }
+    public decimal? TrackingOpeningCash { get; set; }
+    public decimal NetCash => SalesCash + ServiceCash - CashRefunds - SupplierCash - ExpenseCash + AdjustmentCash;
 }
 
 public class CashClosingRecord : CashClosingRequest

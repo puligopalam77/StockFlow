@@ -28,7 +28,7 @@
         <header class="billing-saved-header">
             <div class="billing-saved-heading"><h2 id="saved-bills-title">Saved Bills</h2><span id="saved-bills-count" class="billing-saved-count"></span></div>
             <button id="saved-bills-close" type="button" class="billing-saved-close sf-dialog-close" aria-label="Close Saved Bills">&times;</button>
-            <p id="saved-bills-description">Resume a previously saved or held bill.</p>
+            <p id="saved-bills-description">Active drafts and held bills. Bills open in another session remain protected.</p>
             <label class="visually-hidden" for="saved-bills-search">Search saved bills</label>
             <input id="saved-bills-search" class="form-control" type="search" maxlength="150" placeholder="Search customer, mobile or draft number..." />
             <p class="billing-saved-sort">Most recently saved first</p>
@@ -43,7 +43,7 @@
         <div class="sf-confirm-symbol" aria-hidden="true">!</div>
         <h2 id="resume-bill-title">Resume saved bill?</h2>
         <p id="resume-bill-message">Your current unfinished bill contains items or entered details. Choose what to do before opening the saved bill.</p>
-        <div class="sf-confirm-actions"><button type="button" id="resume-bill-cancel" class="btn btn-outline-secondary">Cancel</button><button type="button" id="resume-bill-hold" class="btn btn-dark">Hold Current Bill &amp; Resume</button><button type="button" id="resume-bill-discard" class="btn btn-outline-danger">Discard Current Draft &amp; Resume</button></div>
+        <div class="sf-confirm-actions"><button type="button" id="resume-bill-cancel" class="btn btn-outline-secondary">Cancel</button><button type="button" id="resume-bill-keep" class="btn btn-outline-secondary">Keep Active Draft &amp; Resume</button><button type="button" id="resume-bill-hold" class="btn btn-dark">Hold Current Bill &amp; Resume</button><button type="button" id="resume-bill-discard" class="btn btn-outline-danger">Discard Current Draft &amp; Resume</button></div>
     </dialog>
     <form id="sale-form" novalidate>
         <fieldset id="sale-editor">
@@ -65,17 +65,20 @@
             <div class="billing-layout">
                 <div class="billing-items">
                     <section id="billing-add-card" class="card card-body mb-3 billing-stage-card">
-                        <h2 class="h5">Scan or Search Product</h2>
+                        <div class="billing-search-heading">
+                            <h2 class="h5">Scan or Search Product</h2>
+                            <button id="sale-search-info" type="button" class="billing-search-info" aria-label="Searchable product fields" data-bs-toggle="tooltip" data-bs-title="Search products by&#10;&#8226; Barcode, name, SKU or product code&#10;&#8226; Brand, model, category or variant&#10;&#8226; Other configured product attributes&#10;&#10;Partial matches are supported.">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/></svg>
+                            </button>
+                        </div>
 @if(Access.Can("SCAN","SCAN") || Access.Can("PRODUCT_VARIANTS")){
                         <label for="sale-scan" class="form-label">Scan Barcode or Search Product</label>
                         <div class="billing-scan-row">
-                            <input id="sale-scan" maxlength="200" autocomplete="off" class="form-control" aria-describedby="sale-scan-help product-result-status" aria-controls="product-results" aria-expanded="false" placeholder="Scan barcode or search product name, SKU, code, brand or model..." />
-                            <button id="scan-sale" type="button" class="btn btn-dark" aria-label="Search or scan product" title="Search or scan product">?</button>
+                            <div class="billing-product-search-field"><input id="sale-scan" maxlength="200" autocomplete="off" class="form-control" aria-describedby="sale-scan-help product-result-status" aria-controls="product-results" aria-expanded="false" placeholder="Scan barcode or search product..." /><svg class="billing-product-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg></div>
                         @if(Access.Can("SALES","MANUAL_ITEM")){<button id="quick-add-item" type="button" class="btn btn-outline-secondary billing-quick-add">+ Quick Add Item</button>}
                         </div>
 
                         <p id="sale-scan-help" class="small text-muted mt-2 mb-0">Scan an exact barcode and press Enter, or type to search and choose the correct SKU.</p>
-                        <details class="small text-muted mt-1"><summary>Keyboard shortcuts</summary><p class="mb-0">From outside a text field or dialog: Alt+S focuses product search, Alt+C customer search, Alt+P payment, Alt+B Complete Sale, and Alt+H holds the bill. Arrow keys and Enter select search results; Escape closes them. Complete Sale still needs deliberate activation.</p></details>
                         <p id="product-result-status" class="small mt-2 mb-1" role="status"></p>
                         <div id="product-results" class="billing-product-results" hidden aria-label="Matching products"></div>
 }else{<p class="small text-muted">Product lookup is unavailable for your account.</p>}
@@ -132,9 +135,8 @@
                         <label for="customer-current" class="form-label">Bill To</label>
                         <div id="customer-picker" class="billing-customer-picker">
                             <div id="customer-current" hidden>
-                                <svg class="billing-customer-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 22v-4a8 8 0 0 1 16 0v4"/></svg>
-                                <span class="billing-customer-identity"><strong id="customer-name"></strong><span id="customer-mobile"></span></span>
-                                <button id="customer-clear" type="button" title="Clear Customer" aria-label="Clear Customer">&#215;</button>
+                                <span class="billing-customer-identity"><strong id="customer-name"></strong><span id="customer-mobile-pill" class="billing-customer-mobile-pill" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.8 2.1z"/></svg><span id="customer-mobile"></span></span></span>
+                                <button id="customer-clear" type="button" title="Remove selected customer" aria-label="Remove selected customer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
                             </div>
 @if(Access.Can("CUSTOMERS")){
                             <label for="customer-search" class="visually-hidden">Search customers by name or mobile</label>
@@ -242,7 +244,6 @@
             <button id="complete-sale" class="btn btn-primary w-100 mt-3" type="submit">@(Access.Can("INVOICES","PRINT") ? "Complete Sale & Generate Bill" : "Complete Sale")</button>
             <p class="small text-muted mt-2 mb-0">Finishing the sale saves the bill and removes the sold items from stock.</p>
         </section>
-        <a asp-page="Index" permission-module="SALES" class="btn btn-outline-secondary">Back to sales</a>
     </div>
 </div>
 </fieldset>

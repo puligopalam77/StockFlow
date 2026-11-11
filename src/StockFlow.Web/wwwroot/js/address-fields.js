@@ -15,6 +15,41 @@ window.StockFlowAddress = (() => {
         const descriptor=Object.getOwnPropertyDescriptor(prototype,'value');
         Object.defineProperty(input,'value',{configurable:true,get(){return descriptor.get.call(this);},set(value){descriptor.set.call(this,value);changed();}});
     }
+    // Keep the original source/value for existing form serializers and saved records.
+    function fixedCountry(source){
+        if(!source)return;
+        if(source.sfCountryField){source.sfCountryField.refresh();return;}
+        const coded=key(source)==='countrycode',select=source instanceof HTMLSelectElement;
+        const display=select?node('input'):source;
+        if(!source.id)source.id='sf-country-'+(++serial);
+        if(select){
+            source.sfSelect?.destroy();source.removeAttribute('data-sf-select');
+            source.hidden=true;source.tabIndex=-1;
+            display.type='text';display.id=source.id+'-display';display.className='form-control';display.dataset.sfAddressUi='true';
+            source.after(display);
+            for(const label of source.labels||[])label.htmlFor=display.id;
+        }
+        display.classList.add('sf-country-field');display.readOnly=true;display.tabIndex=-1;display.setAttribute('aria-readonly','true');
+        const descriptor=Object.getOwnPropertyDescriptor(select?HTMLSelectElement.prototype:HTMLInputElement.prototype,'value');
+        const canonical=coded?'IN':'India';
+        function label(value){
+            if(['in','india'].includes(norm(value)))return 'India';
+            if(select&&/^[A-Z]{2}$/.test(value)){try{return new Intl.DisplayNames(['en'],{type:'region'}).of(value);}catch{}}
+            return value;
+        }
+        function assign(value){
+            value=String(value||canonical);
+            if(select&&![...source.options].some(o=>o.value===value))source.add(new Option(label(value),value));
+            descriptor.set.call(source,value);
+        }
+        function refresh(){
+            if(!source.value)assign(canonical);
+            if(select)display.value=label(source.value);
+            if(!display.readOnly)display.readOnly=true;
+        }
+        Object.defineProperty(source,'value',{configurable:true,get(){return descriptor.get.call(this);},set(value){assign(value);refresh();}});
+        source.sfCountryField={display,refresh};source.addEventListener('change',refresh);refresh();
+    }
     async function reference(){
         if(!loading)loading=fetch('/data/india-state-districts.json',{credentials:'same-origin',cache:'no-cache'}).then(async r=>{if(!r.ok)throw Error('Address options could not be loaded.');const data=await r.json();if(!Array.isArray(data)||!data.every(r=>r.state&&Array.isArray(r.districts)))throw Error('Address options could not be loaded.');locations=data;return data;}).catch(error=>{loading=null;throw error;});
         return loading;
@@ -28,6 +63,7 @@ window.StockFlowAddress = (() => {
     }
     function bind(fields){
         if(!fields.state||!fields.city||!fields.pin||bound.has(fields.state))return;
+        fixedCountry(fields.country);
         bound.add(fields.state);const group={...fields,version:0,verified:'',offices:[],dirtyPin:false,applied:false};groups.add(group);
         const india=()=>!group.country||['in','india',''].includes(norm(group.country.value));
         const currentState=()=>group.state instanceof HTMLSelectElement?stateLabel(group.state.selectedOptions[0]?.textContent):group.state.value;
@@ -106,7 +142,7 @@ window.StockFlowAddress = (() => {
         let internal=false,structured=false,revision=0;
         const fields={},owned=new Set(),scope=source.closest('[data-party]')||source.form;
         const reuse=name=>scope&&[...scope.querySelectorAll('input,select,textarea')].find(i=>i!==source&&!i.dataset.sfAddressUi&&(name==='state'?['state','statecode'].includes(key(i)):name==='pin'?['pin','pincode','postalcode'].includes(key(i)):false));
-        for(const [name,label]of [['line1','Address Line 1'],['line2','Address Line 2'],['state','State'],['district','District'],['city','City/Town'],['country','Country'],['pin','Pincode']]){
+        for(const [name,label]of [['line1','Address Line 1'],['line2','Address Line 2'],['state','State'],['district','District'],['city','City/Town'],...(source.id==='new-customer-address'&&source.closest('#billing-workspace')?[["pin","Pincode"],["country","Country"]]:[["country","Country"],["pin","Pincode"]])]){
             const existing=reuse(name);if(existing){fields[name]=existing;continue;}
             const group=node('div');group.className='sf-address-field'+(['line1','line2'].includes(name)?' sf-address-wide':'');const input=node('input');input.type='text';input.className='form-control';input.dataset.sfAddressUi='true';input.id=(source.id||'address-'+(++serial))+'-'+name;input.maxLength=['line1','line2'].includes(name)?250:100;const caption=node('label',label);caption.htmlFor=input.id;caption.className='form-label';group.append(caption,input);grid.append(group);fields[name]=input;owned.add(input);
         }
@@ -123,6 +159,7 @@ window.StockFlowAddress = (() => {
     }
     function scan(){
         for(const group of groups){if(!group.state.isConnected||group.ownerSource&&!group.ownerSource.isConnected){++group.version;group.controller?.abort();clearTimeout(group.timer);group.statePicker.destroy();group.districtPicker?.destroy();group.ownerContainer?.remove();groups.delete(group);}else group.refresh();}
+        for(const country of document.querySelectorAll('input,select'))if(['country','countrycode'].includes(key(country))&&!country.dataset.sfAddressUi)fixedCountry(country);
         for(const form of document.querySelectorAll('form')){
             const inputs=[...form.querySelectorAll('input,select,textarea')].filter(i=>!i.dataset.sfAddressUi);
             const find=(...names)=>inputs.find(i=>names.includes(key(i)));
@@ -148,5 +185,5 @@ window.StockFlowAddress = (() => {
         for(const source of event.target.querySelectorAll('input,textarea'))if(source.sfAddressCombined){const fields=Object.values(source.sfAddressCombined.fields);for(const input of fields)if(!input.disabled&&!input.checkValidity()){StockFlowValidation?.showField(input,StockFlowValidation.fieldMessage(input));failed.push(input);}}
         if(failed.length){event.preventDefault();event.stopImmediatePropagation();for(let p=failed[0].parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;failed[0].focus();}
     },true);
-    return {scan,bind,combinedAddress,reference,restore(source,details){combinedAddress(source);source.sfAddressCombined.restore(details);}};
+    return {scan,bind,combinedAddress,reference,fixedCountry,restore(source,details){combinedAddress(source);source.sfAddressCombined.restore(details);}};
 })();

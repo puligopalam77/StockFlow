@@ -32,6 +32,7 @@ public static class PermissionCatalog
         ["SERVICE"] = ["VIEW", "CREATE", "UPDATE", "ASSIGN", "DELIVER", "COLLECT"],
         ["PENDING_SERVICES"] = ["VIEW"],
         ["REPORTS"] = ["VIEW", "EXPORT"],
+        ["BANK_ACCOUNTS"] = ["VIEW","CREATE","EDIT","ASSIGN","SET_DEFAULT","INITIALIZE","VERIFY","REVERSE","VIEW_BALANCE","VIEW_DETAILS","DEACTIVATE","EXPORT"],
         ["COMPANY_SETTINGS"] = ["VIEW", "EDIT"],
         ["GST_SETTINGS"] = ["VIEW", "EDIT", "APPROVE_TAX", "OVERRIDE_TAX", "BULK_TAX", "IMPORT_TAX", "EXPORT_TAX"],
         ["CRM"] = ["VIEW", "CREATE", "EDIT", "ASSIGN", "FOLLOW_UP", "CLOSE", "VIEW_TEAM", "VIEW_HISTORY", "VIEW_FINANCIAL"],
@@ -57,7 +58,7 @@ public static class PermissionCatalog
 
     public static bool Sensitive(string action)
     {
-        if (action is "PREPARE" or "VALIDATE" or "RECORD_EXTERNAL" or "VIEW_USAGE" or "CONFIGURE_PROVIDER") return true;
+        if (action is "PREPARE" or "VALIDATE" or "RECORD_EXTERNAL" or "VIEW_USAGE" or "CONFIGURE_PROVIDER" or "SET_DEFAULT" or "INITIALIZE" or "VERIFY" or "VIEW_BALANCE" or "VIEW_DETAILS") return true;
         return action is "STATUS" or "CONVERT" or "MANUAL_ITEM" or "VIEW_FINANCIAL" or "VIEW_HISTORY" or "VIEW_TEAM" or "CLOSE" or "VIEW_REGISTRATION" or "REVIEW" or "PRICE_OVERRIDE" or "DISCOUNT" or "DISCOUNT_APPROVE" or "DEACTIVATE" or "APPROVE" or "RETURN" or "DISPATCH" or "RECEIVE" or "CANCEL" or "ADJUST" or "RESET_PASSWORD" or "RESET_AUTHENTICATOR" or "MANAGE_PERMISSIONS" or "MANAGE" or "MANAGE_ACCESS";
     }
 }

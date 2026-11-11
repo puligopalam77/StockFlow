@@ -1,8 +1,11 @@
 @inject StockFlow.Application.Common.BusinessScope SetupScope
+@inject Microsoft.Extensions.Configuration.IConfiguration BankConfiguration
 @{var currentPath=Context.Request.Path.Value ?? ""; var billingView=ViewData["CompanySection"]?.ToString()=="billing";}
 <details class="sf-nav-group" open="@(currentPath.StartsWith("/Settings/",StringComparison.OrdinalIgnoreCase)||currentPath.StartsWith("/Admin/Gst",StringComparison.OrdinalIgnoreCase)||currentPath=="/Admin/Stores")" data-nav-group="Business Setup">
-<summary class="sf-nav-link">Business Setup<span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
+<summary class="sf-nav-link"><span class="sf-nav-label">Business Setup</span><span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
 <div class="sf-nav-children">
+@if(BankConfiguration.GetValue<bool>("BankAccounts:Enabled")&&Access.Can("BANK_ACCOUNTS")){
+<a class="sf-nav-child @(currentPath.StartsWith("/Settings/BankAccounts",StringComparison.OrdinalIgnoreCase)?"active":"")" href="/Settings/BankAccounts" aria-current="@(currentPath.StartsWith("/Settings/BankAccounts",StringComparison.OrdinalIgnoreCase)?"page":null)">Bank Accounts</a>}
 @if(Access.Can("COMPANY_SETTINGS")){
 <a class="sf-nav-child @(currentPath=="/Settings/Company"&&!billingView?"active":"")" href="/Settings/Company?section=business" aria-current="@(currentPath=="/Settings/Company"&&!billingView?"page":null)">Business Details</a>
 <a class="sf-nav-child @(currentPath=="/Settings/Company"&&billingView?"active":"")" href="/Settings/Company?section=billing" aria-current="@(currentPath=="/Settings/Company"&&billingView?"page":null)">Invoice Settings</a>

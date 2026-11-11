@@ -20,6 +20,10 @@
     else if (page.StartsWith("/Warranty/")) { parentLabel = "Warranty"; parentUrl = "/Warranty/Lookup"; }
     else if (page.StartsWith("/Inventory/")) { parentLabel = "Stock Overview"; parentUrl = "/Inventory"; }
     else if (page == "/Configuration/WhatsApp") { parentLabel = "Notifications"; parentUrl = "/Configuration/Notifications"; }
+    else if(page.StartsWith("/Settings/BankAccounts/")){
+        parents.Add(("Business Setup",null));
+        if(ViewData["BankAccountDetail"] is true)parents.Add(("Bank Accounts","/Settings/BankAccounts"));
+    }
     else if (page.StartsWith("/Settings/") || page == "/Configuration/Notifications") { parentLabel = "Settings"; }
     else if (page.StartsWith("/Expenses/")) { parentLabel="Expenses";parentUrl="/Expenses"; }
     else if (page.StartsWith("/Account/") && page != "/Account/Home") { parentLabel = "My account"; parentUrl = "/Account/Home"; }

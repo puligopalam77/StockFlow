@@ -10,7 +10,7 @@
     if (visible.Length == 0) { continue; }
     var active = visible.Any(item => page.Equals(item.Item3, StringComparison.OrdinalIgnoreCase) || page.StartsWith(item.Item3+"/", StringComparison.OrdinalIgnoreCase));
     <details class="sf-nav-group sf-catalog-nav" open="@active" data-nav-group="Product Catalog">
-        <summary class="sf-nav-child @(active ? "sf-nav-group-active" : "")">@name <span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
+        <summary class="sf-nav-child @(active ? "sf-nav-group-active" : "")"><span class="sf-nav-label">@name</span><span class="sf-nav-chevron" aria-hidden="true">›</span></summary>
         <div class="sf-nav-children" aria-label="@name">
     @foreach (var (module, label, route) in visible)
     {

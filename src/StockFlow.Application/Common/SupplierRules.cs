@@ -23,10 +23,10 @@ public static class SupplierRules
         }
     }
 
-    public static void Validate(CreateSupplierRequest r)
+    public static void Validate(CreateSupplierRequest r, string? existingCountry = null)
     {
         r.SupplierName = Regex.Replace(r.SupplierName?.Trim() ?? "", @"\s+", " ");
-        r.CountryCode = r.CountryCode?.Trim().ToUpperInvariant() ?? "";
+        r.CountryCode = CountryPolicy.Normalize(r.CountryCode, existingCountry, code: true);
         r.SupplierType = Clean(r.SupplierType)?.ToUpperInvariant();
         r.ContactPerson = Clean(r.ContactPerson);
         r.Email = Clean(r.Email);
@@ -50,7 +50,7 @@ public static class SupplierRules
             throw new ValidationException("Supplier name must contain meaningful text.");
         }
 
-        if (!Countries.ContainsKey(r.CountryCode))
+        if (!Countries.ContainsKey(r.CountryCode) && r.CountryCode != existingCountry)
         {
             throw new ValidationException("Choose a supported country.");
         }

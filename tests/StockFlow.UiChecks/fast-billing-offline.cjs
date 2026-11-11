@@ -1,10 +1,10 @@
-const {fillAddress}=require('./address-test-helpers.cjs');
+const {fillAddress,selectValue}=require('./address-test-helpers.cjs');
 // Real rendered Razor + local scripts/styles; mocked HTTP isolates browser behavior.
 const fs=require('fs'),path=require('path'),assert=require('assert');
 const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
 const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/billing-ui-fixtures/Billing.html'),output=path.join(root,'tests/bin/fast-billing-ui-fixtures');fs.mkdirSync(output,{recursive:true});
 (async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
- const page=await browser.newPage({viewport:{width:1366,height:768}}),errors=[],posts=[],created=[],drafts=new Map();const quoteRequests=[];let fastPolicy=false;let failQuote=false,delayTax=false,canOverrideTax=true,canApproveDiscount=true,approvalStatus='REQUIRED',quoteFailureMessage='Synthetic quote rejected';let failCustomer=false,duplicate=false,gstContext={mapped:false},manualRules=[{ruleId:7,ruleName:'Reviewed small goods',hsnSac:'610910',uqc:'NOS',treatment:'TAXABLE',taxRate:5}];
+ const page=await browser.newPage({viewport:{width:1366,height:768},hasTouch:process.env.STOCKFLOW_CUSTOMER_SELECTION_TOUCH==='1'}),errors=[],posts=[],created=[],drafts=new Map();const quoteRequests=[];let fastPolicy=false;let failQuote=false,delayTax=false,canOverrideTax=true,canApproveDiscount=true,approvalStatus='REQUIRED',quoteFailureMessage='Synthetic quote rejected';let failCustomer=false,duplicate=false,gstContext={mapped:false},manualRules=[{ruleId:7,ruleName:'Reviewed small goods',hsnSac:'610910',uqc:'NOS',treatment:'TAXABLE',taxRate:5}];
  const draftNumbers=new Map(),referenceFor=id=>{if(!draftNumbers.has(id))draftNumbers.set(id,'DRF-'+String(draftNumbers.size+1).padStart(4,'0'));return draftNumbers.get(id);};
  const handleDraft=require('./draft-lifecycle-mock.cjs')(drafts,referenceFor);
  page.setDefaultTimeout(Number(process.env.STOCKFLOW_UI_TIMEOUT_MS||12000));page.on('pageerror',e=>errors.push(e.message));
@@ -41,25 +41,54 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  async function fillReason(index,value){const dialog=page.locator('#line-reason-panel-'+index);await dialog.evaluate(n=>{if(!n.open)n.showModal();});const field=page.locator('#line-reason-'+index);if(await field.isVisible())await field.fill(value);else assert((await field.inputValue()).trim(),'Hidden completed reason must already be saved');await dialog.getByRole('button',{name:'Done',exact:true}).click();await page.waitForFunction(()=>document.querySelector('#billing-calculation-status').hidden);}
  async function editTax(index,value){await page.locator('#sale-cart tr').nth(index).locator('button[data-tax-correction]').click();await page.locator('#line-tax-override-'+index).fill(value);await page.locator('#line-reason-panel-'+index).getByRole('button',{name:'Done',exact:true}).click();}
  await page.goto('http://stockflow.test/Sales/Create');await page.waitForFunction(()=>!document.querySelector('#sale-editor').disabled);
+ if(process.env.STOCKFLOW_PRODUCT_SEARCH_STATE_ONLY==='1'){await require('./product-search-state-checks.cjs')(page);assert.deepEqual(errors,[]);return;}
+ if(process.env.STOCKFLOW_PRODUCT_LOOKUP_ONLY==='1'){await require('./product-lookup-list-checks.cjs')(page,output);assert.deepEqual(errors,[]);return;}
+ if(process.env.STOCKFLOW_TAX_BREAKDOWN_ONLY==='1'){await require('./tax-breakdown-checks.cjs')(page,output);assert.deepEqual(errors,[]);return;}
+ if(process.env.STOCKFLOW_CHECKOUT_LAYOUT_ONLY==='1'){await require('./checkout-sticky-checks.cjs')(page,output);assert.deepEqual(errors,[]);return;}
+ if(process.env.STOCKFLOW_PRODUCT_SEARCH_ONLY==='1'){await require('./product-search-field-checks.cjs')(page,output);assert.deepEqual(errors,[]);return;}
+ if(process.env.STOCKFLOW_CUSTOMER_SELECTION_ONLY==='1'){await require('./selected-customer-checks.cjs')(page,output);assert.deepEqual(errors,[]);return;}
+ if(process.env.STOCKFLOW_DRAFT_STATUS_ONLY==='1'){await require('./draft-status-checks.cjs')(page,output);assert.deepEqual(errors,[]);return;}
+ if(process.env.STOCKFLOW_CUSTOMER_ONLY==='1'){await require('./compact-customer-checks.cjs')(page,output,created);assert.deepEqual(errors,[]);return;}
+ if(process.env.STOCKFLOW_QUICK_ADD_ONLY==='1'){
+  await require('./quick-add-item-checks.cjs')(page,output);assert.deepEqual(errors,[]);return;
+ }
+ assert.equal(await page.locator('#billing-header-actions a').count(),0,'No redundant Back to Sales header button');
+ assert.equal(await page.locator('#sale-scan').getAttribute('placeholder'),'Scan barcode or search product...');
+ assert.equal(await page.getByText('Keyboard shortcuts',{exact:true}).count(),0,'No visible expandable shortcut instructions');
+ assert((await page.locator('#breadcrumb-back').getAttribute('href')).startsWith('/Sales'),'Existing Sales back navigation retained');
  assert.equal(await page.locator('#billing-draft-reference').textContent(),'New Draft');
  assert.equal(await page.locator('#billing-draft-reference').evaluate(n=>n.tagName),'SPAN','Existing draft updates target the inline badge');
  assert.equal(await page.locator('#billing-workspace > section.card').count(),0,'Moved header toolbar leaves no spacer card');
- for(const [width,height]of [[1920,1080],[1366,768],[1280,720],[1024,768],[768,1024],[390,844],[320,640]]){
-  await page.setViewportSize({width,height});await page.waitForTimeout(280);
+ for(const [width,height]of [[1920,1080],[1536,864],[1366,768],[1280,720],[1024,768],[768,1024],[560,800],[500,800],[390,844],[320,640]]){
+  await page.setViewportSize({width,height});
+  for(const collapsed of [false,true]){
+  if(width>=992){const expanded=await page.locator('#sidebar-toggle').getAttribute('aria-expanded');if((expanded==='true')===collapsed)await page.locator('#sidebar-toggle').click();}
+  await page.waitForTimeout(280);
   const compact=await page.evaluate(()=>{
    const get=s=>document.querySelector(s),rect=s=>get(s).getBoundingClientRect(),title=rect('.billing-title-row h1'),badge=rect('#billing-draft-reference'),customer=rect('#customer-search'),add=rect('.billing-customer-row>.btn'),scan=rect('#sale-scan');
+   const canvas=document.createElement('canvas'),context=canvas.getContext('2d'),style=getComputedStyle(get('#sale-scan'));context.font=style.font;const placeholderFits=context.measureText(get('#sale-scan').placeholder).width<=get('#sale-scan').clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)+1;
    const controls=[...get('.billing-scan-row:has(#sale-scan)').querySelectorAll(':scope>.btn')].map(n=>({height:n.getBoundingClientRect().height,top:n.getBoundingClientRect().top}));
-   return {headerToLookup:rect('.billing-lookup-card').top-rect('.sf-page-heading').bottom,breadcrumbToHeader:rect('.sf-page-heading').top-rect('.sf-breadcrumb').bottom,titleFont:getComputedStyle(get('.billing-title-row h1')).fontSize,badge:{height:badge.height,font:parseFloat(getComputedStyle(get('#billing-draft-reference')).fontSize),gap:badge.left-title.right,center:Math.abs(badge.top+badge.height/2-title.top-title.height/2)},customer:{height:customer.height,font:getComputedStyle(get('#customer-search')).fontSize},add:{height:add.height,top:add.top-customer.top},scan:{height:scan.height,top:scan.top},controls,scanRowWidth:rect('.billing-scan-row:has(#sale-scan)').width,overflow:document.documentElement.scrollWidth>innerWidth+1};
+   return {placeholderFits,headerToLookup:rect('.billing-lookup-card').top-rect('.sf-page-heading').bottom,breadcrumbToHeader:rect('.sf-page-heading').top-rect('.sf-breadcrumb').bottom,titleFont:getComputedStyle(get('.billing-title-row h1')).fontSize,badge:{height:badge.height,font:parseFloat(getComputedStyle(get('#billing-draft-reference')).fontSize),gap:badge.left-title.right,center:Math.abs(badge.top+badge.height/2-title.top-title.height/2)},customer:{width:customer.width,height:customer.height,font:getComputedStyle(get('#customer-search')).fontSize},add:{height:add.height,top:add.top-customer.top},scan:{width:scan.width,height:scan.height,top:scan.top},controls,scanRowWidth:rect('.billing-scan-row:has(#sale-scan)').width,overflow:document.documentElement.scrollWidth>innerWidth+1};
   });
-  assert.equal(compact.titleFont,'22px');assert(compact.badge.height>=22&&compact.badge.height<=24);assert(compact.badge.font>=11&&compact.badge.font<=12);assert(compact.badge.gap>=10&&compact.badge.gap<=12);assert(compact.badge.center<1,'Badge centered next to title');assert(!compact.overflow);
+  assert.equal(compact.titleFont,'22px');assert(compact.badge.height>=22&&compact.badge.height<=24);assert(compact.badge.font>=11&&compact.badge.font<=12);assert(compact.badge.gap>=10&&compact.badge.gap<=12,JSON.stringify({width,collapsed,...compact}));assert(compact.badge.center<1,'Badge centered next to title');assert(!compact.overflow);if(width>=1280)assert(compact.placeholderFits,'Complete product placeholder fits '+width+' sidebar collapsed='+collapsed);
   assert(compact.headerToLookup>=0&&compact.headerToLookup<=12,'Compact gap above customer/summary panels: '+JSON.stringify(compact));
-  assert(compact.breadcrumbToHeader>=0&&compact.breadcrumbToHeader<=6,'Compact gap below breadcrumbs');
-  if(width>=768){assert.equal(compact.customer.height,40);assert.equal(compact.customer.font,'14px');assert.equal(compact.add.height,40);assert(Math.abs(compact.add.top)<1,'Customer/Add aligned');assert.equal(compact.scan.height,40);for(const c of compact.controls){assert.equal(c.height,40);if(compact.scanRowWidth>420)assert(Math.abs(c.top-compact.scan.top)<1,'Search actions align with input');}}
-  else{assert(compact.customer.height>=44&&compact.add.height>=44&&compact.scan.height>=44);for(const c of compact.controls)assert(c.height>=44);}
-  if(width===1366||width===390)await page.screenshot({path:path.join(output,`new-sale-compact-${width}.png`),fullPage:true});
- }
+  assert(compact.breadcrumbToHeader>=0&&compact.breadcrumbToHeader<=12,'Compact gap below breadcrumbs '+JSON.stringify({width,collapsed,...compact}));
+  if(width>=768){assert.equal(compact.customer.height,36);assert.equal(compact.customer.font,'13px');assert.equal(compact.add.height,36);assert(Math.abs(compact.add.top)<1,'Customer/Add aligned');assert.equal(compact.scan.height,36);assert(compact.customer.width<=380&&compact.scan.width<=compact.scanRowWidth,'Lookup controls fit available space');for(const c of compact.controls){assert(c.height===36);if(c.top<compact.scan.top+compact.scan.height)assert(Math.abs(c.top-compact.scan.top)<=1,'First-row search actions align with input');}}
+  else{assert(compact.customer.height>=36&&compact.add.height>=36&&compact.scan.height>=36);for(const c of compact.controls)assert(c.height>=36);}
+  const info=page.getByRole('button',{name:'Searchable product fields',exact:true}),tip=page.locator('.billing-search-tooltip');
+  await page.mouse.move(0,0);await info.evaluate(n=>n.blur());const lookupBefore=await page.locator('.billing-lookup-card').boundingBox();await info.hover();await tip.waitFor({state:'visible'});
+  assert.equal(await tip.count(),1,'One shared Bootstrap tooltip');const helpText=await tip.textContent();for(const field of ['Search products by','Barcode, name, SKU or product code','Brand, model, category or variant','Other configured product attributes','Partial matches are supported.'])assert(helpText.includes(field),'Tooltip explains '+field);
+  assert(await tip.evaluate(n=>{const r=n.getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight;}),'Search help fits viewport '+width);
+  const helpLayout=await info.evaluate(n=>{const icon=n.querySelector('svg').getBoundingClientRect(),heading=n.closest('.billing-search-heading'),label=heading.querySelector('h2').getBoundingClientRect(),style=getComputedStyle(heading),bubble=document.querySelector('.billing-search-tooltip').getBoundingClientRect(),scan=document.querySelector('#sale-scan').getBoundingClientRect();return {groupWidth:heading.getBoundingClientRect().width,labelWidth:label.width,gap:icon.left-label.right,center:Math.abs(icon.top+icon.height/2-label.top-label.height/2),iconWidth:icon.width,display:style.display,justify:style.justifyContent,overlapsInput:bubble.left<scan.right&&bubble.right>scan.left&&bubble.top<scan.bottom&&bubble.bottom>scan.top};});
+  assert(['inline-flex','flex'].includes(helpLayout.display),'Inline flex is blockified when it is a card flex item');assert(Math.abs(helpLayout.groupWidth-helpLayout.labelWidth-helpLayout.iconWidth-helpLayout.gap)<1,'Label/icon group fits its contents');assert.equal(helpLayout.justify,'flex-start');assert(helpLayout.gap>=5&&helpLayout.gap<=6,'Icon immediately beside label');assert(helpLayout.center<1);assert.equal(helpLayout.iconWidth,16);assert.equal(await tip.evaluate(n=>getComputedStyle(n).pointerEvents),'none','Help does not intercept input or button clicks');
+  const lookupAfter=await page.locator('.billing-lookup-card').boundingBox();assert.equal(lookupAfter.height,lookupBefore.height,'Tooltip does not resize lookup card');
+  if((width===1366||width===390)&&!collapsed)await page.screenshot({path:path.join(output,'search-info-'+width+'.png')});
+  await page.keyboard.press('Escape');await tip.waitFor({state:'hidden'});await page.mouse.move(0,0);await info.evaluate(n=>n.blur());await info.focus();await tip.waitFor({state:'visible'});await page.keyboard.press('Escape');await tip.waitFor({state:'hidden'});
+  await info.click();await tip.waitFor({state:'visible'});await page.locator('#sale-scan').click();await tip.waitFor({state:'hidden'});assert.equal(posts.length,0,'Help never submits a sale');
+  if((width===1366||width===390)&&!collapsed)await page.screenshot({path:path.join(output,`new-sale-compact-${width}.png`),fullPage:true});
+ }}
  await page.setViewportSize({width:1366,height:768});
- console.log('PASS inline live draft badge and aligned 40px desktop / accessible mobile lookup controls at seven sizes.');
+ console.log('PASS compact header, full desktop placeholder, sidebar states, responsive lookup controls and search-info hover/focus/click/Escape at ten sizes.');
  for(const total of [0,1,10,11]){
   paginationTestTotal=total;await page.locator('#show-held').click();await page.waitForFunction(total=>document.querySelector('#saved-bills-count').textContent===total+' '+(total===1?'Draft':'Drafts'),total);
   assert.equal(await page.locator('.billing-saved-pagination').isVisible(),total>10,'Saved Bills threshold '+total);await page.keyboard.press('Escape');
@@ -69,7 +98,7 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  assert.equal(await page.locator('#billing-draft-pill').count(),0);assert(await page.locator('#billing-notes').isVisible());assert(await page.locator('#cash-change-field').isHidden());assert.equal(await page.locator('#payment-amount').count(),0);assert.equal(await page.locator('.billing-scan-row #quick-add-item').count(),1);
  assert.equal(await page.locator('.billing-payment-tile').count(),5);assert.equal(await page.locator('#billing-split-toggle').isVisible(),false);
  await page.evaluate(()=>{window.shortcutHolds=0;document.querySelector('#hold-bill').addEventListener('click',()=>window.shortcutHolds++);document.activeElement?.blur();});
- await page.keyboard.press('Alt+s');assert(await page.locator('#sale-scan').evaluate(n=>document.activeElement===n));await page.keyboard.press('Alt+h');assert.equal(await page.evaluate(()=>window.shortcutHolds),0,'Hold shortcut does not run while typing');
+ await page.keyboard.press('Alt+c');assert(await page.locator('#customer-search').evaluate(n=>document.activeElement===n),'Alt+C focuses empty customer search');await page.evaluate(()=>document.activeElement?.blur());await page.keyboard.press('Alt+p');assert(await page.locator('.billing-payment-tile[aria-pressed=true]').evaluate(n=>document.activeElement===n),'Alt+P focuses payment');await page.evaluate(()=>document.activeElement?.blur());await page.keyboard.press('Alt+s');assert(await page.locator('#sale-scan').evaluate(n=>document.activeElement===n));await page.keyboard.press('Alt+h');assert.equal(await page.evaluate(()=>window.shortcutHolds),0,'Hold shortcut does not run while typing');
  await page.locator('#sale-scan').fill('CABLE-RED');await page.locator('#sale-scan').dispatchEvent('keydown',{key:'Enter',repeat:true,bubbles:true});await page.locator('#sale-scan').dispatchEvent('keydown',{key:'Enter',ctrlKey:true,bubbles:true});assert.equal(await page.locator('#sale-cart tr').count(),0,'Held/modifier Enter never adds an item');
  await page.locator('#sale-scan').press('Enter');await page.waitForFunction(()=>document.querySelectorAll('#sale-cart tr').length===1);
  await page.locator('#sale-scan').fill('CABLE-RED');await page.locator('#sale-scan').press('Enter');await page.waitForFunction(()=>document.querySelector('.billing-quantity input')?.value==='2');
@@ -124,7 +153,18 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  assert.equal(await page.locator('#customer-name').textContent(),'Counter customer');
  await page.waitForFunction(()=>!document.querySelector('#complete-sale').disabled);await page.evaluate(()=>document.activeElement?.blur());await page.keyboard.press('Alt+b');assert(await page.locator('#complete-sale').evaluate(n=>document.activeElement===n));assert.equal(posts.length,0,'Checkout shortcut focuses but never posts');
  await page.evaluate(()=>document.activeElement?.blur());await page.keyboard.press('Alt+c');assert(await page.locator('#customer-clear').evaluate(n=>document.activeElement===n),'Selected customer is focused without clearing it');
- assert.equal(await page.locator('#customer-mobile').textContent(),'Mobile: 9876543210');
+ assert.equal(await page.locator('#customer-mobile').textContent(),'9876543210');
+ for(const [width,height]of [[1920,1080],[1536,864],[1366,768],[1280,720],[1024,768],[768,1024],[390,844],[320,640]]){
+  await page.setViewportSize({width,height});for(const collapsed of [false,true]){
+   if(width>=992){const expanded=await page.locator('#sidebar-toggle').getAttribute('aria-expanded');if((expanded==='true')===collapsed)await page.locator('#sidebar-toggle').click();}
+   await page.waitForTimeout(280);await page.locator('#customer-current').scrollIntoViewIfNeeded();await page.evaluate(()=>document.activeElement?.blur());
+   const m=await page.locator('#customer-current').evaluate(n=>{const r=n.getBoundingClientRect(),clear=document.querySelector('#customer-clear').getBoundingClientRect(),name=document.querySelector('#customer-name'),mobile=document.querySelector('#customer-mobile');return {height:r.height,border:getComputedStyle(n).borderColor,clear:{width:clear.width,height:clear.height,left:clear.left,right:clear.right},nameFont:parseFloat(getComputedStyle(name).fontSize),mobileFont:parseFloat(getComputedStyle(mobile).fontSize),icon:document.querySelector('.billing-customer-mobile-pill svg').getBoundingClientRect().width,overflow:document.documentElement.scrollWidth>innerWidth+1,fieldsFit:[name,mobile].every(t=>{const b=t.getBoundingClientRect();return b.left>=r.left&&b.right<=clear.left&&(t.id==='customer-name'||t.scrollWidth<=t.clientWidth+1);})};});
+   assert.equal(m.height,36,'Selected field height '+width);assert(m.clear.width>=32&&m.clear.height>=32);assert.equal(m.nameFont,13);assert.equal(m.mobileFont,13);assert.equal(m.icon,14);assert(!m.overflow&&m.fieldsFit,'Customer details fit without clipping');assert(!['rgb(255, 0, 127)','rgb(255, 8, 125)'].includes(m.border),'Selected customer has a neutral resting border');
+   if(!collapsed&&(width===1366||width===390||width===320))await page.screenshot({path:path.join(output,'selected-customer-'+width+'.png'),fullPage:true});
+  }
+ }
+ await page.setViewportSize({width:1366,height:768});console.log('PASS selected customer 36px, neutral border, 14px phone icon, single-line name/mobile pill and accessible clear action across eight sizes and desktop sidebar states.');
+
  await page.waitForFunction(()=>document.querySelector('#billing-draft-reference').textContent.includes('DRF-'));
  const customerDraftReference=await page.locator('#billing-draft-reference').textContent();
  await page.locator('#customer-clear').click();
@@ -148,6 +188,8 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  await page.setViewportSize({width:1366,height:768});
  // Mobile required, optional fields collapsed, successful save auto-selects and restores scanning.
  await page.getByRole('button',{name:'+ Add Customer',exact:true}).click();assert(await page.locator('#new-customer-mobile').getAttribute('required')!==null);
+ await page.locator('#new-customer-name').focus();for(const key of ['Alt+s','Alt+c','Alt+p','Alt+h','Alt+b']){await page.keyboard.press(key);assert(await page.locator('#new-customer-name').evaluate(n=>document.activeElement===n),'Billing shortcuts do not steal focus from customer dialog');}
+
  assert.equal(await page.locator('#new-customer-address').isVisible(),false);await page.locator('#new-customer-name').fill('New counter customer');await page.locator('#create-customer').click();assert.equal(created.length,0);
  await page.locator('#new-customer-mobile').fill('123');await page.locator('#create-customer').click();assert.equal(created.length,0);
  duplicate=true;await page.locator('#new-customer-mobile').fill('9876543210');await page.getByRole('button',{name:'Select Existing Customer',exact:true}).waitFor();await page.getByRole('button',{name:'Select Existing Customer',exact:true}).click();
@@ -172,11 +214,11 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  await page.locator('#new-customer-mobile').fill('9861200066');await page.locator('#create-customer').click();await page.waitForFunction(()=>!document.querySelector('#customer-quick-add')?.open && document.querySelector('#sale-customer').value==='11');
  assert.equal(created.length,1);assert.equal(created[0].email,'accounts@example.test');assert.equal(created[0].gstNumber,'29ABCDE1234F1ZW');assert(created[0].address.includes('560001'));assert.equal(await page.locator('#billing-draft-reference').textContent(),customerDraftReference);assert.equal(await page.locator('#sale-cart tr').count(),1);
  await page.locator('#quick-add-item').click();
- assert.equal(await page.locator('#manual-rule').getAttribute('type'),'text');assert(await page.locator('#manual-submit').isDisabled());
+ assert.equal(await page.locator('#manual-rule').evaluate(n=>n.tagName),'SELECT');assert(await page.locator('#manual-submit').isDisabled());
  assert.equal(await page.locator('.billing-manual-modal .sf-validation-summary').count(),0);assert.equal(await page.locator('.billing-manual-modal .is-invalid').count(),0);
  await page.locator('#manual-name').fill('Loose cord');await page.locator('#manual-price').fill('50');await page.locator('#manual-quantity').fill('2');await page.locator('#manual-mrp').fill('60');await page.locator('#manual-discount').fill('5');
- await page.locator('#manual-rule').fill('18');assert(await page.locator('#manual-submit').isDisabled());
- await page.locator('#manual-rule').fill('Reviewed small goods · 610910 · 5% (#7)');
+ await selectValue(page.locator('#manual-rule'),'');
+ await selectValue(page.locator('#manual-rule'),'7');
  await page.waitForFunction(()=>!document.querySelector('#manual-submit').disabled);assert((await page.locator('#manual-preview').textContent()).includes('99.75'));await page.locator('#manual-submit').click();await page.waitForFunction(()=>document.querySelectorAll('#sale-cart tr').length===2);
  assert.equal(await page.locator('#line-stock-1').textContent(),'Non-stock');assert((await page.locator('#sale-cart tr').nth(1).textContent()).includes('Manual Item'));
  await page.locator('.billing-manual-edit').click();assert.equal(await page.locator('#manual-price').inputValue(),'50');await page.locator('#manual-quantity').fill('3');await page.waitForFunction(()=>!document.querySelector('#manual-submit').disabled);await page.locator('#manual-submit').click();
@@ -188,7 +230,7 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  await page.waitForFunction(()=>document.querySelectorAll('#sale-cart tr').length===3&&document.querySelector('#line-mrp-2').textContent==='—');
  await page.locator('#sale-cart tr').nth(2).locator('.billing-manual-edit').click();assert.equal(await page.locator('#manual-rule').inputValue(),'');await page.locator('#manual-cancel').click();
  await page.locator('#sale-cart tr').nth(2).locator('.billing-item-actions button').click();await page.waitForFunction(()=>document.querySelectorAll('#sale-cart tr').length===2);
- await page.locator('#sale-notes').evaluate((n,value)=>{n.value=value;n.dispatchEvent(new Event('input',{bubbles:true}));},'Held mixed bill');await Promise.all([page.waitForEvent('load'),page.locator('#hold-bill').click()]);await page.waitForFunction(()=>document.querySelector('#billing-draft-reference').textContent==='New Draft'&&!document.querySelector('#sale-editor').disabled).catch(async e=>{console.log({errors,state:await page.locator('#draft-status').textContent(),reference:await page.locator('#billing-draft-reference').textContent()});throw e;});
+ await page.locator('#sale-notes').evaluate((n,value)=>{n.value=value;n.dispatchEvent(new Event('input',{bubbles:true}));},'Held mixed bill');await page.evaluate(()=>document.activeElement?.blur());await Promise.all([page.waitForEvent('load'),page.keyboard.press('Alt+h')]);await page.waitForFunction(()=>document.querySelector('#billing-draft-reference').textContent==='New Draft'&&!document.querySelector('#sale-editor').disabled).catch(async e=>{console.log({errors,state:await page.locator('#draft-status').textContent(),reference:await page.locator('#billing-draft-reference').textContent()});throw e;});
  await page.locator('#show-held').click();await page.getByRole('button',{name:/Resume Bill/}).first().click();await page.waitForFunction(()=>document.querySelectorAll('#sale-cart tr').length===2&&!document.querySelector('#sale-editor').disabled&&!document.querySelector('#saved-bills-drawer').open);
  assert.equal(await page.locator('#sale-notes').inputValue(),'Held mixed bill');assert.equal(await page.locator('#sale-customer').inputValue(),'11');assert.equal(await page.locator('#sale-cart tr').nth(1).locator('.billing-quantity input').inputValue(),'3');
  for(const [width,height]of [[1920,1080],[1536,864],[1366,768],[1280,720],[1280,650],[1280,600],[1024,768],[768,1024],[390,844],[375,667],[320,640]]){
@@ -196,7 +238,7 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
   // Wait for the existing sidebar margin transition before measuring container-query rows.
   await page.waitForFunction(()=>innerWidth>991||(Math.abs(parseFloat(getComputedStyle(document.querySelector('.sf-workspace')).marginLeft))<1&&document.querySelector('.sf-sidebar').getBoundingClientRect().right<=1),null,{timeout:3000});
   await page.locator('#quick-add-item').scrollIntoViewIfNeeded();if(width===1366||width===320)await page.screenshot({path:path.join(output,'billing-layout-'+width+'.png'),fullPage:true});
-  const quick=await page.locator('#quick-add-item').boundingBox(),searchAction=await page.locator('#scan-sale').boundingBox();assert(quick.x>=searchAction.x+searchAction.width-1&&Math.abs(quick.y-searchAction.y)<3,'Quick Add Item beside search '+width+' '+JSON.stringify({quick,searchAction}));
+  const quick=await page.locator('#quick-add-item').boundingBox(),searchAction=await page.locator('.billing-scan-row>.sf-camera-trigger').boundingBox();assert(quick.x>=searchAction.x+searchAction.width-1&&Math.abs(quick.y-searchAction.y)<3,'Quick Add Item beside camera '+width+' '+JSON.stringify({quick,searchAction}));
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'page overflow '+width+'x'+height);
   const billingLayout=await page.locator('.billing-layout').evaluate(n=>{const catalog=n.querySelector('.billing-catalog-pane').getBoundingClientRect(),checkout=n.querySelector('.billing-checkout-pane').getBoundingClientRect();return {container:document.querySelector('#billing-workspace').getBoundingClientRect().width,columns:getComputedStyle(n).gridTemplateColumns,sideBySide:checkout.left>=catalog.right-1};});
   assert.equal(billingLayout.sideBySide,billingLayout.container>=980,'Existing checkout container breakpoint '+width);
@@ -221,7 +263,7 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  gstContext={mapped:true,registrationType:'REGULAR'};
  await page.goto('http://stockflow.test/Sales/Create');await page.locator('#quick-add-item').click();await page.locator('#manual-name').fill('GST goods');await page.locator('#manual-price').fill('50');
  await page.waitForFunction(()=>document.querySelector('#manual-rule').required);assert(await page.locator('#manual-submit').isDisabled());
- await page.locator('#manual-rule').fill('Reviewed small goods · 610910 · 5% (#7)');await page.waitForFunction(()=>!document.querySelector('#manual-submit').disabled);await page.locator('#manual-cancel').click();
+ await selectValue(page.locator('#manual-rule'),'7');await page.waitForFunction(()=>!document.querySelector('#manual-submit').disabled);await page.locator('#manual-cancel').click();
  console.log('PASS optional GST: ordinary billing works with no reviewed rules; GST invoicing retains required classification.');
  canOverrideTax=false;canApproveDiscount=false;gstContext={mapped:false};await page.goto('http://stockflow.test/Sales/Create');await page.waitForFunction(()=>!document.querySelector('#sale-editor').disabled);await page.locator('#sale-scan').fill('CABLE-RED');await page.locator('#sale-scan').press('Enter');await page.locator('#line-tax-0').waitFor();assert(await page.locator('#line-tax-0').evaluate(n=>n.readOnly),'Ordinary cashier without Tax Override permission cannot edit tax');
  await page.waitForFunction(()=>document.querySelector('#billing-calculation-status').hidden);assert(await page.locator('#line-warning-0').isHidden(),'Normal sale has no adjustment warning');
@@ -230,7 +272,9 @@ const root=path.resolve(__dirname,'../..'),fixture=path.join(root,'tests/bin/bil
  await fillReason(0,'Customer promotion');await page.locator('#sale-scan').focus();await page.waitForFunction(()=>document.querySelector('#billing-calculation-status').hidden);assert(await page.locator('#line-warning-0').isHidden());
  await page.locator('[data-discount-editor]').fill('10');await page.locator('#sale-scan').focus();await page.waitForFunction(()=>document.querySelector('#billing-calculation-status').hidden);assert(await page.locator('#request-discount-approval').isHidden(),'Exact threshold does not request approval');
  await page.locator('[data-discount-editor]').fill('15');await page.locator('#sale-scan').focus();await page.waitForFunction(()=>!document.querySelector('#request-discount-approval').hidden);assert((await page.locator('#discount-policy-status').textContent()).includes('Manager approval required'));
- await page.locator('#request-discount-approval').click();await page.locator('#billing-approval-dialog').getByRole('button',{name:'Request Approval',exact:true}).click();await page.waitForFunction(()=>document.querySelector('#discount-policy-status').textContent.includes('Approval pending'));approvalStatus='APPROVED';await page.locator('#request-discount-approval').click();await page.waitForFunction(()=>document.querySelector('#discount-policy-status').textContent.includes('Discount approved'));assert(await page.locator('#line-warning-0').isHidden());
+ await page.locator('#request-discount-approval').click();await page.locator('#billing-approval-dialog').getByRole('button',{name:'Request Approval',exact:true}).click();await page.waitForFunction(()=>document.querySelector('#discount-policy-status').textContent.includes('Approval pending'));
+ // Let the approval dialog's deferred quote and 800ms autosave finish before changing the mock manager decision.
+ await page.waitForTimeout(1100);await page.waitForFunction(()=>document.querySelector('#billing-calculation-status').hidden);approvalStatus='APPROVED';await page.locator('#request-discount-approval').click();await page.waitForFunction(()=>document.querySelector('#discount-policy-status').textContent.includes('Discount approved'));assert(await page.locator('#line-warning-0').isHidden());
  approvalStatus='STALE';await page.getByRole('button',{name:/Increase quantity for Cable/}).click();await page.waitForFunction(()=>document.querySelector('#discount-policy-status').textContent.includes('previous approval changed'));assert(await page.locator('#line-warning-0').isVisible());
  assert(!await page.locator('#billing-adjustment-fields').isVisible(),'Generic bill-wide reason panel is not shown');
  await page.locator('[data-discount-editor]').fill('0');await page.locator('#sale-scan').focus();await page.waitForFunction(()=>document.querySelector('#billing-calculation-status').hidden);await page.waitForTimeout(1100);

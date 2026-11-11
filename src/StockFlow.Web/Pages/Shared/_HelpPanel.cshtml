@@ -6,11 +6,6 @@
         Links = article.Links.Where(link => Access.CanVisit(link.Url)).ToArray()
     });
 }
-<button id="help-open" type="button" class="sf-help-open sf-help-mascot" aria-label="Open StockBot Assist" title="StockBot Assist" aria-haspopup="dialog" aria-controls="help-panel" data-no-translate>
-    <span class="sf-mascot-body" aria-hidden="true"></span><span class="sf-mascot-hand" aria-hidden="true"></span>
-    <span class="sf-mascot-eyelids" aria-hidden="true"></span>
-    <span class="sf-mascot-caption"><span class="sf-mascot-chat" aria-hidden="true"><svg class="sf-icon"><use href="/images/icons.svg#chat" /></svg></span><span>Ask StockBot Assist</span></span>
-</button>
 <dialog id="help-panel" class="sf-help-panel" aria-labelledby="help-title" data-no-translate>
     <header class="sf-help-header">
         <span class="sf-assistant-logo" aria-hidden="true"><svg class="sf-icon"><use href="/images/icons.svg#box" /></svg></span>

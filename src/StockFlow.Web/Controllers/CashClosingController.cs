@@ -47,7 +47,8 @@ public class CashClosingController : ControllerBase
             {
                 message = "Only the shop owner or administrator can save cash closing."
             });
-        CashClosingRules.Validate(request, time.Today(clock));
+        // The repository verifies any negative carry-forward against tracked history.
+        CashClosingRules.Validate(request, time.Today(clock), allowNegativeOpening: true);
         return Ok(await repository.SaveAsync(request));
     }
 }
