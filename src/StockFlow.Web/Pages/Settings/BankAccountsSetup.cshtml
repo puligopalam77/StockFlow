@@ -1,0 +1,22 @@
+@page
+@model StockFlow.Web.Pages.Settings.BankAccountsSetupModel
+@{ViewData["Title"]="Bank Accounts";}
+@section PageHeader {
+<header class="sf-page-heading bank-heading"><div><h1>Bank Accounts</h1><p>Manage your business bank account and its authorized shops.</p></div><div class="bank-actions"><button type="button" class="btn btn-primary" disabled aria-describedby="bank-setup-status">+ Add Bank Account</button></div></header>
+}
+<section class="bank-panel" aria-labelledby="bank-setup-title">
+ <h2 id="bank-setup-title">Bank account setup pending</h2>
+ <p id="bank-setup-status" role="status">Account management is not enabled yet. Adding accounts and recording bank transactions will be available after setup is completed.</p>
+ <p>No bank account data is loaded on this page.</p>
+</section>
+<section class="bank-panel" aria-labelledby="bank-sharing-title">
+ <h2 id="bank-sharing-title">One account, shared across your shops</h2>
+ <p>Initially, your business can have one active bank account assigned to up to three authorized shops. The account has one consolidated recorded balance.</p>
+ <p>Owners can review the shared account and filter transactions by shop. Shop Admins can view only their authorized shop activity.</p>
+</section>
+<section class="bank-panel" aria-labelledby="bank-transactions-title">
+ <header class="bank-toolbar"><h2 id="bank-transactions-title">Bank Transactions</h2><button type="button" class="btn btn-outline-secondary" disabled aria-describedby="bank-posting-status">View Transactions</button></header>
+ <p id="bank-posting-status">Opening balances, manual verification and financial posting are disabled.</p>
+ <p>Recorded Bank Balance will reflect verified bank evidence. It is not an actual or live bank balance.</p>
+</section>
+@section Styles {<link rel="stylesheet" href="~/css/bank-accounts.css" asp-append-version="true" />}

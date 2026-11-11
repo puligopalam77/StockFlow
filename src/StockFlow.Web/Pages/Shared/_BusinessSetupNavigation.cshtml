@@ -6,6 +6,8 @@
 <div class="sf-nav-children">
 @if(BankConfiguration.GetValue<bool>("BankAccounts:Enabled")&&Access.Can("BANK_ACCOUNTS")){
 <a class="sf-nav-child @(currentPath.StartsWith("/Settings/BankAccounts",StringComparison.OrdinalIgnoreCase)?"active":"")" href="/Settings/BankAccounts" aria-current="@(currentPath.StartsWith("/Settings/BankAccounts",StringComparison.OrdinalIgnoreCase)?"page":null)">Bank Accounts</a>}
+else if(SetupScope.IsOwner&&Access.Can("COMPANY_SETTINGS")){
+<a class="sf-nav-child @(currentPath.Equals("/Settings/BankAccountsSetup",StringComparison.OrdinalIgnoreCase)?"active":"")" href="/Settings/BankAccountsSetup" aria-current="@(currentPath.Equals("/Settings/BankAccountsSetup",StringComparison.OrdinalIgnoreCase)?"page":null)">Bank Accounts</a>}
 @if(Access.Can("COMPANY_SETTINGS")){
 <a class="sf-nav-child @(currentPath=="/Settings/Company"&&!billingView?"active":"")" href="/Settings/Company?section=business" aria-current="@(currentPath=="/Settings/Company"&&!billingView?"page":null)">Business Details</a>
 <a class="sf-nav-child @(currentPath=="/Settings/Company"&&billingView?"active":"")" href="/Settings/Company?section=billing" aria-current="@(currentPath=="/Settings/Company"&&billingView?"page":null)">Invoice Settings</a>

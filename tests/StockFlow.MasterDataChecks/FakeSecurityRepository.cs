@@ -19,6 +19,7 @@ sealed class FakeSecurityRepository(IHttpContextAccessor context):ISecurityRepos
         foreach(var p in perms)
         {
             p.Actions=p.SupportedActions.Where(a=>p.CanView && (a switch {"VIEW" or "SCAN" or "PRINT" or "REPRINT"=>true,"CREATE"=>p.CanCreate,"DEACTIVATE"=>p.CanDelete,"EXPORT"=>p.CanExport,"APPROVE" or "RECEIVE" or "DISPATCH" or "CANCEL" or "ADJUST" or "DELIVER" or "RESOLVE"=>p.CanApprove,_=>p.CanEdit})).ToArray();
+            if(p.ModuleCode=="BANK_ACCOUNTS"&&headers["Test-Bank-ViewOnly"]=="true")p.Actions=["VIEW"];
             var deniedActions=headers["Test-Deny-Action"].ToString().Split(',');
             p.Actions=p.Actions.Where(a=>!deniedActions.Contains(p.ModuleCode+":"+a)).ToArray();
         }

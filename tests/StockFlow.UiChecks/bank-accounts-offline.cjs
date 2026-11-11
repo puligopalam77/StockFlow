@@ -20,10 +20,12 @@ const root=path.resolve(__dirname,'../..'),dir=path.join(root,'tests/bin/bank-ac
    }
    if(failRead)return route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({message:'Bank account data unavailable'})});
    const data=structuredClone(url.pathname==='/api/bankaccounts'?list:base);
+   if(!data.account)data.canCreate=true; // Exercise an empty-business create capability, separately from SQL policy tests.
    if(data.account){data.account.active=true;data.canVerify=true;data.canReverse=true;data.canOpen=true;
     data.sources=[{id:'34566800-b386-4ad3-b035-71f7a527c3a0',kind:'SALE_PAYMENT',key:'123',direction:'IN',amount:5000,remaining:5000,date:'2026-11-10'}];
     data.candidates=[{kind:'SALE_PAYMENT',key:'456',reference:'SYNTHETIC-INVOICE',mode:'UPI',amount:2000,day:'2026-11-10'}];
-    if(admin){data.ownerOverview=false;delete data.recordedBalance;delete data.opening;delete data.shops;delete data.account.recordedBalance;delete data.account.stores;for(const r of data.transactions)delete r.runningBalance;for(const k of ['canCreate','canEdit','canAssign','canDefault','canStatus','canOpen'])data[k]=false;}
+    const shop=url.searchParams.get('shopId');if(shop){data.selectedShopId=Number(shop);data.showRunningBalance=false;data.moneyIn=2000;data.moneyOut=0;data.netMovement=2000;data.total=1;data.transactions=data.transactions.slice(0,1).map(r=>({...r,amount:2000,shopId:Number(shop),shopName:'Synthetic shop '+shop,reversible:false}));for(const r of data.transactions)delete r.runningBalance;}
+    if(admin){data.ownerOverview=false;data.showRunningBalance=false;data.canLink=false;delete data.recordedBalance;delete data.opening;delete data.shops;delete data.filterShops;delete data.account.recordedBalance;delete data.account.stores;for(const r of data.transactions)delete r.runningBalance;for(const k of ['canCreate','canEdit','canAssign','canDefault','canStatus','canOpen'])data[k]=false;}
    }
    return route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
   }
@@ -48,6 +50,9 @@ const root=path.resolve(__dirname,'../..'),dir=path.join(root,'tests/bin/bank-ac
   await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#bank-dialog').open);
  }
  await page.setViewportSize({width:1366,height:768});await page.goto('https://stockflow.test/Settings/BankAccounts/'+id);await page.locator('#bank-sources input[type=checkbox]').waitFor();
+ const consolidated=await page.locator('#bank-kpis strong').first().innerText();await page.locator('#bank-shop').selectOption('2');await page.waitForFunction(()=>document.querySelector('#bank-scope').textContent.includes('selected shop'));
+ assert.equal(await page.locator('#bank-kpis strong').first().innerText(),consolidated,'Owner shop filter does not replace consolidated balance');assert(await page.locator('#bank-running-head').isHidden());assert((await page.locator('#bank-rows').innerText()).includes('Synthetic shop 2'));
+ await page.locator('#bank-shop').selectOption('');await page.waitForFunction(()=>!document.querySelector('#bank-running-head').hidden);
  await page.locator('#bank-sources input[type=checkbox]').check();await page.locator('#bank-verify').click();
  assert(await page.locator('#bank-field-afterOpening').evaluate(n=>n.required));
  await page.locator('#bank-field-reference').fill('SYNTHETIC-VERIFIED-UTR');await page.locator('#bank-field-evidence').fill('Synthetic statement evidence for actual bank credit');await page.locator('#bank-field-afterOpening').check();
@@ -68,6 +73,7 @@ const root=path.resolve(__dirname,'../..'),dir=path.join(root,'tests/bin/bank-ac
  await page.locator('#bank-save').click();await page.waitForFunction(()=>!document.querySelector('#bank-dialog').open);assert.deepEqual(writes[3],writes[4],'Empty successful response retries exact request identity and payload');
  admin=true;await page.reload();await page.locator('#bank-kpis strong').first().waitFor();assert.equal(await page.locator('#bank-kpis .bank-kpi').count(),3);
  assert(!(await page.locator('#bank-kpis').innerText()).includes('Recorded Bank Balance'));assert(await page.locator('#bank-running-head').isHidden());assert(await page.locator('#bank-opening-audit').isHidden());assert.equal(await page.locator('#bank-settings button').count(),0);
+ assert(await page.locator('#bank-shop-label').isHidden());assert(await page.locator('#bank-link').isHidden(),'Admin has no Owner-only destination write action');
  failRead=true;await page.locator('#bank-date').dispatchEvent('change');await page.waitForFunction(()=>document.querySelector('#bank-message').textContent.includes('unavailable'));assert.equal(await page.locator('#bank-kpis strong').count(),0,'Failed API does not fabricate zero or retain stale balances');
  assert.deepEqual(errors,[]);fs.writeFileSync(path.join(dir,'measurements.json'),JSON.stringify(measurements,null,2));
  console.log('PASS Bank Accounts UI: nine viewports, 42px fields, bounded single-scroll dialogs, list/detail, setup navigation, admin privacy, failed reads and exact lost-response retry. APIs mocked.');

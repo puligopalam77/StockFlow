@@ -19,6 +19,7 @@ public static class Checks
 {
     public static async Task Main(string[] args)
     {
+        if(args.Contains("--bank-january-checks")){await BankJanuaryChecks.Run();return;}
         if(args.Contains("--database-unavailable-checks")){await DatabaseUnavailableChecks.Run();return;}
         if(args.Contains("--bank-development-checks")){await BankDevelopmentChecks.Run();return;}
         if(args.Contains("--cash-release-readonly-audit")){await CashReleaseReadOnlyChecks.Run(details:true);return;}
@@ -53,6 +54,7 @@ public static class Checks
         if(args.Contains("--gst-catalog-large-checks")){await GstCatalogChecks.Run(true);return;}
         if(args.Contains("--crm-checks")){await CrmChecks.Run();return;}
         if(args.Contains("--gst-setup-checks")){await GstSetupChecks.Run();return;}
+        if(args.Contains("--bank-presentation-checks")){await BankPresentationChecks.Run();return;}
         if(args.Contains("--sidebar-navigation-checks")){using var sidebar=new Factory();await NavigationChecks.Run(sidebar);return;}
         if(args.Contains("--responsive-audit-server")){await ResponsiveAuditServer.Run();return;}
         if(args.Contains("--list-pagination-database-checks")){await ListPaginationChecks.Database();return;}

@@ -37,24 +37,30 @@
   if(report.canEdit)el('settings').append(button('Edit Account',()=>open('edit')));
   if(report.canAssign)el('settings').append(button('Shop Assignments',()=>open('assign')));
   if(report.canDefault&&a.active)el('settings').append(button('Set Shop Default',()=>open('default')));
-  if(report.canStatus)el('settings').append(button(a.active?'Deactivate':'Reactivate',()=>open('status')));
+  if(report.canStatus){const status=button(a.active?'Deactivate':'Reactivate',()=>open('status'));status.disabled=!a.active&&!report.canReactivate;if(status.disabled)status.title='The configured active-account or shop limit prevents reactivation.';el('settings').append(status);}
+  el('shop-label').hidden=!report.filterShops;
+  el('shop').replaceChildren(new Option('All shops',''));
+  for(const s of report.filterShops||[])el('shop').append(new Option(s.name+(s.assigned?'':' (previous assignment)'),s.id));
+  el('shop').value=report.selectedShopId===null||report.selectedShopId===undefined?'':String(report.selectedShopId);
   el('initialize').hidden=a.initialized;el('open').hidden=!report.canOpen||!posting||!a.active;
   el('kpis').replaceChildren();
   const tiles=report.ownerOverview?[['Recorded Bank Balance',report.recordedBalance]]:[];
   tiles.push(['Money In',report.moneyIn],['Money Out',report.moneyOut],['Net Movement',report.netMovement]);
   for(const [label,value]of tiles){const card=node('section',undefined,'bank-kpi');card.append(node('span',label),node('strong',money(value)));el('kpis').append(card);}
-  el('scope').textContent=report.ownerOverview?'Whole-account recorded bank activity. Opening is excluded from daily Money In/Out.':'Authorized active shop/location activity only. Shared account totals and running balances are not disclosed.';
-  el('running-head').hidden=!report.ownerOverview;el('rows').replaceChildren();
+  el('scope').textContent=report.ownerOverview?(report.selectedShopId?'Transactions and daily totals are for the selected shop. Recorded Bank Balance remains for the entire shared account. Switch to All shops to reverse a bank event.':'Whole-account recorded bank activity. Opening is excluded from daily Money In/Out.'):'Authorized shop activity only. Shared account totals and running balances are not disclosed.';
+  const showRunning=report.showRunningBalance===true,showShop=!!report.filterShops;
+  el('running-head').hidden=!showRunning;el('shop-head').hidden=!showShop;el('rows').replaceChildren();
   for(const entry of report.transactions){const tr=node('tr');for(const value of [entry.date,entry.reference,entry.type.replaceAll('_',' '),entry.amount>0?money(entry.amount):'—',entry.amount<0?money(-entry.amount):'—'])tr.append(node('td',value));
-   if(report.ownerOverview)tr.append(node('td',money(entry.runningBalance)));
+   if(showShop)tr.insertBefore(node('td',entry.shopName||(entry.shops||[]).map(s=>s.name).join(', ')),tr.children[3]);
+   if(showRunning)tr.append(node('td',money(entry.runningBalance)));
    tr.append(node('td',entry.status+' · '+new Date(entry.verifiedAt).toLocaleString()+' · User '+entry.verifiedBy));const actions=node('td');
    if(posting&&report.canReverse&&entry.reversible)actions.append(button('Reverse',()=>open('reverse',entry)));tr.append(actions);el('rows').append(tr);
   }
-  if(!report.transactions.length){const td=node('td','No bank transactions for this date.');td.colSpan=report.ownerOverview?8:7;const tr=node('tr');tr.append(td);el('rows').append(tr);}
+  if(!report.transactions.length){const td=node('td','No bank transactions for this date.');td.colSpan=7+Number(showRunning)+Number(showShop);const tr=node('tr');tr.append(td);el('rows').append(tr);}
   el('count').textContent=report.total+' transactions';el('page').textContent=page;el('prev').disabled=page<=1;el('next').disabled=page*20>=report.total;
   el('candidate').replaceChildren(new Option('Choose a recorded payment',''));
   for(const s of report.candidates)el('candidate').append(new Option(`${s.reference} · ${s.kind} · ${s.mode} · ${money(s.amount)} · ${s.day}`,s.kind+':'+s.key));
-  el('link').disabled=!a.active||!report.candidates.length;
+  el('link').hidden=!report.canLink;el('link').disabled=!report.canLink||!a.active||!report.candidates.length;
   el('sources').replaceChildren();
   for(const source of report.sources){const tr=node('tr'),cell=node('td'),check=document.createElement('input');check.type='checkbox';check.value=source.id;check.setAttribute('aria-label','Select '+source.kind+' '+source.key);check.disabled=!posting||!report.canVerify||source.remaining<=0;cell.append(check);tr.append(cell);
    for(const value of [source.kind+' / '+source.key,source.date,source.direction,money(source.remaining)])tr.append(node('td',value));el('sources').append(tr);
@@ -64,14 +70,14 @@
  }
  async function load(){
   const current=++version;workspace.setAttribute('aria-busy','true');
-  try{const data=await request('/api/bankaccounts'+(account?'/'+account:'')+'?'+new URLSearchParams({date:el('date').value||today(),page,search:el('search').value}));if(current!==version)return;report=data;el('date').max=data.today;render();error('');}
+  try{const query=new URLSearchParams({date:el('date').value||today(),page,search:el('search').value});if(account&&el('shop').value)query.set('shopId',el('shop').value);const data=await request('/api/bankaccounts'+(account?'/'+account:'')+'?'+query);if(current!==version)return;report=data;el('date').max=data.today;render();error('');}
   catch(e){if(current!==version)return;error(e.message);el('list').replaceChildren(node('p','Bank account data unavailable.'));el('kpis').replaceChildren();el('rows').replaceChildren();el('sources').replaceChildren();el('settings').replaceChildren();el('opening-audit').hidden=true;el('initialize').hidden=true;el('verify').hidden=true;el('add').hidden=true;el('open').hidden=true;el('link').disabled=true;el('prev').disabled=true;el('next').disabled=true;}
   finally{if(current===version)workspace.removeAttribute('aria-busy');}
  }
  function field(name,label,type='text',required=true,value=''){
   const wrap=node('label',label+(required?' *':'')),input=document.createElement(type==='textarea'?'textarea':type==='select'?'select':'input');input.name=name;input.id='bank-field-'+name;if(type!=='textarea'&&type!=='select')input.type=type;input.required=required;input.value=type==='checkbox'?'true':value;input.setAttribute('data-sf-select','native');wrap.append(input);el('fields').append(wrap);return input;
  }
- function shops(values=[]){const group=node('div');group.append(node('strong','Authorized shops *'));for(const s of report.shops||[]){const label=node('label',undefined,'bank-check'),check=document.createElement('input');check.type='checkbox';check.name='stores';check.value=s.id;check.checked=values.includes(s.id);label.append(check,document.createTextNode(s.name));group.append(label);}el('fields').append(group);}
+ function shops(values=[]){const group=node('div');group.append(node('strong','Authorized shops *'),node('p','Select up to '+report.policy.maxAssignedShops+' shops.'));for(const s of report.shops||[]){const label=node('label',undefined,'bank-check'),check=document.createElement('input');check.type='checkbox';check.name='stores';check.value=s.id;check.checked=values.includes(s.id);label.append(check,document.createTextNode(s.name));group.append(label);}el('fields').append(group);}
  function evidence(){const note=field('evidence','Bank evidence / explanation','textarea');note.minLength=10;note.maxLength=1000;}
  function open(action,data){
   if(busy||pending)return;operation={action,accountId:action==='create'?crypto.randomUUID():account,requestId:crypto.randomUUID(),data};
@@ -105,7 +111,7 @@
   if(!pending){
    const f=new FormData(el('form')),body=Object.fromEntries(f),action=operation.action;
    if(['edit','assign','default','status'].includes(action))body.expectedVersion=report.account.version;
-   if(['create','assign'].includes(action)){body.stores=f.getAll('stores').map(Number);if(!body.stores.length){error('Select at least one shop.','form-error');return;}}
+   if(['create','assign'].includes(action)){body.stores=f.getAll('stores').map(Number);if(!body.stores.length||body.stores.length>report.policy.maxAssignedShops){error('Select 1 to '+report.policy.maxAssignedShops+' authorized shops.','form-error');return;}}
    if(action==='edit'&&!body.upiId)delete body.upiId;
    if(action==='default')body.storeId=Number(body.storeId);
    if(action==='status')body.active=!report.account.active;
@@ -125,5 +131,6 @@
  el('date').value=today();el('add').addEventListener('click',()=>open('create'));el('open').addEventListener('click',()=>open('open'));el('link').addEventListener('click',()=>open('link'));el('verify').addEventListener('click',()=>open('verify'));
  el('close').addEventListener('click',close);el('cancel').addEventListener('click',close);el('dialog').addEventListener('cancel',event=>{event.preventDefault();close();});el('form').addEventListener('submit',save);
  el('date').addEventListener('change',()=>{page=1;load();});el('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{page=1;load();},200);});el('prev').addEventListener('click',()=>{page--;load();});el('next').addEventListener('click',()=>{page++;load();});
+ el('shop').addEventListener('change',()=>{page=1;load();});
  load();
 })();

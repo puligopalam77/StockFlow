@@ -15,10 +15,10 @@ public sealed class BankAccountsController(IBankAccountsRepository repository,IO
 {
     [HttpGet]
     [HttpGet("{accountId:guid}")]
-    public async Task<IActionResult> Read(Guid? accountId,DateTime? date,int page=1,string? search=null)
+    public async Task<IActionResult> Read(Guid? accountId,DateTime? date,int page=1,string? search=null,long? shopId=null)
     {
         if(!options.Value.Enabled)return NotFound();
-        return Ok(await repository.ReadAsync(accountId,date??DateTime.Today,page,search));
+        return Ok(await repository.ReadAsync(accountId,date??DateTime.Today,page,search,shopId));
     }
     [HttpPost("{accountId:guid}/{operation}")]
     public async Task<IActionResult> Write(Guid accountId,string operation,BankOperation request)
