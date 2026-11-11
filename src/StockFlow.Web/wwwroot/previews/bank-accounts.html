@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8" />
+ <meta name="viewport" content="width=device-width,initial-scale=1" />
+ <title>Bank Accounts Preview · StockFlow</title>
+ <link rel="stylesheet" href="bank-accounts-preview.css" />
+ <script src="bank-accounts-preview.js" defer></script>
+</head>
+<body>
+ <aside class="sidebar"><a class="brand" href="bank-accounts.html"><span>SF</span> StockFlow</a><div class="shop"><small>BUSINESS WORKSPACE</small><strong>Sample shop</strong><span>UI design preview</span></div><p class="nav-label">BUSINESS SETUP</p><a class="nav-active" href="bank-accounts.html" aria-current="page"><span aria-hidden="true">▤</span> Bank Accounts</a><p class="sidebar-note">Explore the screen with sample accounts and payments.</p></aside>
+ <main>
+  <div class="topbar"><span>Business Setup <span aria-hidden="true">/</span> <strong>Bank Accounts</strong></span><span class="preview-tag">UI preview</span></div>
+  <header class="heading"><div><p class="eyebrow">YOUR BUSINESS FINANCES</p><h1>Bank Accounts</h1><p>Keep your business accounts and bank activity in one place.</p></div><button id="add-account" class="primary" type="button">+ Add Bank Account</button></header>
+  <div class="preview-note"><span class="note-dot" aria-hidden="true"></span><span><strong>Sample data only.</strong> Changes last until you refresh. No bank connection or database setup is required.</span><button id="reset" class="text-button" type="button">Reset preview</button></div>
+  <section aria-labelledby="accounts-heading"><div class="section-heading"><h2 id="accounts-heading">Your accounts <span id="account-count" class="count"></span></h2><span class="muted">Select an account to view its activity</span></div><div id="accounts" class="account-grid"></div></section>
+  <section class="detail" aria-labelledby="detail-name"><header class="detail-heading"><div><p class="eyebrow">ACCOUNT OVERVIEW</p><h2 id="detail-name"></h2><p id="detail-meta" class="muted"></p></div><div class="actions"><button id="edit-account" type="button">Edit Account</button><button id="make-default" type="button">Set as Default</button></div></header>
+   <div id="kpis" class="kpis"></div>
+   <div class="activity-header"><div class="tabs" role="tablist" aria-label="Account activity"><button id="transactions-tab" class="selected" role="tab" aria-selected="true" aria-controls="transactions-panel" type="button">Transactions</button><button id="pending-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="pending-panel" type="button">Pending Settlement <span id="pending-count" class="count"></span></button></div><label class="search"><span class="sr-only">Search account activity</span><input id="search" type="search" placeholder="Search reference or description…" /></label></div>
+   <div id="transactions-panel" role="tabpanel" aria-labelledby="transactions-tab"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description / Reference</th><th>Type</th><th class="numeric">Money In</th><th class="numeric">Money Out</th><th class="numeric">Running Balance</th><th>Status</th></tr></thead><tbody id="transactions"></tbody></table></div></div>
+   <div id="pending-panel" role="tabpanel" aria-labelledby="pending-tab" hidden><p class="pending-note">Sample recorded payments awaiting bank settlement. These are excluded from the recorded balance.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Source / Reference</th><th>Payment Mode</th><th class="numeric">Amount</th><th>Status</th></tr></thead><tbody id="pending"></tbody></table></div></div>
+   <footer class="table-footer"><span id="row-count" role="status"></span><span>All amounts in INR · Sample activity</span></footer>
+  </section>
+  <p id="announcement" class="announcement" role="status" aria-live="polite"></p>
+ </main>
+ <dialog id="account-dialog" aria-labelledby="dialog-title"><form id="account-form"><header class="dialog-header"><div><p class="eyebrow">ACCOUNT DETAILS</p><h2 id="dialog-title">Add Bank Account</h2></div><button id="close-dialog" class="icon-button" type="button" aria-label="Close account dialog">×</button></header><div class="dialog-body"><p class="muted">Use sample details to explore the design.</p><label>Account display name<input name="displayName" required maxlength="120" placeholder="e.g. Main business account" /></label><div class="form-grid"><label>Bank name<input name="bankName" required maxlength="120" placeholder="e.g. Sample Bank" /></label><label>Account type<select name="accountType"><option>Current</option><option>Savings</option><option>Other</option></select></label></div><label>Account holder name<input name="holderName" required maxlength="150" placeholder="e.g. Sample Trading Co." /></label><div class="form-grid"><label>Last four digits<input name="lastFour" required pattern="[0-9]{4}" maxlength="4" inputmode="numeric" placeholder="1234" /></label><label>IFSC<input name="ifsc" required pattern="[A-Za-z]{4}0[A-Za-z0-9]{6}" maxlength="11" placeholder="DEMO0123456" /></label></div><label class="checkbox-label"><input name="isDefault" type="checkbox" /> Set as default receiving account for this sample shop</label></div><footer class="dialog-footer"><button id="cancel-dialog" type="button">Cancel</button><button class="primary" type="submit">Save Preview</button></footer></form></dialog>
+</body>
+</html>
