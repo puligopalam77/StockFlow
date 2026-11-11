@@ -110,8 +110,8 @@
   rows.sort((a,b)=>a.rate-b.rate||a.name.localeCompare(b.name));
   select.replaceChildren(new Option('Select GST rate',''));
   for(const r of rows){const name=r.name.replace(/^TEST ONLY\s*-\s*/i,'').trim(),rate='GST '+r.rate+'%',label=name.toUpperCase()===rate.toUpperCase()?rate:name+' · '+r.rate+'%';const o=new Option(label+(r.treatment!=='TAXABLE'?' · '+r.treatment.replaceAll('_',' '):'')+(r.historical?' (saved)':''),r.id);o.disabled=r.supported===false;select.add(o);}select.value=value;
-  // Keep a short rate list native; reuse the existing search only for larger catalogs.
-  select.dataset.sfSelect=rows.length>10?'search':'native';if(rows.length<=10)select.sfSelect?.destroy();window.StockFlowSelect?.scan();
+  // Keep the original select/IDs/events as the source for the shared presentation.
+  select.dataset.sfSelect='search';window.StockFlowSelect?.scan();
  }
  const taxNote=()=>$('expense-gst-itc').value==='NOT_ELIGIBLE'?'GST credit is not claimed.':'GST credit has not been verified.';
  const dateError=()=>`Expense date cannot be after the database business date (${today.split('-').reverse().join('-')}). Check the database server clock if this date is incorrect.`;

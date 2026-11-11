@@ -263,5 +263,11 @@ window.StockFlowValidation = (() => {
         }
     }, true);
 
-    return { validate, fieldMessage, showField };
+    // Clear validation state without resetting values or the unsaved-change snapshot.
+    function reset(container) {
+        shownForms.delete(container);
+        container.querySelectorAll('input, select, textarea').forEach(input=>showField(input,''));
+        container.querySelectorAll(':scope > .sf-validation-summary').forEach(summary=>summary.hidden=true);
+    }
+    return { validate, fieldMessage, showField, reset };
 })();

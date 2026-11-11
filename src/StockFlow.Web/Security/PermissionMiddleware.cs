@@ -175,6 +175,8 @@ public class PermissionMiddleware
         }
 
         var key = p.FirstOrDefault() ?? "";
+        if(key=="bankaccounts" || key=="settings"&&p.ElementAtOrDefault(1)=="bankaccounts")
+            return ("BANK_ACCOUNTS",method=="GET"?"VIEW":p.LastOrDefault() switch{"create"=>"CREATE","edit"=>"EDIT","assign"=>"ASSIGN","default"=>"SET_DEFAULT","status"=>"DEACTIVATE","open"=>"INITIALIZE","verify"=>"VERIFY","reverse"=>"REVERSE",_=>"VIEW"});
         if(key=="replenishment") return ("REPLENISHMENT",p.Contains("export")?"EXPORT":p.Contains("policy")?"POLICY_EDIT":p.Contains("draft")?"PREPARE_PO":"VIEW");
         if(key=="expenses") return ("EXPENSES",method=="GET"?(p.Contains("export")?"EXPORT":p.Contains("create")?"CREATE":"VIEW"):p.Contains("masters")?"EDIT":p.Contains("attachments")?"ATTACH":p.LastOrDefault() switch{"save" or "record"=>"VIEW","correct"=>"EDIT","post"=>"POST","pay"=>"PAY","refund" or "reverse"=>"REVERSE","cancel"=>"CANCEL",_=>"CREATE"});
         if(key=="shopmasters" || key=="admin"&&p.ElementAtOrDefault(1)=="shopdata") return ("COMPANY_SETTINGS",method=="GET"?"VIEW":"EDIT");
@@ -223,6 +225,7 @@ public class PermissionMiddleware
             "search" => "SEARCH",
             "reports" => "REPORTS",
             "cashclosing" => "REPORTS",
+            "cashinhand" => "REPORTS",
             "settings" => "COMPANY_SETTINGS",
             "business-profile" => "COMPANY_SETTINGS",
             "screenlanguages" or "configuration" => "COMPANY_SETTINGS",
@@ -251,7 +254,7 @@ public class PermissionMiddleware
             _ => null
         };
         // Cash closing also checks verified owner/administrator membership in its endpoint.
-        if (key == "cashclosing") action = "VIEW";
+        if (key is "cashclosing" or "cashinhand") action = "VIEW";
         if (key == "operations")
         {
             module = p.ElementAtOrDefault(1) switch

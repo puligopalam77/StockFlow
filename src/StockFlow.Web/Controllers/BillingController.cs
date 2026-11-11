@@ -274,13 +274,16 @@ t);
     }
 
     [HttpGet("drafts")]
-    public async Task<IActionResult> Drafts(string? search = null, int page = 1, bool paged = false, bool recovery = false)
+    public async Task<IActionResult> Drafts(string? search = null, int page = 1, bool paged = false, bool recovery = false, bool includeActive = false, Guid? editorId = null)
     {
         factory.RequireLocation();await using var c=factory.CreateConnection();
         page=Math.Clamp(page,1,100000);if(search?.Length>150)throw new ValidationException("Search must be at most 150 characters.");
-        var scope=recovery?"(draft_status='LEGACY' OR draft_status='ACTIVE' AND (lease_until IS NULL OR lease_until<=now()))":"draft_status='HELD'";
+        // Keep the held-only API default for existing callers. New Sale includes
+        // its own editor and recoverable Active records without exposing live
+        // sessions owned by another editor. RLS still scopes every read.
+        var scope=recovery?"(draft_status='LEGACY' OR draft_status='ACTIVE' AND (lease_until IS NULL OR lease_until<=now()))":includeActive?"(draft_status='HELD' OR draft_status='ACTIVE' AND (editor_id=@editorId OR lease_until IS NULL OR lease_until<=now()))":"draft_status='HELD'";
         var eligible=" FROM billing_drafts d WHERE "+scope+" AND NOT EXISTS(SELECT 1 FROM sales s WHERE s.request_id=d.draft_id) AND (@search='' OR strpos(lower(sf_draft_number(draft_sequence)||' '||coalesce(payload->>'customerLabel','')||' '||coalesce(payload->>'customerMobile','')||' '||label||' '||draft_id::text),lower(@search))>0)";
-        var args=new{search=search?.Trim()??"",offset=(page-1)*25};
+        var args=new{search=search?.Trim()??"",offset=(page-1)*25,editorId};
         await c.OpenAsync();await using var read=await c.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
         var total=await c.ExecuteScalarAsync<int>("SELECT count(*)"+eligible,args,read);
         var rows=await c.QueryAsync<DraftListRow>("SELECT draft_id AS DraftId,sf_draft_number(draft_sequence) AS DraftNumber,creation_time_source AS CreationTimeSource,draft_status AS DraftStatus,revision AS Revision,label,updated_at AS UpdatedAt,payload::text AS Payload"+eligible+" ORDER BY updated_at DESC,draft_id LIMIT 25 OFFSET @offset",args,read);

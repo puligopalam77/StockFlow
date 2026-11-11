@@ -1,0 +1,51 @@
+@page "/CashInHand"
+@model StockFlow.Web.Pages.CashInHand.IndexModel
+@inject StockFlow.Application.Common.BusinessScope Scope
+@{ ViewData["Title"]="Cash in Hand"; }
+@section PageHeader {
+<header class="sf-page-heading cih-heading">
+ <div><h1>Cash in Hand</h1><p>Physical cash available at this shop <span class="cih-shop-context">· @Model.ShopContext</span></p></div>
+ <div class="cih-toolbar"><label class="cih-date-control"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#report-calendar" /></svg><span id="cih-date-caption">Choose date</span><span aria-hidden="true">⌄</span><input id="cih-date" type="date" aria-label="Transaction date" /></label><a href="/CashClosing" class="cih-control"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#document" /></svg>Cash Closing</a>
+ <div id="cih-actions" class="cih-actions"><span id="cih-entry-help" tabindex="0" aria-label="Set Opening Cash first to enable cash entries."><button id="cih-entry" type="button" class="cih-control cih-primary" disabled aria-expanded="false" aria-controls="cih-entry-menu" aria-describedby="cih-entry-explanation">+ Cash Entry <span aria-hidden="true">⌄</span></button></span><span id="cih-entry-explanation" class="visually-hidden">Set Opening Cash first to enable cash entries.</span><div id="cih-entry-menu" class="cih-menu" hidden><button type="button" data-cash-kind="OWNER_IN">Add Cash</button><button type="button" data-cash-kind="OWNER_OUT">Remove Cash</button></div></div></div>
+</header>
+}
+<div id="cih-workspace" data-profile="@Scope.BusinessProfileCode" data-storage-key="stockflow.cash-adjustment.@Scope.TenantId.@Scope.UserId.@Scope.StoreId.@Scope.LocationId.@Scope.BusinessProfileCode">
+ <p id="cih-message" role="status" hidden></p>
+ <div id="cih-retry-panel" class="alert alert-warning" hidden>A cash movement has an unconfirmed result. <button type="button" id="cih-retry" class="cih-control">Retry saved movement</button></div>
+ <section id="cih-initialize" class="cih-initialize" hidden><div><strong>Set Opening Cash</strong><p>Enter the cash currently available in your shop drawer to start tracking.</p><small>Transactions before your tracking start will not be included.</small></div><button type="button" id="cih-opening" class="cih-control cih-primary">Set Opening Cash</button></section>
+ <details id="cih-review" class="cih-review" hidden><summary id="cih-review-title">Review opening-day cash payments</summary><p>For payments entered after the opening count with the same payment date, identify whether cash changed hands before or after that count. Earlier-dated payments are excluded.</p><div id="cih-review-items"></div></details>
+ <div class="cih-kpis">
+ @foreach(var tile in new[]{("balance","Current Cash Balance"),("received","Cash Received"),("paid","Cash Paid / Out"),("net","Net Cash Movement")}) {
+ <section class="cih-kpi cih-@tile.Item1"><span class="cih-kpi-icon"><svg class="sf-icon" viewBox="0 0 24 24" aria-hidden="true">
+ @if(tile.Item1=="balance"){<path d="M20 8H5a2 2 0 0 1 0-4h13v4M3 6v13a2 2 0 0 0 2 2h15V8M20 12h-6v5h6" />}
+ else if(tile.Item1=="received"){<path d="m5 5 13 13M8 18h10V8" />}
+ else if(tile.Item1=="paid"){<path d="M5 19 18 6M8 6h10v10" />}
+ else{<path d="M5 9h14M5 15h14" />}
+ </svg></span><div><h2>@tile.Item2</h2><strong id="cih-@tile.Item1">&#8212;</strong><small id="cih-caption-@tile.Item1">&#8212;</small></div></section>
+ }
+ </div>
+ <section class="cih-transactions" aria-labelledby="cih-table-title">
+ <header><div><h2 id="cih-table-title">Cash Transactions</h2><p>All cash movements for the selected period</p></div><div class="cih-search-tools"><div class="cih-search"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#search" /></svg><input id="cih-search" type="search" maxlength="150" placeholder="Search by reference, type or note..." aria-label="Search cash transactions" /></div><details id="cih-filter"><summary class="cih-control"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#settings" /></svg>Filter</summary><div class="cih-menu"><label for="cih-type">Transaction type</label><select id="cih-type" data-sf-select="off"><option value="">All types</option>@foreach(var kind in new[]{"SALE","SERVICE","EXPENSE","REFUND","SUPPLIER","OPENING","OWNER_IN","OWNER_OUT","BANK_DEPOSIT","BANK_WITHDRAWAL","REVERSAL"}){<option value="@kind">@kind.Replace('_',' ')</option>}</select><label for="cih-direction">Cash direction</label><select id="cih-direction" data-sf-select="native"><option value="">Cash In and Out</option><option value="IN">Cash In</option><option value="OUT">Cash Out</option></select></div></details></div></header>
+ <div class="cih-table-wrap"><table><thead><tr><th scope="col">Date &amp; Time</th><th scope="col">Reference</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Cash In (₹)</th><th scope="col">Cash Out (₹)</th><th scope="col">Balance (₹)</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead><tbody id="cih-rows"><tr><td colspan="8">Loading cash movements…</td></tr></tbody></table></div>
+ <div id="cih-empty" class="cih-empty" role="status" hidden></div>
+ <footer><span id="cih-pagination-status" role="status"></span><nav id="cih-pagination" aria-label="Cash transaction pages"><button type="button" id="cih-prev" class="cih-page" aria-label="Previous page">‹</button><span id="cih-page" aria-current="page">1</span><button type="button" id="cih-next" class="cih-page" aria-label="Next page">›</button></nav></footer>
+ </section>
+ <p id="cih-reconciliation" class="cih-note"></p>
+ <details class="cih-note"><summary>About this cash balance</summary><p>Bank tracking and transfers are deferred. Bank account configuration belongs under Business Setup. Previously recorded bank-labelled cash entries remain in history. Supplier returns currently record credit only; supplier cash refunds need a recorded receipt and are not inferred from returned stock. Expense movements use their recorded payment date; no payment time is inferred.</p></details>
+</div>
+<dialog id="cih-dialog" data-sf-dialog="small" aria-labelledby="cih-dialog-title" aria-describedby="cih-dialog-help"><form id="cih-form" data-inline-validation data-shop-name="@Model.ShopContext">
+ <header class="cih-dialog-header"><h2 id="cih-dialog-title">Add Cash</h2><button type="button" id="cih-dialog-close" aria-label="Close cash dialog">×</button></header>
+ <div class="cih-dialog-body">
+ <p id="cih-dialog-help">Use Sales, Purchases, Expenses or Refunds for trading payments.</p>
+ <fieldset id="cih-fields"><div id="cih-entry-field"><label for="cih-entry-type">Entry Type <span class="cih-required">*</span></label><div class="cih-entry-select"><span id="cih-direction-icon" aria-hidden="true">+</span><select id="cih-entry-type" data-sf-select="native"><option value="OWNER_IN">Add Cash</option><option value="OWNER_OUT">Remove Cash</option></select></div></div><div id="cih-timing-field" hidden><p id="cih-review-reference"></p><label for="cih-timing">When did cash change hands?</label><select id="cih-timing" data-sf-select="native"><option value="BEFORE">Before the opening count</option><option value="AFTER">After the opening count</option></select></div><div id="cih-start-field" hidden><label for="cih-start">Tracking start date</label><input id="cih-start" type="date" /><small>Opening cash is the amount before this day's recorded payments.</small></div>
+ <div id="cih-amount-field"><label id="cih-amount-label" for="cih-amount">Amount (₹)</label><input id="cih-amount" type="number" inputmode="decimal" min="0.01" max="9999999999.99" step="0.01" required /></div>
+ <div id="cih-reason-code-field" hidden><label for="cih-reason-code">Reason <span class="cih-required">*</span></label><select id="cih-reason-code" data-sf-select="native"><option value="">Select reason</option>@foreach(var reason in StockFlow.Application.Common.CashInHandRules.EntryReasons){<option value="@reason.Key" data-kind="@reason.Value.Kind" data-explanation="@reason.Value.Explanation.ToString().ToLowerInvariant()">@reason.Value.Label</option>}</select></div>
+ <div class="cih-note-field"><label id="cih-reason-label" for="cih-reason">Reason</label><textarea id="cih-reason" rows="2" minlength="3" maxlength="1000" required></textarea><small id="cih-note-counter" hidden>0 / 250</small></div></fieldset>
+ <aside id="cih-opening-info" class="cih-opening-info" hidden><strong>Before you continue</strong><p>Pause cash activity while counting. Transactions already reflected in this opening amount will not be counted again.</p><small>Tracking starts when the opening balance is saved.</small></aside>
+ <p id="cih-dialog-error" role="alert" tabindex="-1" hidden></p>
+ </div>
+ <aside id="cih-entry-info" class="cih-entry-info" hidden><span aria-hidden="true">ⓘ</span><p>Sales, expenses and other regular payments are tracked automatically.</p></aside>
+ <footer><button type="button" id="cih-cancel" class="cih-control">Cancel</button><button id="cih-dialog-retry" type="button" class="cih-control cih-primary" hidden>Retry Saved Movement</button><button id="cih-save" type="submit" class="cih-control cih-primary">Save Cash Movement</button></footer>
+</form></dialog>
+@section Styles {<link rel="stylesheet" href="~/css/cash-in-hand.css" asp-append-version="true" />}
+@section Scripts {<script src="~/js/cash-in-hand.js" asp-append-version="true"></script>}

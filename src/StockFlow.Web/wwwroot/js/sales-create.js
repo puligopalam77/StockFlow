@@ -147,6 +147,7 @@
             cardType: getElement('payment-card-type').value || null,
             reference: getElement('payment-reference').value,
             cash: getElement('cash-received').value.trim(),
+            calculateChange: getElement('calculate-change').checked,
             reason: getElement('adjustment-reason').value,
             tradeIn: tradeIn(),
             savedAt: Date.now()
@@ -160,8 +161,11 @@
         if(draftStatus==='ACTIVE')try{localStorage.setItem(draftKey,JSON.stringify(getBillSnapshot()));}catch{}
     }
     function draftContentsEqual(a,b){
-        const keys=['cart','payments','split','customerId','customerLabel','discount','notes','mode','cardType','reference','cash','reason','tradeIn','crmEnquiryId','pricesIncludeTax','gstPlaceOfSupplyStateCode','gstDeliveryAddress','gstRecipientDetailsRequested','sourceQuotationId','sourceQuotationRevision','sourceQuotationVersion'];
-        return JSON.stringify(keys.map(k=>a[k]??null))===JSON.stringify(keys.map(k=>b[k]??null));
+        const keys=['cart','payments','split','customerId','customerLabel','discount','notes','mode','cardType','reference','cash','calculateChange','reason','tradeIn','crmEnquiryId','pricesIncludeTax','gstPlaceOfSupplyStateCode','gstDeliveryAddress','gstRecipientDetailsRequested','sourceQuotationId','sourceQuotationRevision','sourceQuotationVersion'];
+        const value=(state,key)=>key==='calculateChange'
+            ? (state.mode||'CASH')==='CASH' && (typeof state.calculateChange==='boolean' ? state.calculateChange : !!String(state.cash||'').trim())
+            : state[key]??null;
+        return JSON.stringify(keys.map(k=>value(a,k)))===JSON.stringify(keys.map(k=>value(b,k)));
     }
     const lifecycleRequests=new Map();
     async function draftCommand(action,id=draftId,revision=draftRevision) {
@@ -190,8 +194,9 @@
             if(unconfirmedDraftWrite){const pending=unconfirmedDraftWrite;const ack=await Sales.api(pending.url,{method:'PUT',body:pending.body});unconfirmedDraftWrite=null;applyDraftState(ack);}
             const data={editorId,revision:draftRevision,operationId:createRequestId(),label:((saved.customerLabel||'Customer not selected')+' - '+saved.cart.reduce((n,i)=>n+i.quantity,0)+' units').slice(0,150),payload:saved};
             const pending={url:'/api/sales/billing/drafts/'+saved.draftId+'?reference=true',body:JSON.stringify(data)};unconfirmedDraftWrite=pending;
+            getElement('draft-status').textContent='Saving active draft...';
             const assigned=await Sales.api(pending.url,{method:'PUT',body:pending.body});unconfirmedDraftWrite=null;applyDraftState(assigned);
-            getElement('draft-status').textContent='Active draft saved';
+            getElement('draft-status').textContent=draftContentsEqual(saved,getBillSnapshot())?'Draft saved':'Saved on this device; syncing...';
         }).catch(error=>{
             getElement('draft-status').textContent=error.message+' Device backup retained.';
             if(error.status===409){recoveryBlocked=true;clearTimeout(draftSaveTimer);pendingState();}
@@ -229,7 +234,6 @@
         const enabled=getElement('calculate-change').checked && getElement('payment-mode').value==='CASH';
         getElement('cash-change-field').hidden=!enabled;
         getElement('calculate-change').parentElement.hidden=getElement('payment-mode').value!=='CASH';
-        getElement('exact-cash-help').hidden=getElement('payment-mode').value!=='CASH'||enabled;
         getElement('cash-bill-total').textContent='\u20b9'+formatMoney(due);
         const received =
             !enabled || cashReceivedValue() === null
@@ -365,16 +369,47 @@
     }
     const numericInputsInvalid=()=>!!workspace.querySelector('[data-numeric-invalid=true]');
     const quoteIsCurrent=()=>!!priceQuote&&quoteRevision===cartRevision&&calculationState==='valid'&&!numericInputsInvalid();
+    function renderTaxBreakdown(quote) {
+        const details=getElement('billing-tax-details'),rows=getElement('billing-tax-rates'),status=getElement('billing-tax-status');
+        details.hidden=!cart.length;rows.replaceChildren();
+        if(!cart.length){status.textContent='';return;}
+        if(!quoteIsCurrent()){
+            status.textContent=calculationState==='error'?'Tax details unavailable. Retry the calculation.':'Tax details are updating…';
+            return;
+        }
+        const breakdown=quote.taxBreakdown;
+        if(!breakdown){status.textContent='Detailed tax breakdown is unavailable for this quote.';return;}
+        const messages={NO_GST:'No GST is charged on these items.',UNAVAILABLE:'GST components require an active regular registration and a confirmed place of supply.',PLACE_OF_SUPPLY_REQUIRED:'Select the place of supply to show CGST/SGST or IGST.',IGST:'Inter-state supply · IGST',CGST_SGST:'Intra-state supply · CGST + SGST',CGST_UTGST:'Intra-UT supply · CGST + UTGST'};
+        status.textContent=messages[breakdown.status]||'GST component details are unavailable.';
+        const money=amount=>'₹'+formatMoney(amount);
+        for(const rate of breakdown.rates||[]){
+            const group=document.createElement('div');group.className='billing-tax-rate';
+            const title=document.createElement('strong');title.textContent=rate.rate>0?'GST '+rate.rate+'%':'Items at 0% / without GST';
+            const value=document.createElement('span');value.textContent='Value before GST: '+money(rate.supplyValue);
+            group.append(title,value);
+            for(const [key,label]of [['cgst','CGST'],['sgst','SGST'],['utgst','UTGST'],['igst','IGST'],['cess','Cess']])if(rate[key]>0){
+                const component=document.createElement('span');component.textContent=label+(key==='cess'?'':' '+(key==='igst'?rate.rate:rate.rate/2)+'%')+': '+money(rate[key]);group.append(component);
+            }
+            const total=document.createElement('span');total.textContent='GST total: '+money(rate.taxAmount);group.append(total);rows.append(group);
+        }
+    }
     function updateSummary() {
         const quote=priceQuote;
         cart.forEach((item,index)=>{const total=getElement('line-total-'+index);if(total){total.dataset.provisional=String(!quoteIsCurrent());total.title=quoteIsCurrent()?'Calculated by the current billing quote':Number.isFinite(item.lastLineTotal)?'Last confirmed line total; calculation is pending or invalid.':'Awaiting the billing calculation.';}});
         const set=(id,value)=>{if(!cart.length)value=0;if(getElement(id))getElement(id).textContent=cart.length&&!quote?'Awaiting calculation':'\u20b9'+formatMoney(value??0);};
         set('summary-subtotal',quote?.itemSubtotal);set('summary-tax',quote?.taxAmount);
         set('summary-total',quote?.totalAmount);set('summary-taxable',quote?.taxableAmount);
+        const withoutGst=quote?.amountWithoutGst??(quote?quote.subtotal-quote.taxableAmount:0);
+        getElement('summary-without-gst-row').hidden=!cart.length||!quoteIsCurrent()||withoutGst<=0;
+        set('summary-without-gst',withoutGst);
+        getElement('summary-allowance-row').hidden=!cart.length||!quoteIsCurrent()||!(quote?.discountAmount>0);
+        set('summary-allowance',quote?.discountAmount);
+        if(quote?.discountAmount>0)getElement('summary-allowance').textContent='−'+getElement('summary-allowance').textContent;
+        renderTaxBreakdown(quote);
         set('summary-line-discounts',quote?.itemDiscountAmount);
         if(quote?.itemDiscountAmount>0)getElement('summary-line-discounts').textContent='\u2212'+getElement('summary-line-discounts').textContent;
         const rates=[...new Set((quote?.items||[]).map(line=>line.taxPercentage))];
-        getElement('summary-tax-label').textContent=rates.length===1&&rates[0]>0?'GST ('+rates[0]+'%)':'GST';
+        getElement('summary-tax-label').textContent=(pricesIncludeTax?'GST included':'GST')+(rates.length===1&&rates[0]>0?' ('+rates[0]+'%)':'');
         getElement('summary-tax').title=pricesIncludeTax?'GST included in selling prices':'GST added to taxable prices';
         const allocation=quote?[{paymentMode:getElement('payment-mode').value,amount:quote.totalAmount}]:[];
         workspace.dispatchEvent(new Event('billing-payment-updated'));
@@ -743,8 +778,11 @@
         if(activeLookups)throw new Error('Wait for item and customer lookups to finish.');
         if(!await StockFlowDialog.confirm('Clear this draft bill, its items and entered payment details? This does not affect completed invoices.',{kind:'discard',title:'Clear this bill?',cancelText:'Continue Editing',confirmText:'Clear Bill'}))return;
         if(isSavingSale||pendingSale||isPreparingSale||activeLookups)return;
+        closeResults(true);
         cart=[];payments=[];getElement('use-split-payment').checked=false;
         for(const id of ['sale-notes','adjustment-reason','payment-reference','cash-received'])getElement(id).value='';
+        getElement('calculate-change').checked=false;
+        workspace.dispatchEvent(new Event('billing-notes-restored'));
         if(getElement('sale-gst-pos'))getElement('sale-gst-pos').value='';
         if(getElement('sale-gst-delivery'))getElement('sale-gst-delivery').value='';
         if(getElement('sale-gst-recipient-details'))getElement('sale-gst-recipient-details').checked=false;
@@ -953,63 +991,85 @@
     }
     let searchTimer,searchVersion=0,highlighted=-1;
     const searchInput=getElement('sale-scan'),resultHost=getElement('product-results');
-    function closeResults(){if(resultHost)resultHost.hidden=true;searchInput?.setAttribute('aria-expanded','false');highlighted=-1;}
+    function closeResults(clearInput=false){
+        clearTimeout(searchTimer);++searchVersion;products=[];highlighted=-1;
+        if(resultHost){resultHost.hidden=true;resultHost.replaceChildren();resultHost.scrollTop=0;}
+        searchInput?.setAttribute('aria-expanded','false');
+        if(clearInput&&searchInput)searchInput.value='';
+        getElement('product-result-status').textContent='';
+    }
+    closeResults(true);
     async function searchProducts(term,version=++searchVersion){
         if(workspace.dataset.canSearch!=='true')return;
-        if(!term.trim()){closeResults();getElement('product-result-status').textContent='';return;}
+        const isCurrentSearch=()=>version===searchVersion&&!!term.trim()&&searchInput.value.trim()===term.trim();
+        if(!isCurrentSearch())return;
         getElement('product-result-status').textContent='Searching…';
         try{
             const found=await Sales.api('/api/products/variants?'+new URLSearchParams({term,billing:true}));
             if(version!==searchVersion)return;
+            if(!isCurrentSearch()){closeResults();return;}
             products=found;highlighted=-1;resultHost.replaceChildren();resultHost.hidden=false;searchInput.setAttribute('aria-expanded','true');
             getElement('product-result-status').textContent=found.length?(found.length===30?'Showing the first 30 matches. Refine your search.':found.length+' matching SKUs. Choose an item.'):'No products found. Try another name or code.';
             for(const product of products){
                 const row=document.createElement('div');row.className='billing-result';
-                const identity=document.createElement('div'),name=document.createElement('strong'),meta=document.createElement('small');name.textContent=product.productName;
-                meta.textContent=[product.brandName,product.categoryName,product.variantName==='DEFAULT'?'':product.variantName].filter(Boolean).join(' · ');identity.append(name,meta);
+                const identity=document.createElement('div'),name=document.createElement('strong'),meta=document.createElement('small');identity.className='billing-result-identity';name.textContent=product.productName;name.title=product.productName;
+                meta.textContent=[product.brandName,product.categoryName,product.variantName==='DEFAULT'?'':product.variantName,product.sku].filter(Boolean).join(' · ');meta.title=meta.textContent;identity.append(name,meta);
                 const thumbnail=document.createElement('span');thumbnail.className='billing-result-image';thumbnail.innerHTML='<svg width=24 height=24 viewBox="0 0 24 24" fill=none stroke=currentColor aria-hidden=true><path d="m12 3 9 5v9l-9 5-9-5V8zM3 8l9 5 9-5M12 13v9"/></svg>';if(product.hasProductImage){const img=document.createElement('img');img.src='/api/products/'+product.productId+'/image';img.alt='';img.loading='lazy';img.onerror=()=>img.remove();thumbnail.append(img);}row.append(thumbnail);
-                const sku=document.createElement('div');sku.textContent=product.sku;
-                const price=document.createElement('div');price.textContent='₹'+Sales.money(product.sellingPrice);const tax=document.createElement('small');tax.textContent=pricesIncludeTax?'Includes GST':'Before GST';price.append(tax);
-                if(product.mrp>0){const mrp=document.createElement('small');mrp.textContent='MRP ₹'+Sales.money(product.mrp);price.append(mrp);}
+                const price=document.createElement('div');price.className='billing-result-price';const amount=document.createElement('strong');amount.textContent='\u20b9'+Sales.money(product.sellingPrice);price.append(amount);const tax=document.createElement('small');tax.textContent=pricesIncludeTax?'Includes GST':'Before GST';price.append(tax);
+                if(product.mrp>0){const mrp=document.createElement('small');mrp.className='visually-hidden';mrp.textContent='MRP \u20b9'+Sales.money(product.mrp);price.title=mrp.textContent;price.append(mrp);}
                 const stock=document.createElement('span');stock.className='billing-stock';
-                const available=product.isActive!==false&&product.currentStock>0;
-                stock.textContent=product.isActive===false?'Inactive':product.currentStock<=0?'Out of stock':product.isSerialTracked?'Serial selection required':(product.currentStock<=(product.locationMinimumStockLevel??product.minimumStockLevel??0)?'Low stock: ':'')+product.currentStock+' in stock';
+                const available=product.isActive!==false&&product.isAvailable!==false&&product.currentStock>0;
+                stock.textContent=product.isActive===false?'Inactive':product.currentStock<=0?'Out of stock':product.isAvailable===false?'Unavailable':product.isSerialTracked?'Serial selection required':(product.currentStock<=(product.locationMinimumStockLevel??product.minimumStockLevel??0)?'Low stock: ':'')+product.currentStock+' in stock';
                 stock.dataset.state=!available?'unavailable':product.currentStock<=(product.locationMinimumStockLevel??product.minimumStockLevel??0)?'low':'available';
-                const add=button('Add',()=>Sales.run(()=>lookup(async()=>{if(pendingSale||isPreparingSale||isSavingSale)return;await chooseProduct(product);closeResults();searchInput.value='';searchVersion++;})));
+                const add=button('Add',()=>Sales.run(()=>lookup(async()=>{if(pendingSale||isPreparingSale||isSavingSale)return;const selectedVersion=searchVersion;await chooseProduct(product);if(selectedVersion===searchVersion)closeResults(true);})));
                 add.setAttribute('aria-label','Add '+product.productName+' SKU '+product.sku);add.disabled=!available;
-                row.append(identity,sku,price,stock,add);resultHost.append(row);
+                stock.title=stock.textContent;price.append(stock);
+                row.append(identity,price,add);resultHost.append(row);
             }
-        }catch(error){if(version===searchVersion){getElement('product-result-status').textContent='Search could not finish. Try again.';throw error;}}
+        }catch(error){if(isCurrentSearch()){getElement('product-result-status').textContent='Search could not finish. Try again.';throw error;}}
     }
     async function submitSearch(code){
-        clearTimeout(searchTimer);++searchVersion;closeResults();
-        if(workspace.dataset.canScan!=='true'){await lookup(()=>searchProducts(code));return;}
-        try{await findScannedProduct(code);getElement('product-result-status').textContent='Item identified. Ready for the next scan.';}
+        closeResults();const scanVersion=searchVersion;
+        // Scanner.bind clears the field before calling us. A failed exact scan
+        // becomes a text search only while that operation is still current.
+        const fallbackSearch=async()=>{
+            if(scanVersion!==searchVersion)return;
+            if(!searchInput.value.trim())searchInput.value=code;
+            await lookup(()=>searchProducts(code,scanVersion));
+        };
+        if(workspace.dataset.canScan!=='true'){await fallbackSearch();return;}
+        try{await findScannedProduct(code);if(scanVersion===searchVersion)closeResults();}
         catch(error){
             if([400,404,422].includes(error.status)&&workspace.dataset.canSearch==='true'){
-                await lookup(()=>searchProducts(code));
-                if(!products.length)throw error;
+                await fallbackSearch();
+                if(scanVersion===searchVersion&&!products.length)throw error;
             }else throw error;
         }
     }
     // Capture deliberate result navigation; plain Enter is still an exact scan first.
     searchInput?.addEventListener('keydown',event=>{
         const buttons=[...(resultHost?.querySelectorAll('button:not(:disabled)')||[])];
-        if(event.key==='Escape'){++searchVersion;clearTimeout(searchTimer);closeResults();event.preventDefault();return;}
+        if(event.key==='Escape'){closeResults();event.preventDefault();return;}
         if(['ArrowDown','ArrowUp'].includes(event.key)&&!resultHost.hidden&&buttons.length){
             event.preventDefault();highlighted=(highlighted+(event.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length;
             buttons.forEach((b,i)=>b.closest('.billing-result').classList.toggle('highlighted',i===highlighted));buttons[highlighted].scrollIntoView({block:'nearest'});
         }
         if(event.key==='Enter'&&!event.isComposing&&highlighted>=0&&!resultHost.hidden){event.preventDefault();event.stopImmediatePropagation();if(!event.repeat)buttons[highlighted]?.click();}
     });
-    const scanSubmit=StockFlowScanner.bind('sale-scan',submitSearch,Sales.error);
+    StockFlowScanner.bind('sale-scan',submitSearch,Sales.error);
     if(workspace.dataset.canScan!=='true')searchInput?.parentElement.querySelector('.sf-camera-trigger')?.remove();
-    getElement('scan-sale')?.addEventListener('click',scanSubmit);
     searchInput?.addEventListener('input',()=>{
-        clearTimeout(searchTimer);const version=++searchVersion,term=searchInput.value;highlighted=-1;closeResults();
-        if(!term.trim()){getElement('product-result-status').textContent='';return;}
+        closeResults();const version=searchVersion,term=searchInput.value;
+        if(!term.trim())return;
         if(workspace.dataset.canSearch==='true')searchTimer=setTimeout(()=>Sales.run(()=>lookup(()=>searchProducts(term,version))),300);
     });
+    document.addEventListener('click',event=>{
+        // Dismiss after the clicked control receives its action; shrinking the
+        // list on pointer-down can move controls before their click completes.
+        const path=event.composedPath();
+        if(!path.includes(searchInput?.parentElement)&&!path.includes(resultHost))closeResults();
+    });
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&event.target!==searchInput)closeResults();});
     getElement('find-sale-units')?.addEventListener('click', () => {
         return Sales.run(() => {
             return lookup(loadUnits);
@@ -1040,8 +1100,9 @@
         invalidateCustomerSearch();
         const option=getElement('sale-customer').selectedOptions[0],selected=!!getElement('sale-customer').value;
         const parts=(option?.textContent||'').split(' / ');
-        getElement('customer-name').textContent=parts[0];
-        getElement('customer-mobile').textContent=parts.length>1?'Mobile: '+parts.slice(1).join(' / '):'';
+        getElement('customer-name').textContent=parts[0];getElement('customer-name').title=parts[0];
+        getElement('customer-mobile').textContent=parts.length>1?parts.slice(1).join(' / '):'';
+        getElement('customer-mobile-pill').hidden=!getElement('customer-mobile').textContent;
         getElement('customer-current').hidden=!selected;
         const search=getElement('customer-search');if(search){search.hidden=selected;search.value='';}
     }
@@ -1461,6 +1522,7 @@
         changed();
     });
     getElement('trade-in-allowance')?.addEventListener('input', changed);
+    getElement('sale-gst-pos')?.addEventListener('change',changed);
     async function loadPolicy() {
         billingPolicy = await Sales.api('/api/sales/billing/policy');
         options();
@@ -1581,16 +1643,20 @@
             }
         });
     });
-    let manualDialog, manualEditIndex=null, manualPreviewVersion=0, manualTimer, manualTaxRules=[];
-    const manualRuleText=rule=>rule.ruleName+' · '+rule.hsnSac+' · '+rule.taxRate+'% (#'+rule.ruleId+')';
+    let manualDialog, manualEditIndex=null, manualPreviewVersion=0, manualOpenVersion=0, manualTimer, manualTaxRules=[];
+    const manualRuleText=rule=>{
+        const name=rule.ruleName.replace(/^TEST ONLY\s*-\s*/i,'').trim(),rate='GST '+rule.taxRate+'%';
+        const label=name.toUpperCase()===rate.toUpperCase()?rate:name+' · '+rule.taxRate+'%';
+        return label+(rule.treatment&&rule.treatment!=='TAXABLE'?' · '+rule.treatment.replaceAll('_',' '):'');
+    };
     function manualRuleId(){
         const text=getElement('manual-rule').value.trim();
         if(!text||text.toLowerCase()==='no gst')return getElement('manual-rule').required?null:0;
-        return manualTaxRules.find(rule=>manualRuleText(rule)===text)?.ruleId??null;
+        return manualTaxRules.find(rule=>String(rule.ruleId)===text)?.ruleId??null;
     }
     function manualFieldsValid(){
         // Inspect validity without dispatching native invalid events during live preview.
-        return !!getElement('manual-name').value.trim() && manualRuleId()!==null
+        return !getElement('manual-rule').disabled && !!getElement('manual-name').value.trim() && manualRuleId()!==null
             && [...manualDialog.querySelector('form').elements].every(field=>!field.willValidate||field.validity.valid);
     }
     function manualInput() {
@@ -1603,7 +1669,7 @@
         const version=++manualPreviewVersion, preview=getElement('manual-preview'),submit=getElement('manual-submit');
         submit.disabled=true;preview.textContent='Checking line total…';
         if(!manualFieldsValid()){
-            preview.textContent=getElement('manual-rule').value.trim()&&manualRuleId()===null?'Choose a reviewed GST classification from the suggestions.':'';
+            preview.textContent=getElement('manual-rule').value.trim()&&manualRuleId()===null?'Choose a reviewed GST classification from the dropdown.':'';
             return;
         }
         try{
@@ -1616,18 +1682,19 @@
     }
     async function openManualItem(index=null) {
         if(pendingSale||isSavingSale||isPreparingSale||recoveryBlocked||activeLookups)return;
+        const openVersion=++manualOpenVersion;
         if(!manualDialog){
             manualDialog=document.createElement('dialog');manualDialog.className='billing-manual-modal';manualDialog.setAttribute('aria-labelledby','manual-title');manualDialog.dataset.sfDialog='large';
             manualDialog.innerHTML=`<form novalidate><header><h2 id="manual-title">Quick Add Item</h2><button type="button" id="manual-close" class="billing-manual-close sf-dialog-close" aria-label="Close Quick Add Item" title="Cancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button><p>Add an item to this bill without registering a product.</p></header>
-            <div class="billing-manual-fields"><label class="manual-wide">Item Name *<input id="manual-name" class="form-control" required maxlength="150" /></label>
+            <div class="billing-manual-body"><div class="billing-manual-fields"><div class="billing-manual-primary"><label class="manual-wide">Item Name *<input id="manual-name" class="form-control" required maxlength="150" /></label>
             <label>Quantity *<input id="manual-quantity" class="form-control" type="number" min="1" max="10000" step="1" required value="1" /></label>
-            <label>Selling Price (₹) *<input id="manual-price" class="form-control" type="number" min="0.01" max="9999999999.99" step="0.01" required /></label>
-            <label>MRP (₹)<input id="manual-mrp" class="form-control" type="number" min="0.01" max="9999999999.99" step="0.01" /></label>
+            <label>Selling Price (₹) *<input id="manual-price" class="form-control" type="number" min="0.01" max="9999999999.99" step="0.01" required /></label></div>
+            <div class="billing-manual-secondary"><label>MRP (₹)<input id="manual-mrp" class="form-control" type="number" min="0.01" max="9999999999.99" step="0.01" /></label>
             <label>Discount (%)<input id="manual-discount" class="form-control" type="number" min="0" max="100" step="0.01" required value="0" /></label>
-            <label class="manual-wide"><span id="manual-rule-label">GST Classification (optional)</span><input id="manual-rule" type="text" class="form-control" list="manual-rule-suggestions" autocomplete="off" placeholder="No GST, or type to search reviewed classifications" aria-describedby="manual-classification" /><datalist id="manual-rule-suggestions"></datalist></label>
-            <p id="manual-classification" class="manual-wide small"></p>
+            <div class="manual-wide billing-manual-gst"><label><span id="manual-rule-label">GST Classification (optional)</span><select id="manual-rule" class="form-select" data-sf-select="auto" aria-describedby="manual-classification"><option value="">No GST</option></select></label>
+            <p id="manual-classification" class="small"></p></div></div>
             <label class="manual-wide">Notes (optional)<textarea id="manual-note" class="form-control" rows="2" maxlength="1000"></textarea></label></div>
-            <p id="manual-preview" role="status"></p><footer><button type="button" class="btn btn-outline-secondary" id="manual-cancel">Cancel</button><button id="manual-submit" class="btn btn-primary" disabled>Add to Bill</button></footer></form>`;
+            <p id="manual-preview" role="status"></p></div><footer><button type="button" class="btn btn-outline-secondary" id="manual-cancel">Cancel</button><button id="manual-submit" class="btn btn-primary" disabled>Add to Bill</button></footer></form>`;
             workspace.append(manualDialog);manualDialog.querySelector('form').addEventListener('input',()=>{++manualPreviewVersion;getElement('manual-submit').disabled=true;clearTimeout(manualTimer);manualTimer=setTimeout(previewManual,220);});
             getElement('manual-close').onclick=getElement('manual-cancel').onclick=()=>manualDialog.close();manualDialog.addEventListener('close',()=>{++manualPreviewVersion;clearTimeout(manualTimer);getElement('sale-scan')?.focus();});
             manualDialog.querySelector('form').onsubmit=event=>{event.preventDefault();if(getElement('manual-submit').disabled||!manualFieldsValid())return;
@@ -1636,29 +1703,40 @@
                 renderCart();manualDialog.close();};
         }
         manualEditIndex=index;manualDialog.querySelector('form').reset();getElement('manual-submit').disabled=true;
+        const classification=getElement('manual-rule');classification.disabled=true;
+        classification.replaceChildren(new Option('Checking GST settings…','',true,true));
         getElement('manual-discount').readOnly=!billingPolicy.canDiscount;
         getElement('manual-submit').textContent=index===null?'Add to Bill':'Update Item';
         const row=index===null?null:cart[index];
         if(row){getElement('manual-name').value=row.manualItem.name;getElement('manual-quantity').value=row.quantity;getElement('manual-price').value=row.sellingPrice;getElement('manual-mrp').value=row.manualItem.mrp??'';getElement('manual-discount').value=row.discountPercent??0;getElement('manual-note').value=row.manualItem.description||'';}
         manualDialog.showModal();getElement('manual-name').focus();getElement('manual-preview').textContent='Loading reviewed classifications…';
         try{
-            const context=await gstContextPromise;if(!manualDialog.open)return;
+            const context=await gstContextPromise;if(!manualDialog.open||openVersion!==manualOpenVersion)return;
             if(!context)throw Error('Unable to confirm this shop’s billing setup. Please reload and try again.');
             const requiresGst=context.mapped&&context.registrationType!=='UNREGISTERED';
-            const rules=await Sales.api('/api/sales/manual-tax-rules');if(!manualDialog.open)return;
+            const rules=await Sales.api('/api/sales/manual-tax-rules');if(!manualDialog.open||openVersion!==manualOpenVersion)return;
             manualTaxRules=rules;
             const select=getElement('manual-rule');select.required=requiresGst;
-            select.placeholder=requiresGst?'Type to search reviewed GST classifications':'No GST, or type to search reviewed classifications';
-            const suggestions=getElement('manual-rule-suggestions');suggestions.replaceChildren();
-            if(!requiresGst)suggestions.append(new Option('No GST','No GST'));
+            select.replaceChildren(new Option(requiresGst?'Select GST classification':'No GST','',true,true));
             getElement('manual-rule-label').textContent=requiresGst?'GST Classification *':'GST Classification (optional)';
-            for(const rule of rules)suggestions.append(new Option(manualRuleText(rule),manualRuleText(rule)));
+            const ordered=[...rules].sort((a,b)=>a.taxRate-b.taxRate||a.ruleName.localeCompare(b.ruleName)||a.ruleId-b.ruleId);
+            for(const rule of ordered){
+                const label=manualRuleText(rule),duplicate=rules.some(other=>other.ruleId!==rule.ruleId&&manualRuleText(other)===label);
+                select.add(new Option(label+(duplicate?' · '+rule.hsnSac+' (#'+rule.ruleId+')':''),String(rule.ruleId)));
+            }
+            // A fresh item starts with the permitted default, never the previous item’s tax.
+            select.value='';
             select.oninput=()=>{const rule=rules.find(r=>r.ruleId===manualRuleId());getElement('manual-classification').textContent=rule?'HSN: '+rule.hsnSac+' · Unit: '+rule.uqc:requiresGst?'This shop issues GST documents. Choose a reviewed classification.':'No GST selected. No tax will be added to this item.';};
-            if(row){const rule=rules.find(r=>r.ruleId===row.manualItem.taxRuleId);select.value=rule?manualRuleText(rule):row.manualItem.taxRuleId>0?'Unavailable saved classification #'+row.manualItem.taxRuleId:'';}
+            if(row){
+                const rule=rules.find(r=>r.ruleId===row.manualItem.taxRuleId);
+                if(!rule&&row.manualItem.taxRuleId>0){const unavailable=new Option('Unavailable saved classification #'+row.manualItem.taxRuleId,String(row.manualItem.taxRuleId));unavailable.disabled=true;select.add(unavailable);}
+                select.value=row.manualItem.taxRuleId>0?String(row.manualItem.taxRuleId):'';
+            }
             select.oninput();
             if(!rules.length)getElement('manual-classification').textContent=requiresGst?'No reviewed GST rules are available. Ask the owner to configure a classification in GST Settings.':'No GST selected. No tax will be added to this item.';
+            select.disabled=false;
             await previewManual();
-        }catch(error){getElement('manual-preview').textContent=error.message;}
+        }catch(error){if(manualDialog.open&&openVersion===manualOpenVersion)getElement('manual-preview').textContent=error.message;}
     }
     getElement('quick-add-item')?.addEventListener('click',()=>Sales.run(()=>openManualItem()));
 
@@ -1677,6 +1755,7 @@
     }
     function restore(saved, deferSave = false) {
         validateSavedBill(saved);
+        closeResults(true);
         isRestoringDraft = true;
         try {
             crmEnquiryId = Number.isSafeInteger(saved.crmEnquiryId)&&saved.crmEnquiryId>0?saved.crmEnquiryId:null;
@@ -1703,6 +1782,9 @@
             workspace.dispatchEvent(new Event('billing-notes-restored'));
             getElement('payment-reference').value = saved.reference || '';
             getElement('cash-received').value = String(saved.cash || '').trim();
+            // Older drafts stored the amount without the optional calculator state.
+            getElement('calculate-change').checked = getElement('payment-mode').value==='CASH'
+                && (typeof saved.calculateChange==='boolean' ? saved.calculateChange : !!getElement('cash-received').value);
             getElement('adjustment-reason').value = saved.reason || '';
             getElement('sale-customer').value = '';
             if (Number.isSafeInteger(Number(saved.customerId)) && Number(saved.customerId)>0) {
@@ -1777,7 +1859,7 @@
     async function loadSavedBills(){
         const revision=++savedRequest;drawerFeedback('Loading saved bills...');
         try{
-            const response=await Sales.api('/api/sales/billing/drafts?paged=true&recovery='+recoveryView+'&page='+savedPage+'&search='+encodeURIComponent(savedSearch));
+            const response=await Sales.api('/api/sales/billing/drafts?paged=true&includeActive=true&editorId='+encodeURIComponent(editorId)+'&recovery='+recoveryView+'&page='+savedPage+'&search='+encodeURIComponent(savedSearch));
             if(revision!==savedRequest)return;
             const list=Array.isArray(response)?response:response.items,total=Array.isArray(response)?response.length:response.total;
             if(!Array.isArray(list))throw Error('Saved bills could not be loaded.');
@@ -1787,7 +1869,7 @@
             getElement('saved-bills-page').textContent='Page '+savedPage+' of '+Math.max(1,Math.ceil(total/25));
             getElement('saved-bills-prev').disabled=savedPage<=1;getElement('saved-bills-next').disabled=savedPage*25>=total;
             savedList.replaceChildren();savedList.scrollTop=0;drawerFeedback('');
-            if(!list.length)savedEmpty(savedSearch?'No matching bills':'No saved bills',savedSearch?'Try another customer name, mobile number or draft reference.':'Bills you hold will appear here so you can resume them later.',!!savedSearch);
+            if(!list.length)savedEmpty(savedSearch?'No matching bills':'No saved bills',savedSearch?'Try another customer name, mobile number or draft reference.':recoveryView?'No interrupted or legacy bills are available. Live sessions remain protected.':'Automatically saved active drafts and bills you hold will appear here.',!!savedSearch);
             for(const bill of list){
                 const card=document.createElement('article');card.className='billing-saved-card';
                 const top=document.createElement('div');top.className='billing-saved-card-top';
@@ -1795,7 +1877,8 @@
                 const avatar=document.createElement('span');avatar.className='billing-saved-avatar';avatar.setAttribute('aria-hidden','true');avatar.textContent=bill.customerName?name.split(/\s+/).filter(Boolean).slice(0,2).map(n=>n[0]).join('').toUpperCase():'?';
                 const identity=document.createElement('div');identity.className='billing-saved-customer';const strong=document.createElement('strong');strong.textContent=name;
                 const displayNumber=bill.draftNumber||'Reference unavailable';
-                const ref=document.createElement('div');ref.className='billing-saved-reference';ref.textContent=(recoveryView?'Recovery':'Draft')+' \u00b7 '+displayNumber;
+                const needsRecovery=bill.draftStatus==='ACTIVE'||bill.draftStatus==='LEGACY';
+                const ref=document.createElement('div');ref.className='billing-saved-reference';ref.textContent=displayNumber+' \u00b7 '+(bill.draftStatus==='ACTIVE'?'Active Draft':bill.draftStatus==='LEGACY'?'Interrupted Bill':'On Hold');
                 if(bill.creationTimeSource==='UNKNOWN'){const flag=document.createElement('div');flag.className='billing-saved-reference';flag.textContent='Original creation time unknown';identity.append(strong,ref,flag);}else identity.append(strong,ref);
                 const amount=document.createElement('span');amount.className='billing-saved-total';amount.textContent=Number.isFinite(bill.estimatedTotal)?new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(bill.estimatedTotal):'\u2014';amount.title=Number.isFinite(bill.estimatedTotal)?'Provisional estimate; checked again before checkout':'Estimate unavailable for this older draft; resume to calculate';top.append(avatar,identity,amount);
                 const meta=document.createElement('div');meta.className='billing-saved-meta';const count=document.createElement('div');count.textContent=(bill.itemCount??'\u2014')+' '+(bill.itemCount===1?'item':'items')+' \u00b7 '+(bill.units??'\u2014')+' '+(bill.units===1?'unit':'units');const time=document.createElement('div');time.textContent=savedTime(bill.updatedAt);count.prepend(savedIcon('items'));time.prepend(savedIcon('clock'));meta.append(count,time);
@@ -1807,7 +1890,12 @@
                     if(bill.draftId===draftId){localStorage.removeItem(draftKey);window.StockFlowUnsaved?.markSaved(getElement('sale-form'));location.reload();return;}
                     await loadSavedBills();drawerFeedback('Saved bill discarded.');
                 }));discard.className='btn btn-outline-secondary';
-                const resume=button(recoveryView?'Recover Bill':'Resume Bill',()=>savedAction(()=>resumeSavedBill(bill.draftId,displayNumber)));resume.className='btn billing-saved-resume';
+                // An expired Active bill must first acquire ownership through
+                // the existing recovery flow before it can be discarded.
+                if(bill.draftStatus==='ACTIVE'&&(bill.draftId!==draftId||recoveryBlocked)){
+                    discard.dataset.requiresResume='true';discard.disabled=true;discard.title='Resume this active draft before discarding it.';
+                }
+                const resume=button(recoveryView?'Recover Bill':'Resume Bill',()=>savedAction(()=>resumeSavedBill(bill.draftId,displayNumber,needsRecovery)));resume.className='btn billing-saved-resume';
                 discard.prepend(savedIcon('discard'));resume.prepend(savedIcon('resume'));
                 discard.setAttribute('aria-label','Discard draft '+displayNumber);resume.setAttribute('aria-label',(recoveryView?'Recover Bill ':'Resume Bill ')+displayNumber);
                 actions.append(discard,resume);card.append(top,meta,actions);savedList.append(card);
@@ -1821,19 +1909,23 @@
         getElement('saved-bills-search').disabled=true;
         savedList.querySelectorAll('button').forEach(b=>b.disabled=true);
         try{await action();}catch(error){drawerFeedback(error.message);if(pendingSwitch)getElement('saved-bills-feedback').append(button('Retry Resume',()=>savedAction(()=>resumeSavedBill(pendingSwitch.id,pendingSwitch.source.draftNumber))));}
-        finally{savedBusy=false;isPreparingSale=false;pendingState();getElement('saved-bills-close').disabled=false;getElement('saved-bills-search').disabled=false;savedList.querySelectorAll('button').forEach(b=>b.disabled=false);if(savedDrawer.open&&trigger?.isConnected)trigger.focus();}
+        finally{savedBusy=false;isPreparingSale=false;pendingState();getElement('saved-bills-close').disabled=false;getElement('saved-bills-search').disabled=false;savedList.querySelectorAll('button').forEach(b=>b.disabled=b.dataset.requiresResume==='true');if(savedDrawer.open&&trigger?.isConnected)trigger.focus();}
     }
     function chooseResume(displayNumber){
         return new Promise(resolve=>{
             getElement('resume-bill-message').textContent='Your current unfinished bill contains items or entered details. Choose what to do before opening '+displayNumber+'.';
             const finish=value=>{resumeDialog.close();resolve(value);};
             getElement('resume-bill-cancel').onclick=()=>finish('cancel');getElement('resume-bill-close').onclick=()=>finish('cancel');
+            getElement('resume-bill-keep').onclick=()=>finish('keep');getElement('resume-bill-hold').disabled=!cart.length;
             getElement('resume-bill-hold').onclick=()=>finish('hold');getElement('resume-bill-discard').onclick=()=>finish('discard');
             resumeDialog.oncancel=event=>{event.preventDefault();finish('cancel');};resumeDialog.showModal();getElement('resume-bill-cancel').focus();
         });
     }
-    async function resumeSavedBill(id,displayNumber){
+    async function resumeSavedBill(id,displayNumber,recoverActive=false){
         clearTimeout(draftSaveTimer);await draftSaveQueue.catch(()=>{});
+        // The current editor already owns this bill. Do not attempt to recover
+        // its live lease or issue another identity/revision to return to editing.
+        if(!pendingSwitch&&id===draftId&&draftStatus==='ACTIVE'&&!recoveryBlocked){closeSavedBills(true);return;}
         if(!pendingSwitch){
             const same=id===draftId;
             const hasWork=!same&&billHasContent();
@@ -1849,7 +1941,7 @@
                 try{localStorage.setItem(draftKey+'.recovery.'+id,JSON.stringify(keep?saved:local));}catch{throw Error('Unable to preserve both recovery copies. Free device storage and retry.');}
                 if(keep)source=local;
             }
-            pendingSwitch={id,source,body:{editorId,revision:saved.revision,operationId:createRequestId(),recover:recoveryView,currentDraftId:!same&&draftRevision>0?draftId:null,currentRevision:draftRevision,currentAction:choice==='hold'?'HOLD':choice==='discard'?'DISCARD':'RELEASE'}};
+            pendingSwitch={id,source,body:{editorId,revision:saved.revision,operationId:createRequestId(),recover:recoveryView||recoverActive,currentDraftId:!same&&draftRevision>0?draftId:null,currentRevision:draftRevision,currentAction:choice==='hold'?'HOLD':choice==='discard'?'DISCARD':'RELEASE'}};
         }
         if(pendingSwitch.id!==id)throw Error('Retry the previous resume operation before choosing another bill.');
         try{
@@ -1860,17 +1952,21 @@
     }
     getElement('saved-bills-recovery').onclick=()=>{
         if(savedBusy)return;recoveryView=!recoveryView;savedPage=1;savedSearch='';getElement('saved-bills-search').value='';
-        getElement('saved-bills-recovery').textContent=recoveryView?'Show held bills':'Recover interrupted bills';
-        getElement('saved-bills-description').textContent=recoveryView?'Recover legacy bills or sessions whose editing lease has expired. Live sessions remain protected.':'Resume a previously saved or held bill.';
+        getElement('saved-bills-recovery').textContent=recoveryView?'Show active drafts and held bills':'Recover interrupted bills';
+        getElement('saved-bills-description').textContent=recoveryView?'Recover legacy bills or sessions whose editing lease has expired. Live sessions remain protected.':'Active drafts and held bills. Bills open in another session remain protected.';
         loadSavedBills();
     };
     getElement('saved-bills-search').addEventListener('input',()=>{clearTimeout(savedSearchTimer);savedRequest++;savedSearchTimer=setTimeout(()=>{savedSearch=getElement('saved-bills-search').value.trim();savedPage=1;loadSavedBills();},250);});
     getElement('saved-bills-prev').onclick=()=>{if(!savedBusy){savedPage--;loadSavedBills();}};
     getElement('saved-bills-next').onclick=()=>{if(!savedBusy){savedPage++;loadSavedBills();}};
-    getElement('show-held').addEventListener('click',()=>{
+    getElement('show-held').addEventListener('click',()=>Sales.run(async()=>{
         if(isPreparingSale||isSavingSale){Sales.error(Error('Wait for the current operation to finish.'));return;}
-        if(savedDrawer.open)return;savedPage=1;savedSearch='';getElement('saved-bills-search').value='';savedDrawer.showModal();getElement('saved-bills-search').focus();loadSavedBills();
-    });
+        if(savedDrawer.open)return;savedPage=1;savedSearch='';getElement('saved-bills-search').value='';savedDrawer.showModal();getElement('saved-bills-search').focus();
+        // Flush the existing debounce so opening immediately after customer
+        // selection does not show an empty list while the first save is pending.
+        if(!recoveryBlocked&&!pendingSale&&(billHasContent()||draftRevision>0))try{await persistDraft();}catch(error){Sales.error(error);}
+        if(savedDrawer.open)await loadSavedBills();
+    }));
     getElement('hold-bill').addEventListener('click', () => {
         return Sales.run(async () => {
             if (pendingSale || isSavingSale || isPreparingSale || activeLookups) {
@@ -1950,6 +2046,7 @@
                 payments = pendingSale.request.payments;
                 getElement('sale-discount').value = pendingSale.request.discountAmount;
                 getElement('sale-notes').value = pendingSale.request.notes || '';
+                workspace.dispatchEvent(new Event('billing-notes-restored'));
                 getElement('use-split-payment').checked = true;
                 pendingSale.recoverOnly=true; // A pre-existing pending payload is recovered verbatim; never re-enter old allocations as a new sale.
                 if (pendingSale.request.customerId) {

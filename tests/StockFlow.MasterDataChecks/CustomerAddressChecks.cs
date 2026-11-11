@@ -19,7 +19,7 @@ internal static class CustomerAddressChecks
         Check(row["address"] is null&&row["addressDetails"] is null,"Optional customer address can be explicitly cleared");
         Check((int)(await client.PostAsJsonAsync("/api/customers",new{customerName="Invalid PIN",addressDetails=new{postalCode="123",country="India"}})).StatusCode==400,"Customer API rejects invalid supplied Indian PIN");
         Check((int)(await client.PostAsJsonAsync("/api/customers",new{customerName="Too long line",addressDetails=new{addressLine1=new string('x',251)}})).StatusCode==400,"Customer API validates supplied address line length");
-        (await client.PostAsJsonAsync("/api/customers",new{customerName="International customer",addressDetails=new{addressLine1="Market street",country="United States",postalCode="10001",city="New York",state="New York"}})).EnsureSuccessStatusCode();
+        Check((int)(await client.PostAsJsonAsync("/api/customers",new{customerName="International customer",addressDetails=new{addressLine1="Market street",country="United States",postalCode="10001",city="New York",state="New York"}})).StatusCode==400,"New international address is rejected by country policy");
         client.DefaultRequestHeaders.Add("Test-Deny-Action","CUSTOMERS:CREATE");
         Check((int)(await client.PostAsJsonAsync("/api/customers",new{customerName="Denied customer",addressDetails=details})).StatusCode==403,"Structured customer creation retains existing permissions");
         Console.WriteLine("Customer address HTTP checks use fake repositories; isolated PostgreSQL checks verify persistence separately.");

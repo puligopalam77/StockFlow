@@ -1,0 +1,52 @@
+const assert=require('node:assert/strict'),path=require('path');
+const {fillLocation,expectFixedCountry}=require('./address-test-helpers.cjs');
+module.exports=async(page,out,created)=>{
+ const open=()=>page.getByRole('button',{name:'+ Add Customer',exact:true}).click();
+ const dialog=page.locator('#customer-quick-add-dialog'),additional=page.locator('#quick-customer-additional');
+ await open();assert.equal(await additional.evaluate(n=>n.open),false);
+ assert.equal(await dialog.locator('.is-invalid').count(),0,'No premature errors');
+ await page.locator('#create-customer').click();assert.equal(created.length,0);
+ assert(await page.locator('#new-customer-name').evaluate(n=>n.classList.contains('is-invalid')));
+ assert(await page.locator('#new-customer-mobile').evaluate(n=>n.classList.contains('is-invalid')));
+ await page.locator('#new-customer-name').fill('Compact customer');await page.locator('#new-customer-mobile').fill('9861200066');
+ assert((await dialog.boundingBox()).height<350,'Collapsed fast path stays compact');
+ await dialog.screenshot({path:path.join(out,'compact-customer-default.png')});
+ const result=[];
+ for(const [width,height] of [[1280,720],[1366,768],[1536,864],[1920,1080],[375,667],[430,800]]){
+  await page.setViewportSize({width,height});
+  if(await additional.evaluate(n=>n.open))await additional.locator('summary').click();
+  const n=await page.locator('#new-customer-name').boundingBox(),m=await page.locator('#new-customer-mobile').boundingBox();
+  assert(Math.abs(n.width-m.width)<1);assert(n.height>=40&&n.height<=44);
+  if(width>575)assert.equal(n.y,m.y,'Main fields share a row');else assert(m.y>n.y,'Mobile fields stack');
+  await additional.locator('summary').click();await page.locator('#new-customer-address-line1').waitFor();
+  assert.equal(await dialog.getByText('Billing Address (Optional)',{exact:true}).isVisible(),false);
+  assert.equal(await dialog.getByText('Address Details (Optional)',{exact:true}).isVisible(),false);
+  for(const field of ['line1','line2','state-search','district-search','city','pin','country'])assert(await page.locator('#new-customer-address-'+field).isVisible(),'Address field retained: '+field);
+  const ids=['new-customer-email','new-customer-gst','new-customer-address-line1','new-customer-address-line2','new-customer-address-pin','new-customer-address-country'];
+  if(width>575)for(let i=0;i<ids.length;i+=2){const a=await page.locator('#'+ids[i]).boundingBox(),b=await page.locator('#'+ids[i+1]).boundingBox();assert.equal(a.y,b.y,ids[i]+' shares a row');}
+  const locationBoxes=await Promise.all(['state-search','district-search','city'].map(id=>page.locator('#new-customer-address-'+id).boundingBox()));
+  if(width>575){assert.equal(locationBoxes[0].y,locationBoxes[1].y);assert.equal(locationBoxes[1].y,locationBoxes[2].y,'State, District and City share one row');assert(Math.abs(locationBoxes[0].width-locationBoxes[2].width)<1);}else assert(locationBoxes[0].y<locationBoxes[1].y&&locationBoxes[1].y<locationBoxes[2].y,'Location fields stack on mobile');
+  await page.locator('#new-customer-address-country').scrollIntoViewIfNeeded();
+  const bounds=await dialog.boundingBox(),footer=await dialog.locator('footer').boundingBox(),header=await dialog.locator('header').boundingBox();
+  assert(bounds.x>=0&&bounds.x+bounds.width<=width&&bounds.y>=0&&bounds.y+bounds.height<=height);
+  assert(header.y>=bounds.y&&footer.y+footer.height<=bounds.y+bounds.height);
+  assert(await dialog.evaluate(n=>n.scrollHeight<=n.clientHeight+1&&n.scrollWidth<=n.clientWidth+1),'Only the form body scrolls');
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  assert.equal(await page.locator('#new-customer-address-country').inputValue(),'India');await expectFixedCountry(page.locator('#new-customer-address-country'));
+  await dialog.screenshot({path:path.join(out,'compact-customer-'+width+'.png')});result.push({width,height,modalWidth:bounds.width,modalHeight:bounds.height,inputHeight:n.height});
+ }
+ await page.setViewportSize({width:1366,height:768});
+ await page.locator('#new-customer-email').fill('accounts@example.test');await page.locator('#new-customer-address-line1').fill('20 Retail Street');
+ await fillLocation(page.locator('#new-customer-address-state'),'Karnataka');await fillLocation(page.locator('#new-customer-address-district'),'Bengaluru Urban');
+ await page.locator('#new-customer-address-city').fill('Bengaluru');
+ await additional.locator('summary').click();await additional.locator('summary').click();assert.equal(await page.locator('#new-customer-email').inputValue(),'accounts@example.test');
+ await page.locator('#quick-customer-cancel').click();await open();assert.equal(await page.locator('#new-customer-name').inputValue(),'Compact customer');assert.equal(await page.locator('#new-customer-address-line1').inputValue(),'20 Retail Street');
+ await page.getByRole('button',{name:'Close Add Customer',exact:true}).click();assert.equal(await dialog.evaluate(n=>n.open),false);
+ await open();await page.locator('#create-customer').click();await page.waitForFunction(()=>document.querySelector('#sale-customer').value==='11');
+ assert.equal(created.length,1);assert.equal(created[0].addressDetails.state,'Karnataka');assert.equal(created[0].addressDetails.district,'Bengaluru Urban');assert.equal(created[0].email,'accounts@example.test');assert.equal(await dialog.evaluate(n=>n.open),false);
+ await open();assert.equal(await additional.evaluate(n=>n.open),false);assert.equal(await page.locator('#new-customer-name').inputValue(),'');
+ await page.locator('#new-customer-name').fill('Required details only');await page.locator('#new-customer-mobile').fill('9861200077');await page.locator('#create-customer').click();await page.waitForFunction(()=>!document.querySelector('#customer-quick-add-dialog').open);
+ assert.equal(created.length,2);assert.equal(created[1].addressDetails,null);assert.equal(created[1].gstNumber,null);assert.equal(created[1].email,null);
+ await open();await page.keyboard.press('Escape');
+ console.log('PASS: compact customer layouts '+JSON.stringify(result)+'; required validation, State/District, accordion values, Cancel/Close/Escape, mocked save and automatic bill selection.');
+};

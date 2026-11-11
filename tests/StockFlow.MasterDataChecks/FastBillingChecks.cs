@@ -166,9 +166,14 @@ internal static class FastBillingChecks
             var missingGst=Request();missingGst.Items[0].ManualItem!.TaxRuleId=0;
             await Reject(()=>sales.QuoteAsync(missingGst),"GST-enabled invoice still requires a reviewed classification");
             missingGst.Payments=[new(){Amount=180}];await Reject(()=>sales.CreateSaleAsync(missingGst,1),"checkout cannot bypass GST invoice checks using an ordinary held item");
-            var mapped=Request();mapped.AllocateInvoiceDiscount=true;mapped.DiscountAmount=10;mapped.GstPlaceOfSupplyStateCode="29";await Pay(mapped);var mappedId=await sales.CreateSaleAsync(mapped,1);
+            var mapped=Request();mapped.AllocateInvoiceDiscount=true;mapped.DiscountAmount=10;mapped.GstPlaceOfSupplyStateCode="29";var mappedQuote=await sales.QuoteAsync(mapped);await Pay(mapped);var mappedId=await sales.CreateSaleAsync(mapped,1);
             var taxInvoice=(await new InvoiceRepository(factory).GetInvoiceAsync(mappedId))!;Check(taxInvoice.Gst!.Lines.Single().IsManual&&taxInvoice.Gst.Lines.Single().ProductId is null&&taxInvoice.Gst.Lines.Single().HsnSac=="610910","manual lines reach GST snapshot and invoice template by original line ID");
             Check(taxInvoice.Gst.Cgst+taxInvoice.Gst.Sgst+taxInvoice.Gst.Utgst+taxInvoice.Gst.Igst==taxInvoice.TaxAmount && taxInvoice.Gst.Lines.Sum(l=>l.Total)==taxInvoice.TotalAmount,"allocated invoice tax components and GST line snapshots reconcile to the collected total");
+            var rateBreakdown=mappedQuote.TaxBreakdown!;
+            Check(rateBreakdown.Status=="CGST_SGST" && rateBreakdown.Rates.Sum(r=>r.Cgst)==taxInvoice.Gst.Cgst && rateBreakdown.Rates.Sum(r=>r.Sgst)==taxInvoice.Gst.Sgst && rateBreakdown.Rates.Sum(r=>r.SupplyValue)==taxInvoice.Gst.Lines.Sum(l=>l.TaxableValue),"live quote components and rate bases exactly match saved GST invoice");
+            mapped.GstPlaceOfSupplyStateCode="27";var interQuote=await sales.QuoteAsync(mapped);
+            Check(interQuote.TaxBreakdown!.Status=="IGST"&&interQuote.TaxBreakdown.Rates.Sum(r=>r.Igst)==interQuote.TaxAmount&&interQuote.TotalAmount==mappedQuote.TotalAmount,"place-of-supply change refreshes quote components without changing payable amount");
+            mapped.GstPlaceOfSupplyStateCode=null;Check((await sales.QuoteAsync(mapped)).TaxBreakdown!.Status=="PLACE_OF_SUPPLY_REQUIRED","missing place of supply never invents components");mapped.GstPlaceOfSupplyStateCode="29";
             var hsn=await gst.ReportAsync(new(){RegistrationId=registration,From=today,To=today,Report="hsn"});Check(hsn.Hsn.Any(r=>r.HsnSac=="610910"&&r.Quantity==2),"HSN report includes posted manual goods");
             var salesReport=await gst.ReportAsync(new(){RegistrationId=registration,From=today,To=today,Report="sales"});Check(salesReport.Documents.Any(d=>d.SaleId==mappedId),"sales tax register includes manual invoices");
             var original=salesReport.Documents.Single(d=>d.SaleId==mappedId);
@@ -182,6 +187,7 @@ internal static class FastBillingChecks
             {
                 client.DefaultRequestHeaders.Add("Test-Role","Admin");
                 var html=await client.GetStringAsync("/Sales/Invoice/"+mappedId);
+                Check(html.Contains("GST breakdown by rate"),"Razor invoice prints rate-wise breakdown from recorded GST facts");
                 Check(html.Contains("Manual Item")&&html.Contains("Small cord")&&html.Contains("MRP:")&&html.Contains("Transient counter item")&&html.Contains("610910")&&html.Contains("Item Subtotal")&&html.Contains("Invoice Discount"),"actual Razor invoice renders manual name, note, MRP, percentage and HSN for A4/thermal printing");
                 Directory.CreateDirectory("tests/bin/fast-billing-ui-fixtures");await File.WriteAllTextAsync("tests/bin/fast-billing-ui-fixtures/invoice-manual.html",html);
             }

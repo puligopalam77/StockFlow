@@ -62,7 +62,7 @@ public class CreateSupplierRequest
     }
 
     [Required, StringLength(2, MinimumLength = 2)]
-    public string CountryCode { get; set; } = "IN";
+    public string CountryCode { get; set; } = StockFlow.Application.Common.CountryPolicy.Code;
 
     [StringLength(100)]
     public string? State

@@ -3,6 +3,12 @@
     const choice = document.getElementById('language-choice');
     if (!choice) return;
     const notice = document.getElementById('language-message');
+    // The transparent frame keeps a 40px target around the compact visible field.
+    const control = choice.closest('.sf-language-control');
+    control?.addEventListener('click', event => {
+        const picker = choice.sfSelect;
+        if (picker && (event.target === control || event.target === picker.wrapper)) picker.open();
+    });
     let savedLanguage = 'en';
     choice.replaceChildren();
     for (const [code, name] of window.StockFlowLanguages.languages) {

@@ -1,25 +1,23 @@
 @page
 @model StockFlow.Web.Pages.Account.LoginModel
-@inject Microsoft.Extensions.Options.IOptions<StockFlow.Web.Security.SessionSecurityOptions> SessionSettings
 @{ Layout = "_AuthLayout"; ViewData["Title"] = "Sign in"; }
 @section Styles {
     <link rel="stylesheet" href="~/css/login-responsive.css" asp-append-version="true" />
 }
+@section Scripts {
+    <script src="~/js/notifications-ui.js" asp-append-version="true"></script>
+    <script src="~/js/login-notifications.js" asp-append-version="true"></script>
+}
 <main id="main-content" class="sf-login">
     <section class="sf-login-panel" aria-labelledby="login-title">
-        <a class="sf-brand sf-login-brand" asp-page="/Index" aria-label="StockFlow home"><partial name="_Brand" />
-        </a>
+        <div class="sf-brand sf-login-brand"><partial name="_Brand" /></div>
         <div class="sf-login-content">
             <div class="sf-eyebrow">Welcome back <span>
                 </span>
             </div>
             <h1 id="login-title">Sign in to your<br /><em>StockFlow</em> account</h1>
             <p class="sf-login-intro">Manage your inventory, track stock movement<br class="sf-wide-only" /> and keep your business running smoothly.</p>
-            @if(Request.Query["reason"] == "idle") {<p class="alert alert-info" role="status">You were signed out after @SessionSettings.Value.IdleMinutes minutes of inactivity. Sign in to continue.</p>}
-            @if(Request.Query["reason"] == "absolute") {<p class="alert alert-info" role="status">Your sign-in time has ended. Sign in again to continue.</p>}
-            @if(Request.Query["reason"] == "ended") {<p class="alert alert-info" role="status">Your login session has ended. Sign in again to continue.</p>}
             <form method="post" class="sf-login-form" data-inline-validation>
-                @if(Request.Query["passwordChanged"] == "True") { <p class="alert alert-success" role="status">Password updated. Sign in with your new password.</p> }
                 <input type="hidden" asp-for="ReturnUrl" />
                 <input type="hidden" asp-for="Input.TenantCode" />
                 <label asp-for="Input.Username">Username</label>
@@ -51,7 +49,8 @@
                     </label>
                     <a asp-page="/Account/ForgotPassword" class="sf-text-button" id="forgot-password-link">Forgot Password?</a>
                 </div>
-                <div asp-validation-summary="ModelOnly" class="sf-login-errors" role="alert"></div>
+                <template id="login-feedback"><div asp-validation-summary="ModelOnly"></div></template>
+                <noscript><div asp-validation-summary="ModelOnly" class="sf-login-errors" role="alert"></div></noscript>
                 <button type="submit" class="sf-signin">
                     <svg class="sf-icon" aria-hidden="true">
                         <use href="/images/icons.svg#lock" />

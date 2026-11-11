@@ -215,14 +215,14 @@ const root = path.resolve(__dirname, '../..');
         }
         await page.screenshot({path:path.join(root,'tests/bin/help-language-urdu-mobile.png')});
         await page.locator('#help-close').click();
-        for (const [width,height,size] of [[1920,1080,38.72],[1366,768,35.2],[1024,768,30.8],[768,1024,30.8],[390,844,24.64],[320,568,24.64],[844,390,22]]) {
+        for (const [width,height] of [[1920,1080],[1366,768],[1024,768],[768,1024],[390,844],[320,568],[844,390]]) {
             await page.setViewportSize({width,height});
             const launcher = await page.locator('#help-open').evaluate(element => {
                 const box = element.getBoundingClientRect();
                 const caption = element.querySelector('.sf-mascot-caption');
                 return {fits:box.left >= 0 && box.right <= innerWidth && box.top >= 0 && box.bottom <= innerHeight,
                     captionFits:caption.scrollWidth <= caption.clientWidth,
-                    size:element.querySelector('.sf-mascot-body').getBoundingClientRect().width};
+                    width:box.width,height:box.height,robot:!!element.querySelector('.sf-mascot-body')};
             });
             assert(launcher.fits && launcher.captionFits,'Robot and caption fit '+width+'x'+height);
             assert(Math.abs(launcher.size-size)<0.1,'Robot scales for '+width+'x'+height);

@@ -90,7 +90,7 @@
 }
 <partial name="_RetailDailyActions" />
 <h2 class="retail-overview-title">Business Overview</h2>
-<section class="sf-kpi-grid" aria-label="Inventory summary">
+<section class="sf-kpi-grid sf-business-kpis sf-overview-grid" aria-label="Business Overview">
     <a class="sf-kpi sf-kpi-link" href="/Products">
         <span class="sf-kpi-icon black">
             <svg class="sf-icon">
@@ -115,18 +115,21 @@
             <p>Units received · all time</p>
         </div>
     </a>
-    <a class="sf-kpi sf-kpi-link" href="/StockOutflow">
-        <span class="sf-kpi-icon pink">
+    @if (Access.Can("INVENTORY"))
+    {
+    <a class="sf-kpi sf-kpi-link" href="/Inventory/LowStock">
+        <span class="sf-kpi-icon orange">
             <svg class="sf-icon">
-                <use href="/images/icons.svg#out" />
+                <use href="/images/icons.svg#box" />
             </svg>
         </span>
         <div>
-            <h2>Stock leaving the shop</h2>
-            <strong>@Model.Count(data.StockOutflow)</strong>
-            <p>Units issued · all time</p>
+            <h2>Low Stock</h2>
+            <strong>@Model.Count(data.Business.LowStockCount)</strong>
+            <p>At or below minimum</p>
         </div>
     </a>
+    }
     <a class="sf-kpi sf-kpi-link" href="/Inventory">
         <span class="sf-kpi-icon blue">
             <svg class="sf-icon">
@@ -151,8 +154,8 @@
             <p>Active @(isAdmin ? "suppliers" : "customers")</p>
         </div>
     </a>
-</section>
 <partial name="_BusinessCards" model="Model" />
+</section>
 <div class="sf-chart-grid" id="stock-trends">
     <section class="sf-panel sf-trend-panel">
         <div class="sf-panel-header">

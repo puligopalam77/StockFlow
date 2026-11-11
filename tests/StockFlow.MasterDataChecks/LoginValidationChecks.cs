@@ -12,6 +12,9 @@ internal static class LoginValidationChecks
     {
         using var client = factory.CreateClient(new() { AllowAutoRedirect = false });
         var html = await client.GetStringAsync("/Account/Login");
+        if (!html.Contains("class=\"sf-brand sf-login-brand\"") || !html.Contains("/images/icons.svg#box")
+            || !html.Contains("Inventory Inflow &amp; Outflow Tracking"))
+            throw new Exception("Signed-out login must render the existing shared StockFlow branding.");
         var token = WebUtility.HtmlDecode(Regex.Match(html,
             "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value);
         async Task<string> Submit(string username, string password)
@@ -28,8 +31,8 @@ internal static class LoginValidationChecks
             throw new Exception("Required server messages must name both fields.");
         var invalid = await Submit("admin", "invalid-login-secret");
         if (!invalid.Contains("Invalid username or password.")) throw new Exception("Invalid credentials need a clear message.");
-        if (invalid.IndexOf("sf-login-errors") > invalid.IndexOf("class=\"sf-signin\""))
-            throw new Exception("Credential errors must appear above Sign In.");
+        if (!invalid.Contains("id=\"login-feedback\"") || !invalid.Contains("login-notifications"))
+            throw new Exception("Credential errors must use the shared login toast adapter.");
         if (invalid.Contains("value=\"invalid-login-secret\"")) throw new Exception("Passwords must not be redisplayed.");
         var root = new DirectoryInfo(AppContext.BaseDirectory);
         while (root is not null && !File.Exists(Path.Combine(root.FullName,"StockFlow.sln"))) root=root.Parent;
@@ -63,7 +66,24 @@ internal static class LoginValidationChecks
         await File.WriteAllTextAsync(Path.Combine(output,"login-inactive.html"),inactiveHtml);
         await File.WriteAllTextAsync(Path.Combine(output,"login-session.html"),
             await client.GetStringAsync("/Account/Login?reason=absolute&returnUrl=%2FExpenses"));
-        Console.WriteLine("PASS: login server required-field messages, invalid-credentials placement and no password redisplay.");
+        using var unavailableApp = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services => {
+            services.RemoveAll<IAuthService>();
+            services.AddScoped<IAuthService, UnavailableLoginAuthService>();
+        }));
+        using var unavailableClient = unavailableApp.CreateClient(new() { AllowAutoRedirect = false });
+        var unavailableForm = await unavailableClient.GetStringAsync("/Account/Login");
+        var unavailableToken = WebUtility.HtmlDecode(Regex.Match(unavailableForm,
+            "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value);
+        var unavailableResponse = await unavailableClient.PostAsync("/Account/Login", new FormUrlEncodedContent(new Dictionary<string,string> {
+            ["Input.TenantCode"]="DEFAULT", ["Input.Username"]="admin", ["Input.Password"]="private-test-password",
+            ["__RequestVerificationToken"]=unavailableToken
+        }));
+        var unavailableHtml = await unavailableResponse.Content.ReadAsStringAsync();
+        if (unavailableResponse.StatusCode != HttpStatusCode.OK || !unavailableHtml.Contains("Sign-in is temporarily unavailable.")
+            || unavailableHtml.Contains("private-provider-detail") || unavailableHtml.Contains("value=\"private-test-password\""))
+            throw new Exception("Login failures must expose only safe feedback and never redisplay passwords.");
+        await File.WriteAllTextAsync(Path.Combine(output,"login-unavailable.html"), unavailableHtml);
+        Console.WriteLine("PASS: login required-field messages, toast feedback, safe service failure and no password redisplay.");
         using var passwordApp=factory.WithWebHostBuilder(builder=>builder.ConfigureServices(services=>
         {
             services.RemoveAll<IAuthService>();
@@ -88,6 +108,11 @@ internal static class LoginValidationChecks
             throw new Exception("Retired email OTP endpoint must no longer be available.");
         Console.WriteLine("PASS: password login creates a session with an unavailable email provider; email OTP route is removed.");
     }
+}
+
+internal sealed class UnavailableLoginAuthService : IAuthService
+{
+    public Task<LoginResult> ValidateLoginAsync(LoginRequest request) => throw new InvalidOperationException("private-provider-detail");
 }
 
 internal sealed class PasswordOnlyAuthService:IAuthService

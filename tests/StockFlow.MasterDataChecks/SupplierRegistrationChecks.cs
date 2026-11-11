@@ -41,7 +41,7 @@ internal static class SupplierRegistrationChecks
         foreach(var (field,value) in new (string,JsonNode?)[]{("supplierName",JsonValue.Create("x")),("supplierName",JsonValue.Create("12345")),("countryCode",JsonValue.Create("ZZ")),("supplierType",JsonValue.Create("UNKNOWN")),("mobileNumber",JsonValue.Create("123")),("alternateMobile",JsonValue.Create("+919876543210")),("email",JsonValue.Create("invalid")),("postalCode",JsonValue.Create("123")),("gstNumber",JsonValue.Create("INVALID")),("state",null),("address",JsonValue.Create(new string('x',501))),("notes",JsonValue.Create(new string('x',1001))),("paymentTermsDays",JsonValue.Create(366))}){
             var invalid=(JsonObject)body.DeepClone();invalid[field]=value;Check((int)(await client.PostAsJsonAsync("/api/suppliers",invalid)).StatusCode==400,"Reject invalid "+field);
         }
-        var foreign=new{supplierName="Overseas supplier",countryCode="US",mobileNumber="2125550123",postalCode="10001",paymentTermsDays=0};(await client.PostAsJsonAsync("/api/suppliers",foreign)).EnsureSuccessStatusCode();Check(true,"International supplier with 10-digit local phone and no GSTIN accepted");
+        var foreign=new{supplierName="Overseas supplier",countryCode="US",mobileNumber="2125550123",postalCode="10001",paymentTermsDays=0};Check((int)(await client.PostAsJsonAsync("/api/suppliers",foreign)).StatusCode==400,"New international supplier rejected");
         Check(options!["indianStates"]!.AsArray().Any(x=>x!.GetValue<string>()=="Karnataka"), "Supplier address suggestions reuse Indian state reference data");
         foreach(var (line1,line2) in new (string?,string?)[]{("  12 Market Road  "," First floor "),("12 Market Road",null),(null,null),(null,"Near station")})
         {
@@ -63,7 +63,7 @@ internal static class SupplierRegistrationChecks
         Check(legacy["address"]!.GetValue<string>()=="Old building, Floor 3\nUnsplit locality" && legacy["addressLine1"] is null && legacy["addressLine2"] is null && !legacy["useStructuredAddress"]!.GetValue<bool>(), "Legacy text is retained without guessing address lines");
         foreach(var invalid in new object[]{new{supplierName="Too long address",useStructuredAddress=true,addressLine1=new string('x',251)},new{supplierName="Wrong Indian PIN",useStructuredAddress=true,postalCode="123"}})
             Check((int)(await client.PostAsJsonAsync("/api/suppliers",invalid)).StatusCode==400, "Reject invalid optional address details");
-        (await client.PostAsJsonAsync("/api/suppliers",new{supplierName="Foreign partial address",countryCode="US",addressLine1="12 Market Street",postalCode="10001"})).EnsureSuccessStatusCode();
+        Check((int)(await client.PostAsJsonAsync("/api/suppliers",new{supplierName="Foreign partial address",countryCode="US",addressLine1="12 Market Street",postalCode="10001"})).StatusCode==400,"New foreign partial supplier rejected");
         client.DefaultRequestHeaders.Add("Test-Deny-Action","SUPPLIERS:EDIT");
         Check((int)(await client.PutAsJsonAsync("/api/suppliers/"+id,new{supplierName="Denied edit",isActive=true})).StatusCode==403,"Unauthorized supplier edit denied");
         client.DefaultRequestHeaders.Remove("Test-Deny-Action");

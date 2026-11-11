@@ -171,10 +171,12 @@ public class CreatePaymentRequest
 
 public class SaleQuote
 {
+    public StockFlow.Application.DTOs.Gst.SaleTaxBreakdown? TaxBreakdown { get; set; }
     public decimal ItemSubtotal { get; set; }
     public decimal ItemDiscountAmount { get; set; }
     public decimal InvoiceDiscountAmount { get; set; }
     public decimal TaxableAmount { get; set; }
+    public decimal AmountWithoutGst => Subtotal - TaxableAmount;
     public SaleAdjustmentReview? AdjustmentReview { get; set; }
     public decimal Subtotal
     {

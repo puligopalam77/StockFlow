@@ -71,6 +71,11 @@
 {
     if (root.Route == "/Reports")
     {
+        @if(ShopScope.CanReviewStores && Access.Can("REPORTS")) {
+        <a href="/CashInHand" class="sf-nav-link @(path.Equals("/CashInHand",StringComparison.OrdinalIgnoreCase)?"active":"")" aria-current="@(path.Equals("/CashInHand",StringComparison.OrdinalIgnoreCase)?"page":null)">
+            <svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#cash" /></svg><span class="sf-nav-label">Cash in Hand</span>
+        </a>
+        }
         if (Allowed(root)) { <partial name="_ReportsNavigation" /> }
         continue;
     }
@@ -84,7 +89,8 @@
     var showStaffAccess = root.ModuleCode == "SETUP" && (Access.Can("USER_MANAGEMENT") || Access.Can("ROLE_MANAGEMENT"));
     if(showStaffAccess) children = children.Where(m => m.Route is not ("/Admin/Users" or "/Admin/Roles")).ToArray();
     if (showIntegrations) children = children.Where(m => m.Route != "/EWayBills/Provider").ToArray();
-    var showBusinessSetup = root.ModuleCode == "SETUP" && (Access.Can("COMPANY_SETTINGS") || Access.Can("GST_SETTINGS") || Access.Can("STORES"));
+    var bankVisible=FeatureConfiguration.GetValue<bool>("BankAccounts:Enabled")&&Access.Can("BANK_ACCOUNTS");
+    var showBusinessSetup = root.ModuleCode == "SETUP" && (Access.Can("COMPANY_SETTINGS") || Access.Can("GST_SETTINGS") || Access.Can("STORES") || bankVisible);
     if(showBusinessSetup) children = children.Where(m => m.Route is not ("/Settings/Company" or "/Admin/Gst" or "/Admin/Stores")).ToArray();
     var showNotificationCenter = Access.Can("COMPANY_SETTINGS") && navigation.Any(m => m.ParentModuleId == root.ModuleId && m.Route == "/Settings/Company");
     if (children.Any(m => m.Route == "/Purchases" || m.Route == "/StockInflow"))
@@ -124,7 +130,7 @@
     {
         if (children.Length == 0 && !showCatalog && !showIntegrations && !showBusinessSetup && !showStaffAccess) { continue; }
         var activeUrl = children.Where(m => Matches(m.Route)).OrderByDescending(m => m.Route?.Length ?? 0).Select(m => m.Route).FirstOrDefault();
-        if(showBusinessSetup && (Matches("/Settings/Company") || Matches("/Settings/BusinessProfile") || Matches("/Admin/Gst") || Matches("/Admin/Stores"))) activeUrl=path;
+        if(showBusinessSetup && (Matches("/Settings/Company") || Matches("/Settings/BusinessProfile") || Matches("/Admin/Gst") || Matches("/Admin/Stores") || bankVisible&&Matches("/Settings/BankAccounts"))) activeUrl=path;
         if(showStaffAccess && (Matches("/Admin/Users") || Matches("/Admin/Roles"))) activeUrl=path;
         if (showIntegrations && path.Equals("/EWayBills/Provider", StringComparison.OrdinalIgnoreCase)) activeUrl = "/EWayBills/Provider";
         if (showCatalog)

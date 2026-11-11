@@ -9,14 +9,14 @@ public sealed class AddressComponents
     [StringLength(100)] public string? State { get; set; }
     [StringLength(100)] public string? District { get; set; }
     [StringLength(100)] public string? City { get; set; }
-    [StringLength(100)] public string? Country { get; set; } = "India";
+    [StringLength(100)] public string? Country { get; set; } = CountryPolicy.Name;
     [StringLength(20)] public string? PostalCode { get; set; }
 
-    public string? NormalizeAndFormat()
+    public string? NormalizeAndFormat(string? existingCountry = null)
     {
         AddressLine1=SupplierRules.Clean(AddressLine1);AddressLine2=SupplierRules.Clean(AddressLine2);
         State=SupplierRules.Clean(State);District=SupplierRules.Clean(District);City=SupplierRules.Clean(City);
-        Country=SupplierRules.Clean(Country);PostalCode=SupplierRules.Clean(PostalCode);
+        Country=CountryPolicy.Normalize(Country,existingCountry);PostalCode=SupplierRules.Clean(PostalCode);
         Validator.ValidateObject(this,new ValidationContext(this),true);
         if(PostalCode is not null && (Country is null || Country.Equals("India",StringComparison.OrdinalIgnoreCase) || Country.Equals("IN",StringComparison.OrdinalIgnoreCase)) && !System.Text.RegularExpressions.Regex.IsMatch(PostalCode,"^[1-9][0-9]{5}$"))
             throw new ValidationException("Enter a valid 6-digit Indian PIN code.");

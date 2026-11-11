@@ -7,6 +7,7 @@
     let busy = false;
     let loadVersion = 0;
     let showAll = false;
+    const timingWarning='Review opening-day cash payments in Cash in Hand before counting and closing.';
     const money = (amount) => Number(amount).toFixed(2);
     const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(value || 0));
     const day = (value) => new Date(value.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -18,7 +19,7 @@
         box.hidden = !message;
     }
     function controls() {
-        getElement('cash-fields').disabled = busy || Boolean(pending) || !report;
+        getElement('cash-fields').disabled = busy || Boolean(pending) || !report || report.totals.pendingReviewCount>0;
         getElement('cash-date').disabled = busy || Boolean(pending);
         getElement('cash-refresh').disabled = busy || Boolean(pending);
         getElement('cash-retry').disabled = busy;
@@ -59,6 +60,7 @@
     }
     function preview() {
         if (!report) return;
+        if(report.totals.pendingReviewCount>0){getElement('cash-expected').textContent='—';getElement('cash-difference').textContent='—';return;}
         const expected =
             amount('opening') + report.totals.netCash + amount('added') - amount('removed');
         const difference = Number(money(amount('counted') - expected));
@@ -85,8 +87,9 @@
             ['refunds', 'cashRefunds'],
             ['suppliers', 'supplierCash'], ['expenses', 'expenseCash']
         ]) {
-            getElement('cash-' + id).textContent = currency(report.totals[property]);
-            getElement('cash-tile-' + id).textContent = currency(report.totals[property]);
+            const value=property==='expenseCash'&&report.totals.pendingReviewCount>0?'—':currency(report.totals[property]);
+            getElement('cash-' + id).textContent = value;
+            getElement('cash-tile-' + id).textContent = value;
         }
         for (const [id, property, label] of [['sales', 'salesCount', 'invoice'], ['service', 'serviceCount', 'receipt'], ['refunds', 'refundCount', 'refund'], ['suppliers', 'supplierCount', 'payment'], ['expenses','expenseCount','movement']]) {
             const count = report.totals[property];
@@ -103,6 +106,14 @@
             getElement('cash-' + id).value = last?.[property] ?? 0;
         }
         getElement('cash-reason').value = '';
+        if(report.totals.pendingReviewCount>0)showMessage(timingWarning);
+        else if(getElement('cash-message').textContent===(window.StockFlowLanguage?.text(timingWarning)||timingWarning))showMessage('');
+        const tracked=report.totals.trackingOpeningCash!=null;
+        for(const id of ['opening','added','removed']) {
+            getElement('cash-'+id).readOnly=tracked;
+            if(tracked)getElement('cash-'+id).value=id==='opening'?report.totals.trackingOpeningCash:0;
+        }
+        if(tracked)getElement('cash-zone').textContent+=' · Opening and extra cash are supplied by Cash in Hand. Net adjustments: '+currency(report.totals.adjustmentCash);
         showAll = false;
         renderHistory();
         preview();

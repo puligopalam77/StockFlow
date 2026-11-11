@@ -233,6 +233,22 @@ transaction))
         }
 
         var quote = SaleRules.CalculateLines(request, taxes, false);
+        var mapped = false;
+        string? registrationType = null, supplierState = null;
+        if (await connection.ExecuteScalarAsync<bool>("SELECT to_regprocedure('public.sf_gst_sale_context()') IS NOT NULL", transaction: transaction))
+        {
+            string contextJson;
+            try { contextJson = (await connection.ExecuteScalarAsync<string>("SELECT public.sf_gst_sale_context()::text", transaction: transaction))!; }
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.CheckViolation) { throw new ValidationException(ex.MessageText); }
+            using var context = JsonDocument.Parse(contextJson);
+            mapped = context.RootElement.GetProperty("mapped").GetBoolean();
+            if (mapped)
+            {
+                registrationType = context.RootElement.GetProperty("registrationType").GetString();
+                supplierState = context.RootElement.GetProperty("stateCode").GetString();
+            }
+        }
+        quote.TaxBreakdown = GstBreakdown.ForQuote(quote, mapped, registrationType, supplierState, request.GstPlaceOfSupplyStateCode);
         for (var index = 0; index < resolved.Count; index++)
         {
             var variant = resolved[index];

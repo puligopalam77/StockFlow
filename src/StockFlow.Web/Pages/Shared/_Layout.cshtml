@@ -101,13 +101,14 @@
                 </a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
+                <partial name="_HelpLauncher" />
                 <details class="sf-profile" id="profile-menu">
                     <summary class="sf-profile-trigger" aria-label="My profile" title="My profile">
                         <span class="sf-admin-icon" aria-hidden="true">
                             <svg class="sf-icon" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3" /><path d="M3 20v-2a6 6 0 0 1 10-4M17 11l4 2v3c0 3-4 5-4 5s-4-2-4-5v-3l4-2Z" /><path d="m15.5 16 1 1 2-2" /></svg>
                         </span>
                         <span class="sf-username" data-no-translate>@displayName</span>
-                        <span class="sf-profile-chevron" aria-hidden="true">⌄</span>
+                        <span class="sf-profile-chevron" aria-hidden="true"><svg viewBox="0 0 16 16" width="16" height="16" focusable="false"><path d="m3 5.5 5 5 5-5" /></svg></span>
                     </summary>
                     <section class="sf-profile-panel" aria-label="Personal profile">
                         <div class="sf-profile-heading">
@@ -164,10 +165,10 @@
             }
             @if (!isListScreen && currentPage is not ("/Index" or "/Sales/Create") && !(currentPage=="/Settings/Company" && ViewData["CompanySection"]?.ToString()=="business")) { <partial name="_RetailScreenGuide" /> }
         </main>
-        @if (User.Identity?.IsAuthenticated == true) { <div class="sf-assistant-dock"><partial name="_HelpPanel" /></div> }
         <footer class="sf-app-footer">© @DateTime.Now.Year StockFlow <span>Smart inventory. Better business.</span>
         </footer>
     </div>
+    @if (User.Identity?.IsAuthenticated == true) { <partial name="_HelpPanel" /> }
     @if (User.Identity?.IsAuthenticated == true)
     {
     <dialog data-sf-dialog="medium" id="profile-details-dialog" class="sf-account-dialog" aria-labelledby="profile-details-title">

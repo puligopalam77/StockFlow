@@ -46,3 +46,47 @@
 #billing-workspace .billing-customer-dialog :is(input,textarea):enabled:not(.is-invalid):hover{border-color:#ff007f}
 #billing-workspace .billing-customer-dialog :is(input,textarea):enabled:not(.is-invalid):focus{border-color:#ff007f;box-shadow:0 0 0 3px #ff007f1a}
 #billing-workspace .billing-customer-dialog .is-invalid{border-color:#bd2441}
+
+/* New Sale only: retain the shared CRM form and the large dialog size token. */
+#billing-workspace .billing-customer-dialog{padding:0}
+#billing-workspace .billing-customer-dialog[open]{display:flex;flex-direction:column}
+#billing-workspace .billing-customer-header{flex-shrink:0;grid-template-columns:34px minmax(0,1fr) 36px;align-items:center;gap:10px;padding:12px 18px}
+#billing-workspace .billing-customer-icon{width:34px;height:34px}
+#billing-workspace .billing-customer-icon svg{width:20px;height:20px}
+#billing-workspace .billing-customer-header h2{margin:0 0 3px}
+#billing-workspace .billing-customer-header p{font-size:12px;margin:0}
+#billing-workspace #customer-quick-add-form{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+#billing-workspace .billing-customer-body{padding:14px 18px;min-height:0;overflow-y:auto}
+#billing-workspace .billing-customer-fields{container:quick-customer / inline-size;gap:12px 14px}
+#billing-workspace .billing-customer-fields>.billing-customer-field{grid-column:auto}
+#billing-workspace .billing-customer-dialog .form-label{font-size:13px;margin-bottom:5px}
+#billing-workspace .billing-customer-dialog :is(input.form-control,.sf-select-trigger){height:42px;min-height:42px;padding-block:8px}
+#billing-workspace .billing-customer-dialog :is(input:disabled,input:read-only){background:#f1f4f9}
+#billing-workspace .billing-customer-help{margin-top:4px}
+#billing-workspace .billing-customer-additional>summary{box-sizing:border-box;min-height:40px;padding:9px 12px;font-size:13px;line-height:20px;background:#f1f4f9;border:1px solid #e1e6ee;border-radius:7px}
+#billing-workspace .billing-customer-optional-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;padding-top:12px}
+#billing-workspace .billing-customer-optional-fields>.billing-customer-field{grid-column:auto}
+#billing-workspace .billing-customer-optional-fields>.billing-customer-field:has(#new-customer-address){grid-column:1/-1}
+#billing-workspace .billing-customer-optional-fields .sf-address-details{margin:0}
+#billing-workspace .billing-customer-optional-fields :is(label[for="new-customer-address"],.sf-address-details>h4){display:none}
+#billing-workspace .billing-customer-dialog .sf-address-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;margin-top:0}
+#billing-workspace .billing-customer-dialog .sf-address-wide{grid-column:auto}
+#billing-workspace .billing-customer-dialog .billing-customer-footer{position:static;flex-shrink:0;padding:10px 18px;background:#fff;gap:10px}
+#billing-workspace .billing-customer-footer>.btn{min-height:42px;padding:8px 14px;font-size:13px;line-height:24px}
+#billing-workspace .billing-customer-alert,#billing-workspace .billing-customer-matches{flex-shrink:0;margin:10px 18px 0}
+@container quick-customer (min-width:521px){
+ #billing-workspace .billing-customer-dialog .sf-address-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+ #billing-workspace .billing-customer-dialog .sf-address-grid>.sf-address-field{grid-column:span 3}
+ #billing-workspace .billing-customer-dialog .sf-address-grid>.sf-address-field:has(#new-customer-address-state,#new-customer-address-district,#new-customer-address-city){grid-column:span 2}
+}
+@container quick-customer (max-width:520px){
+ #billing-workspace .billing-customer-optional-fields,#billing-workspace .billing-customer-dialog .sf-address-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:575px){
+ #billing-workspace .billing-customer-header{grid-template-columns:34px minmax(0,1fr) 44px;padding:12px}
+ #billing-workspace .billing-customer-body{padding:12px}
+ #billing-workspace .billing-customer-fields{grid-template-columns:minmax(0,1fr)}
+ #billing-workspace .billing-customer-dialog :is(input.form-control,.sf-select-trigger){height:44px;min-height:44px}
+ #billing-workspace .billing-customer-dialog .billing-customer-footer{padding:10px 12px;flex-wrap:wrap}
+ #billing-workspace .billing-customer-footer>.btn{min-height:44px;flex:1 1 auto}
+}

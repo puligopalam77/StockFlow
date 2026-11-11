@@ -33,7 +33,7 @@ const purchase={purchaseId:1,purchaseNumber:'PUR-1',supplierName:'Supplier',supp
  if(process.argv.includes('--barcode-sale-scan')){
   await page.goto(base+'/Sales/Create');
   for(const code of ['SFL1','SFL1','0123456789012']){
-   await page.locator('#sale-scan').fill(code);await page.locator('#scan-sale').click();await page.waitForTimeout(350);
+   await page.locator('#sale-scan').fill(code);await page.locator('#sale-scan').press('Enter');await page.waitForTimeout(350);
   }
   assert.equal(await page.locator('#sale-cart tr').count(),2);
   assert.equal(quote.items[0].variantId,11);assert.equal(quote.items[0].quantity,2);

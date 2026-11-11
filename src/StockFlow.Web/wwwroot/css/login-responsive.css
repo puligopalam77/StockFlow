@@ -1,6 +1,8 @@
 ﻿/* Login-only overrides of the shared theme. The grid has a minimum viewport
    height, never a fixed height: notifications/errors can grow the document. */
 .sf-auth-body:has(.sf-login) { min-height:100vh; min-height:100dvh; }
+/* Keep the shared icon-action close control legible on the existing dark toast. */
+.sf-auth-body:has(.sf-login) .sf-toast-close { --sf-ink:#fff; --sf-action-neutral:#323a48; --sf-action-neutral-active:#414b5c; }
 .sf-login { grid-template-columns:minmax(360px,41fr) minmax(0,59fr); min-height:100vh; min-height:100dvh; height:auto; overflow:visible; }
 .sf-login > section { min-width:0; height:auto; }
 .sf-login .sf-login-panel { overflow:visible; padding:clamp(24px,4vh,48px) clamp(24px,3vw,56px); }
@@ -8,15 +10,14 @@
 /* Keep the existing corner accents inside their panel, without clipping the form. */
 .sf-login .sf-login-panel::before { width:110px; height:115px; right:0; top:0; border-radius:0 0 0 100%; }
 .sf-login .sf-login-panel::after { width:210px; height:115px; right:0; bottom:0; border-radius:100% 0 0 0; opacity:.35; }
-.sf-login .sf-login-brand { gap:14px; margin-bottom:clamp(20px,3vh,32px); }
-.sf-login .sf-login-brand .sf-brand-mark { width:64px; height:64px; border-radius:22px; }
-.sf-login .sf-login-brand .sf-brand-mark .sf-icon { width:46px; height:46px; }
-.sf-login .sf-login-brand .sf-wordmark { font-size:clamp(30px,2.6vw,42px); }
-.sf-login .sf-login-brand .sf-brand-caption { font-size:clamp(10px,.85vw,14px); }
-.sf-login .sf-login-content { min-width:0; margin-block:auto; }
+.sf-login .sf-login-brand { gap:12px; margin-bottom:16px; }
+.sf-login .sf-login-brand .sf-brand-mark { width:44px; height:44px; border-radius:15px; }
+.sf-login .sf-login-brand .sf-brand-mark .sf-icon { width:33px; height:33px; }
+.sf-login .sf-login-brand .sf-wordmark { font-size:26px; letter-spacing:-1.2px; }
+.sf-login .sf-login-brand .sf-brand-caption { font-size:10px; }
+.sf-login .sf-login-content { min-width:0; margin-block:0 auto; }
 .sf-login .sf-login-content h1 { font-size:clamp(30px,2.8vw,48px); margin:12px 0; letter-spacing:-1px; }
 .sf-login .sf-login-intro { font-size:clamp(15px,1.15vw,18px); line-height:1.5; margin-bottom:16px; }
-.sf-login .sf-login-content > .alert,.sf-login .sf-login-form > .alert { padding:10px 12px; margin:0 0 12px; font-size:14px; line-height:1.5; overflow-wrap:anywhere; }
 .sf-login .sf-login-form,.sf-login .sf-login-footer { overflow-wrap:anywhere; }
 .sf-login .sf-login-form > label { font-size:14px; margin:12px 0 6px; }
 .sf-login .sf-input-wrap { min-height:48px; gap:10px; padding:0 12px; border-radius:8px; }
@@ -46,8 +47,6 @@
 @media(max-height:900px) {
  .sf-login .sf-login-panel { padding-block:24px; }
  .sf-login .sf-login-brand { margin-bottom:16px; }
- .sf-login .sf-login-brand .sf-brand-mark { width:52px; height:52px; border-radius:18px; }
- .sf-login .sf-login-brand .sf-brand-mark .sf-icon { width:38px; height:38px; }
  .sf-login .sf-login-content h1 { font-size:clamp(28px,2.7vw,40px); margin:8px 0 12px; }
  .sf-login .sf-login-intro { margin-bottom:12px; }
  .sf-login .sf-login-form > label { margin-top:10px; }
@@ -71,8 +70,6 @@
 @media(max-height:650px) {
  .sf-login .sf-login-panel { padding-block:16px; }
  .sf-login .sf-login-brand { margin-bottom:12px; }
- .sf-login .sf-login-brand .sf-brand-mark { width:44px; height:44px; border-radius:15px; }
- .sf-login .sf-login-brand .sf-brand-mark .sf-icon { width:32px; height:32px; }
  .sf-login .sf-eyebrow { font-size:11px; }
  .sf-login .sf-login-content h1 { font-size:28px; margin-block:8px; }
  .sf-login .sf-login-intro { font-size:14px; margin-bottom:10px; }
@@ -108,8 +105,6 @@
   padding-bottom:max(24px,env(safe-area-inset-bottom));
  }
  .sf-login :is(.sf-login-brand,.sf-login-content,.sf-login-footer) { width:100%; max-width:520px; margin-inline:auto; }
- .sf-login .sf-login-brand .sf-brand-mark { width:52px; height:52px; border-radius:18px; }
- .sf-login .sf-login-brand .sf-wordmark { font-size:32px; }
  .sf-login .sf-login-content h1 { font-size:clamp(28px,5vw,36px); }
  .sf-login .sf-login-intro { font-size:15px; }
  .sf-login .sf-input-wrap { min-height:48px; }
@@ -117,6 +112,10 @@
  .sf-login .sf-signin { min-height:48px; }
 }
 @media(max-width:379px) {
+ .sf-login .sf-login-brand .sf-brand-mark { width:40px; height:40px; border-radius:14px; }
+ .sf-login .sf-login-brand .sf-brand-mark .sf-icon { width:30px; height:30px; }
+ .sf-login .sf-login-brand .sf-wordmark { font-size:24px; }
+ .sf-login .sf-login-brand .sf-brand-caption { font-size:9.5px; }
  .sf-login .sf-login-panel { padding-inline:max(20px,env(safe-area-inset-left)) max(20px,env(safe-area-inset-right)); }
  .sf-login .sf-login-options { column-gap:8px; font-size:13px; }
 }
