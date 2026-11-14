@@ -25,10 +25,11 @@
   trend(data.trend||[],range);products(data.topProducts||[]);
   for(const link of document.querySelectorAll('[data-summary-link]')){const url=new URL(link.getAttribute('href'),location.origin);url.searchParams.set('from',range.from);url.searchParams.set('to',range.to);link.href=url.pathname+url.search;}
  }
- async function load(){const current=++version;el('activity-error').hidden=true;el('activity-results').hidden=true;el('activity-status').textContent='Loading shop summary...';el('activity-load').disabled=true;
+ const reportRegion=el('activity-results');reportRegion.dataset.sfLoadingReport='true';window.StockFlowLoading?.region(reportRegion,{kind:'report',initialLoaded:false,retry:()=>load()});
+ async function load(){const current=++version;el('activity-error').hidden=true;el('activity-results').hidden=false;el('activity-load').setAttribute('aria-busy','true');el('activity-status').textContent='Loading shop summary...';el('activity-load').disabled=true;
   try{const range=dates(),response=await fetch('/api/reports/activity?'+new URLSearchParams(range)),data=await response.json();if(!response.ok)throw new Error(data.message||'The report could not be loaded.');if(current!==version)return;render(data,range);el('activity-results').hidden=false;el('activity-status').textContent=`Scope: ${data.scope || 'Selected authorized locations'}. Period: ${range.from} to ${range.to}. Stock figures are current.`;document.querySelector('.summary-date-picker').open=false;const query=new URLSearchParams(location.search);query.set('from',range.from);query.set('to',range.to);history.replaceState(null,'','?'+query);}
   catch(error){if(current!==version)return;el('activity-error').textContent=error.message;el('activity-error').hidden=false;el('activity-status').textContent='Report not loaded.';}
-  finally{if(current===version)el('activity-load').disabled=false;}
+  finally{if(current===version){el('activity-load').disabled=false;el('activity-load').removeAttribute('aria-busy');}}
  }
  el('activity-filter').onsubmit=event=>{event.preventDefault();load();};load();
 })();

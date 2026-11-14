@@ -151,7 +151,7 @@
                 });
             }
         );
-        getElement('receipt-results').replaceChildren(result);
+        const host=getElement('receipt-results');if(window.StockFlowLoading)StockFlowLoading.updateTable(host,result);else host.replaceChildren(result);
     }
     function renderItems(data) {
         const result = table(
@@ -169,8 +169,9 @@
                 cell(tr, row.partyName);
             }
         );
-        getElement('receipt-item-results').replaceChildren(result);
+        const host=getElement('receipt-item-results');if(window.StockFlowLoading)StockFlowLoading.updateTable(host,result);else host.replaceChildren(result);
     }
+    for (const id of ['receipt-results','receipt-item-results']) window.StockFlowLoading?.region(getElement(id),{kind:'table',columns:id==='receipt-results'?9:6,retry:()=>load()});
     async function load(pagingRequest) {
         const request = ++loading;
         const form = getElement('receipt-history-filter');

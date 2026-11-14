@@ -1,0 +1,120 @@
+{
+  "reviewOnly": true,
+  "executionApproved": false,
+  "reviewDate": "2026-11-12",
+  "functionComparison": "079 baseline equals 094 after removing exactly SAVE guard and reverting exactly HOLD guard",
+  "files": [
+    {
+      "path": "database/migrations/049_retail_variant_document_snapshots.sql",
+      "bytes": 2,
+      "sha256": "6c179f21e6f62b629055d8ab40f454ed02e48b68563913473b857d3638e23b28"
+    },
+    {
+      "path": "database/migrations/079_bill_draft_lifecycle.sql",
+      "bytes": 14005,
+      "sha256": "18bb9fe4253af796340f35c7a7dd61b1893071a192cee1590bc089862a2b10d0"
+    },
+    {
+      "path": "database/migrations/094_bill_minimum_items.sql",
+      "bytes": 8433,
+      "sha256": "6c9b297bc3580ec6448777ee762ba6cdfc80edd8c92865f61289e82321a77023"
+    },
+    {
+      "path": "src/StockFlow.Web/Controllers/BillingController.cs",
+      "bytes": 25413,
+      "sha256": "f90d699a0cb977d1f5748265e9579b034583e005dca4dd51c866d68f76d6b2af"
+    },
+    {
+      "path": "src/StockFlow.Web/Pages/Sales/Create.cshtml",
+      "bytes": 26313,
+      "sha256": "15067e776c66cc21502179725dc2b67f686eed794d878adeb6cbd50cd28e3de9"
+    },
+    {
+      "path": "src/StockFlow.Web/wwwroot/js/sales-create.js",
+      "bytes": 157214,
+      "sha256": "dc02f3717a38a66aefabe7ba91e3b60a2e87014240bc9f2920b2ba34eca161f1"
+    },
+    {
+      "path": "src/StockFlow.Web/wwwroot/js/billing-layout.js",
+      "bytes": 14258,
+      "sha256": "d89ba8466d76ceca5615aeab183e7d3d6202e434353440bee3558dcddf6d2ce4"
+    },
+    {
+      "path": "src/StockFlow.Web/wwwroot/css/billing.css",
+      "bytes": 58656,
+      "sha256": "08b683436c23b5916e0d5bcc36e8a61afbe5c412f4071f46078a97b6d2f926ed"
+    },
+    {
+      "path": "tests/StockFlow.MasterDataChecks/BillingChecks.cs",
+      "bytes": 15072,
+      "sha256": "dd0cd588d23f597669ca2ad512d724149dda26e4c22caac950be782b97139334"
+    },
+    {
+      "path": "tests/StockFlow.MasterDataChecks/SavedBillLifecycleFixture.cs",
+      "bytes": 8373,
+      "sha256": "f215ca8271b9cacc1765b5244f4b82583485c7bbde020085e41d435340266170"
+    },
+    {
+      "path": "tests/StockFlow.UiChecks/fast-billing-offline.cjs",
+      "bytes": 62378,
+      "sha256": "ecb8156961b5add850311468876e031699861fa4c6346788ae9d8a707d8dd8d3"
+    },
+    {
+      "path": "tests/StockFlow.UiChecks/draft-empty-lifecycle-checks.cjs",
+      "bytes": 4743,
+      "sha256": "4f51a2a9e998ddc805fbb007e309cff53406585cc4f4959a2a2c62f13cb9588f"
+    },
+    {
+      "path": "tests/StockFlow.UiChecks/saved-bills-drawer-checks.cjs",
+      "bytes": 9124,
+      "sha256": "28773d6986d3f1dfb2215083cade0369765a23aa4740b2544ae86fa4834596d8"
+    },
+    {
+      "path": "tests/StockFlow.UiChecks/draft-lifecycle-mock.cjs",
+      "bytes": 5789,
+      "sha256": "b1ff28fd4ca6415ecb6ef4cda805d2ddba8da97dac174fc80e9fbeec5a7f3ce6"
+    }
+  ],
+  "reviewArtifacts": [
+    {
+      "path": "docs/bill-minimum-items-deployment-readiness.txt",
+      "bytes": 22326,
+      "sha256": "17f791eba1752c30ed4be846dcdd376d5a2ff6e5ea9d68ae6d78579cf2ac2f34"
+    },
+    {
+      "path": "database/review/saved-bills/094-readiness/094-exact-changes.diff",
+      "bytes": 4687,
+      "sha256": "e436a0e017334397dd737c2d6390012579e000a4eccac6a1a004cc4a27961c43"
+    },
+    {
+      "path": "database/review/saved-bills/094-readiness/079-function-baseline.sql.txt",
+      "bytes": 6917,
+      "sha256": "76ceb362e61582456be5759fd635457235c094a30169c436d8b506878a898148"
+    },
+    {
+      "path": "database/review/saved-bills/094-readiness/094-function-and-helper.sql.txt",
+      "bytes": 8189,
+      "sha256": "f44e006f84be68e95c77e5950d1b33223dd587b6a2eef50d0a31f396043f0421"
+    },
+    {
+      "path": "database/review/saved-bills/094-readiness/read-only-target-readiness.sql",
+      "bytes": 5716,
+      "sha256": "1b4e81b8c5091676463fbe28514216662b8f4785a3ad3ee3dcacbd196ab7873f"
+    },
+    {
+      "path": "database/review/saved-bills/094-readiness/billing-api-review-test.log",
+      "bytes": 3679,
+      "sha256": "89840cb7a663334da852dcc32e1965017412b12515f17be594e9cb4d6c1f859a"
+    },
+    {
+      "path": "database/review/saved-bills/094-readiness/minimum-items-browser-review-test.log",
+      "bytes": 210,
+      "sha256": "ce35637781101eb091ab4255adf4c89aa1c135269e6472107e1da49bffe8316f"
+    },
+    {
+      "path": "database/review/saved-bills/094-readiness/saved-bills-browser-review-test.log",
+      "bytes": 268,
+      "sha256": "89ec1c702df1600d72baef26acc88933cfa7c4205ba14098ed39192cf9013402"
+    }
+  ]
+}

@@ -274,18 +274,22 @@ t);
     }
 
     [HttpGet("drafts")]
-    public async Task<IActionResult> Drafts(string? search = null, int page = 1, bool paged = false, bool recovery = false, bool includeActive = false, Guid? editorId = null)
+    public async Task<IActionResult> Drafts(string? search = null, int page = 1, bool paged = false, bool recovery = false, bool includeActive = false, Guid? editorId = null,string status="ALL")
     {
         factory.RequireLocation();await using var c=factory.CreateConnection();
+        if(status is not ("ALL" or "DRAFTS" or "HELD"))throw new ValidationException("Choose All, Drafts or On Hold.");
         page=Math.Clamp(page,1,100000);if(search?.Length>150)throw new ValidationException("Search must be at most 150 characters.");
         // Keep the held-only API default for existing callers. New Sale includes
         // its own editor and recoverable Active records without exposing live
         // sessions owned by another editor. RLS still scopes every read.
         var scope=recovery?"(draft_status='LEGACY' OR draft_status='ACTIVE' AND (lease_until IS NULL OR lease_until<=now()))":includeActive?"(draft_status='HELD' OR draft_status='ACTIVE' AND (editor_id=@editorId OR lease_until IS NULL OR lease_until<=now()))":"draft_status='HELD'";
         var eligible=" FROM billing_drafts d WHERE "+scope+" AND NOT EXISTS(SELECT 1 FROM sales s WHERE s.request_id=d.draft_id) AND (@search='' OR strpos(lower(sf_draft_number(draft_sequence)||' '||coalesce(payload->>'customerLabel','')||' '||coalesce(payload->>'customerMobile','')||' '||label||' '||draft_id::text),lower(@search))>0)";
-        var args=new{search=search?.Trim()??"",offset=(page-1)*25,editorId};
+        var unfiltered=eligible;
+        eligible+=" AND (@status='ALL' OR @status='HELD' AND draft_status='HELD' OR @status='DRAFTS' AND draft_status IN('ACTIVE','LEGACY'))";
+        var args=new{search=search?.Trim()??"",offset=(page-1)*25,editorId,status};
         await c.OpenAsync();await using var read=await c.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
         var total=await c.ExecuteScalarAsync<int>("SELECT count(*)"+eligible,args,read);
+        var counts=await c.QuerySingleAsync<DraftCounts>("SELECT count(*) AS AllBills,count(*) FILTER(WHERE draft_status IN('ACTIVE','LEGACY')) AS Drafts,count(*) FILTER(WHERE draft_status='HELD') AS OnHold"+unfiltered,args,read);
         var rows=await c.QueryAsync<DraftListRow>("SELECT draft_id AS DraftId,sf_draft_number(draft_sequence) AS DraftNumber,creation_time_source AS CreationTimeSource,draft_status AS DraftStatus,revision AS Revision,label,updated_at AS UpdatedAt,payload::text AS Payload"+eligible+" ORDER BY updated_at DESC,draft_id LIMIT 25 OFFSET @offset",args,read);
         await read.CommitAsync();
         var items=rows.Select(row=>{
@@ -295,7 +299,7 @@ t);
             var lines=p.TryGetProperty("cart",out var cart)&&cart.ValueKind==JsonValueKind.Array?cart.EnumerateArray().ToArray():[];
             decimal? estimate=lines.Length==0?0:p.TryGetProperty("estimatedTotal",out var amount)&&amount.ValueKind==JsonValueKind.Number&&amount.TryGetDecimal(out var value)?value:null;
             return new{row.DraftId,row.DraftNumber,row.CreationTimeSource,row.DraftStatus,row.Revision,row.Label,row.UpdatedAt,customerName=selected?Text("customerLabel"):null,itemCount=lines.Length,units=lines.Sum(line=>line.ValueKind==JsonValueKind.Object&&line.TryGetProperty("quantity",out var q)&&q.ValueKind==JsonValueKind.Number&&q.TryGetDecimal(out var n)?n:0),estimatedTotal=estimate};
-        }).ToArray();return paged?Ok(new{items,total,page,pageSize=25}):Ok(items);
+        }).ToArray();return paged?Ok(new{items,total,page,pageSize=25,counts=new{all=counts.AllBills,drafts=counts.Drafts,onHold=counts.OnHold}}):Ok(items);
     }
     [HttpGet("drafts/{id:guid}")]
     public async Task<IActionResult> Draft(Guid id)
@@ -310,12 +314,24 @@ t);
         if(id==Guid.Empty||string.IsNullOrWhiteSpace(request.Label)||request.Label.Length>150||request.Payload.ValueKind!=JsonValueKind.Object||request.Payload.GetRawText().Length>250000
             ||!request.Payload.TryGetProperty("draftId",out var payloadId)||payloadId.ValueKind!=JsonValueKind.String||!Guid.TryParse(payloadId.GetString(),out var matching)||matching!=id)
             throw new ValidationException("Invalid billing draft or mismatched identity.");
+        if(!HasValidDraftItem(request.Payload))throw new ValidationException("Add at least one item before saving this bill.");
         return await DraftAction(id,"SAVE",request.EditorId,request.Revision,request.OperationId,request.Label,request.Payload.GetRawText());
+    }
+    private static bool HasValidDraftItem(JsonElement payload)
+    {
+        if(payload.ValueKind!=JsonValueKind.Object||!payload.TryGetProperty("cart",out var cart)||cart.ValueKind!=JsonValueKind.Array)return false;
+        static bool PositiveId(JsonElement line,string field)=>line.TryGetProperty(field,out var value)&&value.ValueKind==JsonValueKind.Number&&value.TryGetInt64(out var id)&&id>0;
+        return cart.EnumerateArray().Any(line=>line.ValueKind==JsonValueKind.Object&&line.TryGetProperty("quantity",out var quantity)&&quantity.ValueKind==JsonValueKind.Number&&quantity.TryGetDecimal(out var count)&&count>0&&count<=10000&&decimal.Truncate(count)==count&&
+            (PositiveId(line,"productId")&&PositiveId(line,"variantId")||line.TryGetProperty("manualItem",out var manual)&&manual.ValueKind==JsonValueKind.Object&&manual.TryGetProperty("name",out var name)&&name.ValueKind==JsonValueKind.String&&!string.IsNullOrWhiteSpace(name.GetString())));
     }
     private async Task<IActionResult> DraftAction(Guid id,string action,Guid editorId,long revision,Guid operationId,string? label=null,string? payload=null)
     {
         factory.RequireLocation();if(editorId==Guid.Empty||operationId==Guid.Empty||revision<0)return BadRequest(new{message="Reload New Sale to establish a valid editing session."});
         await using var c=factory.CreateConnection();
+        if(action=="HOLD"){
+            var saved=await c.QuerySingleOrDefaultAsync<string>("SELECT payload::text FROM billing_drafts WHERE draft_id=@id",new{id});
+            if(saved is not null){using var document=JsonDocument.Parse(saved);if(!HasValidDraftItem(document.RootElement))throw new ValidationException("Add at least one item before putting this bill on hold.");}
+        }
         try{var result=await c.ExecuteScalarAsync<string>("SELECT public.sf_draft_action(@action,@id,@editorId,@revision,@operationId,@label,@payload::jsonb)::text",new{action,id,editorId,revision,operationId,label,payload});return Content(result!,"application/json");}
         catch(Npgsql.PostgresException ex)when(ex.SqlState=="P0001"){return Conflict(new{message=ex.MessageText});}
     }
@@ -341,4 +357,5 @@ t);
     public record DraftCommand(Guid EditorId,long Revision,Guid OperationId);
     public record ResumeDraftRequest(Guid EditorId,long Revision,Guid OperationId,bool Recover=false,Guid? CurrentDraftId=null,long? CurrentRevision=null,string? CurrentAction=null);
     private sealed record DraftListRow(Guid DraftId,string DraftNumber,string CreationTimeSource,string DraftStatus,long Revision,string Label,DateTime UpdatedAt,string Payload);
+    private sealed record DraftCounts(long AllBills,long Drafts,long OnHold);
 }

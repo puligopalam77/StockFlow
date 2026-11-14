@@ -1,0 +1,15 @@
+{
+  "status": "Review only; not applied or database tested",
+  "source": "database/migrations/067_sequential_catalog_identifiers.sql",
+  "sourceSha256": "c5b3b10f45b095a85de9abeb9965391bad62cea0b272b829291af6a4a53e39e2",
+  "files": [
+    {
+      "name": "parent-assignment-candidate.sql",
+      "sha256": "e41a45bc70dcef9f3868ebd104a75066a8fa2c7121832471ae6a65b6d63569b6"
+    },
+    {
+      "name": "parent-assignment-rollback.sql",
+      "sha256": "da71537a0115c04473dd754bd9a56da1322fe4d59c7ac06a7e4a85ce4fef16e5"
+    }
+  ]
+}

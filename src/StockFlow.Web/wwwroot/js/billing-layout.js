@@ -23,9 +23,9 @@
     actions.id='billing-header-actions';
     const draftStatus=byId('draft-status'),draftStatusVisibility=()=>{const text=draftStatus.textContent.trim();draftStatus.classList.toggle('visually-hidden',!text);draftStatus.dataset.saved=String(text==='Draft saved');};
     new MutationObserver(draftStatusVisibility).observe(draftStatus,{childList:true,characterData:true,subtree:true});draftStatusVisibility();
-    const headerIcons={ 'hold-bill':'M8 5v14M16 5v14','show-held':'M6 3h12v18l-6-4-6 4z' };
-    for(const button of actions.querySelectorAll('#hold-bill,#show-held')){
-        const label=button.id==='hold-bill'?'Hold Bill':'Saved Bills';
+    const headerIcons={ 'save-draft':'M5 3h12l4 4v14H3V3Zm2 0v6h10V3M7 21v-8h10v8','hold-bill':'M8 5v14M16 5v14','show-held':'M6 3h12v18l-6-4-6 4z' };
+    for(const button of actions.querySelectorAll('#save-draft,#hold-bill,#show-held')){
+        const label=button.id==='save-draft'?'Save Draft':button.id==='hold-bill'?'Hold Bill':'Saved Bills';
         const icon=document.createElementNS('http://www.w3.org/2000/svg','svg'),path=document.createElementNS(icon.namespaceURI,'path');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('fill','none');icon.setAttribute('stroke','currentColor');icon.setAttribute('stroke-width','1.8');icon.setAttribute('aria-hidden','true');path.setAttribute('d',headerIcons[button.id]);icon.append(path);
         const text=document.createElement('span');text.className='billing-action-label';text.textContent=label;button.replaceChildren(icon,text);button.title=label;button.setAttribute('aria-label',label);
     }

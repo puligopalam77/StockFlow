@@ -302,15 +302,16 @@
                 })
         );
     }
+    let templateVersion = 0;
     async function template() {
-        matrix(
-            await requestJson(
+        const version = ++templateVersion;
+        const permissions = await requestJson(
                 getElement('role').value
                     ? `roles/${getElement('role').value}/permissions`
                     : 'modules'
-            ),
-            true
-        );
+            );
+        if (version !== templateVersion) return;
+        matrix(permissions, true);
         if (getElement('selected-role-help')) {
             getElement('selected-role-help').textContent = getElement('role').value
                 ? 'The selected role template supplies account permissions.'

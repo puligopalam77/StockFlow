@@ -66,7 +66,10 @@ new
         var details=await connection.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='categories' AND column_name='display_order')",transaction:transaction);
         var prefixes=await connection.ExecuteScalarAsync<bool>("SELECT to_regclass('public.catalog_prefix_registry') IS NOT NULL",transaction:transaction);
         if(entity.SkuPrefix is not null&&!prefixes)throw new System.ComponentModel.DataAnnotations.ValidationException("Apply migration 067 before assigning SKU prefixes.");
-        if(prefixes)await connection.ExecuteAsync("UPDATE categories SET sku_prefix=COALESCE(@SkuPrefix,sku_prefix) WHERE category_id=@CategoryId AND business_profile_code=@Profile",arguments,transaction);
+        if(prefixes){
+            var prefixChanged=await connection.ExecuteAsync("UPDATE categories SET sku_prefix=COALESCE(@SkuPrefix,sku_prefix) WHERE category_id=@CategoryId AND business_profile_code=@Profile AND (NOT @CheckSkuPrefix OR sku_prefix IS NOT DISTINCT FROM @ExpectedSkuPrefix)",arguments,transaction);
+            if(entity.CheckSkuPrefix && prefixChanged==0)throw new System.ComponentModel.DataAnnotations.ValidationException("Category prefix changed. Reload the category before saving.");
+        }
         var metadata=details?"category_code=COALESCE(NULLIF(@CategoryCode,''),category_code),display_order=COALESCE(@DisplayOrder,display_order),":"";
         var changed=await connection.ExecuteAsync("UPDATE categories SET "+metadata+"category_name=@CategoryName,description=@Description,parent_category_id=@ParentCategoryId,is_active=@IsActive WHERE category_id=@CategoryId AND COALESCE(to_jsonb(categories)->>'business_profile_code','ELECTRICAL')=@Profile",arguments,transaction)>0;
         if(changed&&entity.ConfigurationJson is not null)

@@ -13,6 +13,7 @@ window.StockFlowQuotationList=async function(root,options){
  const query=new URL(location.href).searchParams;
  for(const [key,input]of Object.entries(fields))if(query.has(key))input.value=query.get(key);
  let sequence=0,timer,activeMenu=null,loaded=false;
+ window.StockFlowLoading?.region($('quote-list-table'),{retry:()=>load()});
  $('quote-count').parentElement.hidden=true;
  const pager=StockFlowPagination.create({host:$('quote-pagination'),label:'quotations',size:Number(query.get('pageSize')),onChange:()=>load()});
  const initialPage=Number(query.get('page'));
@@ -71,7 +72,7 @@ window.StockFlowQuotationList=async function(root,options){
   if(invalid()){pager.set({busy:false});return;}
   const p=params();history.replaceState(null,'',location.pathname+'?'+p);
   pager.set({busy:true});$('quote-list-status').textContent='Loading quotations…';$('quote-list-error').hidden=true;
-  $('quote-list-table').setAttribute('aria-busy','true');$('quote-list-empty').hidden=true;
+  $('quote-list-table').hidden=false;$('quote-list-table').setAttribute('aria-busy','true');$('quote-list-empty').hidden=true;
   try{
    const result=await api('/api/quotations?'+p);if(token!==sequence)return;
    if(!Array.isArray(result.rows)||!Number.isSafeInteger(result.total)||result.total<0)throw Error('The quotation list response could not be confirmed.');

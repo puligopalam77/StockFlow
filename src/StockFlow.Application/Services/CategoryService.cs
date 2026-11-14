@@ -56,12 +56,22 @@ public class CategoryService : ICategoryService
             return false;
         }
 
+        if(!string.IsNullOrEmpty(existing.SkuPrefix) && request.SkuPrefix is not null && !string.Equals(existing.SkuPrefix,request.SkuPrefix.Trim(),StringComparison.OrdinalIgnoreCase) && request.ExpectedSkuPrefix is null)
+            throw new ValidationException("Reload the category before changing its SKU prefix.");
+        if(request.ExpectedSkuPrefix is not null && !string.Equals(existing.SkuPrefix,request.ExpectedSkuPrefix,StringComparison.Ordinal))
+            throw new ValidationException("Category prefix changed. Reload the category before saving.");
         await ValidateAsync(request, id);
         if (existing.ParentCategoryId != request.ParentCategoryId)
             throw new ValidationException("Parent relationships are read-only. Use a reviewed category migration to move existing categories.");
 
+        if(existing.SkuPrefixUsed && request.SkuPrefix is not null && !string.Equals(existing.SkuPrefix,request.SkuPrefix,StringComparison.OrdinalIgnoreCase))
+            throw new ValidationException("SKU prefix is permanent after issuing a product code.");
         var entity = ToEntity(request);
         entity.CategoryId = id;
+        entity.ExpectedSkuPrefix=existing.SkuPrefix;
+        entity.CheckSkuPrefix=true;
+        if(!existing.IsActive && request.IsActive && existing.ParentCategoryId is int parentId && await repository.GetByIdAsync(parentId) is not { IsActive: true, ParentCategoryId: null })
+            throw new ValidationException("Activate the parent category first before activating this subcategory.");
         entity.IsActive = request.IsActive;
         return await repository.UpdateAsync(entity);
     }
@@ -72,6 +82,8 @@ public class CategoryService : ICategoryService
     {
         var category=await repository.GetByIdAsync(id);
         if(category is null)return false;
+        if(active && category.ParentCategoryId is int parentId && await repository.GetByIdAsync(parentId) is not { IsActive: true, ParentCategoryId: null })
+            throw new ValidationException("Activate the parent category first before activating this subcategory.");
         category.IsActive=active;
         return await repository.UpdateAsync(category);
     }
@@ -124,6 +136,8 @@ public class CategoryService : ICategoryService
         }
 
         var all = (await repository.GetAllAsync()).ToDictionary(c => c.CategoryId);
+        if(request.SkuPrefix is not null && all.Values.Any(c => c.CategoryId != id && string.Equals(c.SkuPrefix,request.SkuPrefix,StringComparison.OrdinalIgnoreCase)))
+            throw new ValidationException("SKU prefix already exists. Choose another prefix.");
         if (all.Values.Any(c => c.CategoryId != id && c.ParentCategoryId == request.ParentCategoryId && string.Equals(Regex.Replace(c.CategoryName.Normalize(NormalizationForm.FormKC).Trim(), @"\s+", " "), request.CategoryName, StringComparison.OrdinalIgnoreCase)))
         {
             throw new ValidationException(request.ParentCategoryId is null

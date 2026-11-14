@@ -18,6 +18,7 @@
 @if(BusinessScope.Consolidated){<p class="alert alert-info">Choose one location in the administrator's top bar before billing.</p>}
     <section class="card card-body mb-3">
         <div class="d-flex flex-wrap gap-2">
+            <button id="save-draft" type="button" class="btn btn-outline-secondary">Save Draft</button>
             <button id="hold-bill" type="button" class="btn btn-dark">Hold Bill</button>
             <button id="show-held" type="button" class="btn btn-outline-secondary">Saved bills</button>
             <span id="draft-status" role="status" class="small align-self-center">
@@ -30,9 +31,9 @@
             <button id="saved-bills-close" type="button" class="billing-saved-close sf-dialog-close" aria-label="Close Saved Bills">&times;</button>
             <p id="saved-bills-description">Active drafts and held bills. Bills open in another session remain protected.</p>
             <label class="visually-hidden" for="saved-bills-search">Search saved bills</label>
-            <input id="saved-bills-search" class="form-control" type="search" maxlength="150" placeholder="Search customer, mobile or draft number..." />
-            <p class="billing-saved-sort">Most recently saved first</p>
-            <button id="saved-bills-recovery" type="button" class="btn btn-sm btn-outline-secondary mb-2">Recover interrupted bills</button>
+            <div class="billing-saved-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="saved-bills-search" class="form-control" type="search" maxlength="150" placeholder="Search customer, mobile or bill number..." /></div>
+            <div class="billing-saved-filters" role="group" aria-label="Saved bill status"><button type="button" data-saved-filter="ALL" aria-pressed="true">All</button><button type="button" data-saved-filter="DRAFTS" aria-pressed="false">Drafts</button><button type="button" data-saved-filter="HELD" aria-pressed="false">On Hold</button></div>
+            <div class="billing-saved-tools"><span class="billing-saved-sort">Recently saved first</span><button id="saved-bills-recovery" type="button" class="billing-saved-recovery">Recover interrupted bills</button></div>
         </header>
         <div id="saved-bills-feedback" role="status"></div>
         <div id="saved-bills-list" class="billing-saved-list" aria-label="Saved bills"></div>
@@ -46,6 +47,7 @@
         <div class="sf-confirm-actions"><button type="button" id="resume-bill-cancel" class="btn btn-outline-secondary">Cancel</button><button type="button" id="resume-bill-keep" class="btn btn-outline-secondary">Keep Active Draft &amp; Resume</button><button type="button" id="resume-bill-hold" class="btn btn-dark">Hold Current Bill &amp; Resume</button><button type="button" id="resume-bill-discard" class="btn btn-outline-danger">Discard Current Draft &amp; Resume</button></div>
     </dialog>
     <form id="sale-form" novalidate>
+        <p id="billing-availability" class="billing-availability" role="status" hidden></p>
         <fieldset id="sale-editor">
             <div id="sale-gst-context" class="alert alert-info" hidden>
                 <label for="sale-gst-pos" class="form-label">Place of supply for this bill</label>
@@ -108,17 +110,17 @@
                         </div>
                         <p class="small text-muted">@(Model.Company.DefaultTaxMode == "INCLUSIVE" ? "Item prices include tax." : "Price per item is before tax. Each item total includes tax.")</p>
                         <p id="billing-cart-scroll-hint" class="small text-muted" hidden>Scroll horizontally for all columns, line totals and actions.</p>
-                        <div class="table-responsive billing-cart-scroll" role="region" aria-label="Items in this bill; scroll horizontally for all columns" aria-describedby="billing-cart-scroll-hint" tabindex="0" hidden>
+                        <div class="table-responsive billing-cart-scroll" role="region" aria-label="Items in this bill" aria-describedby="billing-cart-scroll-hint" tabindex="0" hidden>
                             <table class="table billing-cart" aria-label="Items in this bill">
                                 <thead>
                                     <tr>
                                         <th>Product / Variant</th>
-                                        <th>SKU</th>
-                                        <th>Available Stock</th>
+                                        <th hidden>SKU</th>
+                                        <th hidden>Available Stock</th>
                                         <th>Qty</th>
-                                        <th>MRP (₹)</th><th>Selling Price (₹)</th>
-                                        <th>Discount (%)</th>
-                                        <th>Tax (%)</th>
+                                        <th hidden>MRP (&#8377;)</th><th>Selling Price (₹)</th>
+                                        <th>Discount</th>
+                                        <th><span>GST</span> <button type="button" class="billing-gst-info" aria-label="About configured GST" data-bs-toggle="tooltip" title="GST follows the product configuration. No GST means no GST is charged; its recorded classification is preserved.">&#9432;</button></th>
                                         <th title="After item and allocated invoice discounts, including applicable tax">Line Total (₹)</th>
                                         <th>Actions</th>
                                     </tr>

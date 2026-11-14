@@ -155,6 +155,7 @@ public static class Checks
         if(args.Length==0)await BillingChecks.Run(factory);
         if(args.Contains("--label-checks")){await LabelChecks.Run(factory);return;}
         if(args.Contains("--category-hierarchy-checks")){await CatalogRegistrationChecks.Run(factory);await CategoryHierarchyChecks.Run(factory);return;}
+        if(args.Contains("--category-simplification-checks")){await CategorySimplificationChecks.Run(factory);return;}
         if(args.Contains("--two-level-category-checks")){await TwoLevelCategoryChecks.Run(factory);return;}
         if(args.Length==0)await LabelChecks.Run(factory);
         if(args.Contains("--receiving-checks")){await ReceivingChecks.Run(factory);return;}

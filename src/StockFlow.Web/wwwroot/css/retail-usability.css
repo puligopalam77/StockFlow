@@ -55,11 +55,22 @@
 
 /* Shared module refinements; custom workspaces retain their grids and widths. */
 @media screen {
- .sf-app { --sf-page-title-size:22px; --sf-page-subtitle-size:13px; --sf-section-title-size:16px; --sf-card-title-size:15px; --sf-button-height:36px; --sf-button-compact-height:32px; --sf-button-workflow-height:40px; --sf-page-header-gap:12px; }
+ .sf-app {
+  --sf-ui-title-size:22px; --sf-ui-title-weight:600; --sf-ui-body-size:14px;
+  --sf-ui-label-size:13px; --sf-ui-helper-size:12px; --sf-ui-control-height:38px;
+  --sf-ui-button-height:36px; --sf-ui-button-small-height:32px;
+  --sf-ui-table-header-height:40px; --sf-ui-table-row-height:44px;
+  --sf-ui-section-gap:12px; --sf-ui-field-gap:10px; --sf-ui-label-gap:4px;
+  --sf-ui-page-padding:20px; --sf-ui-card-padding:16px; --sf-ui-radius:6px;
+  --sf-page-title-size:var(--sf-ui-title-size); --sf-page-subtitle-size:13px;
+  --sf-section-title-size:16px; --sf-card-title-size:15px;
+  --sf-button-height:var(--sf-ui-button-height); --sf-button-compact-height:var(--sf-ui-button-small-height);
+  --sf-button-workflow-height:40px; --sf-page-header-gap:8px;
+ }
  /* A single minimum-size owner prevents legacy form-specific important rules
     from shrinking the same input/select component in different modules. */
  @layer stockflow-retail-control-size {
-  .sf-retail-ui .sf-main :is(input.form-control:not([type=checkbox]):not([type=radio]),select.form-select,.sf-select-trigger) { min-height:var(--sf-input-min-height,38px)!important; }
+  .sf-retail-ui .sf-main :is(input.form-control:not([type=checkbox]):not([type=radio]),select.form-select,.sf-select-trigger) { min-height:var(--sf-input-min-height,var(--sf-ui-control-height,38px))!important; }
   .sf-retail-ui .sf-main .btn:not(.table *):not(.sf-action-icon) { min-height:var(--sf-button-min-height,var(--sf-button-height))!important;font-size:var(--sf-button-font-size,13px)!important; }
   /* One owner for legacy important title sizes; document/brand headings are exceptions. */
   .sf-retail-ui .sf-main h1:not(:where(.sf-hero *,.invoice-paper *,.sf-document-brand *,.sf-document-heading *,.sf-report-brand *)) { font-size:var(--sf-page-title-size)!important; }
@@ -69,17 +80,17 @@
   }
   @media(pointer:coarse) { .sf-retail-ui .sf-main .btn:not(.table *):not(.sf-action-icon) { min-height:44px!important; } }
  }
- .sf-retail-ui .sf-main h1:not(:where(.sf-hero *,.invoice-paper *,.sf-document-brand *,.sf-document-heading *,.sf-report-brand *)) { font-weight:650;line-height:1.25; }
+ .sf-retail-ui .sf-main h1:not(:where(.sf-hero *,.invoice-paper *,.sf-document-brand *,.sf-document-heading *,.sf-report-brand *)) { font-weight:var(--sf-ui-title-weight);line-height:1.2; }
  .sf-retail-ui .sf-main :is(.sf-page-heading,.sf-list-caption,.master-screen-heading,.admin-heading,.reports-header,.crm-heading,.company-page-heading,.quote-heading,.quote-list-heading,.configuration-heading) { gap:8px 12px; margin-bottom:var(--sf-page-header-gap); }
  .sf-retail-ui .sf-main :is(.sf-page-heading,.sf-list-caption,.master-screen-heading,.admin-heading,.reports-header,.crm-heading,.company-page-heading,.quote-heading,.quote-list-heading,.configuration-heading) p { font-size:var(--sf-page-subtitle-size);font-weight:400;line-height:1.5;margin-top:4px;margin-bottom:0; }
  .sf-retail-ui .sf-main .btn:not(:where(.table *,.sf-action-icon)) { line-height:20px;padding:7px 12px; }
- .sf-retail-ui .sf-main .btn-primary { --sf-button-min-height:var(--sf-button-workflow-height);--sf-button-font-size:14px; }
+ .sf-retail-ui .sf-main .btn-primary { --sf-button-min-height:var(--sf-button-height);--sf-button-font-size:13px; }
  .sf-retail-ui .sf-main .btn-sm { --sf-button-min-height:var(--sf-button-compact-height);--sf-button-font-size:12px;padding:5px 10px; }
  .sf-retail-ui .sf-main :is(.sf-page-heading,.sf-list-caption,.master-screen-heading,.admin-heading,.reports-header,.crm-heading,.company-page-heading,.quote-heading,.quote-list-heading,.configuration-heading) .btn { --sf-button-min-height:var(--sf-button-height);--sf-button-font-size:13px;line-height:20px;padding:7px 12px; }
  .sf-retail-ui .sf-main :is(.sf-page-heading,.sf-list-caption,.master-screen-heading,.admin-heading,.reports-header,.crm-heading,.company-page-heading,.quote-heading,.quote-list-heading,.configuration-heading) .btn .sf-icon { width:16px;height:16px; }
  .sf-retail-ui .sf-main h2:not(:where(.sf-hero *,.sf-kpi *,.invoice-paper *,.sf-document-brand *,dialog *)) { font-size:var(--sf-section-title-size);font-weight:600; }
  .sf-retail-ui .sf-main .card h2 { font-size:var(--sf-card-title-size); }
- .sf-retail-ui .sf-main :is(.form-label,label) { font-size:13px; }
+ .sf-retail-ui .sf-main :is(.form-label,label) { font-size:var(--sf-ui-label-size); }
  /* POS entry, checkout, and confirmation controls keep independent comfortable targets. */
  .sf-retail-ui .sf-main #billing-workspace .btn { --sf-button-min-height:var(--sf-pos-action-height,38px); }
  .sf-retail-ui .sf-main #billing-workspace #complete-sale { --sf-button-min-height:44px;--sf-button-font-size:14px; }
@@ -90,7 +101,7 @@
   .sf-retail-ui .sf-main .btn:not(.table *):not(.sf-action-icon) { --sf-button-min-height:44px; }
   .sf-retail-ui .sf-main .billing-header-actions .btn { min-width:44px; }
  }
- .sf-retail-ui .sf-module-main { padding-top:12px; }
+ .sf-retail-ui .sf-module-main { padding-top:12px;padding-inline:var(--sf-ui-page-padding);font-size:var(--sf-ui-body-size); }
  .sf-retail-ui .sf-module-main .sf-breadcrumb { margin-bottom:8px; }
  .sf-retail-ui .sf-module-main :is(.form-control,.form-select,.sf-select-trigger) { border-radius:6px; }
  .sf-retail-ui .sf-module-main :is(.configuration-dialog,.sf-account-dialog) { border-radius:12px;box-shadow:0 8px 24px #142b451a; }
@@ -111,4 +122,13 @@
  @media(max-width:767px) {
   .sf-retail-ui .sf-module-main :is(.sf-filter-bar,.reports-filters,.sales-filters) input[type=date] { max-width:none; }
  }
+}
+
+/* Shared component density, screen-only; document/print and POS grids retain ownership. */
+@media screen {
+ .sf-retail-ui .sf-main :is(.sf-page-heading,.sf-list-caption,.master-screen-heading,.admin-heading,.reports-header,.crm-heading,.company-page-heading,.quote-heading,.quote-list-heading,.configuration-heading) :is(h1,h2){font-weight:var(--sf-ui-title-weight);line-height:1.2;margin-block:0}
+ .sf-retail-ui .sf-main :is(.sf-filter-bar,.sf-list-filter){padding:var(--sf-ui-section-gap);gap:var(--sf-ui-field-gap);margin-bottom:var(--sf-ui-section-gap)}
+ .sf-retail-ui .sf-main :is(.sf-filter-bar,.sf-list-filter) :is(label,.form-label){font-size:var(--sf-ui-label-size);gap:var(--sf-ui-label-gap)}
+ .sf-retail-ui .sf-operational-main .card-body{padding:var(--sf-ui-card-padding)}
+ @media(max-width:767px){.sf-retail-ui .sf-module-main{padding-inline:12px}}
 }

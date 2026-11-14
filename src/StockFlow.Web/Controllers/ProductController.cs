@@ -25,9 +25,16 @@ IVariantRepository variants)
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(bool activeOnly = false, string? term = null)
+    public async Task<IActionResult> GetAll(bool activeOnly = false, string? term = null, int? categoryId = null,
+        bool includeDescendants = true, [FromServices] ICategoryService? categories = null)
     {
-        return Ok(await service.GetAllAsync(activeOnly, term));
+        if (categoryId is null) return Ok(await service.GetAllAsync(activeOnly, term));
+        if (categoryId <= 0) return BadRequest(new { message = "Invalid category filter." });
+        if (!access.Can("CATEGORIES", "VIEW")) return Forbid();
+        if (categories is null || await categories.GetByIdAsync(categoryId.Value) is null) return NotFound();
+        var ids = (await categories.GetAllAsync()).Where(c => c.CategoryId == categoryId.Value
+            || includeDescendants && c.ParentCategoryId == categoryId.Value).Select(c => c.CategoryId).ToHashSet();
+        return Ok((await service.GetAllAsync(activeOnly, term)).Where(p => ids.Contains(p.CategoryId)));
     }
 
     [HttpPost("identifier-reservations")]

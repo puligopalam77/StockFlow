@@ -1,5 +1,6 @@
 // Browser-only fake of the server contract. Real lease/transaction safety is tested in C#.
 module.exports=function draftLifecycleMock(drafts,referenceFor,controls=()=>({})){
+ const hasItem=p=>Array.isArray(p?.cart)&&p.cart.some(i=>i&&Number.isInteger(i.quantity)&&i.quantity>0&&i.quantity<=10000&&(i.manualItem?.name?.trim()||Number.isInteger(i.productId)&&i.productId>0&&Number.isInteger(i.variantId)&&i.variantId>0));
  const reply=(id,d)=>({draftId:id,draftNumber:referenceFor(id),revision:d.revision,draftStatus:d.draftStatus,leaseUntil:d.leaseUntil});
  const init=d=>{if(d){d.draftStatus??='HELD';d.revision??=1;}return d;};
  return async(req,url,route,json)=>{
@@ -9,7 +10,8 @@ module.exports=function draftLifecycleMock(drafts,referenceFor,controls=()=>({})
    const recover=url.searchParams.get('recovery')==='true',search=(url.searchParams.get('search')||'').toLowerCase(),page=Number(url.searchParams.get('page')||1);
    const includeActive=url.searchParams.get('includeActive')==='true',editor=url.searchParams.get('editorId');
    const all=[...drafts].filter(([,raw])=>{const d=init(raw);return recover?d.draftStatus==='LEGACY'||d.draftStatus==='ACTIVE'&&(!d.leaseUntil||d.leaseUntil<Date.now()):d.draftStatus==='HELD'||includeActive&&d.draftStatus==='ACTIVE'&&(d.editorId===editor||!d.leaseUntil||d.leaseUntil<Date.now());}).map(([draftId,d])=>({...reply(draftId,d),label:d.label,customerName:d.payload.customerId?d.payload.customerLabel:null,creationTimeSource:d.creationTimeSource||'SERVER',itemCount:d.payload.cart.length,units:d.payload.cart.reduce((s,i)=>s+i.quantity,0),estimatedTotal:d.payload.cart.length?d.payload.estimatedTotal:0,updatedAt:new Date().toISOString()})).filter(d=>(d.label+' '+d.draftId+' '+d.draftNumber).toLowerCase().includes(search));
-   return json({items:all.slice((page-1)*25,page*25),total:all.length,page,pageSize:25});
+   const status=url.searchParams.get('status')||'ALL',filtered=all.filter(d=>status==='ALL'||status==='HELD'&&d.draftStatus==='HELD'||status==='DRAFTS'&&['ACTIVE','LEGACY'].includes(d.draftStatus));
+   return json({items:filtered.slice((page-1)*25,page*25),total:filtered.length,page,pageSize:25,counts:{all:all.length,drafts:all.filter(d=>['ACTIVE','LEGACY'].includes(d.draftStatus)).length,onHold:all.filter(d=>d.draftStatus==='HELD').length}});
   }
   const path=url.pathname.split('/'),id=path[5],action=path[6],d=init(drafts.get(id));
   if(req.method()==='GET'){
@@ -19,6 +21,7 @@ module.exports=function draftLifecycleMock(drafts,referenceFor,controls=()=>({})
   const b=req.postDataJSON();
   if(d?.lastOperation===b.operationId)return json(reply(id,d));
   if(req.method()==='PUT'){
+   if(!hasItem(b.payload))return bad('Add at least one item before saving this bill.',400);
    if(fail.failSave)return bad('Save unavailable',500);
    if(d&&(d.draftStatus!=='ACTIVE'||d.revision!==b.revision||d.editorId!==b.editorId||!d.leaseUntil||d.leaseUntil<Date.now()))return bad('Stale save or another editor');
    if(!d&&b.revision!==0)return bad('Missing draft');
@@ -34,18 +37,18 @@ module.exports=function draftLifecycleMock(drafts,referenceFor,controls=()=>({})
    if(current){
     if(current.revision!==b.currentRevision||current.editorId!==b.editorId||current.draftStatus!=='ACTIVE')return bad('Current draft changed');
     if(b.currentAction==='DISCARD'&&fail.failDelete)return bad('Delete unavailable',500);
-    if(b.currentAction==='HOLD'&&!current.payload.cart.length)return bad('Add an item before holding this bill.');
+    if(b.currentAction==='HOLD'&&!hasItem(current.payload))return bad('Add an item before holding this bill.');
     current.draftStatus=b.currentAction==='DISCARD'?'DISCARDED':b.currentAction==='HOLD'?'HELD':'ACTIVE';current.leaseUntil=null;current.revision++;current.lastOperation=b.operationId;
    }
-   d.draftStatus='ACTIVE';d.editorId=b.editorId;d.leaseUntil=Date.now()+120000;d.revision++;d.lastOperation=b.operationId;return json(reply(id,d));
+   d.draftStatus='ACTIVE';d.editorId=b.editorId;d.leaseUntil=Date.now()+120000;d.revision++;d.lastOperation=b.operationId;if(fail.loseRecoverResponse){fail.loseRecoverResponse=false;return route.abort('failed');}return json(reply(id,d));
   }
   if(d.revision!==b.revision)return bad('Stale revision');
   if(d.draftStatus==='ACTIVE'&&(d.editorId!==b.editorId||!d.leaseUntil||d.leaseUntil<Date.now()))return bad('Another editor owns this draft');
   if(req.method()==='DELETE'){
    if(fail.failDelete)return bad('Delete unavailable',500);d.draftStatus='DISCARDED';
   }else if(action==='hold'){
-   if(d.draftStatus!=='ACTIVE'||!d.payload.cart.length)return bad('Add an item before holding this bill.');d.draftStatus='HELD';
+   if(d.draftStatus!=='ACTIVE'||!hasItem(d.payload))return bad('Add an item before holding this bill.');d.draftStatus='HELD';
   }else return bad('Unknown action');
-  d.leaseUntil=null;d.revision++;d.lastOperation=b.operationId;d.editorId=b.editorId;return json(reply(id,d));
+  d.leaseUntil=null;d.revision++;d.lastOperation=b.operationId;d.editorId=b.editorId;if(req.method()==='DELETE'&&fail.loseDeleteResponse){fail.loseDeleteResponse=false;return route.abort('failed');}return json(reply(id,d));
  };
 };

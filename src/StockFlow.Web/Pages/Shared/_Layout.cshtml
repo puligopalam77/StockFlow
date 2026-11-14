@@ -30,6 +30,8 @@
     <script src="~/js/common/screen-language-catalog.js" asp-append-version="true"></script>
     <script src="~/js/common/language.js" asp-append-version="true"></script>
     <script src="~/js/branch-context.js" asp-append-version="true"></script>
+    <link rel="stylesheet" href="~/css/loading.css" asp-append-version="true" />
+    <script src="~/js/common/loading.js" asp-append-version="true"></script>
     @if (User.Identity?.IsAuthenticated == true) { <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" /> }
         <title>@ViewData["Title"] @(currentPage=="/Settings/Company"?"—":"-") StockFlow</title>
         @if(currentPage=="/Settings/Company"){<script src="~/js/company-settings-route.js" asp-append-version="true"></script>}

@@ -2,7 +2,7 @@
 window.StockFlowMaster = {
     async start(config) {
         const root = document.getElementById('master-data');
-        const screen=window.StockFlowMasterScreens;
+        const screen=config.inlineEditor&&!window.StockFlowMasterScreens?.page?null:window.StockFlowMasterScreens;
         const createOnly = root.dataset.createOnly === 'true';
         const isProductRegistration = root.dataset.module === 'products';
         const productUpdateKey='stockflow.product-updated.'+document.body.dataset.businessProfile+'.'+(window.StockFlowLocation||'');
@@ -16,6 +16,7 @@ window.StockFlowMaster = {
         const editor = document.getElementById('editor');
         const fields = document.getElementById('form-fields');
         const tbody = document.getElementById('master-rows');
+        window.StockFlowLoading?.region(tbody,{retry:()=>load()});
         const message = document.getElementById('master-message');
         const list = document.getElementById('master-list');
         const pageTitle = document.getElementById('master-page-title');
@@ -61,7 +62,7 @@ window.StockFlowMaster = {
             ++editorVersion;
             if(screen?.page){screen.back();return;}
             setEditorVisible(false);
-            if (createOnly) document.getElementById('add-record')?.focus();
+            if (createOnly||config.inlineEditor) document.getElementById('add-record')?.focus();
             managementButton?.focus();
         }
         let editingId = null;
@@ -270,7 +271,8 @@ window.StockFlowMaster = {
             th.textContent = text;
             header.append(th);
         }
-        document.getElementById('master-head')?.append(header);
+        const listHead = document.getElementById('master-head');
+        if (!listHead?.children.length) listHead?.append(header);
         async function openEditor(id = null) {
             if(screen&&!screen.page){screen.navigate(id===null?'Create':'Edit',id);return;}
             if (saving) {
@@ -363,15 +365,17 @@ window.StockFlowMaster = {
             }
         }
         if (isProductRegistration) document.addEventListener('stockflow:catalog-imported',()=>load().catch(error=>show(error.message,true)));
+        let listController;
         async function load() {
             if (createOnly||screen?.page) return;
             const version = ++loadVersion;
+            listController?.abort();listController=new AbortController();
             const params = new URLSearchParams(config.listQuery?.() ?? {
                 term: document.getElementById('master-search').value,
                 activeOnly: document.getElementById('status-filter').value
             });
             try {
-                const records = await requestJson(endpoint + '?' + params);
+                const records = await requestJson(endpoint + '?' + params,{signal:listController.signal});
                 if (version !== loadVersion) {
                     return;
                 }
@@ -404,9 +408,12 @@ window.StockFlowMaster = {
                         row.append(cell);
                     }
                     const status = document.createElement('td');
-                    status.textContent = record.productStatus==='DISCONTINUED'?'Discontinued':record.isActive
+                    status.textContent = record.productStatus==='DISCONTINUED'?'Discontinued':record.productStatus==='INACTIVE'?'Inactive':record.isActive
                         ? config.activeStatus || 'Active'
                         : config.inactiveStatus || 'Inactive';
+                    if(status.textContent==='Active'||status.textContent==='Inactive'){
+                        const badge=document.createElement('span');badge.className='sf-status-badge';badge.dataset.active=String(status.textContent==='Active');badge.textContent=status.textContent;status.replaceChildren(badge);
+                    }
                     row.append(status);
                     if (canEdit || canDisable || canHistory || config.detailLink) {
                         const actions = document.createElement('td');
@@ -475,7 +482,7 @@ window.StockFlowMaster = {
                     row.append(cell);
                     tbody.append(row);
                 }
-                await config.onLoaded?.({records, rows:[...tbody.children], openEditor});
+                await config.onLoaded?.({records, rows:[...tbody.children], openEditor, isCurrent:()=>version===loadVersion});
             } catch (error) {
                 if (version === loadVersion) {
                     show(error.message, true);
@@ -515,6 +522,7 @@ window.StockFlowMaster = {
             saving = true;
             form.dataset.saving='true';
             config.onSaving?.(true);
+            const endButtonLoading=window.StockFlowLoading?.button(submit);
             const dismissButtons = [
                 document.getElementById('cancel-edit'),
                 document.getElementById('close-editor')
@@ -583,9 +591,10 @@ window.StockFlowMaster = {
         let timer;
         search?.addEventListener('input', () => {
             clearTimeout(timer);
-            timer = setTimeout(load, 250);
+            if (!config.localFilter) { ++loadVersion; listController?.abort(); }
+            timer = setTimeout(config.localFilter || load, 250);
         });
-        document.getElementById('status-filter')?.addEventListener('change', load);
+        document.getElementById('status-filter')?.addEventListener('change', () => { clearTimeout(timer); (config.localFilter || load)(); });
         if (createOnly) document.getElementById('add-record').disabled = false;
         if(screen?.page){await openEditor(screen.id);screen.ready();}
         else {

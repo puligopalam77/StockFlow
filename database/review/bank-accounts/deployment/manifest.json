@@ -1,0 +1,63 @@
+{
+    "Package":  "bank-accounts-jan2027-review-v1",
+    "Status":  "REVIEW ONLY; NOT DATABASE-EXECUTED; NOT RELEASE-CERTIFIED",
+    "Inputs":  [
+                   {
+                       "Sha256":  "992E2A48B9D024A3894EC1AC01F7E2FB5BD7D99DB54F9D3C9689FF301944D331",
+                       "Path":  "database/review/bank-accounts/090_bank_accounts_schema.sql"
+                   },
+                   {
+                       "Sha256":  "E9F20F467C844B9029B550CDAE6BE0AF63421116B3C1802DD147EDB5FDAF8045",
+                       "Path":  "database/review/bank-accounts/091_bank_permissions.sql"
+                   },
+                   {
+                       "Sha256":  "53C051B79CA2200DE2E0FAD91744D9FE1AE57DC3E6DC799DD6573CC99AF2AD5E",
+                       "Path":  "database/review/bank-accounts/092_bank_development_workflows.sql"
+                   },
+                   {
+                       "Sha256":  "128A8C7F58CBFC1C949F4CCDEA98265B7158E1800C6C6DF6D0F1BD9E6E316CCD",
+                       "Path":  "database/review/bank-accounts/093_bank_january_policy.sql"
+                   }
+               ],
+    "Migrations":  [
+                       {
+                           "Sha256":  "CC3DE7A87102A4D1BF1311BAD42692222499EE462EFC5F01CBAF5FCC569AB3FB",
+                           "Path":  "10_bank_foundation.sql"
+                       },
+                       {
+                           "Sha256":  "C1A8A46AE00FB94E826741BD6CF2069586663AA7D98644A38AA608954445424A",
+                           "Path":  "20_bank_permission_metadata.sql"
+                       },
+                       {
+                           "Sha256":  "F2141A873B0EA8D8B415F01DA4490CEED3507715738A009D89944F74D1917E34",
+                           "Path":  "30_bank_workflows.sql"
+                       }
+                   ],
+    "ReviewFiles":  [
+                        {
+                            "Sha256":  "5D7F343874C68EC9CF734406FA1A3D6CE4C30C5E931D749B8C8E0056BF846DAD",
+                            "Path":  "00_readiness_read_only.sql"
+                        },
+                        {
+                            "Sha256":  "DF1A7C2C057FBD088A4D8257EA6FE568A10A0D13F1317670F3B0C2695D3FFD83",
+                            "Path":  "40_verify_installation_read_only.sql"
+                        },
+                        {
+                            "Sha256":  "50138B8D5175EA8FB51D1E11DB04E2795C0315F2CBB28E2AC3AD00278FDC9611",
+                            "Path":  "REVIEW.txt"
+                        },
+                        {
+                            "Sha256":  "AE6922C31126CF6332DE899FC89ED2508DF46E4886D89B89004A047130A97CAC",
+                            "Path":  "CONNECTION-KEYS.txt"
+                        },
+                        {
+                            "Sha256":  "1F47BFF22F785D4607A2BDCBDE5E5A31F07061B1666406059FB041C763A9D325",
+                            "Path":  "RELEASE-TESTS.txt"
+                        },
+                        {
+                            "Sha256":  "165C8EA928111247359D9175C7AB561923F13003CCE7EDA605B13A33FB9CC23C",
+                            "Path":  "build-review-package.ps1"
+                        }
+                    ],
+    "StaticChecks":  "PASS: source sections, no local target gates, transaction boundaries, EDIT linking, exact 091 metadata, qualified creation, pg_temp-last definers, generated hashes"
+}

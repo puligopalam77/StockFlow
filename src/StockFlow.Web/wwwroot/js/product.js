@@ -271,6 +271,7 @@
         onLoaded: skuRows,
         columnLabels: {productName:'Product Name',parentProductCode:'Product Code',skuSummary:'SKU',categoryName:'Category',brandName:'Brand',configuredVariantCount:'Variants'},
         columns: listColumns,
+        listQuery(){const query=new URLSearchParams({term:document.getElementById('master-search').value,activeOnly:document.getElementById('status-filter').value}),navigation=new URLSearchParams(location.search);if(navigation.has('categoryId')){query.set('categoryId',navigation.get('categoryId'));query.set('includeDescendants',String(navigation.get('includeDescendants')!=='false'));}return query;},
         async onCreate({ api: requestJson, onSaved }) {
             if (document.getElementById('product-registration-access').dataset.create !== 'true') {
                 throw new Error(
@@ -287,6 +288,8 @@
             await ProductRegistrationForm.open();
         },
         onReady(controls) {
+            const navigation=new URLSearchParams(location.search);
+            if(navigation.has('categoryId')&&!window.StockFlowMasterScreens?.page){const info=document.createElement('p'),clear=document.createElement('a');info.className='small text-muted';info.id='product-category-context';info.append('Category: '+(navigation.get('categoryName')||'Selected category')+(navigation.get('includeDescendants')==='false'?' (direct products). ':' (direct products and subcategories). '));clear.textContent='Show all categories';clear.href='/Products';info.append(clear);document.getElementById('master-list').prepend(info);}
             document.getElementById('master-form').dataset.productValidation='true';
             if (document.body.dataset.businessProfile && document.body.dataset.businessProfile !== 'ELECTRICAL') {
                 for (const name of ['trackingType','warrantyMonths','warrantyProvider']) if (controls[name]) {
