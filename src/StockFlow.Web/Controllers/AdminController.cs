@@ -21,10 +21,16 @@ public class AdminController : ControllerBase
     int Actor => access.User!.UserId;
 
     [HttpGet("users")]
-    public async Task<IActionResult> Users(string? term, int offset = 0)
+    public async Task<IActionResult> Users(string? term, int offset = 0, long? storeId = null, string? accountType = null, int? roleId = null, bool? isActive = null)
     {
-        return Ok(await repository.GetUsersAsync(term, offset));
+        return Ok(await repository.GetUsersAsync(term, offset, storeId, accountType, roleId, isActive));
     }
+
+    [HttpGet("users/registration-options")]
+    public async Task<IActionResult> RegistrationOptions() => Ok(await repository.StaffRegistrationOptionsAsync(Actor));
+
+    [HttpGet("users/username-suggestion")]
+    public async Task<IActionResult> UsernameSuggestion(string fullName) => Ok(new { username = await repository.SuggestStaffUsernameAsync(fullName, Actor) });
 
     [HttpGet("users/{id:int}")]
     public async Task<IActionResult> UserById(int id)

@@ -1,0 +1,59 @@
+<form id="store-form" data-unsaved-context="Shop details" data-indian-address="true">
+ <div class="stores-dialog-body">
+  <div class="alert alert-danger" id="store-form-error" role="alert" data-keep-banner hidden></div>
+  <section class="shop-form-section" aria-labelledby="shop-details-heading">
+   <div class="shop-section-heading"><svg aria-hidden="true"><use href="/images/icons.svg#home" /></svg><h3 id="shop-details-heading" data-step="1">Shop Details</h3><span>Basic information about the shop.</span></div>
+   <div class="stores-form-grid">
+    <div class="store-field"><label for="store-storeName">Shop Name *</label><input id="store-storeName" name="storeName" class="form-control" required maxlength="150" autocomplete="organization" /></div>
+    <div class="store-field"><label for="store-storeCode">Shop Code *</label><input id="store-storeCode" name="storeCode" class="form-control" required maxlength="50" aria-describedby="shop-code-help" /><small id="shop-code-help">Suggested from the name; you can edit it before saving.</small></div>
+    <div class="store-field"><label for="store-type">Shop Type *</label><select id="store-type" name="isHeadOffice" required class="form-select"><option value="false">Retail Shop</option><option value="true">Head Office</option></select></div>
+   </div>
+  </section>
+  <section id="store-gst-configuration" class="shop-form-section" aria-labelledby="shop-gst-heading">
+   <div class="shop-section-heading"><svg aria-hidden="true"><use href="/images/icons.svg#document" /></svg><h3 id="shop-gst-heading" data-step="2">GST &amp; Legal Business</h3><span>Choose the tax registration and legal business for this shop.</span></div>
+   <div class="stores-form-grid">
+    <div class="store-field" id="store-gst-mode-wrap"><label for="store-gst-mode">GST Status *</label><select id="store-gst-mode" data-radio-group="gstModeChoice" name="gstSetupMode" class="form-select"><option value="EXISTING">GST Registered</option><option value="UNREGISTERED" selected>Not GST Registered</option></select>
+     <fieldset class="shop-gst-choices" id="store-gst-choices" hidden><legend class="visually-hidden">GST Status</legend><label><input type="radio" name="gstModeChoice" value="EXISTING" /> GST Registered</label><label><input type="radio" name="gstModeChoice" value="UNREGISTERED" checked /> Not GST Registered</label></fieldset>
+    </div>
+    <div class="store-field" id="store-gst-business-select-wrap"><label for="store-gst-business">Legal Business</label><select id="store-gst-business" name="gstBusinessId" class="form-select"><option value="">Select legal business</option></select></div>
+    <div class="store-field" id="store-gst-business-readonly-wrap" hidden><label for="store-gst-business-name">Legal Business</label><input id="store-gst-business-name" class="form-control" readonly /></div>
+    <div class="store-field" id="store-gst-registration-wrap" hidden><label for="store-gst-registration" id="store-gst-registration-label">GST Number (GSTIN) *</label><select id="store-gst-registration" name="gstRegistrationId" class="form-select"></select><span id="store-gst-state-badge" class="shop-state-badge" hidden></span></div>
+   </div>
+   <p id="store-gst-help" class="stores-help" role="status"></p>
+   <a href="/Admin/Gst" id="store-gst-settings-link">Manage GST Settings</a>
+  </section>
+  <section id="store-existing-fields" class="shop-form-section" aria-labelledby="shop-address-heading">
+   <div class="shop-section-heading"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><h3 id="shop-address-heading" data-step="3">Shop Address</h3><span>Enter the physical address of the shop.</span></div>
+   <div id="store-legacy-address"><label for="store-address">Saved combined address</label><textarea id="store-address" name="address" maxlength="1000" rows="2" class="form-control"></textarea><button id="store-convert-address" class="btn btn-outline-secondary" type="button">Enter Structured Address</button></div>
+   <p id="store-original-address" class="stores-help"></p>
+   <div class="stores-form-grid">
+    <div id="store-structured-address" class="store-field"><label for="store-addressLine1">Address Line 1</label><input id="store-addressLine1" name="addressLine1" class="form-control" maxlength="250" placeholder="Building, street and area" /></div>
+    <div class="store-field"><label for="store-city">City / Town</label><input id="store-city" name="city" class="form-control" maxlength="100" /></div>
+    <div class="store-field"><label for="store-state">State</label><select name="state" id="store-state" class="form-select"><option value="">Select state</option>@foreach(var state in StockFlow.Application.Common.GstRules.States.Where(s=>s.Key!="28").OrderBy(s=>s.Value)){<option value="@state.Value" data-state-code="@state.Key">@state.Value</option>}</select></div>
+    <div id="store-district-wrap" class="store-field"><label for="store-district">District</label><input id="store-district" name="district" class="form-control" maxlength="100" placeholder="Select State first" /></div>
+    <div id="store-pin-wrap" class="store-field"><label for="store-pinCode">PIN Code</label><input id="store-pinCode" name="pinCode" class="form-control" maxlength="6" inputmode="numeric" pattern="[1-9][0-9]{5}" /></div>
+    <div class="store-field"><label for="store-country">Country</label><input id="store-country" class="form-control" value="India" readonly disabled /></div>
+   </div>
+   <p class="stores-help">Select State, then District. Enter the actual shop city and a six-digit PIN; postal lookup can suggest corrections. Select the appropriate post office / locality when offered. Street and building details must be checked by you.</p>
+  </section>
+  <section class="shop-form-section" aria-labelledby="shop-contact-heading">
+   <div class="shop-section-heading"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 3 4 4-2 3a15 15 0 0 0 7 7l3-2 4 4-2 3C9 22 2 15 2 5Z"/></svg><h3 id="shop-contact-heading" data-step="4">Contact Details</h3><span>Optional contact information for the shop.</span></div>
+   <div class="stores-form-grid shop-contact-grid">
+    <div class="store-field"><label for="store-mobileNumber">Mobile (optional)</label><input id="store-mobileNumber" name="mobileNumber" class="form-control" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" /></div>
+    <div class="store-field"><label for="store-email">Email (optional)</label><input id="store-email" name="email" class="form-control" type="email" maxlength="150" /></div>
+   </div>
+  </section>
+  <details id="store-additional-details" class="shop-additional-details">
+   <summary><svg class="shop-additional-icon" aria-hidden="true"><use href="/images/icons.svg#settings" /></svg><strong>Additional Details</strong> <span>Address, contact and status</span></summary>
+   <div class="stores-form-grid">
+    <div id="store-addressLine2-wrap" class="store-field"><label for="store-addressLine2">Address Line 2 (optional)</label><input id="store-addressLine2" name="addressLine2" class="form-control" maxlength="250" /></div>
+    <div class="store-field"><label for="store-alternatePhone">Alternate Phone (optional)</label><input id="store-alternatePhone" name="alternatePhone" class="form-control" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" /></div>
+    <div class="store-field"><label for="store-active">Status</label><select name="isActive" id="store-active" class="form-select"><option value="true">Active</option><option value="false">Inactive</option></select><small>Active does not mean billing setup is complete.</small></div>
+    <div class="store-field" data-store-edit-only><label for="store-profile">Business profile</label><input id="store-profile" class="form-control" readonly /></div>
+   </div>
+  </details>
+
+  <div class="shop-stock-panel"><svg aria-hidden="true"><use href="/images/icons.svg#box" /></svg><div><strong>Default Stock Location</strong><p id="store-main-stock-note" class="shop-stock-note">Main Stock will be created automatically when this shop is saved.</p></div></div>
+ </div>
+ <footer><button type="button" class="btn btn-outline-secondary" data-close="store-dialog">Cancel</button><button id="store-save" type="submit" class="btn btn-primary">Save Shop</button></footer>
+</form>

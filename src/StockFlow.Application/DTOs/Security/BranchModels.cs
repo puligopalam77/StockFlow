@@ -27,6 +27,13 @@ public class BranchLocation
 
 public class StoreRequest
 {
+    public bool IsActive { get; set; } = true;
+    // Existing store type: head office or ordinary retail shop. Null preserves
+    // the type for older clients editing an existing record.
+    public bool? IsHeadOffice { get; set; }
+    [Range(1,long.MaxValue)] public long? GstBusinessId { get; set; }
+    [Range(1,long.MaxValue)] public long? GstRegistrationId { get; set; }
+    public string? GstSetupMode { get; set; }
     [StringLength(250)] public string? AddressLine1 { get; set; }
     [StringLength(250)] public string? AddressLine2 { get; set; }
     [StringLength(100)] public string? District { get; set; }

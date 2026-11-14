@@ -20,6 +20,8 @@ exports.fillLocation=async(locator,value)=>{
 };
 // Exercise the visible shared control instead of forcing a hidden native source.
 exports.selectValue=async(locator,value)=>{
+ const radioGroup=await locator.getAttribute('data-radio-group');
+ if(radioGroup){const radio=locator.page().locator('input[type="radio"][name="'+radioGroup+'"][value="'+value+'"]');if(await radio.isVisible()){await radio.check();return;}}
  const picker=await locator.evaluate(e=>e.sfSelect?{trigger:e.sfSelect.input.id,query:e.sfSelect.search.id,list:e.sfSelect.list.id}:null);
  if(!picker)return locator.selectOption(value);
  const option=await locator.evaluate((e,v)=>[...e.options].find(o=>o.value===String(v))?.textContent||String(v),value);

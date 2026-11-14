@@ -1,0 +1,12 @@
+@page "/Admin/Stores/Create"
+@model StockFlow.Web.Pages.Admin.Stores.CreateModel
+@{ViewData["Title"]="Add Shop";}
+<div id="stores-workspace" class="sf-list-screen stores-create-page" data-create-page="true" data-gst="@Access.Can("GST_SETTINGS","VIEW")" data-gst-edit="@Access.Can("GST_SETTINGS","EDIT")">
+ <header class="stores-heading"><div><h1 id="store-dialog-title">Add Shop</h1><p>Enter shop details and choose the GST setup before adding the shop address.</p></div><a class="btn btn-outline-secondary" href="/Admin/Stores">Back to Shops &amp; Locations</a></header>
+ <div id="branch-message" class="alert" role="status" data-keep-banner hidden></div>
+ <section id="store-dialog" class="stores-page-editor" aria-labelledby="store-dialog-title" hidden>
+  <partial name="~/Pages/Admin/Stores/_ShopForm.cshtml" />
+ </section>
+</div>
+@section Styles {<link rel="stylesheet" href="~/css/store-management.css" asp-append-version="true"/>}
+@section Scripts {<script src="~/js/branches.js" asp-append-version="true"></script>}

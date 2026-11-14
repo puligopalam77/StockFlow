@@ -1,25 +1,12 @@
 @page
-@{ ViewData["Title"]="Roles and permissions"; }
-<div data-grants="@System.Text.Json.JsonSerializer.Serialize(Access.User!.Permissions.ToDictionary(p=>p.ModuleCode,p=>p.SupportedActions.Where(p.Allows).ToArray()))" id="admin-roles" data-edit="@Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS").ToString().ToLowerInvariant()">
-    <h1>Role templates</h1>
-    <div id="admin-message" role="status" aria-live="polite">
-    </div>
-@if(Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS")){<button id="create-role" type="button" class="btn btn-outline-primary mb-3">Add role</button>}
-    <label for="role">Role template</label>
-    <select id="role" class="form-select mb-3">
-    </select>
-@if(Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS")){<button type="button" class="btn btn-outline-secondary" data-matrix="reset">Reset unsaved changes</button>}
-    <details class="admin-permissions">
-        <summary>Authenticator policy</summary>
-        <label class="d-block my-3">
-            <input id="role-two-factor" type="checkbox" /> Require authenticator for this role</label>
-        <button id="save-role-security" type="button" class="btn btn-outline-secondary">Save role security rules</button>
-    </details>
-    <div id="permission-matrix" class="mt-3">
-    </div>
-@if(Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS")){<button id="save-role" class="btn btn-primary" type="button">Save staff role</button>}
+@{ViewData["Title"]="Roles & Permissions";}
+<div id="roles-workspace" class="roles-screen" data-mode="list" data-edit="@Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS").ToString().ToLowerInvariant()">
+ <header class="roles-heading"><div><h1>Roles &amp; Permissions</h1><p>Manage staff roles and access permissions.</p></div>@if(Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS")){<a class="btn btn-primary" href="/Admin/Roles/Create">+ Add Role</a>}</header>
+ <div id="role-message" role="status" class="alert" hidden></div>
+ <nav class="role-tabs" aria-label="Role configuration"><a href="/Admin/Roles" aria-current="page">Roles</a><a href="/Admin/Roles/Templates">Role Templates</a></nav>
+ <section class="role-kpis" aria-label="Role totals"><article class="pink"><svg aria-hidden="true"><use href="/images/icons.svg#users" /></svg><div><h2>Total Roles</h2><strong id="roles-total">—</strong></div></article><article class="green"><svg aria-hidden="true"><use href="/images/icons.svg#report-check" /></svg><div><h2>Active Roles</h2><strong id="roles-active">—</strong></div></article><article class="orange"><svg aria-hidden="true"><use href="/images/icons.svg#clock" /></svg><div><h2>Inactive Roles</h2><strong id="roles-inactive">—</strong></div></article></section>
+ <form id="role-filters" class="role-filters"><label for="role-search">Find roles</label><input id="role-search" class="form-control" type="search" maxlength="100" placeholder="Search role name or description"/><select id="role-filter-status" class="form-select" aria-label="Role status"><option value="ALL">All statuses</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select><button id="role-filter-reset" type="button" class="btn btn-outline-secondary">Reset Filters</button></form>
+ <section class="role-table-card"><div class="role-table-scroll"><table class="table"><thead><tr><th>Role Name</th><th>Description</th><th>Users</th><th>Status</th><th>Actions</th></tr></thead><tbody id="role-list"></tbody></table></div><p id="role-empty" hidden>No matching roles.</p><p id="role-list-count" class="roles-help" role="status"></p></section>
 </div>
-@section Scripts {<script src="~/js/common/permission-editor.js" asp-append-version="true"></script><script src="~/js/admin-security.js" asp-append-version="true"></script>}
-
-
-@section Styles {<link rel="stylesheet" href="~/css/admin-security.css" asp-append-version="true" />}
+@section Styles{<link rel="stylesheet" href="~/css/role-management.css" asp-append-version="true"/>}
+@section Scripts{<script src="~/js/role-management.js" asp-append-version="true"></script>}

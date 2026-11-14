@@ -1,0 +1,123 @@
+:is(#roles-workspace,#role-templates-workspace){min-width:0;color:#121b2c;--role-pink:#ff007f}
+:is(#roles-workspace,#role-templates-workspace) [hidden]{display:none!important}
+:is(#roles-workspace,#role-templates-workspace) .roles-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+:is(#roles-workspace,#role-templates-workspace) h1{font-size:28px;font-weight:750;margin:0 0 4px}
+:is(#roles-workspace,#role-templates-workspace) .roles-heading p{margin:0;color:#536075}
+:is(#roles-workspace,#role-templates-workspace) .btn-primary{background:#ff007f!important;border-color:#ff007f!important;color:#fff!important}
+:is(#roles-workspace,#role-templates-workspace) .btn-outline-secondary{background:#fff!important;border:1px solid #ccd6e4!important;color:#172235!important}
+:is(#roles-workspace,#role-templates-workspace) .btn{border-radius:9px;font-weight:600;padding:10px 16px}
+:is(#roles-workspace,#role-templates-workspace) .role-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}
+:is(#roles-workspace,#role-templates-workspace) .role-kpis article{display:flex;gap:12px;align-items:center;border-radius:10px;padding:6px 14px;background:#ffedf5;border:1px solid #ffdaeb;color:#bb0054}
+:is(#roles-workspace,#role-templates-workspace) .role-kpis .green{background:#eaffef;border-color:#d6f8df;color:#087719}
+:is(#roles-workspace,#role-templates-workspace) .role-kpis .orange{background:#fff2e4;border-color:#ffe7ca;color:#b84e00}
+:is(#roles-workspace,#role-templates-workspace) .role-kpis svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+:is(#roles-workspace,#role-templates-workspace) .role-kpis h2{font-size:13px;line-height:17px;margin:0 0 2px;font-weight:700}
+:is(#roles-workspace,#role-templates-workspace) .role-kpis strong{font-size:24px;line-height:1}
+:is(#roles-workspace,#role-templates-workspace) .role-filters{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:18px 20px;background:#fff;border:1px solid #dae2ec;border-radius:14px;margin-bottom:20px}
+:is(#roles-workspace,#role-templates-workspace) .role-filters label{font-weight:700;white-space:nowrap}
+:is(#roles-workspace,#role-templates-workspace) .role-filters input{flex:1;min-width:180px}
+:is(#roles-workspace,#role-templates-workspace) .role-filters select,:is(#roles-workspace,#role-templates-workspace) .role-filters .sf-select{width:210px;max-width:100%}
+:is(#roles-workspace,#role-templates-workspace) .role-table-card{padding:10px 16px;background:#fff;border:1px solid #dae2ec;border-radius:14px}
+:is(#roles-workspace,#role-templates-workspace) .role-table-scroll{overflow-x:auto;max-width:100%}
+:is(#roles-workspace,#role-templates-workspace) table{width:100%;min-width:650px}
+:is(#roles-workspace,#role-templates-workspace) th{background:#1c2736;color:white;padding:15px 14px;font-weight:700}
+:is(#roles-workspace,#role-templates-workspace) td{padding:15px 14px;vertical-align:middle;border-bottom:1px solid #e1e6ee;max-width:300px;overflow-wrap:anywhere}
+:is(#roles-workspace,#role-templates-workspace) td:first-child{font-weight:650}
+:is(#roles-workspace,#role-templates-workspace) .role-status{border-radius:30px;padding:5px 12px;font-weight:650;white-space:nowrap;background:#fff0dc;color:#934600}
+:is(#roles-workspace,#role-templates-workspace) .role-status.active{background:#e1fbdf;color:#0c6b13}
+:is(#roles-workspace,#role-templates-workspace) .role-status:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:middle}
+:is(#roles-workspace,#role-templates-workspace) .role-actions{white-space:nowrap}
+:is(#roles-workspace,#role-templates-workspace) .role-action{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;min-height:34px;min-width:38px;border:1px solid #ccd6e4;background:#fff;border-radius:8px;margin:3px;padding:6px;color:#172235;font-size:12px;text-decoration:none}
+:is(#roles-workspace,#role-templates-workspace) .role-action svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+:is(#roles-workspace,#role-templates-workspace) .role-status-action{color:#cc0064;border-color:#ffc1dc}
+:is(#roles-workspace,#role-templates-workspace) button:disabled{opacity:.5;cursor:not-allowed}
+:is(#roles-workspace,#role-templates-workspace) .role-protected{display:block;color:#6b7383;font-weight:400;font-size:11px;margin-top:3px}
+:is(#roles-workspace,#role-templates-workspace) .roles-help{font-size:12px;color:#556479;margin:8px 0}
+:is(#roles-workspace,#role-templates-workspace) .role-card{background:#fff;border:1px solid #d7dfec;border-radius:15px;padding:18px 20px;margin-bottom:16px;min-width:0}
+:is(#roles-workspace,#role-templates-workspace) .role-card h2{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:750;margin:0 0 14px}
+:is(#roles-workspace,#role-templates-workspace) .role-card h2 svg{width:26px;height:26px;fill:none;stroke:#ff007f;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;flex-shrink:0}
+:is(#roles-workspace,#role-templates-workspace) .role-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 22px}
+:is(#roles-workspace,#role-templates-workspace) .role-fields>div{min-width:0}
+:is(#roles-workspace,#role-templates-workspace) label{font-size:13px;font-weight:600;margin-bottom:6px}
+:is(#roles-workspace,#role-templates-workspace) .role-fields input,:is(#roles-workspace,#role-templates-workspace) .role-fields select{max-width:100%;min-width:0}
+:is(#roles-workspace,#role-templates-workspace) .role-fields .form-control,:is(#roles-workspace,#role-templates-workspace) .role-fields .form-select{min-height:38px;font-size:13px}
+:is(#roles-workspace,#role-templates-workspace) .role-status-choices{padding:0;border:0;margin:0;min-width:0}
+:is(#roles-workspace,#role-templates-workspace) .role-status-choices legend{font-size:13px;font-weight:600;margin-bottom:9px;float:none;width:auto}
+:is(#roles-workspace,#role-templates-workspace) .role-status-choices label{display:inline-flex;align-items:center;gap:8px;margin-right:22px}
+:is(#roles-workspace,#role-templates-workspace) input[type=radio],:is(#roles-workspace,#role-templates-workspace) input[type=checkbox]{accent-color:#ff007f;width:18px;height:18px;vertical-align:middle;flex-shrink:0}
+:is(#roles-workspace,#role-templates-workspace) .role-impact{background:#fff4de;color:#643a0c;border:1px solid #ffd191;border-radius:8px;padding:12px;margin:16px 0 0;font-size:13px}
+:is(#roles-workspace,#role-templates-workspace) .role-section-heading{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid #f3d7e6;background:linear-gradient(90deg,#fff2f8,#fff)}
+:is(#roles-workspace,#role-templates-workspace) .role-section-heading p{font-size:13px;margin:0 0 14px;color:#536075}
+:is(#roles-workspace,#role-templates-workspace) .role-permission-layout{display:grid;grid-template-columns:minmax(180px,30%) minmax(0,1fr);gap:20px;margin-top:16px}
+:is(#roles-workspace,#role-templates-workspace) #role-groups{display:flex;flex-direction:column;gap:5px;border-right:1px solid #e4dce8;padding-right:16px;max-height:430px;overflow-y:auto;scrollbar-width:thin}
+:is(#roles-workspace,#role-templates-workspace) .role-group-button{text-align:left;background:#fcfaff;border:1px solid #e5dfe9;border-radius:8px;padding:7px 12px;color:#172235;min-width:0;line-height:1.25;font-size:13px;flex-shrink:0}
+:is(#roles-workspace,#role-templates-workspace) .role-group-button strong,:is(#roles-workspace,#role-templates-workspace) .role-group-button small{display:block;overflow-wrap:anywhere}
+:is(#roles-workspace,#role-templates-workspace) .role-group-button small{font-size:10px;margin-top:2px;color:#5e5770}
+:is(#roles-workspace,#role-templates-workspace) .role-group-button[aria-pressed=true]{background:#ffe1ef;border-color:#ff9acb;box-shadow:inset 3px 0 #ff007f;color:#a7004e}
+:is(#roles-workspace,#role-templates-workspace) .role-group-item{display:grid;grid-template-columns:18px minmax(0,1fr);gap:9px;align-items:center;padding-left:10px;border:1px solid #e5dfe9;border-radius:8px;background:#fcfaff;flex-shrink:0}
+:is(#roles-workspace,#role-templates-workspace) .role-group-item>.role-group-button{border:0;background:transparent;box-shadow:none;border-radius:0 8px 8px 0;padding-left:2px}
+:is(#roles-workspace,#role-templates-workspace) .role-group-item:has(button[aria-pressed=true]){background:#ffe1ef;border-color:#ff9acb;box-shadow:inset 3px 0 #ff007f}
+:is(#roles-workspace,#role-templates-workspace) .role-group-item input{margin:0;cursor:pointer}
+:is(#roles-workspace,#role-templates-workspace) .role-group-item input:disabled{cursor:default}
+:is(#roles-workspace,#role-templates-workspace) .permission-module legend .permission-screen-select{font-weight:700!important;font-size:14px!important;margin:0!important;padding:0}
+:is(#roles-workspace,#role-templates-workspace) .permission-screen-select input{margin-right:4px}
+:is(#roles-workspace,#role-templates-workspace) #role-permission-matrix{min-width:0}
+:is(#roles-workspace,#role-templates-workspace) .permission-toolbar{margin:0 0 10px;gap:10px}
+:is(#roles-workspace,#role-templates-workspace) .permission-toolbar .form-control{min-width:0;max-width:none;font-size:13px}
+:is(#roles-workspace,#role-templates-workspace) .permission-group>summary{background:#fff0f8;color:#172235}
+:is(#roles-workspace,#role-templates-workspace) .permission-group>.permission-module{border-top:1px solid #f1e2eb}
+:is(#roles-workspace,#role-templates-workspace) .permission-action{display:inline-flex;margin:6px 16px 6px 0!important;max-width:100%;font-size:13px!important}
+:is(#roles-workspace,#role-templates-workspace) .role-access-summary{background:#edf8f0;border:1px solid #d6efdc;border-radius:10px;padding:14px 18px}
+:is(#roles-workspace,#role-templates-workspace) .role-access-summary p{font-size:12px;margin:5px 0 0;color:#29423a}
+:is(#roles-workspace,#role-templates-workspace) .role-form-footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:12px;padding:0 0 18px}
+:is(#roles-workspace,#role-templates-workspace) .role-heading-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+:is(#roles-workspace,#role-templates-workspace) #role-updated{font-size:12px;border:1px solid #dae2ec;background:#fff;border-radius:8px;padding:10px}
+:is(#roles-workspace,#role-templates-workspace) :is(a,button,input,select):focus-visible{outline:2px solid #ff007f;outline-offset:3px}
+@media(min-width:1450px){:is(#roles-workspace,#role-templates-workspace)[data-mode=edit] .role-fields{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:850px){:is(#roles-workspace,#role-templates-workspace) .role-kpis{gap:10px}:is(#roles-workspace,#role-templates-workspace) .role-kpis article{padding:6px 12px;gap:10px}:is(#roles-workspace,#role-templates-workspace) .role-kpis svg{width:24px;height:24px}:is(#roles-workspace,#role-templates-workspace) .role-kpis h2{font-size:13px}:is(#roles-workspace,#role-templates-workspace) .role-kpis strong{font-size:24px}:is(#roles-workspace,#role-templates-workspace) .role-permission-layout{grid-template-columns:1fr}:is(#roles-workspace,#role-templates-workspace) #role-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-right:0;padding:0}:is(#roles-workspace,#role-templates-workspace) .role-group-button{padding:8px}}
+@media(max-width:575px){:is(#roles-workspace,#role-templates-workspace) .role-kpis{grid-template-columns:1fr}:is(#roles-workspace,#role-templates-workspace) .role-fields{grid-template-columns:1fr}:is(#roles-workspace,#role-templates-workspace) .role-card{padding:14px}:is(#roles-workspace,#role-templates-workspace) .role-filters input,:is(#roles-workspace,#role-templates-workspace) .role-filters .sf-select{width:100%;flex-basis:100%}:is(#roles-workspace,#role-templates-workspace) .role-heading-actions{width:100%}:is(#roles-workspace,#role-templates-workspace) h1{font-size:23px}:is(#roles-workspace,#role-templates-workspace) .role-card h2{font-size:16px}:is(#roles-workspace,#role-templates-workspace) .role-section-heading{gap:0}}
+:is(#roles-workspace,#role-templates-workspace) .role-permission-layout{display:block}
+:is(#roles-workspace,#role-templates-workspace) #role-groups{display:none}
+:is(#roles-workspace,#role-templates-workspace) .role-section-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;background:none;border:0;gap:4px 16px}
+:is(#roles-workspace,#role-templates-workspace) .role-section-heading h2{margin-bottom:4px}
+:is(#roles-workspace,#role-templates-workspace) .role-section-heading p{flex-basis:100%;margin-bottom:6px}
+:is(#roles-workspace,#role-templates-workspace) .role-accordion-controls{display:flex;gap:10px;margin-left:auto;grid-column:2;grid-row:1 / 3}
+:is(#roles-workspace,#role-templates-workspace) .permission-group{border-radius:12px;margin-bottom:6px;border:1px solid #dce2ec}
+:is(#roles-workspace,#role-templates-workspace) .permission-group.role-module-selected{border-color:#ff8dc6}
+:is(#roles-workspace,#role-templates-workspace) .permission-group>summary{display:flex;align-items:center;gap:12px;list-style:none;background:#fff;padding:5px 14px;min-height:48px}
+:is(#roles-workspace,#role-templates-workspace) .permission-group>summary::-webkit-details-marker{display:none}
+:is(#roles-workspace,#role-templates-workspace) .permission-group.role-module-selected>summary{background:linear-gradient(100deg,#fff0f7,#ffedf6)}
+:is(#roles-workspace,#role-templates-workspace) .role-module-icon{display:flex;align-items:center;justify-content:center;background:#ffe5f2;border-radius:8px;padding:5px;color:#ff007f;flex-shrink:0}
+:is(#roles-workspace,#role-templates-workspace) .role-module-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+:is(#roles-workspace,#role-templates-workspace) .role-module-identity{flex:1;min-width:0}
+:is(#roles-workspace,#role-templates-workspace) .role-module-identity strong{display:block;font-size:18px;font-weight:750;overflow-wrap:anywhere}
+:is(#roles-workspace,#role-templates-workspace) .role-module-identity small{display:block;color:#536075;font-size:12px;font-weight:400;margin-top:0}
+:is(#roles-workspace,#role-templates-workspace) .role-module-count{background:#eef0f3;border-radius:24px;padding:4px 14px;font-size:16px;font-weight:750;white-space:nowrap}
+:is(#roles-workspace,#role-templates-workspace) .role-module-selected .role-module-count{background:#ffd0e8;color:#d00064}
+:is(#roles-workspace,#role-templates-workspace) .role-module-chevron{width:10px;height:10px;border-right:2px solid;border-bottom:2px solid;transform:rotate(45deg);margin:0 4px 5px 8px;flex-shrink:0}
+:is(#roles-workspace,#role-templates-workspace) .permission-group[open] .role-module-chevron{transform:rotate(225deg);margin-bottom:-5px}
+:is(#roles-workspace,#role-templates-workspace) .permission-actions>summary{display:none}
+:is(#roles-workspace,#role-templates-workspace) .permission-actions{display:flex;flex-wrap:wrap;gap:4px 20px}
+:is(#roles-workspace,#role-templates-workspace) .permission-action{min-height:30px;color:#172235}
+:is(#roles-workspace,#role-templates-workspace) .permission-hint{margin:4px 0;color:#657188}
+:is(#roles-workspace,#role-templates-workspace) .role-permission-subgroup{margin:10px 14px;padding:0;border:1px solid #e5e8ef;border-radius:8px;overflow:hidden}
+:is(#roles-workspace,#role-templates-workspace) .role-permission-subgroup>summary{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fc;margin:0;font-size:14px;cursor:pointer}
+:is(#roles-workspace,#role-templates-workspace) .role-permission-subgroup>summary:after{content:'+';margin-left:auto}
+:is(#roles-workspace,#role-templates-workspace) .role-permission-subgroup[open]>summary:after{content:'−'}
+:is(#roles-workspace,#role-templates-workspace) .permission-module .permission-hint{font-size:11px;overflow-wrap:anywhere;line-height:1.5}
+.role-tabs{display:flex;gap:6px;margin:0 0 16px;border-bottom:1px solid #d7dfec}
+.role-tabs a{padding:10px 16px;color:#536075;text-decoration:none;font-weight:650}
+.role-tabs a[aria-current=page]{color:#e60070;border-bottom:3px solid #ff007f}
+.role-template-preview{padding:18px 20px;background:#fff;border:1px solid #d7dfec;border-radius:15px;margin-bottom:16px}
+.role-template-preview h2{font-size:18px;font-weight:750}
+.role-template-modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:12px 0}
+.role-template-module{display:flex;flex-direction:column;padding:10px 12px;border:1px solid #e2e6ee;border-radius:8px;background:#fafbfd;font-size:12px;gap:4px}
+.role-template-module.included{border-color:#bdddc5;background:#effbf2;color:#17652b}
+.role-customize-choice{display:flex;align-items:center;gap:8px;margin-top:14px}
+.role-copy-advanced>summary{font-size:12px;color:#536075;cursor:pointer;margin-bottom:8px}
+.role-template-directory{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0}
+.role-template-tile{background:#fff;border:1px solid #d7dfec;border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0}
+.role-template-tile h2{font-size:17px;margin:0;font-weight:750}
+.role-template-tile p,.role-template-tile small{font-size:12px;margin:0;color:#536075}
+.role-template-tile button{margin-top:auto}
+@media(max-width:575px){:is(#roles-workspace,#role-templates-workspace) .permission-group>summary{gap:10px;padding:5px 10px}:is(#roles-workspace,#role-templates-workspace) .role-module-icon{display:none}:is(#roles-workspace,#role-templates-workspace) .role-module-identity strong{font-size:15px}:is(#roles-workspace,#role-templates-workspace) .role-module-identity small{font-size:11px}:is(#roles-workspace,#role-templates-workspace) .role-module-count{font-size:13px;padding:4px 8px}:is(#roles-workspace,#role-templates-workspace) .role-section-heading{display:block}:is(#roles-workspace,#role-templates-workspace) .role-accordion-controls{margin:6px 0}:is(#roles-workspace,#role-templates-workspace) .role-accordion-controls .btn{padding:8px 10px}}

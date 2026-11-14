@@ -31,11 +31,12 @@ public class StoreDirectoryRow
     public string BusinessProfileCode { get; set; }="ELECTRICAL";
     public string GstStatus { get; set; }="Not assessed";
     public string? GstRegistrationType { get; set; }
+    public long? GstBusinessId { get; set; }
+    public string SetupReadiness { get; set; }="Review existing setup in GST Settings";
 }
-public sealed record StoreDirectoryPage(IEnumerable<StoreDirectoryRow> Rows,long Total,int Page,int PageSize,long StoreCount,long LocationCount,long WarehouseCount,long MissingSalesFloorCount,bool ManagementAvailable,bool CanManage,bool CanCreate,bool CanAssignAccess,string BusinessProfileCode);
+public sealed record StoreDirectoryPage(IEnumerable<StoreDirectoryRow> Rows,long Total,int Page,int PageSize,long StoreCount,long LocationCount,long WarehouseCount,long MissingSalesFloorCount,bool ManagementAvailable,bool CanManage,bool CanCreate,bool CanAssignAccess,string BusinessProfileCode,long ActiveStoreCount=0,long InactiveStoreCount=0,bool ShopSetupAvailable=false);
 public sealed record StoreDetails(StoreDirectoryRow Store,IEnumerable<BranchLocation> Locations);
 public sealed class StoreUpdateRequest:StoreRequest
 {
     public long ExpectedVersion { get; set; }
-    public bool IsActive { get; set; }=true;
 }
