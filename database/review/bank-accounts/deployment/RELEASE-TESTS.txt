@@ -1,0 +1,164 @@
+READINESS, REGRESSION AND ROLLBACK PLAN — REVIEW ONLY
+
+READ-ONLY READINESS CHECKLIST (SEPARATE TARGET ACCESS APPROVAL REQUIRED)
+
+[ ] Name intended environment/database/server/deployment and authorized reviewer.
+    Record expected IP/port/system identifier from trusted inventory, not merely
+    from whichever Query Tool tab happens to be selected. Never use a remote tab
+    to execute the isolated local drafts. No target inspection occurred this turn.
+[ ] Verify effective application configuration precedence without exposing secrets:
+    appsettings, Development settings, environment, private user secrets and launch/
+    service profiles; Program DI/options, DbConnectionFactory and bank repository.
+[ ] Approved machine-side TCP probe only; distinguish timeout, refusal and successful
+    listener. Then authenticate using privately configured credentials/prompt, no
+    password in command line/history. A server login is separate from TCP reachability.
+[ ] Confirm exact database/current_user/session_user/server/version/system identifier,
+    TLS and primary/standby. Distinguish SQLSTATE 28P01 (invalid credentials), 28000
+    (authorization), 3D000 (database absent), 42501 (privilege), network refusal/timeout
+    and schema/object errors. Do not change firewall, password or pg_hba.conf.
+[ ] Correlate application/PostgreSQL log timestamps/request IDs after redaction; do
+    not dump full logs that might include connection strings or payment payloads.
+    If TCP still times out, fix reachability via a separately approved minimal change;
+    do not start schema repair. Current target reachability/auth remains UNKNOWN.
+[ ] Collect manual migration records/backup/build hashes and catalog evidence through
+    089. Repository search found no proven universal migration-history ledger; a
+    numbered filename or existing helper is not proof of applied migration history.
+    Readiness SQL enumerates potential history tables but does not assume their shape.
+[ ] Review authentic 049 function, trigger and snapshot-column contract; 050/074
+    dependencies and existing retail preservation. Recover genuine implementation or
+    approve an explicit baseline plan before full rehearsal. No no-op replacement.
+[ ] Compare source column TYPES/nullability/status/mode semantics with sf_bank_sources
+    for payments/sales, supplier_payments/purchases, service_payments/service_requests,
+    sale_returns and expense_payments/expenses. Pay particular attention to date vs
+    timestamp/time-zone casts, profile visibility, location ownership and source IDs.
+[ ] Compare scope/Owner/permission helper definitions and hashes against authorized
+    source, including active user/role/tenant/membership and explicit VIEW+action
+    grants. Test truth tables; hash/existence alone does not prove correct semantics.
+[ ] Inspect existing bank tables/functions/indexes/FKs/triggers/policies/owners/ACLs,
+    BANK_ACCOUNTS module/actions, effective user grants/role templates and key-store
+    dependencies. If ANY existing bank object is present, STOP fresh installation.
+[ ] Verify runtime role non-superuser/non-BYPASSRLS, no schema CREATE, no unintended
+    inherited grants; SECURITY DEFINER search paths and trusted owners. Match all
+    reviewed constraints, source/ref uniqueness, forced RLS and append-only triggers.
+[ ] Verify existing Owner identity/shops and permission bootstrap authority. Record
+    only IDs/authorization evidence; no real banking/customer data in test fixtures.
+[ ] Obtain backups, tested recovery/key access and a writer-quiescence plan before
+    requesting approval to install exact hashes. Current package is not that approval.
+
+ISOLATED CANDIDATE REHEARSAL (NOT EXECUTED FOR THIS PACKAGE)
+
+Use a separate disposable instance/database with independently verified identity,
+complete genuine/reviewed pre-bank schema and synthetic actors/payment rows only.
+Do not use a production dump containing rows. Do not execute migrations through app
+startup. Approve the exact candidate hashes and fixture contract before running them.
+
+ - Execute 10/20/30 with approved test identity, then 40. Confirm no activation,
+   user/role grants, secret rows, financial rows or source changes after installation.
+ - Missing/mismatched approval, database/address/port/system identifier/actor,
+   helper/source schema and excessive runtime privileges must stop before changes.
+ - Verify no bank objects were created in pg_catalog or a temporary schema. Attempt
+   temporary-table/function shadowing as an unprivileged actor and confirm definer
+   object resolution/permission checks remain pinned to the trusted public objects.
+ - Force failures inside EACH migration and disconnect; verify complete transaction
+   rollback. Cleanly reapply on the disposable fixture. Verify fresh-install rerun
+   refuses existing objects; never make rerun work by dropping financial history.
+ - A partially completed 10 or 10+20 installation must remain inaccessible with all
+   gates OFF. Restart only at the reviewed next stage after comparing definitions.
+ - Port the 46 January SQL/API checks to the production-candidate helper/gates and
+   full schema. Do not merely rerun local 093 and claim this package was certified.
+ - Test one active account, three assignments, concurrent create/reactivate/assign,
+   stale versions, policy expansion to 2/4 then restoration, retired history and
+   runtime denial of policy edits. No database account/shop restructuring.
+ - Test exact retry vs changed payload/actor/account/action, duplicate bank identity,
+   source links, UTR/reference, over-allocation/precision, concurrent verification
+   and reversal. Test cross-tenant IDs and unauthorized/non-active shops/locations.
+ - Opening absent vs zero vs positive, once-only/race, nonfuture boundary/time-zone,
+   same-day already-included funds, next-day carry, opening not daily receipt.
+ - Shared 3000 settlement: shop 1 two sources 600+400; shop 2 source 2000. Expect
+   consolidated one movement/3000, shop allocations 1000/2000, no doubled balance.
+   Owner filter keeps consolidated balance while daily totals become shop-specific.
+ - Test shop removal/inactive historical assignments and Owner filtering of their
+   past movements; Admin cannot expand scope with account/shop/filter/profile IDs.
+   Inspect JSON itself: no opening, whole balance, running balance, foreign-shop
+   allocation/assignment/name or batch amount. Hiding HTML is insufficient.
+ - Verify explicit VIEW-only link denial at HTTP middleware and raw SQL; Owner+EDIT
+   positive; Admin+EDIT still denied. Active module/action/user/tenant/role and revoked
+   permissions must fail appropriately. Separate VERIFY/INITIALIZE/REVERSE denials.
+ - Post one evidenced event and opposite reversal; preserve originals/allocations,
+   duplicate reversal denial and exact arithmetic. Resolve/retest same-UTR correction
+   blocker before financial release. Never use a fake alternate UTR.
+ - Test SQL posting OFF even if API flag ON, API OFF even if SQL ON, both OFF initial
+   state and separately approved test ON. CSRF/auth denial, safe backend errors and
+   lost-response retry/recovery including hard refresh and process restart.
+ - Default receiving account change must not rewrite any prior payment/link; one
+   active default/shop, invalid inactive/unassigned defaults rejected, retire clears
+   defaults. When inline capture is implemented, freeze destination during original
+   request and test account selection across retries/default changes.
+ - Compare synthetic source Sales/customer/supplier/expense/service/refund rows,
+   outstanding balances, Cash in Hand/Closing, GST and inventory before/after bank
+   operations. Run complete existing module suites against the full schema, not only
+   mocked UI or source-row snapshots. Cross-profile/date/status edge cases required.
+ - Review persisted redacted configuration events, manual verifier/reference/date/
+   amount/time/request audit, immutable history and no plaintext secrets in logs.
+ - Browser/UI at 1920x1080,1366x768,1280x720,1280x600,1024x768,390x844,375x667,320x568;
+   initial/validation/backend failures, long labels, keyboard focus, no hidden content.
+   Mocked layout checks and real full-schema API tests must be reported separately.
+ - Large history, candidate paging, index/query-plan behavior, connection failures,
+   multi-instance protected key recovery and permission revocation while page open.
+
+EVIDENCE AVAILABLE / LIMITS
+
+Historical local evidence: 117 foundation checks; later 43 development checks; latest
+46 January SQL/repository/HTTP checks, 093 forced rollback/reapplication, nine mocked
+viewport checks, navigation/billing regressions and clean build. Counts overlap;
+they are not one full-schema certification. See docs/bank-accounts-january-2027-corrections.txt.
+No database tests, builds or browser tests were rerun for this documentation/SQL
+package. Only file-generation/static checks ran; see manifest.json. Production-target
+guard/runtime differences are UNTESTED. No new migration parser/executor was used.
+
+RELEASE VERIFICATION AFTER SEPARATE APPROVAL
+
+Before install: signed target/schema evidence, exact hashes, verified backups/keys,
+no conflicting writers, feature/posting flags OFF. Execute through an approved
+manual maintenance client with stop-on-error, never application auto-migration.
+If anything fails, stop and ROLLBACK the failed transaction, capture redacted first
+error and inspect committed stage state; do not blindly rerun the whole package.
+
+After install/before activation: 40 results match eleven tables/forced RLS/no direct
+runtime access, restricted entry EXECUTE/no PUBLIC, inactive module and twelve keys,
+zero bank user/role grants, 1/3 policy and both SQL gates OFF. Compare function hashes,
+constraints/indexes/audits. Verify original application workflows remain unchanged.
+
+After Owner configuration activation: intended Owner sees one Business Setup link,
+direct/API denials work for others; account caps/defaults work; no opening/posting
+allowed. Record the exact actor/user grant and activation audit. Never use real
+financial transactions as test probes. Synthetic end-to-end posting stays isolated.
+
+After separately approved financial rollout: real operations follow their normal
+authorized workflow with evidenced boundary and operators; review aggregate recorded
+totals/audit under authorized access. Pending excluded, no duplicate consolidated
+count, Admin privacy and source balances intact. No backfill by deployment automation.
+
+ROLLBACK / FAILURE CONTAINMENT
+
+1. Preparation now: no database changes exist to undo. Do not run rollback/drop SQL
+   against Remote merely because a package has been generated.
+2. SQL error before a script COMMIT: ROLLBACK only its failed transaction; earlier
+   committed package stages are separate. Inspect them read-only. Do not assume a
+   rollback in another Query Tool session cleared this session or earlier commits.
+3. Installation-only failure: keep all application/SQL gates OFF and module inactive;
+   preserve committed foundation/metadata while reviewing. This is safer than dropping
+   tables. An approved repair/resume must compare exact definitions first.
+4. Configuration/financial activation rollback: under explicit incident/change authority,
+   quiesce writers/stop new requests, resolve in-flight/unknown outcomes, disable
+   application and SQL posting gates, then module/configuration entry as appropriate.
+   Revoking a gate does not cancel an already-running transaction; drain/check them.
+5. Return only to a schema-compatible application build with BankAccounts OFF. Leave
+   account, opening, movement, request, allocation, ciphertext and audit history intact.
+   Do not undo source payments/outstanding/GST/stock or delete verifications.
+6. Wrong verification is corrected only by approved append-only reversal workflow;
+   broader correction/reverification policy is an unresolved release gate.
+7. Any destructive down migration, full restore, key restore or credential/config
+   change needs separate approval and an impact/recovery plan. No DROP/down script
+   is supplied. Full DB restore could lose unrelated business activity; never use it
+   as an automatic Bank Accounts rollback. Protect retained keys with retained data.

@@ -483,7 +483,10 @@ $RECYCLE.BIN/
 
 # Local editor settings and development credentials
 ErrorLog/
-.vscode/
+# Keep the static error view; only runtime error logs should be ignored.
+!/src/StockFlow.Web/Views/ErrorLog/
+/src/StockFlow.Web/Views/ErrorLog/*
+!/src/StockFlow.Web/Views/ErrorLog/Error.cshtml
 appsettings.Development.json
 
 # Android SDK/tooling and private release signing material
