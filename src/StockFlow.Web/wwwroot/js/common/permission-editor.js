@@ -212,7 +212,7 @@ window.StockFlowPermissionEditor = (() => {
         );
     };
     let rowsForTitles = [];
-    function bind(target, editable, changed, grants = {}) {
+    function bind(target, editable, changed, grants = {}, options = {}) {
         let rows = [];
         let query = '';
         let assignedOnly = false;
@@ -287,7 +287,7 @@ window.StockFlowPermissionEditor = (() => {
                     rows.filter((value) => {
                         return info(value)[0] === section.dataset.group && value.actions.length;
                     }).length +
-                    ' assigned';
+                    (options.screenSelection?' screens selected':' assigned');
             }
             checks();
         }
@@ -328,6 +328,7 @@ window.StockFlowPermissionEditor = (() => {
                         return info(value2)[0] === group && value2.actions.length;
                     }).length;
                     summary.textContent = group + ' · ' + enabled + ' assigned';
+                    if(options.screenSelection)summary.textContent=group+' - '+enabled+' screens selected';
                     section.append(summary);
                     section.ontoggle = () => {
                         if (section.open) {
@@ -367,6 +368,12 @@ window.StockFlowPermissionEditor = (() => {
                     }
                 };
                 const viewInput = make('VIEW', row);
+                if(options.screenSelection){
+                    const label=viewInput.parentElement;
+                    label.classList.add('permission-screen-select');
+                    label.lastChild.textContent=' '+title;
+                    legend.replaceChildren(label);
+                }
                 if (value.supportedActions.length > 1) {
                     for (const a of value.supportedActions.filter((a) => {
                         return a !== 'VIEW';
@@ -450,6 +457,7 @@ window.StockFlowPermissionEditor = (() => {
     }
     return {
         bind,
+        actionNames: names,
         catalog
     };
 })();

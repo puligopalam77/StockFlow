@@ -181,6 +181,8 @@ public class NavigationModule
 
 public class SecurityUser
 {
+    public bool UsesRolePermissions { get; set; }
+    public string AccountType { get; set; } = "EMPLOYEE";
     public long? TotalCount { get; set; }
     public bool IsTenantOwner
     {
@@ -244,6 +246,8 @@ public class SecurityUser
 
 public class SaveSecurityUserRequest
 {
+    [RegularExpression("^(EMPLOYEE|SHOP_ADMIN)$")]
+    public string? AccountType { get; set; }
     // Resolve role defaults on the server; preserve existing access on unchanged roles.
     public bool UseRoleTemplate { get; set; }
     public bool RequireTwoFactor
@@ -311,6 +315,8 @@ public class ChangePasswordRequest
 
 public class SecurityRole
 {
+    public string StaffAccountType { get; set; } = "EMPLOYEE";
+    public bool IsProtected {get;set;}
     public bool RequiresTwoFactor
     {
         get; set;

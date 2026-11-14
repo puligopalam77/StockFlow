@@ -74,21 +74,24 @@ scope);
     {
         Owner();Normalize(r);await using var c=factory.CreateConnection();await c.OpenAsync();await using var t=await c.BeginTransactionAsync();await Manage(c,t,"CREATE");
         await c.ExecuteAsync("SELECT pg_advisory_xact_lock(hashtextextended('store-management:'||sf_tenant()::text,0))",transaction:t);
+        await c.ExecuteAsync("SELECT pg_advisory_xact_lock(hashtextextended('gst-config:'||sf_tenant()::text,0))",transaction:t);
+        await ValidateShopGst(c,t,r);
         var metadata=await ManagementAvailable(c,t);var details=Metadata(r);
         if(!metadata&&(r.AddressLine1 is not null||r.Email is not null||r.AlternatePhone is not null))throw new ValidationException("Apply manual migration 089 before saving structured store metadata.");
         var existing=await c.ExecuteScalarAsync<long?>("SELECT store_id FROM stores WHERE lower(store_code)=lower(@StoreCode)",r,t);
         if(existing is {} id){
             var same=await c.ExecuteScalarAsync<bool>("""
-            SELECT store_name=@StoreName AND address IS NOT DISTINCT FROM @Address AND city IS NOT DISTINCT FROM @City AND state IS NOT DISTINCT FROM @State AND mobile_number IS NOT DISTINCT FROM @MobileNumber AND is_active
-            AND jsonb_strip_nulls(coalesce(to_jsonb(s)->'management_details','{}'::jsonb))=jsonb_strip_nulls(CAST(@details AS jsonb))
+            SELECT store_name=@StoreName AND address IS NOT DISTINCT FROM @Address AND city IS NOT DISTINCT FROM @City AND state IS NOT DISTINCT FROM @State AND mobile_number IS NOT DISTINCT FROM @MobileNumber AND is_active=@IsActive AND is_head_office=coalesce(@IsHeadOffice,false)
+            AND jsonb_strip_nulls(coalesce(to_jsonb(s)->'management_details','{}'::jsonb)-'ShopSetupRequired')=jsonb_strip_nulls(CAST(@details AS jsonb))
             AND (SELECT count(*) FROM store_locations l WHERE l.store_id=s.store_id AND l.location_type='SALES_FLOOR' AND l.is_active)=1
             FROM stores s WHERE store_id=@id
-            """,new{r.StoreName,r.Address,r.City,r.State,r.MobileNumber,details,id},t);
+            """,new{r.StoreName,r.Address,r.City,r.State,r.MobileNumber,r.IsActive,r.IsHeadOffice,details,id},t);
             if(!same)throw new ValidationException("This store code is already used. Review the existing store instead of creating a duplicate.");
-            await t.CommitAsync();return id;
+            await MapNewShop(c,t,id,r);await t.CommitAsync();return id;
         }
-        var created=await c.ExecuteScalarAsync<long>(metadata?"INSERT INTO stores(store_code,store_name,address,city,state,mobile_number,management_details) VALUES(@StoreCode,@StoreName,@Address,@City,@State,@MobileNumber,CAST(@details AS jsonb)) RETURNING store_id":"INSERT INTO stores(store_code,store_name,address,city,state,mobile_number) VALUES(@StoreCode,@StoreName,@Address,@City,@State,@MobileNumber) RETURNING store_id",new{r.StoreCode,r.StoreName,r.Address,r.City,r.State,r.MobileNumber,details},t);
+        var created=await c.ExecuteScalarAsync<long>(metadata?"INSERT INTO stores(store_code,store_name,address,city,state,mobile_number,is_active,is_head_office,management_details) VALUES(@StoreCode,@StoreName,@Address,@City,@State,@MobileNumber,@IsActive,coalesce(@IsHeadOffice,false),CAST(@details AS jsonb)) RETURNING store_id":"INSERT INTO stores(store_code,store_name,address,city,state,mobile_number,is_active,is_head_office) VALUES(@StoreCode,@StoreName,@Address,@City,@State,@MobileNumber,@IsActive,coalesce(@IsHeadOffice,false)) RETURNING store_id",new{r.StoreCode,r.StoreName,r.Address,r.City,r.State,r.MobileNumber,r.IsActive,r.IsHeadOffice,details},t);
         await c.ExecuteAsync("INSERT INTO store_locations(store_id,location_name,location_type) VALUES(@created,'Main stock','SALES_FLOOR'); INSERT INTO audit_logs(user_id,module_name,action_name,table_name,record_id) VALUES(sf_actor(),'Stores','CREATE','stores',@created)",new{created},t);
+        await MapNewShop(c,t,created,r);
         await t.CommitAsync();return created;
     }
     public async Task<long> CreateLocationAsync(LocationRequest r)

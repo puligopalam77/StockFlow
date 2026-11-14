@@ -1,0 +1,5 @@
+@page "/Admin/Roles/Edit/{id:int}"
+@{ViewData["Title"]="Edit Role";ViewData["RoleMode"]="edit";}
+<partial name="~/Pages/Admin/Roles/_RoleEditor.cshtml"/>
+@section Styles{<link rel="stylesheet" href="~/css/admin-security.css" asp-append-version="true"/><link rel="stylesheet" href="~/css/role-management.css" asp-append-version="true"/>}
+@section Scripts{<script src="~/js/common/permission-editor.js" asp-append-version="true"></script><script src="~/js/common/role-permission-editor.js" asp-append-version="true"></script><script src="~/js/role-management.js" asp-append-version="true"></script>}

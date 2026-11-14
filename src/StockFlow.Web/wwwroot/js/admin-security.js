@@ -295,7 +295,7 @@
             ...(users ? [new Option('Choose a role template', '')] : []),
             ...data
                 .filter((value) => {
-                    return value.isActive;
+                    return value.isActive && (!value.isProtected || current?.roleId === value.roleId);
                 })
                 .map((value) => {
                     return new Option(value.roleName, value.roleId);
@@ -304,8 +304,14 @@
     }
     let templateVersion = 0;
     async function template() {
+<<<<<<< HEAD
         const version = ++templateVersion;
         const permissions = await requestJson(
+=======
+        if(users){rows=[];getElement('selected-role-help').textContent=getElement('role').value?'Permissions will be copied automatically from this role when the user is saved.':'Choose a role for account access.';return;}
+        matrix(
+            await requestJson(
+>>>>>>> 5b356494ce76bad93b86480393777ee41b2cfb96
                 getElement('role').value
                     ? `roles/${getElement('role').value}/permissions`
                     : 'modules'
@@ -335,7 +341,7 @@
             expectedVersion: current?.securityVersion || 0,
             useRoleTemplate: true,
             storeAccess: storePayload(),
-            permissions: rows,
+            permissions: [],
             ...(!current
                 ? {
                       password: getElement('password').value,
@@ -396,7 +402,7 @@
         getElement('user-rows').replaceChildren();
         getElement('users-total').textContent = data.length;
         getElement('users-active').textContent = data.filter((value) => {
-            return value.isActive;
+            return value.isActive && (!value.isProtected || current?.roleId === value.roleId);
         }).length;
         getElement('users-inactive').textContent = data.filter((value) => {
             return !value.isActive;
@@ -407,7 +413,7 @@
             })
         ).size;
         getElement('user-count').textContent = data.length
-            ? `${offset + 1}–${offset + data.length} records shown${getElement('search-term').value ? ' · search results' : ''}`
+            ? `${offset + 1}â€“${offset + data.length} records shown${getElement('search-term').value ? ' Â· search results' : ''}`
             : 'No matching users';
         for (const [index, user] of data.entries()) {
             const tr = document.createElement('tr');
@@ -426,8 +432,8 @@
             status.className = 'admin-status ' + (user.isActive ? 'active' : 'inactive');
             status.textContent = user.isActive ? 'Active' : 'Inactive';
             cell(tr, '').append(status);
-            cell(tr, user.email || '—');
-            cell(tr, user.mobileNumber || '—');
+            cell(tr, user.email || 'â€”');
+            cell(tr, user.mobileNumber || 'â€”');
             cell(
                 tr,
                 user.isTenantOwner ? 'All stores' : user.assignedStores || 'Warehouse / unassigned'
@@ -580,7 +586,7 @@
         getElement('role-two-factor').disabled = !editable();
         getElement('create-role')?.addEventListener('click', () => {
             return runAction(async () => {
-                const roleName = prompt('New role name (2–50 characters):');
+                const roleName = prompt('New role name (2â€“50 characters):');
                 if (!roleName) {
                     return;
                 }
@@ -646,7 +652,7 @@
             const summary = document.createElement('summary');
             const pre = document.createElement('pre');
             summary.textContent = 'View changes';
-            pre.textContent = `Before: ${a.oldValues || '—'}\nAfter: ${a.newValues || '—'}\n${a.reason || ''}`;
+            pre.textContent = `Before: ${a.oldValues || 'â€”'}\nAfter: ${a.newValues || 'â€”'}\n${a.reason || ''}`;
             pre.style.whiteSpace = 'pre-wrap';
             detail.append(summary, pre);
             cell(tr, '').append(detail);

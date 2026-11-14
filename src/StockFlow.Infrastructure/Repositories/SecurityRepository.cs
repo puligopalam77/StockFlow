@@ -21,7 +21,7 @@ public partial class SecurityRepository : ISecurityRepository
     }
 
     private static readonly PasswordHasher<string> Hasher = new();
-    private const string UserSql = "SELECT u.is_tenant_owner IsTenantOwner,u.require_two_factor RequireTwoFactor,u.two_factor_enabled TwoFactorEnabled,(u.require_two_factor OR r.requires_two_factor OR EXISTS(SELECT 1 FROM tenant_security_settings WHERE require_two_factor)) TwoFactorRequired,(SELECT string_agg(s.store_name,', ' ORDER BY s.store_name) FROM user_store_access a JOIN stores s USING(store_id) WHERE a.user_id=u.user_id AND a.is_active) AssignedStores,u.user_id UserId,u.role_id RoleId,r.role_name RoleName,u.full_name FullName,u.username Username,u.mobile_number MobileNumber,u.email Email,u.is_active IsActive,u.must_change_password MustChangePassword,u.last_login_at LastLoginAt,u.locked_until LockedUntil,u.security_version SecurityVersion FROM users u JOIN roles r ON r.role_id=u.role_id";
+    private const string UserSql = "SELECT u.uses_role_permissions UsesRolePermissions,r.staff_account_type AccountType,u.is_tenant_owner IsTenantOwner,u.require_two_factor RequireTwoFactor,u.two_factor_enabled TwoFactorEnabled,(u.require_two_factor OR r.requires_two_factor OR EXISTS(SELECT 1 FROM tenant_security_settings WHERE require_two_factor)) TwoFactorRequired,(SELECT string_agg(s.store_name,', ' ORDER BY s.store_name) FROM user_store_access a JOIN stores s USING(store_id) WHERE a.user_id=u.user_id AND a.is_active) AssignedStores,u.user_id UserId,u.role_id RoleId,r.role_name RoleName,u.full_name FullName,u.username Username,u.mobile_number MobileNumber,u.email Email,u.is_active IsActive,u.must_change_password MustChangePassword,u.last_login_at LastLoginAt,u.locked_until LockedUntil,u.security_version SecurityVersion FROM users u JOIN roles r ON r.role_id=u.role_id";
     private const string PermissionSql = """
         SELECT m.module_id ModuleId,m.parent_module_id ParentModuleId,parent.module_name ParentModuleName,
         m.module_code ModuleCode,m.module_name ModuleName,m.description Description,m.route Route,m.sort_order SortOrder,m.is_active IsActive,
@@ -31,7 +31,7 @@ public partial class SecurityRepository : ISecurityRepository
         FROM modules m LEFT JOIN modules parent ON parent.module_id=m.parent_module_id CROSS JOIN LATERAL (
           SELECT COALESCE(array_agg(ma.action_code ORDER BY ma.module_action_id),ARRAY[]::varchar[]) supported_actions,
           COALESCE(array_agg(ma.action_code ORDER BY ma.module_action_id) FILTER(WHERE p.is_allowed),ARRAY[]::varchar[]) actions
-          FROM module_actions ma LEFT JOIN user_action_permissions p ON p.module_action_id=ma.module_action_id AND p.user_id=@id
+          FROM module_actions ma LEFT JOIN effective_user_action_permissions p ON p.module_action_id=ma.module_action_id AND p.user_id=@id
           WHERE ma.module_id=m.module_id AND ma.is_active
         ) a WHERE m.is_active AND EXISTS(SELECT 1 FROM module_actions x WHERE x.module_id=m.module_id AND x.is_active)
         ORDER BY COALESCE(parent.sort_order,m.sort_order),parent.module_id NULLS FIRST,m.sort_order,m.module_id
@@ -275,13 +275,14 @@ t);
         return row;
     }
 
-    public async Task<IEnumerable<SecurityUser>> GetUsersAsync(string? term, int offset)
+    public async Task<IEnumerable<SecurityUser>> GetUsersAsync(string? term, int offset, long? storeId = null, string? accountType = null, int? roleId = null, bool? isActive = null)
     {
         using var c = factory.CreateConnection();
-        return await c.QueryAsync<SecurityUser>(UserSql.Insert(7,"COUNT(*) OVER() AS TotalCount,") + " WHERE (CAST(@term AS text) IS NULL OR u.username ILIKE @term OR u.full_name ILIKE @term) ORDER BY u.user_id LIMIT 100 OFFSET @offset",
+        return await c.QueryAsync<SecurityUser>(UserSql.Insert(7,"COUNT(*) OVER() AS TotalCount,") + " WHERE u.tenant_id=sf_tenant() AND sf_staff_target(u.user_id) AND (CAST(@term AS text) IS NULL OR u.username ILIKE @term OR u.full_name ILIKE @term OR u.mobile_number ILIKE @term OR u.email ILIKE @term) AND (CAST(@storeId AS bigint) IS NULL OR EXISTS(SELECT 1 FROM user_store_access a WHERE a.tenant_id=u.tenant_id AND a.user_id=u.user_id AND a.store_id=@storeId AND a.is_active)) AND (CAST(@accountType AS text) IS NULL OR r.staff_account_type=@accountType AND NOT u.is_tenant_owner) AND (CAST(@roleId AS integer) IS NULL OR u.role_id=@roleId) AND (CAST(@isActive AS boolean) IS NULL OR u.is_active=@isActive) ORDER BY u.user_id LIMIT 100 OFFSET @offset",
 new
 {
     term = string.IsNullOrWhiteSpace(term) ? null : "%" + term.Trim() + "%",
+    storeId, accountType, roleId, isActive,
     offset = Math.Max(0, offset)
 });
     }
@@ -289,7 +290,7 @@ new
     public async Task<SecurityUser?> GetUserAsync(int id)
     {
         using var c = factory.CreateConnection();
-        var u = await c.QuerySingleOrDefaultAsync<SecurityUser>(UserSql + " WHERE u.user_id=@id", new
+        var u = await c.QuerySingleOrDefaultAsync<SecurityUser>(UserSql + " WHERE u.tenant_id=sf_tenant() AND u.user_id=@id AND sf_staff_target(u.user_id)", new
         {
             id
         });
@@ -317,13 +318,13 @@ new
     public async Task<IEnumerable<SecurityRole>> GetRolesAsync()
     {
         using var c = factory.CreateConnection();
-        return await c.QueryAsync<SecurityRole>("SELECT role_id RoleId,role_name RoleName,description Description,is_active IsActive,requires_two_factor RequiresTwoFactor FROM roles ORDER BY role_id");
+        return await c.QueryAsync<SecurityRole>("SELECT r.staff_account_type StaffAccountType,r.role_id RoleId,r.role_name RoleName,r.description Description,r.is_active IsActive,r.requires_two_factor RequiresTwoFactor,(lower(btrim(r.role_name)) IN('admin','owner','main owner') OR EXISTS(SELECT 1 FROM users u WHERE u.tenant_id=r.tenant_id AND u.role_id=r.role_id AND u.is_tenant_owner)) IsProtected FROM roles r ORDER BY r.role_id");
     }
 
     public async Task<IEnumerable<ModulePermission>> GetRolePermissionsAsync(int id)
     {
         using var c = factory.CreateConnection();
-        return await c.QueryAsync<ModulePermission>(PermissionSql.Replace("user_action_permissions", "role_action_permissions").Replace("p.user_id", "p.role_id"),
+        return await c.QueryAsync<ModulePermission>(PermissionSql.Replace("effective_user_action_permissions", "role_action_permissions").Replace("p.user_id", "p.role_id"),
 new
 {
     id
@@ -362,7 +363,7 @@ t))
             throw new UnauthorizedAccessException("Only the business owner can manage an owner account.");
         }
 
-        var u = await c.QuerySingleOrDefaultAsync<SecurityUser>(UserSql + " WHERE u.user_id=@id FOR UPDATE OF u", new
+        var u = await c.QuerySingleOrDefaultAsync<SecurityUser>(UserSql + " WHERE u.tenant_id=sf_tenant() AND u.user_id=@id AND sf_staff_target(u.user_id) FOR UPDATE OF u", new
         {
             id
         }, t) ?? throw new KeyNotFoundException("User not found.");
@@ -440,6 +441,40 @@ int actor,
 bool role = false)
     {
         await Require(c, t, actor, role ? "ROLE_MANAGEMENT" : "USER_MANAGEMENT", "MANAGE_PERMISSIONS");
+        await ValidateGrantablePermissions(c,t,rows,actor);
+
+        var table = role ? "role_action_permissions" : "user_action_permissions";
+        var key = role ? "role_id" : "user_id";
+        if(!role)await c.ExecuteAsync("UPDATE users SET uses_role_permissions=false WHERE tenant_id=sf_tenant() AND user_id=@id",new{id},t);
+        await c.ExecuteAsync($"DELETE FROM {table} WHERE {key}=@id", new
+        {
+            id
+        }, t);
+        foreach (var p in rows)
+        {
+            foreach (var action in p.Actions!)
+            {
+                await c.ExecuteAsync($"INSERT INTO {table}({key},module_action_id,is_allowed,assigned_by) SELECT @id,module_action_id,true,@actor FROM module_actions WHERE module_id=@ModuleId AND action_code=@action AND is_active",
+new
+{
+    id,
+    p.ModuleId,
+    action,
+    actor
+},
+t);
+            }
+        }
+
+        if (!role && id == actor)
+        {
+            await Require(c, t, actor, "USER_MANAGEMENT", "MANAGE_PERMISSIONS");
+            await Require(c, t, actor, "SECURITY", "MANAGE");
+        }
+    }
+
+    private static async Task ValidateGrantablePermissions(NpgsqlConnection c,NpgsqlTransaction t,List<ModulePermission> rows,int actor)
+    {
         var modules = (await c.QueryAsync<ModulePermission>(PermissionSql, new
         {
             id = 0
@@ -477,37 +512,12 @@ bool role = false)
             }
         }
 
-        var table = role ? "role_action_permissions" : "user_action_permissions";
-        var key = role ? "role_id" : "user_id";
-        await c.ExecuteAsync($"DELETE FROM {table} WHERE {key}=@id", new
-        {
-            id
-        }, t);
-        foreach (var p in rows)
-        {
-            foreach (var action in p.Actions!)
-            {
-                await c.ExecuteAsync($"INSERT INTO {table}({key},module_action_id,is_allowed,assigned_by) SELECT @id,module_action_id,true,@actor FROM module_actions WHERE module_id=@ModuleId AND action_code=@action AND is_active",
-new
-{
-    id,
-    p.ModuleId,
-    action,
-    actor
-},
-t);
-            }
-        }
-
-        if (!role && id == actor)
-        {
-            await Require(c, t, actor, "USER_MANAGEMENT", "MANAGE_PERMISSIONS");
-            await Require(c, t, actor, "SECURITY", "MANAGE");
-        }
     }
 
     public async Task<int> SaveUserAsync(int? id, SaveSecurityUserRequest r, int actor)
     {
+        // Registration links the authoritative role; client permission arrays are not an input.
+        if(id is null){r.UseRoleTemplate=true;r.Permissions=[];}
         SecurityRules.User(r, id is null);
         using var c = factory.CreateConnection();
         await c.OpenAsync();
@@ -520,12 +530,17 @@ t);
         }
 
         var old = id.HasValue ? await Target(c, t, id.Value, r.ExpectedVersion) : null;
+        var linked = old is null || old.UsesRolePermissions || old.RoleId!=r.RoleId;
+        await StaffSchema(c,t);
+        await ValidateStaffAssignment(c,t,r,old);
+        r.UseRoleTemplate=true;
+        if((old is null||old.RoleId!=r.RoleId)&&await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM roles r WHERE r.tenant_id=sf_tenant() AND r.role_id=@RoleId AND (lower(btrim(r.role_name)) IN('admin','owner','main owner') OR EXISTS(SELECT 1 FROM users u WHERE u.tenant_id=r.tenant_id AND u.role_id=r.role_id AND u.is_tenant_owner)))",r,t))throw new UnauthorizedAccessException("Owner and protected roles are not assignable staff roles.");
         if (r.UseRoleTemplate)
         {
             // Do not trust hidden client permission arrays or reset an existing MFA policy.
             r.RequireTwoFactor = old?.RequireTwoFactor ?? false;
             var sameRole = old is not null && old.RoleId == r.RoleId;
-            var sql = sameRole ? PermissionSql : PermissionSql.Replace("user_action_permissions", "role_action_permissions").Replace("p.user_id", "p.role_id");
+            var sql = sameRole ? PermissionSql : PermissionSql.Replace("effective_user_action_permissions", "role_action_permissions").Replace("p.user_id", "p.role_id");
             r.Permissions = (await c.QueryAsync<ModulePermission>(sql, new { id = sameRole ? id!.Value : r.RoleId }, t)).ToList();
         }
         await ProtectAdmin(c, t, actor, r.RoleId);
@@ -549,6 +564,8 @@ t);
             throw new ValidationException("Choose an active role.");
         }
 
+        if(await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM users WHERE tenant_id=sf_tenant() AND lower(username)=lower(@Username) AND (CAST(@id AS integer) IS NULL OR user_id<>@id))",new{r.Username,id},t))
+            throw new ValidationException("This username is already in use. Choose another username.");
         if (id is null)
         {
             id = await c.ExecuteScalarAsync<int>("INSERT INTO users(role_id,full_name,username,password_hash,mobile_number,email,is_active,must_change_password,created_by,password_changed_at) VALUES(@RoleId,@FullName,@Username,@hash,@MobileNumber,@Email,@IsActive,@MustChangePassword,@actor,CURRENT_TIMESTAMP) RETURNING user_id",
@@ -586,7 +603,11 @@ t);
 
         await c.ExecuteAsync("UPDATE users SET require_two_factor=@RequireTwoFactor WHERE user_id=@id", new { id, r.RequireTwoFactor }, t);
         await SaveStoreAccess(c, t, id.Value, r.StoreAccess, actor);
-        await WritePermissions(c, t, id.Value, r.Permissions, actor);
+        if(linked) {
+            await Require(c,t,actor,"USER_MANAGEMENT","MANAGE_PERMISSIONS");
+            await ValidateGrantablePermissions(c,t,r.Permissions,actor);
+            await c.ExecuteAsync("UPDATE users SET uses_role_permissions=true WHERE tenant_id=sf_tenant() AND user_id=@id",new{id},t);
+        } else await WritePermissions(c, t, id.Value, r.Permissions, actor);
         await GuardAdmins(c, t);
         await Audit(c,
 t,
@@ -605,6 +626,8 @@ new
     r.MustChangePassword,
     r.RequireTwoFactor,
     r.StoreAccess,
+    r.AccountType,
+    UsesRolePermissions=linked,
     r.Permissions
 });
         await t.CommitAsync();
@@ -693,11 +716,12 @@ Func<NpgsqlConnection, NpgsqlTransaction, SecurityUser, Task<object>> change)
         var old = await Target(c, t, id, version);
         await ProtectAdmin(c, t, actor, old.RoleId);
         var next = await change(c, t, old);
-        await c.ExecuteAsync("UPDATE users SET security_version=security_version+1,updated_at=CURRENT_TIMESTAMP,updated_by=@actor WHERE user_id=@id",
+        await c.ExecuteAsync("UPDATE users SET security_version=GREATEST(security_version,@version+1),updated_at=CURRENT_TIMESTAMP,updated_by=@actor WHERE user_id=@id",
 new
 {
     id,
-    actor
+    actor,
+    version
 },
 t);
         await GuardAdmins(c, t);
@@ -747,6 +771,7 @@ t);
         await using var t = await c.BeginTransactionAsync();
         await c.ExecuteAsync("SELECT pg_advisory_xact_lock(170017)", transaction: t);
         await Require(c, t, actor, "ROLE_MANAGEMENT", "MANAGE_PERMISSIONS");
+        if(await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM roles r WHERE r.role_id=@id AND (lower(btrim(r.role_name)) IN('admin','owner','main owner') OR EXISTS(SELECT 1 FROM users u WHERE u.tenant_id=r.tenant_id AND u.role_id=r.role_id AND u.is_tenant_owner)))",new{id},t))throw new UnauthorizedAccessException("Protected role permissions cannot be changed here.");
         if (!await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM roles WHERE role_id=@id AND is_active)", new
         {
             id
@@ -755,7 +780,7 @@ t);
             throw new ValidationException("Choose an active role.");
         }
 
-        var old = await c.QueryAsync<ModulePermission>(PermissionSql.Replace("user_action_permissions", "role_action_permissions").Replace("p.user_id", "p.role_id"),
+        var old = await c.QueryAsync<ModulePermission>(PermissionSql.Replace("effective_user_action_permissions", "role_action_permissions").Replace("p.user_id", "p.role_id"),
 new
 {
     id

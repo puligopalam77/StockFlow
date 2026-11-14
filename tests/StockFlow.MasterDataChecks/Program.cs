@@ -19,6 +19,7 @@ public static class Checks
 {
     public static async Task Main(string[] args)
     {
+        if(args.Contains("--role-navigation-checks")){await RoleNavigationChecks.Run();return;}
         if(args.Contains("--bank-january-checks")){await BankJanuaryChecks.Run();return;}
         if(args.Contains("--database-unavailable-checks")){await DatabaseUnavailableChecks.Run();return;}
         if(args.Contains("--bank-development-checks")){await BankDevelopmentChecks.Run();return;}

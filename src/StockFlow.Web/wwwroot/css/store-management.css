@@ -1,4 +1,36 @@
 #stores-workspace{max-width:none;min-width:0;--sf-action-bg:#ff007f}
+#stores-workspace .stores-page-editor{background:#fff;border:1px solid #dbe3ee;border-radius:12px;margin-top:20px;min-width:0}
+#stores-workspace .stores-page-editor h3{font-size:1rem;margin:20px 0 12px}
+#stores-workspace .stores-page-editor .stores-dialog-body{padding:14px 20px 10px}
+#stores-workspace .shop-form-section{padding:12px 0;border-bottom:1px solid #edf0f5;min-width:0}
+#stores-workspace .shop-form-section h3{font-size:.95rem;margin:0 0 10px}
+#stores-workspace .shop-form-section:first-of-type{padding-top:0}
+#stores-workspace .stores-page-editor .stores-form-grid{gap:10px 18px;margin:0;grid-template-columns:repeat(3,minmax(0,1fr))}
+#stores-workspace .stores-page-editor .store-field{gap:4px}
+#stores-workspace .stores-page-editor .store-field label{font-size:13px}
+#stores-workspace .stores-page-editor .store-field small{font-size:11px}
+#stores-workspace .stores-page-editor .form-control,#stores-workspace .stores-page-editor .form-select{min-height:36px;padding-top:6px;padding-bottom:6px;font-size:13px}
+#stores-workspace .stores-page-editor .stores-help{font-size:12px;margin:7px 0}
+#stores-workspace #store-original-address:empty{display:none}
+#stores-workspace .shop-additional-details{padding:10px 0;border-bottom:1px solid #edf0f5}
+#stores-workspace .shop-additional-details summary{cursor:pointer;font-weight:600;font-size:13px;padding:3px 0}
+#stores-workspace .shop-additional-details summary span{font-size:12px;font-weight:400;color:#607086;margin-left:8px}
+#stores-workspace .shop-additional-details[open] .stores-form-grid{margin-top:10px}
+#stores-workspace .shop-stock-note{font-size:12px;color:#506780;padding:8px 0;margin:0}
+#stores-workspace .stores-page-editor footer{position:sticky;bottom:0;z-index:5;box-shadow:0 -3px 12px rgb(27 45 67 / 5%);padding:10px 20px}
+#stores-workspace .stores-page-editor{scroll-padding-bottom:76px}
+#stores-workspace .stores-page-editor input,#stores-workspace .stores-page-editor select{scroll-margin-bottom:90px}
+@media(max-width:1050px){#stores-workspace .stores-page-editor .stores-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:575px){#stores-workspace .stores-page-editor .stores-form-grid{grid-template-columns:minmax(0,1fr)}#stores-workspace .stores-page-editor .stores-dialog-body{padding:12px}#stores-workspace .stores-page-editor footer .btn{flex:1}#stores-workspace .shop-additional-details summary span{display:block;margin:4px 0 0 16px}}
+#stores-workspace .stores-page-editor footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 20px;border-top:1px solid #dbe3ee;background:#fff;border-radius:0 0 12px 12px}
+#stores-workspace .stores-tabs{display:flex;gap:8px;border-bottom:1px solid #dbe3ee;margin-top:16px}
+#stores-workspace .stores-tabs button{border:0;border-bottom:3px solid transparent;background:transparent;padding:12px 18px;color:#253348;font-weight:600;min-height:44px}
+#stores-workspace .stores-tabs button[aria-selected=true]{color:#cf0069;border-bottom-color:#ff007f;background:#fff0f7}
+#stores-workspace #stock-locations-panel{margin-top:16px;padding:16px;background:#fff;border:1px solid #dbe3ee;border-radius:12px;min-width:0}
+.sf-app #stores-workspace dialog#store-dialog.stores-compact[data-sf-dialog]{width:min(620px,calc(100vw - 24px))!important}
+#stores-workspace dialog.stores-compact .stores-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#stores-workspace dialog.stores-compact :is(input,select){min-height:38px}
+@media(max-width:575px){#stores-workspace dialog.stores-compact .stores-form-grid{grid-template-columns:minmax(0,1fr)}}
 #stores-workspace [hidden]{display:none!important}
 #stores-workspace .stores-heading,#stores-workspace .stores-actions,#stores-workspace .stores-setup-links{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 #stores-workspace .stores-setup-links{justify-content:flex-start;margin:16px 0;padding:14px;background:#fff;border:1px solid #dbe3ee;border-radius:12px}
@@ -40,6 +72,48 @@
 #stores-workspace .stores-details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 #stores-workspace .stores-assistant-dock{display:flex;justify-content:flex-end;margin:16px 0}
 #stores-workspace .stores-assistant-dock .sf-help-open{position:static!important}
+/* Add Shop reference layout; existing directory and edit-dialog sizing stay local. */
+#stores-workspace .shop-section-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+#stores-workspace .shop-section-heading svg,#stores-workspace .shop-stock-panel>svg,#stores-workspace .shop-additional-icon{width:26px;height:26px;flex-shrink:0;fill:none;stroke:#ff007f;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#stores-workspace .shop-section-heading h3{margin:0!important}
+#stores-workspace .shop-section-heading>span{font-size:12px;color:#253348}
+#stores-workspace .shop-additional-icon{width:21px;height:21px;vertical-align:middle;margin:0 10px}
+#stores-workspace .shop-stock-panel{display:flex;align-items:flex-start;gap:16px;padding:14px 20px;background:#eaf3ff;border:1px solid #bad6ff;border-radius:12px;margin-top:16px}
+#stores-workspace .shop-stock-panel>svg{stroke:#1255cf}
+#stores-workspace .shop-stock-panel strong{font-size:14px}
+#stores-workspace .shop-stock-panel .shop-stock-note{padding:3px 0 0;color:#142440}
+#stores-workspace.stores-create-page{color:#11172e}
+#stores-workspace.stores-create-page .stores-heading{margin-bottom:18px;gap:14px}
+#stores-workspace.stores-create-page .stores-heading h1{font-size:24px;font-weight:750;margin:0 0 4px}
+#stores-workspace.stores-create-page .stores-heading p{font-size:13px;margin:0}
+#stores-workspace.stores-create-page .stores-page-editor{background:transparent;border:0;border-radius:0;margin:0}
+#stores-workspace.stores-create-page .stores-dialog-body{padding:0}
+#stores-workspace.stores-create-page .shop-form-section{padding:15px 18px;border:1px solid #d6dcea;border-radius:15px;background:#fff;margin-bottom:12px}
+#stores-workspace.stores-create-page .shop-section-heading h3{font-size:16px;font-weight:750}
+#stores-workspace.stores-create-page .shop-section-heading h3:before{content:attr(data-step) '. '}
+#stores-workspace.stores-create-page .stores-form-grid{column-gap:30px;row-gap:10px}
+#stores-workspace.stores-create-page .store-field label{font-size:13px;color:#11172e}
+#stores-workspace.stores-create-page #store-gst-configuration{background:linear-gradient(100deg,#fff5fa,#fffafb);border-color:#ffa6d0}
+#stores-workspace.stores-create-page #store-gst-configuration>.stores-form-grid{grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr));align-items:start}
+#stores-workspace.stores-create-page #store-gst-mode-wrap{padding-right:18px;border-right:1px solid #f3b2d1;min-height:80px}
+#stores-workspace .shop-gst-choices{border:0;margin:0;padding:8px 0;display:flex;flex-wrap:wrap;gap:12px 16px;min-width:0}
+#stores-workspace .shop-gst-choices label{display:flex;align-items:center;gap:7px;font-size:12px!important;font-weight:500;cursor:pointer;line-height:1.5}
+#stores-workspace .shop-gst-choices input[type=radio]{appearance:auto;width:18px;min-width:18px;height:18px;min-height:18px;margin:0;padding:0;accent-color:#ff007f;box-shadow:none}
+#stores-workspace .shop-gst-choices label:has(input:disabled){opacity:.55;cursor:not-allowed}
+#stores-workspace .shop-state-badge{align-self:flex-start;background:#d7f7d9;color:#145b29;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;margin-top:3px}
+#stores-workspace .shop-state-badge:before{content:'\2713';display:inline-block;margin-right:7px;font-weight:800}
+#stores-workspace.stores-create-page #store-gst-help{background:#edf3ff;border:1px solid #cbdcff;color:#14274e;border-radius:6px;padding:7px 10px;margin:12px 0 6px;font-size:12px}
+#stores-workspace.stores-create-page #store-gst-settings-link{font-size:12px;color:#b6005b;text-underline-offset:3px}
+#stores-workspace.stores-create-page .shop-contact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#stores-workspace.stores-create-page .shop-additional-details{border:1px solid #d6dcea;border-radius:12px;background:#fff;padding:12px 18px}
+#stores-workspace.stores-create-page .shop-additional-details summary{font-size:16px;color:#11172e}
+#stores-workspace.stores-create-page .shop-additional-details summary strong:before{content:'5. '}
+#stores-workspace.stores-create-page .shop-additional-details summary span{font-size:12px;color:#253348;font-weight:400}
+#stores-workspace.stores-create-page .stores-page-editor footer{padding:16px 0 4px;border:0;background:#f5f7fc;border-radius:0;box-shadow:none}
+#stores-workspace.stores-create-page .btn-outline-secondary{background:#fff!important;color:#11172e!important;border-color:#cdd7e7!important}
+#stores-workspace.stores-create-page footer .btn{min-width:90px}
+@media(max-width:1100px){#stores-workspace.stores-create-page #store-gst-configuration>.stores-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#stores-workspace.stores-create-page #store-gst-mode-wrap{grid-column:1/-1;border-right:0;border-bottom:1px solid #f3b2d1;padding:0 0 6px;min-height:0}}
+@media(max-width:575px){#stores-workspace.stores-create-page .shop-form-section{padding:14px}#stores-workspace.stores-create-page .shop-section-heading{gap:8px}#stores-workspace.stores-create-page .shop-section-heading>span{flex-basis:100%;padding-left:34px}#stores-workspace.stores-create-page #store-gst-configuration>.stores-form-grid,#stores-workspace.stores-create-page .shop-contact-grid{grid-template-columns:minmax(0,1fr)}#stores-workspace.stores-create-page .shop-additional-details summary span{margin-left:34px}#stores-workspace.stores-create-page .shop-additional-details summary{font-size:14px}}
 @media(max-width:1100px){#stores-workspace .stores-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:850px){#stores-workspace .stores-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:575px){#stores-workspace .stores-kpis,#stores-workspace .stores-form-grid,#stores-workspace .stores-details-grid{grid-template-columns:minmax(0,1fr)}#stores-workspace .stores-heading,#stores-workspace .stores-actions{align-items:stretch}#stores-workspace .stores-directory{padding:10px}#stores-workspace dialog{width:calc(100vw - 16px);max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}#stores-workspace dialog header,#stores-workspace dialog footer,#stores-workspace .stores-dialog-body{padding-left:12px;padding-right:12px}#stores-workspace dialog footer .btn{flex:1 1 130px;white-space:normal}#stores-workspace .stores-setup-links a{overflow-wrap:anywhere}}
