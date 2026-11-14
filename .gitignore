@@ -493,3 +493,7 @@ appsettings.Development.json
 .artifacts/
 *.keystore
 *.jks
+# Ignore local VS Code configuration files
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/tasks.json
