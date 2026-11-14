@@ -65,6 +65,7 @@ window.StockFlowAddress = (() => {
         if(!fields.state||!fields.city||!fields.pin||bound.has(fields.state))return;
         fixedCountry(fields.country);
         bound.add(fields.state);const group={...fields,version:0,verified:'',offices:[],dirtyPin:false,applied:false};groups.add(group);
+        const strict=group.state.form?.dataset.indianAddress==='true';
         const india=()=>!group.country||['in','india',''].includes(norm(group.country.value));
         const currentState=()=>group.state instanceof HTMLSelectElement?stateLabel(group.state.selectedOptions[0]?.textContent):group.state.value;
         const stateOptions=()=>{
@@ -72,7 +73,7 @@ window.StockFlowAddress = (() => {
             if(group.state instanceof HTMLSelectElement)return [...group.state.options].filter(o=>o.value).map(o=>({value:o.value,label:stateLabel(o.textContent)}));
             return locations.map(row=>({value:row.state,label:row.state}));
         };
-        const districtOptions=()=>{const row=locations.find(row=>norm(row.state)===norm(currentState()));const names=new Set(row?.districts||[]);for(const office of group.offices)if(norm(office.State)===norm(currentState()))names.add(office.District);if(group.district?.value)names.add(group.district.value);return [...names].map(name=>({value:name,label:name}));};
+        const districtOptions=()=>{const row=locations.find(row=>norm(row.state)===norm(currentState()));const names=new Set(row?.districts||[]);for(const office of group.offices)if(norm(office.State)===norm(currentState()))names.add(office.District);if(!strict&&group.district?.value)names.add(group.district.value);return [...names].sort((a,b)=>a.localeCompare(b)).map(name=>({value:name,label:name}));};
         group.statePicker=picker(group.state,'State',stateOptions,()=>!india());
         if(group.district)group.districtPicker=picker(group.district,'District',districtOptions,()=>!india());
         group.city.placeholder='Enter City or Town';group.pin.autocomplete='postal-code';
@@ -84,12 +85,17 @@ window.StockFlowAddress = (() => {
         const retry=node('button','Retry PIN lookup');retry.type='button';retry.className='btn btn-outline-secondary btn-sm';retry.hidden=true;
         officeGroup.append(label,office);group.pin.after(status,retry,officeGroup);group.officeGroup=officeGroup;group.status=status;
         function error(message){if(group.pin.dataset.sfPostalError&&group.pin.validationMessage===group.pin.dataset.sfPostalError)group.pin.setCustomValidity('');group.pin.dataset.sfPostalError=message;if(message)group.pin.setCustomValidity(message);StockFlowValidation?.showField(group.pin,message);retry.hidden=!message?.includes('unavailable');}
-        const postalMatch=()=>group.offices.find(o=>norm(o.State)===norm(currentState())&&(!active(group.district)||!group.district.value||norm(o.District)===norm(group.district.value))&&(!active(group.city)||!office.value||[o.Name,o.Block].some(name=>name&&norm(name)===norm(group.city.value))));
+        const postalMatch=()=>group.offices.find(o=>norm(o.State)===norm(currentState())&&(!active(group.district)||!group.district.value||norm(o.District)===norm(group.district.value))&&(!active(group.city)||!(strict?group.city.value:office.value)||[o.Name,o.Block,...(strict?[o.District]:[])].some(name=>name&&norm(name)===norm(group.city.value))));
         function validate(){
+            if(strict&&active(group.district)){
+                const mismatch=group.district.value&&locations.length&&!districtOptions().some(o=>norm(o.value)===norm(group.district.value));
+                group.district.setCustomValidity(mismatch?'Select a district belonging to the selected State.':'');
+                if(mismatch)return false;
+            }
             if(!active(group.pin)||!india()){error('');return true;}
             const pin=group.pin.value.trim();if(!pin){error('');return !group.pin.required;}
             if(!/^[1-9][0-9]{5}$/.test(pin)){error('Enter a valid 6-digit Indian PIN code.');return false;}
-            if(group.verified===pin){if(!postalMatch()){error(office.value?'State, district and city must match this PIN code.':'State and district must match this PIN code.');return false;}error('');return true;}
+            if(group.verified===pin){if(!postalMatch()){error(strict||office.value?'State, district and city/locality must match this PIN code. Choose a listed locality or correct the address.':'State and district must match this PIN code.');return false;}error('');return true;}
             return !group.dirtyPin||!group.pin.dataset.sfPostalError;
         }
         function assign(input,value){if(!input||!active(input))return;if(input instanceof HTMLSelectElement&&!Array.from(input.options).some(o=>o.value===value))input.add(new Option(value,value));input.value=value;emit(input);}
@@ -97,7 +103,8 @@ window.StockFlowAddress = (() => {
             if(!selected)return;group.applied=true;
             const state=stateOptions().find(o=>norm(o.label)===norm(selected.State));
             if(!state){error('PIN details do not match a supported state. Review the address.');group.applied=false;return;}
-            assign(group.state,state.value);assign(group.district,selected.District);assign(group.city,selected.Name);group.applied=false;error('');status.textContent=[selected.Name,selected.District,selected.State].join(', ');
+            if(strict&&!active(group.state)&&norm(currentState())!==norm(selected.State)){group.applied=false;error('This PIN belongs to a different State. Correct the PIN or GST registration.');return;}
+            assign(group.state,state.value);assign(group.district,selected.District);assign(group.city,selected.Name);group.applied=false;validate();status.textContent=[selected.Name,selected.District,selected.State].join(', ');
         }
         async function lookup(){
             const pin=group.pin.value.trim();if(group.loadingPin===pin&&group.controller&&!group.controller.signal.aborted)return;
@@ -111,9 +118,10 @@ window.StockFlowAddress = (() => {
                 group.offices=data?.[0]?.Status==='Success'?(data[0].PostOffice||[]).filter(o=>o.State&&o.District&&o.Name):[];
                 if(!group.offices.length){error('PIN code not found. Enter a valid Indian PIN code.');return;}
                 group.verified=pin;office.replaceChildren(new Option('Select post office / locality',''),...group.offices.map((o,i)=>new Option(o.Name,String(i))));office.disabled=false;officeGroup.hidden=false;
+                if(strict&&!active(group.state)&&!group.offices.some(o=>norm(o.State)===norm(currentState()))){error('This PIN belongs to a different State. Correct the PIN or GST registration.');return;}
                 const prior=group.offices.findIndex(o=>norm(o.Name)===norm(group.city.value));
                 if(group.offices.length===1||prior>=0){const index=prior>=0?prior:0;office.value=String(index);apply(group.offices[index]);}
-                else {group.applied=true;const states=new Set(group.offices.map(o=>o.State)),districts=new Set(group.offices.map(o=>o.District));if(states.size===1){const state=stateOptions().find(o=>norm(o.label)===norm(group.offices[0].State));if(state)assign(group.state,state.value);}if(districts.size===1)assign(group.district,group.offices[0].District);group.applied=false;error('');}
+                else {group.applied=true;const states=new Set(group.offices.map(o=>o.State)),districts=new Set(group.offices.map(o=>o.District));if(states.size===1){const state=stateOptions().find(o=>norm(o.label)===norm(group.offices[0].State));if(state)assign(group.state,state.value);}if(districts.size===1)assign(group.district,group.offices[0].District);group.applied=false;validate();}
             }catch(failure){if(version===group.version&&group.pin.value.trim()===pin&&india()&&active(group.pin))error('PIN lookup is unavailable. Retry when connected; the address has not been verified.');}
             finally{clearTimeout(timer);if(group.version===version)group.loadingPin='';}
         }
@@ -121,7 +129,13 @@ window.StockFlowAddress = (() => {
         group.pin.addEventListener('input',()=>{group.dirtyPin=true;clearTimeout(group.timer);++group.version;group.controller?.abort();group.verified='';if(!group.pin.value.trim()){officeGroup.hidden=true;error('');return;}error(/^[1-9][0-9]{5}$/.test(group.pin.value.trim())?'Verifying PIN code…':'Enter a valid 6-digit Indian PIN code.');group.timer=setTimeout(lookup,300);});
         group.pin.addEventListener('blur',()=>{if(group.dirtyPin&&!group.verified){clearTimeout(group.timer);lookup();}});
         group.state.addEventListener('sf-address-selection',()=>{if(group.district){assign(group.district,'');group.districtPicker.refresh();}validate();});
-        for(const input of [group.state,group.district,group.city].filter(Boolean))input.addEventListener('change',()=>{if(!group.applied)validate();});
+        if(strict){
+            let priorState=group.state.value;
+            group.state.addEventListener('change',()=>{if(priorState!==group.state.value&&!group.applied&&group.district){assign(group.district,'');group.districtPicker.refresh();}priorState=group.state.value;validate();});
+            group.city.addEventListener('input',()=>{if(!group.applied){if(office.value!==''&&!postalMatch())office.value='';validate();}});
+            group.district?.addEventListener('input',()=>{if(!group.applied)validate();});
+        }
+        for(const input of [group.state,group.district,group.city].filter(Boolean))input.addEventListener('change',()=>{if(!group.applied){validate();if(strict&&active(group.pin)&&/^[1-9][0-9]{5}$/.test(group.pin.value.trim())&&group.verified!==group.pin.value.trim())lookup();}});
         group.country?.addEventListener('change',()=>{++group.version;group.controller?.abort();group.verified='';group.offices=[];group.dirtyPin=false;officeGroup.hidden=true;error('');refresh();});
         function refresh(){
             const indian=india();if(indian){group.pin.inputMode='numeric';group.pin.maxLength=6;group.pin.pattern='[1-9][0-9]{5}';}else if(group.country){group.pin.inputMode='text';group.pin.maxLength=20;if(group.pin.pattern==='[1-9][0-9]{5}')group.pin.removeAttribute('pattern');}
@@ -177,11 +191,11 @@ window.StockFlowAddress = (() => {
     document.addEventListener('DOMContentLoaded',queue,{once:true});queue();
     document.addEventListener('reset',event=>{const sources=[...event.target.querySelectorAll('input,textarea')].filter(source=>source.sfAddressCombined).map(source=>({source,revision:source.sfAddressCombined.revision}));queueMicrotask(()=>{
         for(const {source,revision} of sources)if(source.sfAddressCombined.revision===revision)source.sfAddressCombined.adopt();
-        for(const group of groups)if(group.pin.form===event.target){++group.version;group.controller?.abort();clearTimeout(group.timer);group.verified='';group.dirtyPin=false;group.offices=[];if(group.pin.dataset.sfPostalError)group.pin.setCustomValidity('');delete group.pin.dataset.sfPostalError;group.officeGroup.hidden=true;group.status.textContent='';group.refresh();}
+        for(const group of groups)if(group.pin.form===event.target){++group.version;group.controller?.abort();clearTimeout(group.timer);group.verified='';group.dirtyPin=false;group.offices=[];if(group.pin.dataset.sfPostalError)group.pin.setCustomValidity('');if(group.state.form?.dataset.indianAddress==='true')group.district?.setCustomValidity('');delete group.pin.dataset.sfPostalError;group.officeGroup.hidden=true;group.status.textContent='';group.refresh();}
     });});
     document.addEventListener('submit',event=>{
         if(event.submitter?.formNoValidate)return;const failed=[];
-        for(const group of groups)if(group.pin.form===event.target&&!group.validate())failed.push(group.pin);
+        for(const group of groups)if(group.pin.form===event.target&&!group.validate())failed.push(group.district&&!group.district.checkValidity()?group.district:group.pin);
         for(const source of event.target.querySelectorAll('input,textarea'))if(source.sfAddressCombined){const fields=Object.values(source.sfAddressCombined.fields);for(const input of fields)if(!input.disabled&&!input.checkValidity()){StockFlowValidation?.showField(input,StockFlowValidation.fieldMessage(input));failed.push(input);}}
         if(failed.length){event.preventDefault();event.stopImmediatePropagation();for(let p=failed[0].parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;failed[0].focus();}
     },true);

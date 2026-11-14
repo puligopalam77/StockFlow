@@ -1,0 +1,16 @@
+@page "/Admin/Roles/Templates"
+@{ViewData["Title"]="Role Templates";}
+<div id="role-templates-workspace" class="roles-screen" data-edit="@Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS").ToString().ToLowerInvariant()" data-grants="@System.Text.Json.JsonSerializer.Serialize(Access.User!.Permissions.ToDictionary(p=>p.ModuleCode,p=>p.SupportedActions.Where(p.Allows).ToArray()))">
+ <header class="roles-heading"><div><h1>Role Templates</h1><p>Configure reusable starting permissions for staff roles.</p></div><div class="role-heading-actions"><a class="btn btn-outline-secondary" href="/Admin/Roles">Back to Roles &amp; Permissions</a>@if(Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS")){<button id="template-new" type="button" class="btn btn-primary">+ Add Template</button>}</div></header>
+ <nav class="role-tabs" aria-label="Role configuration"><a href="/Admin/Roles">Roles</a><a href="/Admin/Roles/Templates" aria-current="page">Role Templates</a></nav>
+ <div id="template-message" class="alert" role="alert" hidden></div>
+ <p class="roles-help">System recommendations can be customized for your business. Saving a template affects future roles; existing roles and users keep their permissions.</p>
+ <div id="template-list" class="role-template-directory" aria-label="Available role templates"></div>
+ <form id="template-form" hidden>
+  <section class="role-card"><h2 id="template-title">Configure Template</h2><div class="role-fields"><div><label for="template-name">Template Name *</label><input id="template-name" class="form-control" required minlength="2" maxlength="50"/></div><div><label for="template-description">Description</label><input id="template-description" class="form-control" maxlength="200"/></div><div><label for="template-active"><input id="template-active" type="checkbox" checked/> Active — available in Add Role</label></div></div><p id="template-limits" class="roles-help"></p><p id="template-omitted" class="role-impact" hidden></p></section>
+  <section class="role-card role-permission-card"><div class="role-section-heading"><h2>Module Permissions</h2><p>Select the default screens and actions for this template.</p></div><div id="template-permissions"></div></section>
+  <footer class="role-form-footer"><button id="template-cancel" type="button" class="btn btn-outline-secondary">Close</button><button id="template-save" type="submit" class="btn btn-primary">Save Template</button></footer>
+ </form>
+</div>
+@section Styles{<link rel="stylesheet" href="~/css/admin-security.css" asp-append-version="true"/><link rel="stylesheet" href="~/css/role-management.css" asp-append-version="true"/>}
+@section Scripts{<script src="~/js/common/permission-editor.js" asp-append-version="true"></script><script src="~/js/common/role-permission-editor.js" asp-append-version="true"></script><script src="~/js/role-templates.js" asp-append-version="true"></script>}

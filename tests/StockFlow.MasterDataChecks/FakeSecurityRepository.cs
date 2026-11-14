@@ -5,6 +5,10 @@ using StockFlow.Application.Interfaces;
 namespace StockFlow.MasterDataChecks;
 sealed class FakeSecurityRepository(IHttpContextAccessor context):ISecurityRepository
 {
+    public Task<IEnumerable<RoleDirectoryRow>> RoleDirectoryAsync(int actor)=>throw new NotSupportedException();
+    public Task<RoleDetails> RoleDetailsAsync(int id,int actor)=>throw new NotSupportedException();
+    public Task<int> SaveRoleAsync(SaveRoleRequest r,int actor)=>throw new NotSupportedException();
+    public Task SetRoleStatusAsync(int id,RoleStatusRequest r,int actor)=>throw new NotSupportedException();
     public Task<UserAccess?> GetAccessAsync(int id)
     {
         var headers=context.HttpContext!.Request.Headers;var role=headers["Test-Role"].ToString();bool admin=role=="Admin",sales=role=="Sales",service=role=="Service";
@@ -41,7 +45,12 @@ sealed class FakeSecurityRepository(IHttpContextAccessor context):ISecurityRepos
         return Task.FromResult<UserAccess?>(new(){TwoFactorEnabled=headers["Test-2FA-Enabled"]=="true",TwoFactorRequired=headers["Test-2FA-Required"]=="true",UserId=id,Username=role,FullName="Example "+role,Email="person@example.test",MobileNumber="9876543210",RoleName=role,IsActive=headers["Test-Inactive"]!="true",SecurityVersion=1,MustChangePassword=headers["Test-Force-Password"]=="true",Permissions=perms,NavigationModules=navigation});
     }
     public Task<LoginResult> LoginAsync(LoginRequest r)=>Task.FromResult(new LoginResult());
-    public Task<IEnumerable<SecurityUser>> GetUsersAsync(string? term,int offset)=>Task.FromResult<IEnumerable<SecurityUser>>([]);
+    public Task<IEnumerable<RoleTemplateRow>> RoleTemplatesAsync(int actor)=>throw new NotSupportedException();
+    public Task<RoleTemplateDetails> RoleTemplateAsync(string key,int actor)=>throw new NotSupportedException();
+    public Task<string> SaveRoleTemplateAsync(SaveRoleTemplateRequest request,int actor)=>throw new NotSupportedException();
+    public Task<IEnumerable<SecurityUser>> GetUsersAsync(string? term,int offset,long? storeId=null,string? accountType=null,int? roleId=null,bool? isActive=null)=>Task.FromResult<IEnumerable<SecurityUser>>([]);
+    public Task<StaffRegistrationOptions> StaffRegistrationOptionsAsync(int actor)=>Task.FromResult(new StaffRegistrationOptions{BusinessName="Test business",CanCreateShopAdmin=true,CanUseAdvancedAccess=true});
+    public Task<string> SuggestStaffUsernameAsync(string fullName,int actor)=>Task.FromResult("suggested.staff");
     public Task<SecurityUser?> GetUserAsync(int id)=>Task.FromResult<SecurityUser?>(null);
     public Task<IEnumerable<ModulePermission>> GetModulesAsync()=>Task.FromResult<IEnumerable<ModulePermission>>([]);
     public Task<IEnumerable<SecurityRole>> GetRolesAsync()=>Task.FromResult<IEnumerable<SecurityRole>>([]);

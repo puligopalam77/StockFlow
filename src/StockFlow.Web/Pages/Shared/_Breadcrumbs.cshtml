@@ -1,4 +1,4 @@
-﻿@{
+@{
     var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "/Index";
     var title = ViewData["Title"]?.ToString() ?? "Page";
     var home = Access.Can("DASHBOARD") ? "/" : "/Account/Home";
@@ -10,6 +10,14 @@
         parentLabel = "Settings";
         parentUrl = Access.Can("USER_MANAGEMENT") ? "/Admin/Users" : Access.Can("ROLE_MANAGEMENT") ? "/Admin/Roles" : Access.Can("STORES") ? "/Admin/Stores" : Access.Can("SECURITY") ? "/Admin/Security" : "/Admin/AuditLogs";
         if (page == "/Admin/Users") title = "User list";
+        if(page=="/Admin/Roles"){parents.Add(("Settings",null));parentLabel="Staff & Access";parentUrl=Access.Can("USER_MANAGEMENT")?"/Admin/Users":null;}
+        if(page.StartsWith("/Admin/Roles/")){parents.Add(("Settings",null));parents.Add(("Staff & Access",null));parentLabel="Roles & Permissions";parentUrl="/Admin/Roles";}
+        if (page == "/Admin/Stores/Create")
+        {
+            parents.Add(("Settings",null));
+            parentLabel="Shops & Locations";
+            parentUrl="/Admin/Stores";
+        }
     }
     else if (page.StartsWith("/Labels/")) { parents.Add(("Inventory",Access.CanVisit("/Inventory")?"/Inventory":null));parentLabel = "Product Catalog"; }
     else if (page == "/Purchases/Details") { parentLabel = "Purchase Orders"; parentUrl = "/Purchases"; }
@@ -22,7 +30,6 @@
     else if (page == "/Configuration/WhatsApp") { parentLabel = "Notifications"; parentUrl = "/Configuration/Notifications"; }
     else if(page.StartsWith("/Settings/BankAccounts/")||page=="/Settings/BankAccountsSetup"){
         parents.Add(("Business Setup",null));
-        if(ViewData["BankAccountDetail"] is true)parents.Add(("Bank Accounts","/Settings/BankAccounts"));
     }
     else if (page.StartsWith("/Settings/") || page == "/Configuration/Notifications") { parentLabel = "Settings"; }
     else if (page.StartsWith("/Expenses/")) { parentLabel="Expenses";parentUrl="/Expenses"; }

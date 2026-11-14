@@ -73,6 +73,7 @@ TwoFactorService twoFactor)
     public async Task<IActionResult> CreateRole(NewRole r)
     {
         r.RoleName = r.RoleName.Trim();
+        if(new[]{"admin","owner","main owner"}.Contains(r.RoleName.ToLowerInvariant()))throw new ValidationException("Owner and system identities are reserved.");
         if (r.RoleName.Length < 2 || !r.RoleName.Any(char.IsLetterOrDigit))
         {
             throw new ValidationException("Enter a meaningful role name.");
@@ -156,6 +157,7 @@ t);
         await c.OpenAsync();
         await using var t = await c.BeginTransactionAsync();
         await c.ExecuteAsync("SELECT pg_advisory_xact_lock(170017)", transaction: t);
+        if(await c.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM roles r WHERE r.role_id=@id AND (lower(btrim(r.role_name)) IN('admin','owner','main owner') OR EXISTS(SELECT 1 FROM users u WHERE u.tenant_id=r.tenant_id AND u.role_id=r.role_id AND u.is_tenant_owner)))",new{id},t))throw new UnauthorizedAccessException("Protected role policy cannot be changed here.");
         var old = await c.QuerySingleOrDefaultAsync<RolePolicy>("SELECT requires_two_factor RequiresTwoFactor FROM roles WHERE role_id=@id AND is_active FOR UPDATE", new
         {
             id
@@ -203,7 +205,7 @@ t);
             return Forbid();
         }
 
-        var changed = await c.ExecuteAsync("UPDATE users SET two_factor_enabled=false,require_two_factor=true,two_factor_secret_encrypted=NULL,two_factor_pending_encrypted=NULL,two_factor_pending_until=NULL,two_factor_enabled_at=NULL,two_factor_last_step=NULL,two_factor_failures=0,two_factor_locked_until=NULL,security_version=security_version+1 WHERE user_id=@id AND security_version=@ExpectedVersion",
+        var changed = await c.ExecuteAsync("UPDATE users SET two_factor_enabled=false,require_two_factor=true,two_factor_secret_encrypted=NULL,two_factor_pending_encrypted=NULL,two_factor_pending_until=NULL,two_factor_enabled_at=NULL,two_factor_last_step=NULL,two_factor_failures=0,two_factor_locked_until=NULL,security_version=security_version+1 WHERE tenant_id=sf_tenant() AND user_id=@id AND sf_staff_target(user_id) AND security_version=@ExpectedVersion",
 new
 {
     id,

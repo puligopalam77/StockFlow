@@ -361,7 +361,7 @@ public class PermissionMiddleware
         if (key == "admin" && p.ElementAtOrDefault(1) == "roles")
         {
             module = "ROLE_MANAGEMENT";
-            if (method != "GET")
+            if (method != "GET" || p.ElementAtOrDefault(2) is "create" or "edit")
             {
                 action = "MANAGE_PERMISSIONS";
             }

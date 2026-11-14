@@ -21,28 +21,22 @@
     </div>
     <section id="user-list-view">
         <div class="admin-list-card">
-            <form id="user-search" class="admin-filters">
-                <input id="search-term" class="form-control" aria-label="Search users" placeholder="Search name or username" maxlength="100"/>
-                <button class="btn admin-dark">Search</button>
-                <button id="clear-users" type="button" class="btn admin-dark">Clear</button>
+            <form id="user-search" class="admin-filters staff-search-toolbar" role="search">
+                <input id="search-term" type="search" class="form-control" aria-label="Search users" placeholder="Search staff by name, mobile or email" maxlength="100"/>
+                <button id="toggle-user-filters" type="button" class="btn btn-outline-secondary" aria-expanded="false" aria-controls="user-filter-panel">Filters<span id="user-filter-count" hidden></span></button>
+                <button id="clear-users" type="button" class="staff-filter-reset" hidden>Reset</button>
+                <div id="user-filter-panel" class="staff-filter-grid" hidden>
+                    <div><label for="filter-shop">Shop</label><select id="filter-shop" class="form-select" aria-label="Filter by shop"><option value="">All authorized shops</option></select></div>
+                    <div><label for="filter-account-type">Account type</label><select id="filter-account-type" class="form-select" aria-label="Filter by account type"><option value="">All account types</option><option value="SHOP_ADMIN">Shop Admin</option><option value="EMPLOYEE">Employee</option></select></div>
+                    <div><label for="filter-role">Role</label><select id="filter-role" class="form-select" aria-label="Filter by role"><option value="">All roles</option></select></div>
+                    <div><label for="filter-status">Status</label><select id="filter-status" class="form-select" aria-label="Filter by status"><option value="">All statuses</option><option value="true">Active</option><option value="false">Inactive</option></select></div>
+                </div>
             </form>
-            <p id="user-count" class="admin-record-count" aria-live="polite">Loading users…</p>
+            <p id="user-count" class="admin-record-count" aria-live="polite">Loading users...</p>
             <div class="table-responsive">
                 <table class="table admin-user-table">
                     <thead>
-                        <tr>
-                            <th>S.No</th>
-                            <th>User name</th>
-                            <th>Full name</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Email</th>
-                            <th>Mobile</th>
-                            <th>Assigned stores</th>
-                            <th>Sign-in verification</th>
-                            <th>Last login</th>
-                            <th>Actions</th>
-                        </tr>
+                        <tr><th>User</th><th>Account type</th><th>Assigned shop</th><th>Role</th><th>Status</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="user-rows">
                     </tbody>
@@ -56,64 +50,34 @@
     </section>
     <form id="user-editor" class="card card-body admin-editor" hidden>
         <h2 id="editor-title" class="admin-form-title">Add staff account</h2>
-        <p>Enter account details, choose a role template and assign the shop. Access comes from the selected role template.</p>
-        <div class="row g-3">
-            <div class="col-md-4">
-                <label for="full-name">Full name *</label>
-                <input id="full-name" class="form-control" required minlength="2" maxlength="100" />
-            </div>
-            <div class="col-md-4">
-                <label for="username">Username *</label>
-                <input id="username" class="form-control" required minlength="3" maxlength="50" pattern="[\p{L}\p{N}_.\-]+" autocomplete="off" />
-            </div>
-            <div class="col-md-4">
-                <label for="mobile">Mobile *</label>
-                <input id="mobile" required type="tel" inputmode="numeric" pattern="[0-9]{10}" class="form-control" maxlength="10" />
-            </div>
-            <div class="col-md-4">
-                <label for="email">Email *</label>
-                <input id="email" required type="email" class="form-control" maxlength="150" />
-            </div>
-            <div class="col-md-4">
-                <label for="role">Role template *</label>
-                <select id="role" class="form-select" required>
-                </select>
-                <p id="selected-role-help" class="small mt-2">
-                </p>
-            </div>
-            <div class="col-md-4">
-                <label>
-                    <input id="active" type="checkbox" checked /> Active</label> <label>
-                    <input id="must-change" type="checkbox" checked /> Require password change at next login</label>
-            </div>
+        <p>Create an account and assign shop access.</p>
+        <fieldset class="staff-section"><legend>1. Staff Information</legend><div class="staff-fields">
+            <div><label for="full-name">Full name *</label><input id="full-name" class="form-control" required minlength="2" maxlength="100" placeholder="e.g. Ravi Kumar" autocomplete="name" /></div>
+            <div><label for="mobile">Mobile number *</label><input id="mobile" required type="tel" inputmode="numeric" pattern="[0-9]{10}" class="form-control" placeholder="10-digit mobile number" maxlength="10" /></div>
+            <div><label for="email">Email *</label><input id="email" required type="email" class="form-control" placeholder="staff@example.com" maxlength="150" /></div>
+            <div><label for="username">Username *</label><input id="username" class="form-control" aria-describedby="username-help" placeholder="e.g. ravi01" required minlength="3" maxlength="50" pattern="[\p{L}\p{N}_.\-]+" autocomplete="off" /><small id="username-help">Suggested from the staff name; you can change it.</small></div>
+        </div></fieldset>
+        <fieldset class="staff-section"><legend>2. Shop &amp; Role Assignment</legend><div class="staff-fields">
+            <div><label for="business-name">Business name</label><input id="business-name" class="form-control" readonly /></div>
+            <div><label for="account-type">Account type *</label><select id="account-type" class="form-select" required><option value="EMPLOYEE">Employee</option><option value="SHOP_ADMIN">Shop Admin</option></select></div>
+            <div><label for="primary-store">Assigned Shop *</label><select id="primary-store" class="form-select" required></select></div>
+            <div><label for="role">Role *</label><select id="role" class="form-select" required></select><p id="selected-role-help" class="small mt-2"></p></div>
+        </div><p id="store-assignment-help"></p><div class="staff-access-summary" aria-labelledby="access-summary-heading"><h3 id="access-summary-heading">Access Preview</h3><p id="staff-access-summary" role="status">Choose a shop and role to preview access.</p><div id="staff-permission-highlights" class="staff-permission-highlights"></div><details><summary>Effective permissions</summary><div id="staff-permission-summary"></div></details></div></fieldset>
+        <div class="staff-account-grid">
+        <section class="staff-section"><h3>3. Login &amp; Security</h3><div id="initial-password"><p class="staff-section-help">8-128 characters; your business may require a longer minimum.</p><div class="staff-fields staff-password-fields">
+            <div><label for="password">Password *</label><input id="password" type="password" autocomplete="new-password" class="form-control" minlength="8" maxlength="128" /></div>
+            <div><label for="confirm-password">Confirm password *</label><input id="confirm-password" type="password" autocomplete="new-password" class="form-control" minlength="8" maxlength="128" /></div>
+        </div></div><label class="staff-password-change"><input id="must-change" type="checkbox" checked /> Require password change at next login</label></section>
+        <div class="staff-settings-panel">
+        <fieldset class="staff-section"><legend>4. Account Settings</legend><label class="staff-status-switch"><span>Account status</span><input id="active" type="checkbox" role="switch" checked aria-describedby="staff-status-label"/><strong id="staff-status-label">Active</strong></label></fieldset>
+        <details id="advanced-store-access" class="staff-section"><summary>Advanced Access - additional shops and warehouses</summary>
+            <div id="assigned-stores" class="row g-2 mt-2"></div>
+            <div id="multi-store-default" hidden><label for="default-store">Default shop for multi-shop staff login</label><select id="default-store" class="form-select"></select></div>
+            <h3>Central warehouses</h3><div id="assigned-warehouses" class="row g-2"></div>
+            <p>Additional access requires separate authorization. Staff sign in to their default shop.</p>
+        </details>
         </div>
-        <fieldset id="initial-password" class="mt-3">
-            <legend>Initial password</legend>
-            <p>8–128 characters; spaces and passphrases allowed. Your business may require a longer minimum.</p>
-            <label for="password">Password *</label>
-            <input id="password" type="password" autocomplete="new-password" class="form-control" minlength="8" maxlength="128" />
-            <label for="confirm-password">Confirm password *</label>
-            <input id="confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" class="form-control" />
-        </fieldset>
-        <section class="admin-permissions">
-            <h3>Assigned shop</h3>
-            <label for="primary-store">Assigned store</label>
-            <select id="primary-store" class="form-select">
-            </select>
-            <p id="store-assignment-help">Staff sign in to this store automatically. Role permissions control what they can do.</p>
-            <details id="advanced-store-access">
-                <summary>Additional stores / warehouse access</summary>
-                <div id="assigned-stores" class="row g-2 mt-2">
-                </div>
-                <label for="default-store">Default store for staff login</label>
-                <select id="default-store" class="form-select">
-                </select>
-                <h3>Central warehouses</h3>
-                <div id="assigned-warehouses" class="row g-2">
-                </div>
-                <p>Additional stores support authorized admin reviews. Staff remain pinned to the default store. Owners retain business-wide access.</p>
-            </details>
-        </section>
+        </div>
         <p>Saving security changes ends affected sessions. Changes to your own account require signing in again.</p>
         <div class="admin-form-footer">
             <button type="button" id="cancel-user" class="btn admin-dark">Cancel</button>
@@ -122,7 +86,7 @@
     </form>
     <form id="reset-form" class="card card-body admin-editor" hidden>
         <h2 id="reset-title">Reset password</h2>
-        <p>8–128 characters; spaces and passphrases allowed. Your business may require a longer minimum.</p>
+        <p>8-128 characters; spaces and passphrases allowed. Your business may require a longer minimum.</p>
         <label for="reset-password">New password</label>
         <input id="reset-password" type="password" class="form-control" autocomplete="new-password" minlength="8" maxlength="128" required />
         <label for="reset-confirm">Confirm password</label>
@@ -134,7 +98,7 @@
         </div>
     </form>
 </div>
-@section Scripts {<script src="~/js/common/permission-editor.js" asp-append-version="true"></script><script src="~/js/admin-security.js" asp-append-version="true"></script>}
+@section Scripts {<script src="~/js/common/permission-editor.js" asp-append-version="true"></script><script src="~/js/staff-users.js" asp-append-version="true"></script>}
 
 @section Styles {<link rel="stylesheet" href="~/css/admin-security.css" asp-append-version="true" />}
 
