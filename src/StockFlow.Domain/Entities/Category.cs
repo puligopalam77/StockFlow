@@ -3,6 +3,9 @@ namespace StockFlow.Domain.Entities;
 public class Category
 {
     public string? SkuPrefix { get; set; }
+    // Write-time expectation only; not a database column.
+    public string? ExpectedSkuPrefix { get; set; }
+    public bool CheckSkuPrefix { get; set; }
     public bool SkuPrefixUsed { get; set; }
     public int? DisplayOrder { get; set; }
     public string? ConfigurationJson { get; set; }

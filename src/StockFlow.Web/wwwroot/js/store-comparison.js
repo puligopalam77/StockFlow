@@ -24,12 +24,15 @@
         .catch((error) => {
             document.getElementById('comparison-message').textContent = error.message;
         });
+    let version=0;
     const load = async () => {
+        const current=++version;
         try {
             const rows = await window.sfBranchApi(
                 '/api/branches/comparison?term=' +
                     encodeURIComponent(document.getElementById('comparison-term').value)
             );
+            if(current!==version)return;
             const body = document.getElementById('comparison-rows');
             body.replaceChildren();
             for (const item of rows) {
@@ -51,6 +54,7 @@
             document.getElementById('comparison-message').textContent =
                 `${rows.length} location balances`;
         } catch (error) {
+            if(current!==version)return;
             document.getElementById('comparison-message').textContent = error.message;
         }
     };

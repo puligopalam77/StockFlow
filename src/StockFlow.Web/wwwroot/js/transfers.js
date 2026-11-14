@@ -129,8 +129,12 @@
         getElement('transfer-count').textContent =
             `${filtered.length} shown from the latest ${rows.length} accessible transfers.`;
     }
+    let listVersion = 0;
     async function list() {
-        rows = await requestJson('/api/transfers');
+        const version = ++listVersion;
+        const data = await requestJson('/api/transfers');
+        if (version !== listVersion) return;
+        rows = data;
         renderList();
     }
     async function detail(id) {

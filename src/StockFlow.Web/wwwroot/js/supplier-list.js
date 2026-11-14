@@ -84,7 +84,7 @@ window.StockFlowSupplierDirectory = (() => {
                 const cell = (label, content, className) => { const td = node('td', null, className); td.setAttribute('role', 'cell'); td.dataset.label = label; typeof content === 'string' ? td.textContent = content : td.append(content); row.append(td); return td; };
                 const name = node('a', record.supplierName, 'supplier-name'); name.href = href('View', record.supplierId); name.title = record.supplierName; name.onclick = persist;
                 cell('Supplier', name); cell('Supplier Code', record.supplierCode || '—', 'supplier-code'); cell('Type', typeLabel(record.supplierType)); cell('Mobile', record.mobileNumber || '—');
-                const badge = node('span', record.isActive ? 'Active' : 'Inactive', 'supplier-status'); badge.dataset.active = record.isActive; cell('Status', badge);
+                const badge = node('span', record.isActive ? 'Active' : 'Inactive', 'supplier-status sf-status-badge'); badge.dataset.active = record.isActive; cell('Status', badge);
                 const actions = node('div', null, 'supplier-actions');
                 const viewEdit = action(canEdit ? 'Edit Supplier' : 'View Supplier', canEdit ? 'edit' : 'eye', href(canEdit ? 'Edit' : 'View', record.supplierId));
                 viewEdit.onclick = persist; actions.append(viewEdit);

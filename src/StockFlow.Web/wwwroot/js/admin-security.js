@@ -302,16 +302,22 @@
                 })
         );
     }
+    let templateVersion = 0;
     async function template() {
+<<<<<<< HEAD
+        const version = ++templateVersion;
+        const permissions = await requestJson(
+=======
         if(users){rows=[];getElement('selected-role-help').textContent=getElement('role').value?'Permissions will be copied automatically from this role when the user is saved.':'Choose a role for account access.';return;}
         matrix(
             await requestJson(
+>>>>>>> 5b356494ce76bad93b86480393777ee41b2cfb96
                 getElement('role').value
                     ? `roles/${getElement('role').value}/permissions`
                     : 'modules'
-            ),
-            true
-        );
+            );
+        if (version !== templateVersion) return;
+        matrix(permissions, true);
         if (getElement('selected-role-help')) {
             getElement('selected-role-help').textContent = getElement('role').value
                 ? 'The selected role template supplies account permissions.'

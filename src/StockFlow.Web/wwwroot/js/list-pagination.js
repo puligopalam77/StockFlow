@@ -74,6 +74,8 @@ window.StockFlowPagination = (() => {
         let generation=0,controller,lastGood={page:1,size:defaultSize};
         const scope=()=>[document.body.dataset.businessProfile,document.querySelector('meta[name="stockflow-location"]')?.content].join('|');
         const pager=create({...options,onChange:()=>reload()});lastGood.size=pager.state.size;
+        const loadingRoot=element(options.root)||root;
+        window.StockFlowLoading?.region(loadingRoot?.querySelector?.('.table-responsive')||loadingRoot,{retry:()=>reload()});
         async function reload({reset=false}={}){
             if(!validateFilters(options.filterRoot?element(options.filterRoot):document.querySelector('.sf-list-screen')))return;
             if(reset)pager.state.page=1;
@@ -126,7 +128,7 @@ window.StockFlowPagination = (() => {
             scheduled=false;
             const root=body.closest('.sf-list-screen,.sf-notification-console');
             const key=JSON.stringify([...(root?.querySelectorAll('.sf-list-filter input,.sf-list-filter select,.sf-filter-bar input,.sf-filter-bar select')||[])].map(field=>[field.id,field.type==='checkbox'||field.type==='radio'?field.checked:field.value]));
-            rows=[...body.rows].filter(row=>!row.hidden&&!(row.cells.length===1&&row.cells[0].colSpan>1));
+            rows=[...body.rows].filter(row=>!row.closest('.sf-skeleton')&&!row.hidden&&!(row.cells.length===1&&row.cells[0].colSpan>1));
             // Filters restart the list. Data refreshes retain a still-valid page;
             // draw() clamps to the nearest valid page after a deletion.
             pager.set({page:key===criteria?pager.state.page:1,total:rows.length});criteria=key;apply();

@@ -1,0 +1,89 @@
+CONNECTION AND ENCRYPTION CONFIGURATION PLAN — REVIEW ONLY
+
+No passwords, connection strings, HMAC values, certificate contents/private keys or
+key-ring XML are included. No settings have been changed or secret stores read.
+
+CURRENT REPOSITORY LOCATIONS
+
+src/StockFlow.Application/DTOs/Operations/BankAccountModels.cs:
+ BankAccounts:Enabled=false, PostingEnabled=false; DevelopmentConnection/IdentityKey
+ empty by default. These options do not include a production connection mode.
+src/StockFlow.Infrastructure/Repositories/BankAccountsRepository.cs:
+ explicit isolated loopback connection and cluster validation; no DefaultConnection
+ fallback. Writes set trusted BusinessScope session context and stockflow_runtime.
+src/StockFlow.Infrastructure/Data/DbConnectionFactory.cs:
+ existing DefaultConnection, validated profile and application scope/session context.
+src/StockFlow.Web/Program.cs:
+ option binding, DataProtection ApplicationName=StockFlow, SharedProtectionKeys XML
+ repository and optional SessionSecurity:KeyCertificatePath/KeyCertificatePassword.
+src/StockFlow.Web/Security/SharedProtectionKeys.cs:
+ database-backed sf_read_protection_keys()/sf_write_protection_key(text,text), through
+ the main security connection. This is why an unreachable DB can also produce a
+ Data Protection error during login; an encryption exception alone is not key loss.
+src/StockFlow.Web/Security/BankAccountProtection.cs:
+ bank-number/UPI encryption purpose StockFlow.BankAccount.v1 + tenant + account UUID;
+ HMAC-SHA256 IdentityKey on tenant + normalized bank identity + account number.
+src/StockFlow.Web/Pages/Shared/_BusinessSetupNavigation.cshtml:
+ BankAccounts:Enabled AND Access.Can(BANK_ACCOUNTS) determines menu visibility.
+PermissionMiddleware and Index.cshtml.cs add API/page permission/feature guards.
+
+PROPOSED APPLICATION CONNECTION DESIGN (NOT IMPLEMENTED BY THIS PACKAGE)
+
+Use the SAME verified business/security database as the authenticated application,
+via the existing scoped connection infrastructure and stockflow_runtime. Do not
+add an arbitrary independently configured bank database or silently fall back from
+failed bank identity checks. Verify database/server/deployment identity at startup
+and normal error handling without automatically running migrations.
+
+A separately reviewed code change must explicitly support that release mode while
+preserving the isolated test mode and trusted tenant/user/store/location/profile
+context. Production identity/availability failures must fail closed. Do not remove
+the local guard alone or redirect real authenticated IDs into a synthetic database.
+Keep defaults OFF and normal configuration unchanged until approved activation.
+
+Before the approved change: inspect deployed appsettings/environment/user-secrets/
+launch profile/container/service providers PRIVATELY for effective configuration
+precedence. Record only host, port, database name, deployment identity and provider
+source; never log full connection strings, passwords or arbitrary environment dumps.
+Use managed secret injection for credentials; a non-superuser login with only the
+required runtime role capability, no schema CREATE/BYPASSRLS/bank-table DML. Review
+existing main-app dependencies before changing a credential/role. Do not change an
+application currently using an administrative login without a separate impact plan.
+
+Use validated TLS server identity (VerifyFull with managed trust roots where supported
+by the target), network access restricted to application/maintenance hosts and bounded
+timeouts/pools. Resolve TLS/DNS/server identity requirements before changing settings;
+do not use Trust Server Certificate or disable certificate verification as a shortcut.
+Database existence, SELECT CONNECT and runtime SET ROLE eligibility are independent
+checks; a successful TCP socket does not prove authentication or schema compatibility.
+
+KEY PROVISIONING / RECOVERY
+
+1. Keep the established StockFlow Data Protection application name and purpose
+   separation stable. Review current durable shared key ring and access controls.
+   Never replace/delete keys to fix an outage; that can invalidate cookies and make
+   stored bank secrets unreadable. Preserve old decryption keys/certificates.
+2. Review existing certificate wrapping in Program.cs. Provision the certificate
+   privately with service-identity access, protected private key and recoverable
+   backup. Configure SessionSecurity:KeyCertificatePath and its password through
+   managed secrets, not checked-in appsettings or this report. No values are supplied.
+   Verify key XML is wrapped appropriately at rest; do not assume SQL storage alone
+   encrypts it. Test all app instances can read/decrypt the same durable ring.
+3. Provision BankAccounts:IdentityKey privately as durable cryptographically random
+   material of at least 32 bytes (base64 encoding expected by existing code). Never
+   use the ephemeral test key. Retain the same key for duplicate identity matching.
+   Its HMAC identifies accounts, not a provider login credential or encryption key.
+4. Current persisted key/protection versions are 1; multi-version HMAC lookup/rotation
+   is not implemented. Do NOT rotate IdentityKey in place: the same account could
+   obtain a different fingerprint. Design/test multi-version deduplication first.
+5. Test isolated recovery of key-ring metadata + wrapping certificate + HMAC key +
+   matching synthetic database. Confirm previous ciphertext can decrypt and duplicate
+   account detection remains stable across restart/instances. Never decrypt/copy real
+   banking details into the test environment or print plaintext in logs/test reports.
+6. Test certificate renewal retaining old decryptors, key-store denial/unavailability,
+   wrong key, missing key, and audit/log redaction. Key/ciphertext XML/full bank number/
+   UPI/request body must not reach ordinary DTOs, ErrorLog, telemetry or support dumps.
+
+Private provisioning, connection implementation and recovery test results are required
+review artifacts before normal-app activation. This document is a plan, not proof
+that the target has correct TLS, credentials, role grants, certificate or encryption.

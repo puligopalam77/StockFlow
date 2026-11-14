@@ -3,7 +3,7 @@
 .sf-list-screen .sf-list-caption{margin-top:0;margin-bottom:4px;gap:10px;max-width:none!important;width:100%}
 .sf-list-screen .sf-list-caption:is(h1,h2),.sf-list-screen .sf-list-caption :is(h1,h2){font-size:var(--sf-list-title-size)!important;line-height:1.3;font-weight:700;margin:0}
 .sf-list-screen .sf-list-caption p{font-size:var(--sf-list-text-size);line-height:1.45;margin:4px 0 0;max-width:none}
-.sf-list-screen .sf-list-caption+.sf-breadcrumb{margin:4px 0 12px;font-size:11px}
+.sf-list-screen .sf-list-caption+.sf-breadcrumb{margin:4px 0 12px;font-size:12px}
 .sf-list-screen .sf-list-caption .btn{min-height:30px;padding:5px 10px;font-size:12px}
 .sf-list-screen .table :is(th,td):not(dialog *,[role="dialog"] *,#editor *){padding:var(--sf-list-cell-y) var(--sf-list-cell-x)!important;font-size:var(--sf-list-text-size)!important;line-height:1.4!important;vertical-align:middle}
 .sf-list-screen .table th{font-weight:650}
@@ -23,3 +23,11 @@
 @media(min-width:751px){.sf-list-screen .table .sales-row-actions>a,.sf-list-screen .table .sales-more>summary{width:24px;height:24px;padding:2px;min-height:24px}}
 @media(max-width:750px){.sf-list-screen{--sf-list-row-height:auto}}
 @media(max-width:575px){.sf-list-screen{--sf-list-title-size:20px}.sf-list-screen .sf-list-caption{gap:8px}.sf-list-screen .sf-filter-bar{padding:10px}}
+
+@media screen{.sf-list-screen .table thead tr:not(dialog *,[role=dialog] *,#editor *){height:var(--sf-ui-table-header-height,40px)}}
+
+/* Keep the existing print typography; density tokens apply to screens only. */
+@media screen{
+ .sf-list-screen{--sf-list-text-size:13px;--sf-list-cell-y:5px;--sf-list-row-height:var(--sf-ui-table-row-height,44px)}
+ .sf-list-screen .sf-list-caption:is(h1,h2),.sf-list-screen .sf-list-caption :is(h1,h2){font-weight:var(--sf-ui-title-weight,600)}
+}

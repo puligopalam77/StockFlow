@@ -4,14 +4,14 @@
     var singular = Model switch { "Categories" => "Category", "Brands" => "Brand", "Suppliers" => "Supplier", _ => "Product" };
     var module = Model.ToUpperInvariant();
 }
-<div id="master-data" data-module="@Model.ToLowerInvariant()" data-can-edit="@Access.Can(module,"EDIT").ToString().ToLowerInvariant()" data-can-disable="@Access.Can(module,"DELETE").ToString().ToLowerInvariant()">
+<div id="master-data" data-module="@Model.ToLowerInvariant()" data-can-products="@Access.Can("PRODUCTS").ToString().ToLowerInvariant()" data-can-edit="@Access.Can(module,"EDIT").ToString().ToLowerInvariant()" data-can-disable="@Access.Can(module,"DELETE").ToString().ToLowerInvariant()">
     <div class="configuration-heading">
         <h2>@Model</h2>
         <div class="d-flex align-items-center flex-wrap gap-2">
         @if(Model=="Products" && Access.Can("BARCODES","VIEW")){<a href="/Labels" class="btn btn-outline-secondary">Barcode Labels</a>}
         @if (Access.Can(module,"CREATE")) {
         @if (Model == "Categories") {
-        <div class="category-create-actions"><button id="add-record" class="btn category-primary" type="button"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#plus" /></svg> Add Parent Category</button><button id="category-add-subcategory" class="btn category-secondary" type="button"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#plus" /></svg> Add Subcategory</button></div>
+        <div class="category-create-actions"><button id="add-record" class="btn category-primary" type="button" aria-haspopup="dialog" aria-controls="editor">+ Add Category</button></div>
         } else {
         <button id="add-record" class="btn btn-primary" type="button" aria-haspopup="dialog" aria-controls="@(Model == "Products" ? "purchase-registration" : "editor")">+ Add @singular</button>
         }

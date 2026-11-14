@@ -1,0 +1,265 @@
+STOCKFLOW BANK ACCOUNTS DEPLOYMENT PACKAGE — REVIEW ONLY
+Prepared 11 November 2026 for January 2027 policy
+
+DECISION: DO NOT EXECUTE / NOT RELEASE-CERTIFIED
+
+This package prepares production-target SQL candidates from the locally tested
+implementation. It does not connect anywhere, apply SQL, grant permissions, change
+configuration or activate anything. No database client or application was started
+while preparing it. Only file generation and static consistency checks were run.
+
+The candidate differs from the local migrations in its explicit target/approval
+guards, runtime environment gate, explicitly qualified object creation and pg_temp-last
+SECURITY DEFINER search paths (preventing temporary relation shadowing). Those
+differences have NOT been executed in
+a database. A production-ready release cannot be certified until the full-schema,
+application connection and financial release blockers below are closed. This is a
+review package, not authorization to deploy or an instruction to run 090-093 remotely.
+
+CONTENTS / MIGRATION ORDER
+
+00_readiness_read_only.sql: catalog/identity/permission inventory, only after separate
+approved read-only target access. It is not a migration. It assumes an existing
+StockFlow security baseline; a missing security table means stop for schema review.
+
+10_bank_foundation.sql: equivalent to 090's nine bank tables, indexes, tenant FKs,
+protected-secret storage, forced RLS, revoked runtime DML and immutable financial
+history. No payments, opening amounts, assignments or banking credentials are seeded.
+
+20_bank_permission_metadata.sql: equivalent to 091's inactive module and twelve
+EXISTING actions. No user/role grants, navigation activation or posting activation.
+
+30_bank_workflows.sql: private release controls and request ledger from 092,
+authorized source/permission helpers, January-corrected writer/readers from 093.
+Policy is initialized directly to 1/3, configuration_enabled=false and
+posting_enabled=false. No local database/port/cluster predicate is present in this
+deployment candidate. Authorized access still requires private control state,
+active module/actions, explicit grants, active tenant/user/role and scope checks.
+Both reader signatures remain compatible with the current API contract.
+All created objects are explicitly in public; definer search paths put pg_catalog
+first, public second and pg_temp explicitly last. This hardening is specific to the
+deployment candidate and requires negative temporary-object tests in its rehearsal.
+
+40_verify_installation_read_only.sql: post-install catalog, gate and privilege
+verification before activation. It assumes all three candidate migrations succeeded.
+
+CONNECTION-KEYS.txt: proposed coherent application connection/key design and blockers.
+RELEASE-TESTS.txt: readiness checklist, regression matrix and safe rollback procedure.
+build-review-package.ps1: generates 10/20/30 and manifest using bounded source sections;
+file operations only. It is NOT a deployment runner. Original 090-093 are unchanged.
+manifest.json: source and output SHA-256 values, status and static check results.
+
+Order for a FUTURE separately approved FRESH bank installation: readiness evidence,
+10, 20, 30, 40, then later separately approved activation. Do not ALSO execute the
+original 090/091/092/093; that would duplicate the same objects. These filenames are
+review-package steps, not renumbered entries in database/migrations. A release owner
+must choose the final migration identities/history convention after target discovery.
+
+The fresh-install guard refuses ANY existing bank tables, bank functions or module
+metadata. If an earlier bank draft was actually installed, stop and prepare a
+target-specific incremental migration after inspecting definitions/history. No
+DROP, truncate, IF NOT EXISTS skip, automatic repair or backfill is supplied.
+
+TARGET / APPROVAL GUARDS
+
+Each mutating script has one transaction, a 5-second lock timeout and a 60-second
+statement timeout, an explicitly reviewed maintenance superuser requirement and
+exact identity comparison against these session inputs (all deliberately UNSET):
+ stockflow.bank_deployment_approved = bank-accounts-jan2027-review-v1
+ stockflow.bank_schema_contract_reviewed = yes
+ stockflow.bank_expected_database
+ stockflow.bank_expected_server_address
+ stockflow.bank_expected_server_port
+ stockflow.bank_expected_system_identifier
+ stockflow.bank_expected_maintenance_role
+
+Values must be filled in a separately approved target-specific maintenance runbook
+from independently verified evidence. No ready-to-run approval-setting wrapper is
+included. These acknowledgements prevent wrong-target accidents; PostgreSQL custom
+settings are NOT authentication, secret credentials or a substitute for approval.
+Application writers never use them as user authorization.
+
+The guard requires a non-superuser/non-BYPASSRLS runtime role without public-schema
+CREATE, real snapshot helper from 049, cash reason guard through 089 and existing
+scope/permission helpers. Existence does not certify helper semantics, column types
+or provenance. The explicit schema-reviewed acknowledgement must follow actual
+contract/definition review, not bypass it. Target IP/system identifier can differ
+after a failover; that requires renewed identity review, not a relaxed guard.
+
+JANUARY POLICY / FINANCIAL MODEL
+
+ - One active operating account per tenant/business initially; inactive accounts
+   and financial/audit records retained. No duplicate accounts for individual shops.
+ - At most three active assignments per account initially. The existing many-to-many
+   bank_account_shops relationship supports expansion without restructuring.
+ - Private maintenance policy values max_active_accounts/max_assigned_shops are
+   positive configurable data, defaults 1/3. They are installation-wide limits whose
+   counts apply per business/account; no runtime policy-editor permission is added.
+ - Authorized writer holds configuration/account/request locks and policy row SHARE
+   lock, enforces limits on create/assign/reactivate and detects stale versions.
+ - One account opening plus signed verified movements gives consolidated Recorded
+   Bank Balance through the selected effective date. Unverified links add ZERO.
+ - Money In/Out/Net exclude opening; movement counted once in consolidated totals.
+   Owner shop filter uses that shop's allocations while whole-account balance stays
+   explicitly labeled. Shop-filtered views omit running balance and full-event reversal.
+ - Owner authority does not grant implicit bank permissions. Owner transaction
+   read spans the tenant account; source linking/verification still validates source
+   module permission and active business profile/scope. A complete cross-profile
+   source-selection UX has not been established for release.
+ - Shop Admin returns only active authorized shop/location/profile allocations;
+   no opening, consolidated balance, running balance, foreign-shop options/amounts
+   or shared batch total. Admin may not link, even with EDIT; linking is Owner-only.
+ - Default change affects future choices only. Existing immutable links do not move.
+   Current payment forms still lack inline receiving-account capture (see blockers).
+
+OWNER-FIRST ACTIVATION — PLAN ONLY
+
+1. After approved read-only discovery, identify the actual tenant_id and user_id of
+   the existing Owner from trusted administrative records and verify users.is_tenant_owner,
+   active user/tenant/role and real authorized shops. A role name, UI label, numeric
+   ID from a synthetic database or caller-supplied tenant is NOT identity proof.
+2. Verify coherent authentication/business/bank database, target schema, immutable
+   financial history protections, protected keys and exact application release build.
+   Current repository BankAccountsRepository is LOCAL-ONLY; do not enable this build
+   against real identities pointing to the synthetic bank database.
+3. Apply approved fresh-bank migrations in order during a separately approved
+   maintenance window with backups and schema evidence. Check 40: all controls OFF,
+   module inactive, no user/role grants, indexes/constraints and privileges as reviewed.
+4. With separate permission-bootstrap approval, use existing authorization/audit flow
+   to assign ONLY this Owner's existing actions needed for the agreed initial scope:
+    VIEW — account list/transactions
+    CREATE, EDIT — account configuration and Owner-only destination attribution
+    ASSIGN — authorized shop assignments
+    SET_DEFAULT — future receiving selection metadata
+    DEACTIVATE — retire/reactivate subject to caps
+    VIEW_BALANCE — Owner consolidated recorded balance
+   VIEW alone is sufficient for a read-only pilot; add configuration actions only if
+   that phase is approved. EDIT permits linking, so the configuration pilot is not
+   wholly read-only even with bank posting OFF. Linking does not verify settlement.
+5. Do NOT initially grant INITIALIZE, VERIFY or REVERSE. Leave VIEW_DETAILS and EXPORT
+   ungranted: full-number reveal/export are not implemented. No new permission keys,
+   blanket Owner/Admin grants or COMPANY_SETTINGS/REPORTS compatibility shortcuts.
+   Existing SQL checks user_action_permissions; role templates alone do not grant
+   effective access. SecurityRepository.WritePermissions/SetPermissionsAsync and
+   SetRolePermissionsAsync enforce grantor restrictions. If nobody possesses a new
+   bank action, prepare a separately audited, exact-Owner bootstrap change for review;
+   this package does not bypass the restriction or supply generic grant SQL.
+6. After separate activation approval, activate the BANK_ACCOUNTS module and required
+   existing action metadata/catalog/route/profile mappings, refresh permission/session
+   caches using the established process, and set the reviewed database configuration
+   gate ON. Enable BankAccounts:Enabled only in the reviewed production-capable build.
+   Keep BOTH BankAccounts:PostingEnabled=false and SQL posting_enabled=false.
+   No executable activation file is included. Menu check: Business Setup > Bank Accounts,
+   /Settings/BankAccounts and /api/bankaccounts with the intended Owner identity.
+7. Verify direct API permission/CSRF denials, create/assign limits, masked details,
+   failure behavior and defaults. An absent opening is uninitialized, not zero balance.
+   Opening/verification/reversal must fail from UI, API AND direct runtime SQL.
+8. Later authorize named Shop Admins with explicit VIEW and approved shop/location
+   membership. Current SQL recognizes active role_name normalized to 'admin'; verify
+   the target's actual role contract rather than renaming roles or adding a shortcut.
+   Verify own activity only and denial of forced shop filters/foreign account IDs.
+   Do not grant configuration, linking or VIEW_BALANCE to Shop Admins. Additional
+   bank-evidence permissions require the separate financial phase below.
+
+FINANCIAL POSTING ACTIVATION — SEPARATE APPROVAL
+
+Do not treat installation/menu approval as permission to post bank money. Prerequisites:
+full-schema regression evidence; reviewed source contracts; resolved same-UTR correction
+policy; durable unknown-result recovery; protected key recovery; tested authorization,
+duplicate/race controls and an agreed manual-verification operating procedure.
+
+ - Independently authorize named verifiers with existing VERIFY; Owner/Admin status
+   alone is insufficient. INITIALIZE stays Owner-only plus explicit permission;
+   REVERSE has its own explicit approval. Shop Admin verification remains single-source,
+   current authorized scope; shared verification/reversal is Owner-only.
+ - Separately approve application AND protected SQL posting controls ON; neither gate
+   replaces the other. Do not backfill or fabricate historical settlements.
+ - Initialize each account ONCE against actual authorized bank evidence, amount,
+   reference and tracking timestamp. Zero is valid if evidenced. Define same-day
+   tracking boundary and evidence already included in opening to prevent double count.
+   Opening is not a daily receipt; shop assignment must not duplicate it.
+ - Link a genuine eligible existing payment once. Check tenant/shop/location/profile,
+   source amount/direction/method and module permission server-side. Recording UPI/card
+   means unverified destination attribution, not settled money or a live balance.
+ - Verify actual bank credit/debit with reference/UTR, effective date, amount and
+   explanation. Retain server timestamp, verifier, request identity and source/shop
+   allocations. Signed allocations must exactly equal the statement movement.
+   Current implementation does not invent fee adjustments or support fee-net batches.
+ - Check exact retries, changed-payload conflicts, duplicate source/reference rejection
+   and concurrent postings. Shared movement is one consolidated event; allocation
+   projections supply shop totals. Verify absence of foreign-shop data from Admin APIs.
+ - Reverse an erroneous verification by appending an equal opposite event/allocations;
+   never edit/delete the original or undo the source payment. Current same-reference
+   uniqueness blocks later re-verification of that SAME UTR: unresolved release blocker,
+   not a reason to invent another reference. Opening correction is not implemented.
+ - Verify redacted configuration audit and complete immutable movement/request history.
+   No source customer/supplier balances, Cash in Hand, stock or GST should change.
+
+049 / FULL-SCHEMA DEPLOYMENT BLOCKER
+
+Rechecked locally: 049_retail_variant_document_snapshots.sql is TWO whitespace bytes,
+Git object 136d06384a4c9c59573f0e4362c9fe14117da821. Local path history has only initial
+commit 3c3aa84. Earlier exhaustive local investigation found no recoverable body;
+no fetch, remote access or reconstruction was performed. It entered available history
+empty; evidence cannot identify the original editor/export failure or external copy.
+
+050 explicitly requires sf_snapshot_retail_variant(); 074 replaces a trigger using
+it and depends on genuine document snapshot fields. Documentation/verification scripts
+describe the preservation contract but are not authoritative missing DDL. Authentic
+full replay previously stopped at 050. Existing deployed databases might already
+have genuine compatible objects; their absence or correctness is NOT known here.
+
+Impact: representative-fixture bank tests cannot certify the full deployment upgrade,
+security/session helpers, source types/triggers or legacy retail workflows. Do not run
+049 against an existing system just because the repository file is empty. Recover the
+genuine implementation from its author/authorized artifact, or separately approve a
+reviewed schema-only contract baseline/reconstruction plan; use synthetic rows only.
+This package requires snapshot helper presence AND explicit contract review; presence
+alone does not close the blocker. No dummy migration, skip, renumber or repair exists.
+
+OTHER BLOCKERS / UNVERIFIED RISKS
+
+ - Target login connectivity/authentication/database/permissions are unverified here.
+   Earlier TCP timeout to 192.168.1.9:5432 occurred before authentication and cannot
+   be attributed to 049. No present reachability result is claimed.
+ - Current application local-only connection guard needs a separately reviewed code
+   release; no configuration switch alone makes it production-capable.
+ - New deployment guards and production runtime helper adaptation are static-checked,
+   NOT database-tested. Existing 46 January checks and nine mocked viewport checks
+   apply to local 093, not this new package. Rehearse these exact hashed files after
+   separately approving isolated synthetic deployment-candidate testing.
+ - Durable HMAC/Data Protection keys, certificate recovery and versioned rotations
+   are not production-certified. Shared key-store permissions require security review.
+ - Same-UTR reverification, opening correction, durable request recovery across hard
+   refresh, complete audit-history UI/export/full-number reveal remain incomplete.
+ - Inline checkout/customer/supplier/expense receiving-account capture is missing.
+   Source-backed Owner linking happens after source payment and is not atomic with
+   it. Defaults are metadata until that integration is implemented and approved.
+ - No provider/statement reconciliation or actual/live balance. Fees, bank-only charges,
+   transfers and credit-card liability settlement need separate modeling if required.
+ - Candidate selection limited to 50; history/source-query performance at scale,
+   all profiles and all permission revocation combinations require testing.
+ - Strict runtime table privileges protect normal access; superuser/raw maintenance
+   DML is not an authorized financial posting path. SECURITY DEFINER owner/ACL/search
+   paths and helper semantics require review. Bank helper scope must not trust an
+   unvalidated request or cross-database numeric user match.
+
+APPROVALS REQUIRED FOR THE NEXT STAGES (NONE IMPLIED BY THIS PACKAGE)
+
+A. Named-target READ-ONLY connectivity/authentication/catalog inspection, specifying
+   target and permitted roles. No migration/credentials/firewall changes included.
+B. Exact package/hash ISOLATED SYNTHETIC rehearsal, including missing-schema recovery
+   plan or reviewed baseline. No real data copy or 049 reconstruction by implication.
+C. Production-capable application connection/key implementation and test approval;
+   secret provisioning/certificate access must be managed privately.
+D. Named-target database maintenance approval: exact reviewed hashes, full-schema
+   evidence, backups/restore test, maintenance actor/window, fresh vs incremental plan.
+   Installation only, all gates OFF, no user grants or historical import.
+E. Exact Owner permission bootstrap + module/configuration/menu activation approval,
+   naming tenant/user/actions and environment. Bank posting remains OFF. Later Admin
+   rollout requires its own named membership/grant scope and privacy verification.
+F. Explicit separate financial-posting approval: named actors/actions, tracking boundary,
+   operating procedure, regression evidence and both posting gates. No implied backfill.
+
+Wait for explicit approval before any of these target actions. Review-only preparation
+does not authorize a network probe, SQL login, migration, settings change or activation.

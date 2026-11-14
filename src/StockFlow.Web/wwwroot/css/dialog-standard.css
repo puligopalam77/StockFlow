@@ -1,7 +1,7 @@
 /* Opt-in dialog presentation. Drawers, camera, dropdowns and printed labels keep
    their own layouts. Workflow widths are retained; only short forms are resized. */
 @media screen {
- .sf-app [data-sf-dialog] { --sf-dialog-padding:22px; --sf-button-min-height:40px; --sf-button-font-size:13px; }
+ .sf-app [data-sf-dialog] { --sf-dialog-padding:var(--sf-ui-card-padding,16px); --sf-button-min-height:40px; --sf-button-font-size:13px; }
  /* This layer is the dimension owner for opted-in dialogs, including legacy
     ID selectors. Keep all size variants here instead of adding page overrides. */
  @layer stockflow-dialog-layout {
@@ -14,6 +14,8 @@
   }
   .sf-app dialog[data-sf-dialog="compact"] { width:440px!important; padding:var(--sf-dialog-padding)!important; }
   .sf-app dialog[data-sf-dialog="medium"] { width:520px!important; }
+  /* Compact data-entry form: two readable columns, first used by Categories. */
+  .sf-app dialog[data-sf-dialog="form"] { width:680px!important; }
   .sf-app dialog[data-sf-dialog="large"] { width:800px!important; }
   .sf-app [data-sf-dialog] :is(h2,.modal-title) { font-size:18px!important; line-height:1.35!important; font-weight:600!important; }
  }
@@ -51,12 +53,12 @@
  /* Sectioned forms already own their header/body/footer padding. Remove the
     category/brand fixed height, and let their existing field grids grow. */
  .sf-app dialog[data-sf-dialog]:is(.category-registration,.brand-registration) { padding:0; }
- .sf-app [data-sf-dialog] :is(.category-registration-heading,.brand-registration-heading) { padding:20px 22px 10px; }
- .sf-app [data-sf-dialog] :is(.category-registration-content,.brand-registration-content) { padding:10px 22px 20px; overflow:visible; }
- .sf-app [data-sf-dialog] :is(.category-registration-footer,.brand-registration-footer) { padding:14px 22px; }
+ .sf-app [data-sf-dialog] :is(.category-registration-heading,.brand-registration-heading) { padding:14px 16px 8px; }
+ .sf-app [data-sf-dialog] :is(.category-registration-content,.brand-registration-content) { padding:8px 16px 14px; overflow:visible; }
+ .sf-app [data-sf-dialog] :is(.category-registration-footer,.brand-registration-footer) { padding:10px 16px; }
  .sf-app [data-sf-dialog="medium"] .billing-customer-header h2 { font-size:18px; }
- .sf-app [data-sf-dialog="medium"] .billing-customer-header { grid-template-columns:40px minmax(0,1fr) 36px; padding:20px 22px 16px; }
- .sf-app [data-sf-dialog="medium"] .billing-customer-body { padding:16px 22px; }
+ .sf-app [data-sf-dialog="medium"] .billing-customer-header { grid-template-columns:40px minmax(0,1fr) 36px; padding:14px 16px 10px; }
+ .sf-app [data-sf-dialog="medium"] .billing-customer-body { padding:12px 16px; }
  .sf-app [data-sf-dialog="medium"] .billing-customer-footer { padding:14px 22px; }
  .sf-app [data-sf-dialog="medium"] .billing-customer-icon { width:40px; height:40px; }
  .sf-app [data-sf-dialog] .billing-customer-fields { gap:14px; }

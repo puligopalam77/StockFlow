@@ -17,9 +17,6 @@
 .supplier-directory .supplier-name{font-weight:650;color:#14253c;display:inline-block;max-width:100%;white-space:normal}
 .supplier-directory .supplier-name:hover{color:#a51b5e;text-decoration:underline}
 .supplier-directory .supplier-code{font-variant-numeric:tabular-nums;font-size:12px;user-select:text}
-.supplier-directory .supplier-status{display:inline-flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap}
-.supplier-directory .supplier-status::before{content:'';width:6px;height:6px;border-radius:50%;background:#687383}
-.supplier-directory .supplier-status[data-active=true]::before{background:#16835f}
 .supplier-directory .supplier-actions{display:flex;flex-wrap:wrap;gap:6px}
 .supplier-directory .supplier-row-action{display:inline-grid;place-items:center;min-width:36px;width:36px;min-height:36px;padding:7px!important;border-radius:6px;position:relative}
 .supplier-directory .supplier-row-action .sf-icon{width:18px;height:18px}

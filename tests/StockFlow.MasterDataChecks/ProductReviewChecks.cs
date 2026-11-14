@@ -24,6 +24,20 @@ internal static class ProductReviewChecks
   body=Body("BAD-IMAGE",helmets);body["productImages"]=new JsonArray(new JsonObject{["fileName"]="x.png",["contentType"]="image/png",["data"]="AQI=",["variantName"]="Other product variant"});Check((int)(await client.PostAsJsonAsync("/api/products",body)).StatusCode==400,"unrelated variant image rejected");
   var mode=(await factory.Services.GetRequiredService<ICompanySettingsRepository>().GetAsync()).DefaultTaxMode=="INCLUSIVE";
   body=Body("TAX-MODE-066",helmets);body["registrationDefaults"]=new JsonObject{["purchasePrice"]=10,["sellingPrice"]=20,["catalogPricesIncludeTax"]=!mode};var staleTax=await client.PostAsJsonAsync("/api/products",body);Check((int)staleTax.StatusCode==400&&(await staleTax.Content.ReadAsStringAsync()).Contains("shop tax mode changed"),"registration rejects stale shop tax mode before saving prices");
+  var productId=product["productId"]!.GetValue<int>();
+  JsonObject Reassignment(int categoryId){var request=Body("DRAFT-001",categoryId);request["expectedEditVersion"]=product["editVersion"]?.GetValue<string>()??new string('0',32);request["isActive"]=false;request.Remove("variants");return request;}
+  async Task RejectAssignment(HttpResponseMessage response,string name){var text=await response.Content.ReadAsStringAsync();if((int)response.StatusCode!=400||!text.Contains("active"))throw new Exception(name+": "+response.StatusCode+" "+text);Check(true,name);}
+  Check((await client.PostAsJsonAsync($"/api/categories/{parts}/status",new{isActive=false})).IsSuccessStatusCode,"deactivate category for assignment checks");
+  await RejectAssignment(await client.PostAsJsonAsync("/api/products",Body("INACTIVE-CATEGORY",parts)),"new product cannot use inactive category");
+  await RejectAssignment(await client.PutAsJsonAsync($"/api/products/{productId}",Reassignment(parts)),"product cannot be reassigned to inactive category");
+  var anotherChild=await Category("Visors",root);
+  Check((await client.PostAsJsonAsync($"/api/categories/{root}/status",new{isActive=false})).IsSuccessStatusCode,"deactivate parent for assignment checks");
+  await RejectAssignment(await client.PostAsJsonAsync("/api/products",Body("INACTIVE-PARENT",helmets)),"new product cannot use active child of inactive parent");
+  await RejectAssignment(await client.PutAsJsonAsync($"/api/products/{productId}",Reassignment(anotherChild)),"product cannot be reassigned to active child of inactive parent");
+  var retained=await client.GetFromJsonAsync<JsonObject>($"/api/products/{productId}");Check(retained!["categoryId"]!.GetValue<int>()==helmets,"deactivation and rejected reassignment preserve existing product relationship");
+  Check((await client.PostAsJsonAsync($"/api/categories/{root}/status",new{isActive=true})).IsSuccessStatusCode,"reactivate parent for assignment checks");
+  Check((await client.PostAsJsonAsync("/api/products",Body("REACTIVATED-CHILD",helmets))).StatusCode==System.Net.HttpStatusCode.Created,"active child accepts new product after parent reactivation");
+  Check(!(await client.GetFromJsonAsync<JsonObject>($"/api/categories/{parts}"))!["isActive"]!.GetValue<bool>(),"parent reactivation preserves independently inactive child");
   var dir=new DirectoryInfo(AppContext.BaseDirectory);while(dir is not null&&!File.Exists(Path.Combine(dir.FullName,"StockFlow.sln")))dir=dir.Parent;var output=Path.Combine(dir!.FullName,"tests/bin/product-review-fixtures");Directory.CreateDirectory(output);await File.WriteAllTextAsync(Path.Combine(output,"Products.html"),await client.GetStringAsync("/Products"));
  }
  static void Check(bool ok,string name){if(!ok)throw new Exception(name);Console.WriteLine("PASS: "+name);}

@@ -5,8 +5,8 @@
     .sf-category-list .sf-main .sf-breadcrumb { margin:6px 0 12px; }
     .sf-category-list .category-create-actions { display:flex; flex-wrap:wrap; gap:6px; }
     .sf-category-list #master-list > .row {
-        display:grid; grid-template-columns:42fr 33fr 25fr;
-        gap:12px; margin:0 0 12px!important; padding:0;
+        display:grid; grid-template-columns:minmax(180px,1.1fr) minmax(300px,1.2fr) minmax(130px,.6fr);
+        gap:10px; margin:0 0 12px!important; padding:0;
         --bs-gutter-x:0; --bs-gutter-y:0;
     }
     .sf-category-list #master-list > .row > div { width:auto; min-width:0; padding:0; margin:0; }
@@ -14,18 +14,27 @@
     .sf-category-list #master-list > .row :is(.form-control,.form-select) { min-height:36px; }
     .sf-category-list .category-list-table { margin-bottom:0; }
     .sf-app.sf-category-list #master-list .category-list-table :is(th,td) { padding:5px 10px!important; }
-    .sf-category-list .category-list-table thead tr { height:38px!important; }
-    .sf-category-list .category-list-table tbody tr { height:42px!important; }
+    .sf-category-list .category-list-table thead tr { height:var(--sf-ui-table-header-height,40px)!important; }
+    .sf-category-list .category-list-table tbody tr { height:var(--sf-ui-table-row-height,44px)!important; }
     .sf-category-list #master-list .category-list-table .category-icon-action { height:28px; min-height:28px!important; }
     .sf-category-list #master-list .category-list-table .category-group-toggle { min-height:28px!important; }
     .sf-category-list .category-child-count { white-space:normal; }
     .sf-category-list .category-list-footer:not(.sf-pagination) { padding:8px 0 0; gap:8px; }
     .sf-category-list .category-pagination:not(.sf-pagination) { margin-top:0; flex-wrap:wrap; gap:6px; }
     .sf-category-list .category-pagination:not(.sf-pagination) .btn { min-height:30px; }
-    .sf-category-list #deactivate-dialog { width:min(520px,calc(100vw - 24px)); text-align:center; }
-    .sf-category-list .category-status-symbol { width:64px; height:64px; margin:0 auto 16px; display:grid; place-items:center; border-radius:50%; background:#fff4db; color:#b77909; }
-    .sf-category-list .category-status-symbol svg { width:30px; height:30px; }
-    .sf-category-list #deactivate-dialog .configuration-dialog-actions { justify-content:center; flex-wrap:wrap; }
+    .sf-category-list #deactivate-dialog { text-align:left; }
+    .sf-category-list .category-status-symbol { width:44px; height:44px; margin:0; flex-shrink:0; display:grid; place-items:center; border-radius:50%; background:#fff4db; color:#b77909; }
+    .sf-category-list .category-status-symbol svg { width:24px; height:24px; }
+    .sf-category-list #deactivate-dialog[data-status-action="activate"] .category-status-symbol { background:#e5f6ed; color:#187345; }
+    .sf-category-list .category-status-header { display:flex; align-items:center; gap:10px; padding-right:32px; margin-bottom:10px; }
+    .sf-category-list #deactivate-title { margin:0; }
+    .sf-category-list .category-status-metadata span+span::before { content:"\00b7"; margin-right:8px; }
+    .sf-category-list #cancel-deactivate:focus:not(:focus-visible) { outline:none; }
+    .sf-category-list #category-status-context strong { display:block; font-size:15px; overflow-wrap:anywhere; }
+    .sf-category-list .category-status-metadata { display:flex; flex-wrap:wrap; gap:4px 8px; margin:4px 0 10px; font-size:12px; color:#64748b; }
+    .sf-category-list #category-status-description { margin:0; display:grid; gap:8px; }
+    .sf-category-list #category-status-description small { color:#64748b; }
+    .sf-category-list #deactivate-dialog .configuration-dialog-actions { justify-content:flex-end; flex-wrap:wrap; margin-top:12px; padding-top:10px; }
     @media (max-width:767px) {
         .sf-category-list #master-list > .row { grid-template-columns:repeat(2,minmax(0,1fr)); }
         .sf-category-list #master-list > .row > div:first-child { grid-column:1 / -1; }
@@ -39,3 +48,145 @@
         .sf-category-list #master-list .category-list-table .category-icon-action { height:34px; min-height:34px!important; }
     }
 }
+/* Compact category forms: medium (680px) uses two columns; mobile uses one. */
+.sf-app #editor.category-registration{width:min(680px,calc(100vw - 24px));height:auto;max-height:calc(100dvh - 24px);overflow:auto}
+.sf-app #editor.category-registration .category-registration-heading{padding:12px 16px 8px;align-items:center}
+.sf-app #editor.category-registration .category-registration-heading h2{font-size:18px;margin:0}
+.sf-app #editor.category-registration .category-registration-content{padding:4px 16px 10px;overflow:visible;flex:none}
+.sf-app #editor.category-registration #master-form{flex:none}
+.sf-app #editor.category-registration .category-registration-card{border:0;padding:0}
+.sf-app #editor.category-registration #form-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;margin:0;--bs-gutter-x:0;--bs-gutter-y:0}
+.sf-app #editor.category-registration #form-fields>div{width:auto;min-width:0;padding:0;margin:0}
+.sf-app #editor.category-registration .form-label{font-size:12px;margin-bottom:4px}
+.sf-app #editor.category-registration :is(.form-control,.form-select){min-height:36px;font-size:13px}
+.sf-app #editor.category-registration .category-registration-footer{padding:10px 16px;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.sf-app #editor.category-registration .category-registration-footer .btn{min-height:34px;padding:6px 12px;font-size:13px}
+.sf-app #editor.category-registration .category-field-error{display:block;font-size:11px;color:#b42343;margin-top:3px}
+.sf-app #editor.category-registration .category-field-error[hidden]{display:none}
+.sf-category-list .category-list-table{overflow:visible}
+.sf-category-list .category-list-table th:last-child{width:100px}
+.sf-category-list .category-list-table th:nth-child(2){width:110px}
+.sf-category-list .category-list-table th:nth-child(3){width:90px}
+.sf-category-list .category-list-table th:nth-child(4){width:90px}
+@media(max-width:767px){
+ .sf-app #editor.category-registration #form-fields{grid-template-columns:minmax(0,1fr)}
+ .sf-category-list .category-list-table table{min-width:0!important;table-layout:fixed}
+ .sf-category-list .category-list-table th:first-child{width:32%}
+ .sf-category-list .category-list-table th:nth-child(2){width:16%}
+ .sf-category-list .category-list-table th:nth-child(3){width:10%}
+ .sf-category-list .category-list-table th:nth-child(4){width:12%}
+ .sf-category-list .category-list-table th:last-child{width:26%}
+ .sf-category-list #master-list .category-list-table :is(th,td){padding:5px!important;overflow-wrap:anywhere}
+ .sf-category-list .category-row-actions{flex-wrap:wrap;gap:2px}
+}
+/* Preserve indentation on desktop; stack the listing metadata on phones. */
+.sf-category-list #master-list .category-list-table .category-subcategory-row>td:first-child{padding-left:32px!important}
+.sf-category-list :is(.category-status-active,.category-status-inactive){white-space:nowrap;overflow-wrap:normal;word-break:normal}
+@media(max-width:575px){
+ .sf-category-list .category-list-table :is(table,tbody){display:block;width:100%}
+ .sf-category-list .category-list-table thead{display:none}
+ .sf-category-list #master-list .category-list-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;height:auto!important;padding:8px;border-bottom:1px solid #e1e7f0}
+ .sf-category-list #master-list .category-list-table tbody td{display:block;border:0;min-width:0;overflow-wrap:normal;padding:0!important}
+ .sf-category-list #master-list .category-list-table tbody td:first-child{grid-column:1;grid-row:1;padding-left:0!important}
+ .sf-category-list #master-list .category-list-table tbody td:nth-child(2){grid-column:1/-1;grid-row:2;font-size:12px}
+ .sf-category-list #master-list .category-list-table tbody td:nth-child(3):before{content:'Products: ';color:#637087}
+ .sf-category-list #master-list .category-list-table tbody td:nth-child(3){grid-column:1;grid-row:3;font-size:12px}
+ .sf-category-list #master-list .category-list-table tbody td:nth-child(4){grid-column:2;grid-row:3;text-align:right}
+ .sf-category-list #master-list .category-list-table tbody td:last-child{grid-column:2;grid-row:1}
+ .sf-category-list .category-child-count{display:block;white-space:normal;overflow-wrap:normal;word-break:normal}
+ .sf-category-list .category-list-table .category-subcategory-row{margin-left:14px;border-left:2px solid #edf0f5}
+ .sf-category-list .category-row-actions{flex-wrap:nowrap}
+}
+@media(max-width:575px){.sf-category-list #master-list .category-list-table tbody td{width:auto!important;max-width:none}}
+/* Category creation shows only Name and optional Parent. Keep hidden backing fields. */
+.sf-app #editor.category-registration #form-fields>[hidden]{display:none!important}
+.sf-app #editor.category-registration .category-parent-panel{position:fixed;z-index:50;display:flex;flex-direction:column;max-height:240px;margin:0;padding:6px;overflow:hidden;box-sizing:border-box;box-shadow:0 5px 16px #14274020}
+.sf-app #editor.category-registration .category-parent-results{display:block;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;margin:0}
+.sf-app #editor.category-registration .category-parent-panel>input{flex:none;margin-bottom:5px}
+.sf-app #editor.category-registration .category-parent-panel>input[hidden]{display:none!important}
+.sf-app #editor.category-registration .category-parent-option{font-size:13px;min-height:38px;padding:8px 10px;line-height:20px;cursor:pointer}
+.sf-app #editor.category-registration .category-parent-option:focus-visible{outline:0;box-shadow:inset 3px 0 var(--sf-pink,#ff087d);background:#fff0f7;color:#a80052}
+
+/* Floating picker overlays fields without reserving space in the grid. */
+.sf-app #editor.category-registration .category-parent-details{position:relative}
+.sf-app #editor.category-registration .category-parent-details>summary:focus-visible{outline:1px solid #69798c;outline-offset:2px;box-shadow:none}
+.sf-app #editor.category-registration .category-parent-option:hover,.sf-app #editor.category-registration .category-parent-option[aria-pressed=true]{background:#fff0f7;color:#a80052}
+
+/* Optional category details are always visible in the existing form grid. */
+.sf-app #editor.category-registration #form-fields>.col-12{grid-column:1/-1}
+.sf-app #editor.category-registration #description{height:64px;min-height:64px;resize:vertical}
+
+/* Compact hierarchy list and viewport-aware action menu. */
+.sf-category-list .category-product-count:focus-visible{outline:1px solid #526680;outline-offset:3px;border-radius:2px}
+.sf-category-list .category-list-table td:first-child{overflow-wrap:anywhere}
+.sf-category-list .category-child-count{font-size:11px;color:#637087}
+
+/* Three category types; common actions stay directly visible. */
+.sf-category-list .category-type-filter{display:flex;min-height:38px;border:1px solid #dce3ed;border-radius:6px;overflow:hidden;background:#fff}
+.sf-category-list .category-type-filter>button{flex:1;min-width:0;padding:6px 8px;border:0;border-right:1px solid #e3e8f1;background:transparent;color:#172b47;font:inherit;font-size:12px;cursor:pointer;white-space:normal}
+.sf-category-list .category-type-filter>button:last-child{border-right:0}
+.sf-category-list .category-type-filter>button[aria-pressed=true]{background:var(--sf-pink,#ff087d);color:white}
+.sf-category-list .category-type-filter>button:hover:not([aria-pressed=true]){background:#fff0f7;color:#a80052}
+.sf-category-list .category-type-filter>button:focus-visible{outline:2px solid #526680;outline-offset:-3px}
+@layer stockflow-action-icons{
+ .sf-app.sf-category-list .category-icon-action{color:#273b56!important}
+ .sf-app.sf-category-list .category-icon-action:hover{--sf-action-surface:#fff0f7!important;color:#ac0055!important}
+ .sf-app.sf-category-list .category-icon-action.category-action-warning{color:#96501e!important}
+}
+@media(min-width:768px){
+ .sf-category-list .category-list-table th:first-child{width:39%}
+ .sf-category-list .category-list-table th:nth-child(2){width:13%}
+ .sf-category-list .category-list-table th:nth-child(3){width:10%}
+ .sf-category-list .category-list-table th:nth-child(4){width:12%}
+ .sf-category-list .category-list-table th:last-child{width:26%}
+}
+.sf-category-list #master-list .category-list-table .category-flat-child>td:first-child{padding-left:10px!important}
+@media(max-width:575px){
+ .sf-category-list #master-list .category-list-table tbody td:last-child{grid-column:1/-1;grid-row:4}
+ .sf-category-list #master-list .category-list-table .category-flat-child>td:first-child{padding-left:0!important}
+ .sf-category-list .category-list-table .category-flat-child{margin-left:0;border-left:0}
+}
+
+/* Category list consumes shared sizing tokens; editor and shell keep their own sizing. */
+@media screen {
+ .sf-app.sf-category-list .sf-main{padding-top:6px}
+ .sf-app.sf-category-list .sf-main .configuration-heading{margin-bottom:0;padding-block:0;gap:8px}
+ .sf-app.sf-category-list .configuration-heading h2{font-size:var(--sf-page-title-size);font-weight:var(--sf-ui-title-weight);line-height:1.2}
+ .sf-app.sf-category-list .sf-main .sf-breadcrumb{margin:4px 0 8px}
+ .sf-app.sf-category-list #master-list>.row{--sf-input-min-height:36px;margin-bottom:8px!important}
+ .sf-app.sf-category-list #master-list>.row .form-label{font-size:12px;line-height:18px;margin-bottom:4px}
+ .sf-app.sf-category-list #master-list>.row :is(input,select){font-size:13px!important;line-height:20px;padding-block:7px;border-radius:var(--sf-ui-radius,6px)}
+ .sf-app.sf-category-list .category-type-filter{min-height:36px}
+ @media(max-width:767px),(pointer:coarse){
+  .sf-app.sf-category-list #master-list>.row :is(input,select){font-size:16px!important;min-height:44px!important}
+  .sf-app.sf-category-list .category-type-filter{min-height:44px}
+ }
+}
+
+@media screen and (max-width:575px){.sf-category-list #master-list .category-list-table tbody td:first-child{grid-column:1/-1}}
+
+/* Category sorting stays inside the existing compact table header. */
+@media screen {
+ .sf-category-list .category-sort { display:inline-flex; align-items:center; gap:5px; min-width:0; padding:0; border:0; background:transparent; color:inherit; font:inherit; font-weight:inherit; text-align:left; cursor:pointer; }
+ .sf-category-list .category-sort-icon { display:inline-flex; flex:none; opacity:.55; }
+ .sf-category-list .category-sort-icon svg { width:14px; height:14px; }
+ .sf-category-list .category-sort[data-direction] .category-sort-icon { opacity:1; color:var(--sf-pink,#ff087d); }
+ .sf-category-list .category-sort[data-direction=ascending] .sort-down,.sf-category-list .category-sort[data-direction=descending] .sort-up { opacity:.25; }
+ .sf-category-list .category-sort:focus-visible { outline:2px solid var(--sf-pink,#ff087d); outline-offset:3px; border-radius:2px; }
+ @media(max-width:575px){
+  .sf-category-list .category-list-table thead { display:block; background:var(--sf-navy,#203047); color:white; }
+  .sf-category-list .category-list-table thead tr { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:center; height:auto!important; min-height:40px; }
+  .sf-category-list #master-list .category-list-table thead th { width:auto!important; max-width:none; min-width:0; padding:6px 4px!important; font-size:12px; border:0; word-break:normal; overflow-wrap:normal; }
+  .sf-category-list .category-list-table thead th:last-child { display:none; }
+  .sf-category-list .category-sort { min-height:32px; gap:3px; }
+ }
+}
+
+/* Prefix regeneration stays within the existing category field. */
+.sf-app #editor.category-registration label:has(.category-prefix-regenerate){display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sf-app .category-prefix-regenerate{border:0;background:transparent;padding:0;color:var(--sf-pink-dark,#df0063);font-size:12px;cursor:pointer}
+.sf-app .category-prefix-regenerate:focus-visible{outline:2px solid var(--sf-pink,#ff087d);outline-offset:3px}
+.sf-app #category-prefix-help:empty{display:none}
+.sf-app #category-prefix-help{display:block;font-size:12px;line-height:1.4;margin-top:4px}
+
+.sf-category-list .category-code-cell{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}

@@ -53,6 +53,13 @@ static class BillingChecks
         Check(approvalHash!=StockFlow.Application.Common.BillingApproval.Hash(allocated),"allocation semantics invalidate an after-tax discount approval");
         using var client=factory.CreateClient(new(){AllowAutoRedirect=false});client.DefaultRequestHeaders.Add("Test-Role","Admin");
         var token=await client.GetFromJsonAsync<JsonObject>("/api/antiforgery");client.DefaultRequestHeaders.Add("X-CSRF-TOKEN",token!["requestToken"]!.GetValue<string>());
+        foreach(var quantity in new[]{0,-1}){
+            var emptyId=Guid.NewGuid();var body=new{label="Customer-only attempt",editorId=Guid.NewGuid(),revision=0,operationId=Guid.NewGuid(),payload=new{draftId=emptyId,customerId=10,cart=new[]{new{productId=1,variantId=1,quantity,sellingPrice=0}}}};
+            Check((int)(await client.PutAsJsonAsync("/api/sales/billing/drafts/"+emptyId,body)).StatusCode==400,"Draft API rejects quantity "+quantity+" before database access");
+        }
+        var noItemsId=Guid.NewGuid();
+        Check((int)(await client.PutAsJsonAsync("/api/sales/billing/drafts/"+noItemsId,new{label="Customer only",editorId=Guid.NewGuid(),revision=0,operationId=Guid.NewGuid(),payload=new{draftId=noItemsId,customerId=10,cart=Array.Empty<object>()}})).StatusCode==400,"Draft API rejects customer-only empty cart");
+        Check((int)(await client.PostAsJsonAsync("/api/sales",new CreateSaleRequest{RequestId=Guid.NewGuid(),CustomerId=1,LocationId=1,Items=[],Payments=[]})).StatusCode==400,"Complete Payment API rejects no sale items");
         var html=await client.GetStringAsync("/Sales/Create");Check(html.Contains("billing-layout")&&html.Contains("billing-simple-payment")&&html.Contains("billing-split-payment")&&!html.Contains("billing-options"),"billing combines scanner/cart with simple payment and optional controls");
         Check(html.Contains("id=\"quick-add-item\""),"authorized manual billing action is visible near scanning");
         client.DefaultRequestHeaders.Add("Test-Deny-Action","SALES:MANUAL_ITEM");

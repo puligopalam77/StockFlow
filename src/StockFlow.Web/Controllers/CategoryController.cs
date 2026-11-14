@@ -52,6 +52,17 @@ public class CategoryController : ControllerBase
         }
     }
 
+    [HttpGet("{id:int}/products")]
+    public async Task<IActionResult> Products(int id, [FromServices] IProductService products)
+    {
+        if (!access.Can("PRODUCTS")) return Forbid();
+        if (await service.GetByIdAsync(id) is null) return NotFound();
+        var ids = (await service.GetAllAsync()).Where(c => c.CategoryId == id || c.ParentCategoryId == id).Select(c => c.CategoryId).ToHashSet();
+        ids.Add(id);
+        return Ok((await products.GetAllAsync()).Where(p => ids.Contains(p.CategoryId))
+            .Select(p => new { p.ProductId, p.ProductName, p.CategoryId, p.ParentProductCode, p.IsActive }));
+    }
+
     [HttpGet("search")]
     public async Task<IActionResult> Search(string? term, bool activeOnly = true)
     {

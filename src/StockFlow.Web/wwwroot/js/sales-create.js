@@ -7,6 +7,8 @@
         return document.getElementById(id);
     };
     const workspace = getElement('billing-workspace');
+    let activeLineEditor=null;
+    let billingInitialization='loading';
     let gstMapped=true;
     const gstContextPromise=fetch('/api/sales/gst-context').then(async r=>{if(!r.ok)throw Error('Unable to check GST issuing context.');return r.json();}).then(context=>{gstMapped=!!context.mapped;if(getElement('sale-gst-context'))getElement('sale-gst-context').hidden=!context.mapped;options();return context;}).catch(error=>{const box=getElement('sale-message');box.textContent=error.message;box.hidden=false;return null;});
     let pricesIncludeTax = workspace.dataset.taxInclusive === 'true';
@@ -116,6 +118,15 @@
         getElement('billing-draft-reference').textContent=draftNumber?'Draft No: '+draftNumber:'New Draft';
     }
     showDraftReference();
+    function hasValidBillItem(items=cart){
+        return items.some(item=>item&&Number.isInteger(item.quantity)&&item.quantity>0&&item.quantity<=10000&&
+            (typeof item.manualItem?.name==='string'&&item.manualItem.name.trim()||Number.isInteger(item.productId)&&item.productId>0&&Number.isInteger(item.variantId)&&item.variantId>0));
+    }
+    function requireBillItem(hold=false){
+        if(hasValidBillItem())return true;
+        Sales.clear();window.StockFlowNotify.show('error',hold?'Add at least one item before putting this bill on hold.':'Add at least one item before saving this bill.',{key:'bill-minimum-items'});
+        getElement('sale-scan').focus();return false;
+    }
     function billHasContent() {
         return cart.length > 0 || !!getElement('sale-customer').value || !!getElement('sale-notes').value.trim()
             || !!getElement('payment-reference').value.trim() || !!getElement('cash-received').value
@@ -173,29 +184,32 @@
         if(!lifecycleRequests.has(key))lifecycleRequests.set(key,{editorId,revision,operationId:createRequestId()});
         try{
             const result=await Sales.api('/api/sales/billing/drafts/'+id+(action==='discard'?'':'/'+action),{method:action==='discard'?'DELETE':'POST',body:JSON.stringify(lifecycleRequests.get(key))});
-            lifecycleRequests.delete(key);applyDraftState(result);return result;
+            lifecycleRequests.delete(key);if(id===draftId)applyDraftState(result);return result;
         }catch(error){if(error.status===409||error.status===400)lifecycleRequests.delete(key);throw error;}
     }
     function saveDraftOnThisDevice() {
         if(isRestoringDraft||pendingSale||isSavingSale||isPreparingSale||recoveryBlocked||['HELD','COMPLETED','DISCARDED'].includes(draftStatus))return;
-        // Once persisted, even an entirely empty cart remains the SAME active draft.
+        // Empty working state is a device recovery copy, never a new saved bill.
         if(!billHasContent()&&draftRevision===0){clearTimeout(draftSaveTimer);localStorage.removeItem(draftKey);return;}
         try{localStorage.setItem(draftKey,JSON.stringify(getBillSnapshot()));getElement('draft-status').textContent='Saved on this device; syncing...';}
         catch{getElement('draft-status').textContent='Device backup unavailable. Keep this page open until server save completes.';}
-        clearTimeout(draftSaveTimer);draftSaveTimer=setTimeout(()=>persistDraft().catch(()=>{}),800);
+        clearTimeout(draftSaveTimer);if(!hasValidBillItem()){getElement('draft-status').textContent='Saved on this device only; add an item to save a draft.';return;}draftSaveTimer=setTimeout(()=>persistDraft().catch(()=>{}),800);
     }
-    function persistDraft(includeEmpty=false) {
+    function persistDraft() {
         clearTimeout(draftSaveTimer);
-        if((!billHasContent()&&!includeEmpty&&draftRevision===0)||pendingSale||isSavingSale)return draftSaveQueue;
+        if(!hasValidBillItem()||pendingSale||isSavingSale)return draftSaveQueue;
         if(recoveryBlocked)return Promise.reject(Error('Recover the current editing session before saving. Your device backup is retained.'));
         const saved=structuredClone(getBillSnapshot());
         draftSaveQueue=draftSaveQueue.catch(()=>{}).then(async()=>{
+            // Do not send a stale autosave after the last valid item was removed.
+            if(!hasValidBillItem()||saved.draftId!==draftId||!hasValidBillItem(saved.cart))return;
             // Retry an uncertain write with the SAME operation ID before sending newer edits.
             if(unconfirmedDraftWrite){const pending=unconfirmedDraftWrite;const ack=await Sales.api(pending.url,{method:'PUT',body:pending.body});unconfirmedDraftWrite=null;applyDraftState(ack);}
             const data={editorId,revision:draftRevision,operationId:createRequestId(),label:((saved.customerLabel||'Customer not selected')+' - '+saved.cart.reduce((n,i)=>n+i.quantity,0)+' units').slice(0,150),payload:saved};
             const pending={url:'/api/sales/billing/drafts/'+saved.draftId+'?reference=true',body:JSON.stringify(data)};unconfirmedDraftWrite=pending;
             getElement('draft-status').textContent='Saving active draft...';
-            const assigned=await Sales.api(pending.url,{method:'PUT',body:pending.body});unconfirmedDraftWrite=null;applyDraftState(assigned);
+            const firstSave=draftRevision===0;
+            const assigned=await Sales.api(pending.url,{method:'PUT',body:pending.body});unconfirmedDraftWrite=null;applyDraftState(assigned);if(firstSave)refreshSavedBillCount();
             getElement('draft-status').textContent=draftContentsEqual(saved,getBillSnapshot())?'Draft saved':'Saved on this device; syncing...';
         }).catch(error=>{
             getElement('draft-status').textContent=error.message+' Device backup retained.';
@@ -409,7 +423,7 @@
         set('summary-line-discounts',quote?.itemDiscountAmount);
         if(quote?.itemDiscountAmount>0)getElement('summary-line-discounts').textContent='\u2212'+getElement('summary-line-discounts').textContent;
         const rates=[...new Set((quote?.items||[]).map(line=>line.taxPercentage))];
-        getElement('summary-tax-label').textContent=(pricesIncludeTax?'GST included':'GST')+(rates.length===1&&rates[0]>0?' ('+rates[0]+'%)':'');
+        getElement('summary-tax-label').textContent=(pricesIncludeTax?'GST included':'GST Amount')+(rates.length===1&&rates[0]>0?' ('+rates[0]+'%)':'');
         getElement('summary-tax').title=pricesIncludeTax?'GST included in selling prices':'GST added to taxable prices';
         const allocation=quote?[{paymentMode:getElement('payment-mode').value,amount:quote.totalAmount}]:[];
         workspace.dispatchEvent(new Event('billing-payment-updated'));
@@ -420,7 +434,9 @@
         const invoiceEditing=numericInputsInvalid();
         const missingReason=cart.some(lineMissingReason);
         const review=approvalReview(),approvalBlocked=quoteIsCurrent()&&review.requiresApproval&&((!billingPolicy.canApproveDiscount&&review.approvalStatus!=='APPROVED')||['PENDING','REJECTED'].includes(review.approvalStatus));
-        getElement('complete-sale').disabled=!cart.length||!quoteIsCurrent()||invoiceEditing||missingReason||approvalBlocked||cashInputInvalid()||!getElement('sale-customer').value||invalidMethod||!getElement('payment-mode').value||(getElement('payment-mode').value==='CARD'&&!getElement('payment-card-type').value)||(invoiceReasonRequired()&&!getElement('adjustment-reason').value.trim());
+        getElement('complete-sale').disabled=!!activeLineEditor||!hasValidBillItem()||!quoteIsCurrent()||invoiceEditing||missingReason||approvalBlocked||cashInputInvalid()||!getElement('sale-customer').value||invalidMethod||!getElement('payment-mode').value||(getElement('payment-mode').value==='CARD'&&!getElement('payment-card-type').value)||(invoiceReasonRequired()&&!getElement('adjustment-reason').value.trim());
+        const complete=getElement('complete-sale');complete.title=activeLineEditor?'Apply or cancel the item edit first.':!hasValidBillItem()?'Add at least one valid item.':!getElement('sale-customer').value?'Select a customer before completing the sale.':!quoteIsCurrent()?'Wait for a valid current calculation.':invoiceEditing?'Correct the highlighted number.':missingReason?'Supply the required adjustment reasons.':approvalBlocked?'Manager approval is required.':cashInputInvalid()?'Correct the cash received amount.':invalidMethod?'Choose an eligible collected payment method.':complete.disabled?'Complete the required payment and adjustment details.':'';
+        updateAvailability();
         const status=getElement('billing-calculation-status');
         status.textContent=!cart.length?'':numericInputsInvalid()?'Finish or correct the highlighted number. Totals shown are provisional.':calculationState==='error'?calculationError+' Totals shown are provisional.':!quoteIsCurrent()?'Updating totals - previous amounts are provisional.':invoiceEditing?'Finish the invoice discount edit.':'';
         status.hidden=!status.textContent;getElement('billing-retry-calculation').hidden=calculationState!=='error'||numericInputsInvalid();
@@ -559,7 +575,9 @@
             if(document.activeElement!==priceEditor)priceEditor.value=Sales.money(item.sellingPrice);
             if(item.catalogTaxPercentage==null&&item.taxOverride==null)item.catalogTaxPercentage=line.taxPercentage;
             item.taxPercentage=line.taxPercentage;
-            getElement('line-tax-'+index).value=line.taxPercentage;
+            getElement('line-tax-'+index).value=line.taxPercentage===0?'No GST':line.taxPercentage+'%';
+            item.lastGstAmount=line.taxAmount;item.lastTaxableAmount=line.taxableAmount;
+            if(line.hsnSac)item.hsnSac=line.hsnSac;if(line.gstTreatment)item.gstTreatment=line.gstTreatment;
             const taxEditor=getElement('line-tax-override-'+index);if(document.activeElement!==taxEditor)taxEditor.value=item.taxOverride??line.taxPercentage;
             item.lastLineTotal=line.lineTotal;getElement('line-total-' + index).textContent = formatMoney(line.lineTotal);
             updateLineIdentity(item,index,line);
@@ -578,23 +596,25 @@
             node.readOnly = !billingPolicy.canOverridePrice && !cart[Number(node.dataset.lineIndex)]?.manualItem;
         }
         for (const node of document.querySelectorAll('[data-discount-editor]')) {
-            node.readOnly = !billingPolicy.canDiscount;
+            node.readOnly = true;
         }
         for(const node of document.querySelectorAll('[data-tax-editor]')){
             const row=node.closest('tr'),item=cart[Number(row.querySelector('[data-price-editor]').dataset.lineIndex)];
             node.readOnly=!billingPolicy.canOverrideTax||gstMapped||!!item?.manualItem;
-            row.querySelector('button[data-tax-correction]').hidden=node.readOnly;
+            row.querySelector('button[data-tax-correction]').hidden=true;
             row.querySelector('[data-tax-display]').title='Tax from the current billing calculation. Authorized ordinary-bill corrections use the separate correction action.';
         }
         getElement('sale-discount').readOnly = !billingPolicy.canDiscount;
     }
+    function compactProductName(item){return (item.productDisplayName||item.productName||'').replace(/\s*\/\s*DEFAULT\s*$/i,'').trim();}
+    function compactVariant(item){return (item.variantDetails||'').split(/\s*[·|]\s*/).map(part=>part.replace(/^(?:color|colou?r)\s*:\s*/i,'').replace(/^(?:helmet\s+)?size\s*:\s*/i,'Size ').replace(/^(?:helmet\s+)?type\s*:\s*/i,'').trim()).filter(part=>part&&!/^(?:[^:]+:\s*)?DEFAULT$/i.test(part)).join(' · ');}
     function updateLineIdentity(item,index,line={}) {
-        const info=getElement('line-info-'+index);info.textContent=item.variantDetails||'';info.title=info.textContent;info.hidden=!info.textContent;
+        const info=getElement('line-info-'+index);info.textContent=compactVariant(item)||(item.sku?'SKU: '+item.sku:'');info.title=[item.variantDetails,item.sku?'SKU: '+item.sku:null].filter(Boolean).join(' · ');info.hidden=!info.textContent;
         const serial=getElement('line-serial-'+index);serial.textContent=item.serialNumber?(item.serialSource==='MANUFACTURER'?'Serial: ':item.serialSource==='INTERNAL'?'Unit ID: ':'Serial / Unit ID: ')+item.serialNumber:'';serial.title=serial.textContent;serial.hidden=!serial.textContent;
     }
     function updateLineStock(item,index){
         const stock=getElement('line-stock-'+index),quantity=item.currentStock,threshold=item.stockMinimum;
-        stock.textContent=item.manualItem?'Non-stock':Number.isFinite(quantity)?String(quantity):'Pending';
+        stock.textContent=item.manualItem?'Non-stock':Number.isFinite(quantity)?'Stock: '+quantity:'Stock pending';
         stock.dataset.state=item.manualItem?'non-stock':!Number.isFinite(quantity)?'pending':quantity<=0?'out':Number.isFinite(threshold)?quantity<=threshold?'low':'available':'neutral';
         stock.title=item.manualItem?'Manual item; no inventory posting':!Number.isFinite(quantity)?'Awaiting current location stock':quantity<=0?'Out of stock in this location':Number.isFinite(threshold)?'Available in this location; low-stock threshold '+threshold:'Available in this location; low-stock threshold not supplied';
     }
@@ -616,9 +636,9 @@
             if(taxError)messages.push('Tax configuration needs review. '+calculationError);
             const approvalNeeded=current&&review.requiresApproval&&(['PENDING','REJECTED'].includes(review.approvalStatus)||!billingPolicy.canApproveDiscount&&review.approvalStatus!=='APPROVED')&&(changed.discount||changed.price);
             if(approvalNeeded)messages.push(review.approvalStatus==='PENDING'?'Discount approval pending.':review.approvalStatus==='REJECTED'?'Manager rejected this exception.':'Manager approval required.');
-            badge.textContent=approvalNeeded?'Approval Required':taxError?'Review Tax':taxReasonRequired?'Tax Reason':'Add Reason';badge.title=messages.join(' ');badge.setAttribute('aria-label',messages.join(' '));badge.hidden=!messages.length;
+            badge.textContent=approvalNeeded?'Approval Required':taxError?'Review Tax':taxReasonRequired?'Tax Reason':'Add Reason';badge.title=messages.join(' ');badge.setAttribute('aria-label',messages.join(' '));badge.hidden=true;badge.dataset.needsReview=String(messages.length>0);const edit=row.querySelector('[data-edit-item]');if(edit){edit.title=messages.length?'Edit Item: '+messages.join(' '):'Edit Item';}
             badge.classList.add('billing-approval-indicator');badge.dataset.state=taxError?'error':'warning';
-            (taxError||taxReasonRequired?tax:changed.price?price:discount).parentElement.append(badge);
+            row.querySelector('.billing-product-copy').append(badge);
             const dialog=getElement('line-reason-panel-'+index),label=getElement('line-reason-label-'+index),feedback=getElement('line-reason-status-'+index);
             dialog.hidden=false;
             const reasonInput=getElement('line-reason-'+index),priceInput=getElement('line-price-reason-'+index),taxInput=getElement('line-tax-reason-'+index);
@@ -648,6 +668,77 @@
         });
     }
     function updateItemCount(){const units=cart.reduce((sum,item)=>sum+item.quantity,0);getElement('sale-item-count').textContent=cart.length ? cart.length+' item'+(cart.length===1?'':'s')+' \u00b7 '+units+' unit'+(units===1?'':'s') : '0 items';}
+    function closeLineEditor(){
+        const state=activeLineEditor;if(!state)return;
+        state.dispose?.();activeLineEditor=null;state.row.remove();state.trigger.setAttribute('aria-expanded','false');
+        for(const [node,disabled]of state.controls)node.disabled=disabled;
+        for(const row of getElement('sale-cart').querySelectorAll('[data-bill-line]'))row.inert=false;
+        balance();options();state.trigger.focus();
+    }
+    function openLineEditor(index,line,trigger){
+        if(activeLineEditor||pendingSale||isSavingSale||isPreparingSale||recoveryBlocked)return;
+        const item=cart[index],row=document.createElement('tr');row.className='billing-item-detail-row';row.id='line-editor-'+index;
+        const cell=document.createElement('td');cell.colSpan=7;row.append(cell);
+        const panel=document.createElement('section');panel.className='billing-inline-editor billing-compact-editor';panel.setAttribute('aria-labelledby','line-editor-title-'+index);cell.append(panel);
+        const heading=document.createElement('h3');heading.id='line-editor-title-'+index;heading.textContent='Edit '+compactProductName(item);panel.append(heading);
+        const metadata=document.createElement('p');metadata.className='billing-inline-identity';metadata.textContent=[compactVariant(item),item.sku?'SKU: '+item.sku:null,item.mrp!=null?'MRP: ₹'+formatMoney(item.mrp):null,item.uqc?'Unit: '+item.uqc:null,item.hsnSac?'HSN / SAC: '+item.hsnSac:null,item.serialNumber?'Serial: '+item.serialNumber:null].filter(Boolean).join(' · ');panel.append(metadata);
+        const fields=document.createElement('div');fields.className='billing-compact-fields';panel.append(fields);
+        const discountLabel=document.createElement('label');discountLabel.htmlFor='item-edit-discount';discountLabel.textContent='Discount';fields.append(discountLabel);
+        const pair=document.createElement('div');pair.className='billing-discount-pair';discountLabel.append(pair);
+        const discount=document.createElement('input');discount.id='item-edit-discount';discount.className='form-control';discount.type='number';discount.min='0';discount.step='0.01';discount.value=item.discountPercent??item.discountAmount;discount.readOnly=!billingPolicy.canDiscount;discount.setAttribute('aria-describedby','item-edit-error');pair.append(discount);
+        const kind=document.createElement('select');kind.id='item-edit-discount-kind';kind.className='form-select';kind.dataset.sfSelect='native';kind.setAttribute('aria-label','Discount type');kind.add(new Option('%','PERCENT'));kind.add(new Option('₹','FIXED'));kind.value=item.discountPercent!=null?'PERCENT':'FIXED';kind.disabled=!billingPolicy.canDiscount;pair.append(kind);
+        const gst=document.createElement('p');gst.className='billing-editor-gst';gst.textContent='GST: '+(item.taxPercentage==null?'Pending':item.taxPercentage===0?'No GST':item.taxPercentage+'%');gst.title=item.gstTreatment||'Configured GST classification; changes require authorization.';fields.append(gst);
+        function reasonField(label,id,value){const wrap=document.createElement('label');wrap.htmlFor=id;wrap.textContent=label;wrap.className='billing-editor-reason';wrap.hidden=true;const input=document.createElement('input');input.id=id;input.className='form-control';input.maxLength=500;input.value=value;input.setAttribute('aria-describedby','item-edit-error');wrap.append(input);fields.append(wrap);return input;}
+        const reason=reasonField('Discount Reason','item-edit-reason',lineReason(item));
+        const priceReason=reasonField('Price Change Reason','item-edit-price-reason',item.priceAdjustmentReason||lineReason(item));
+        const error=document.createElement('p');error.id='item-edit-error';error.className='text-danger';error.setAttribute('role','status');error.hidden=true;panel.append(error);
+        const status=document.createElement('p');status.id='item-edit-preview';status.className='billing-inline-identity';status.setAttribute('role','status');panel.append(status);
+        const advanced=document.createElement('details');advanced.className='billing-editor-advanced';const summary=document.createElement('summary');summary.textContent='Advanced';advanced.append(summary);
+        const correction=line.querySelector('[data-tax-correction]'),taxInput=getElement('line-tax-override-'+index);
+        const dirty=()=>Number(discount.value)!==(item.discountPercent??item.discountAmount)||(kind.value==='PERCENT')!==(item.discountPercent!=null)||reason.value!==lineReason(item)||priceReason.value!==(item.priceAdjustmentReason||lineReason(item));
+        const advancedAction=action=>{if(dirty()){error.textContent='Apply or cancel your pending changes before opening advanced details.';error.hidden=false;return;}closeLineEditor();action();};
+        if(correction&&!taxInput.readOnly){const correct=button('Correct GST',()=>advancedAction(()=>correction.click()));correct.dataset.inlineTaxCorrection='';advanced.append(correct);}
+        const feedback=line.querySelector('.billing-approval-indicator');
+        if(feedback?.dataset.needsReview==='true'&&/GST|tax|approval/i.test(feedback.title)){const review=button('Review GST / approval',()=>advancedAction(()=>feedback.click()));review.dataset.reviewAdjustment='';advanced.append(review);}
+        if(item.manualItem){const manual=button('Manual item details',()=>advancedAction(()=>openManualItem(index)));manual.classList.add('billing-manual-edit');advanced.append(manual);}
+        const toolbar=document.createElement('div');toolbar.className='billing-editor-actions';panel.append(toolbar);if(advanced.children.length>1)toolbar.append(advanced);
+        const footer=document.createElement('footer');toolbar.append(footer);const cancel=button('Cancel',closeLineEditor);cancel.dataset.localCancel='';footer.append(cancel);
+        let sequence=0,timer,applying=false,required={};
+        const apply=button('Apply Changes',()=>Sales.run(async()=>{
+            if(applying)return;applying=true;apply.disabled=true;
+            try{const valid=await preview();if(!valid||activeLineEditor?.row!==row)return;
+                if(required.discount&&!reason.value.trim()){error.textContent='Enter the discount reason required by shop policy.';error.hidden=false;reason.setAttribute('aria-invalid','true');reason.focus();return;}
+                if(required.price&&!priceReason.value.trim()){error.textContent='Enter the required price change reason.';error.hidden=false;priceReason.focus();return;}
+                if(!billingPolicy.canDiscount&&(Number(discount.value)!==(item.discountPercent??item.discountAmount)||(kind.value==='PERCENT')!==(item.discountPercent!=null))){error.textContent='You do not have permission to change this discount.';error.hidden=false;return;}
+                if(cart[index]!==item){error.textContent='The bill changed. Cancel and reopen this item.';error.hidden=false;return;}
+                item.discountPercent=kind.value==='PERCENT'?Number(discount.value):null;item.discountAmount=item.discountPercent!=null?0:Number(discount.value);
+                if(required.discount||reason.value.trim())item.adjustmentReason=reason.value.trim();
+                if(required.price)item.priceAdjustmentReason=priceReason.value.trim();
+                closeLineEditor();renderCart();getElement('line-edit-'+index)?.focus();
+            }finally{applying=false;if(activeLineEditor?.row===row)apply.disabled=false;}
+        }));apply.className='btn btn-primary';footer.append(apply);
+        async function preview(){
+            clearTimeout(timer);const version=++sequence,amount=Number(discount.value),percent=kind.value==='PERCENT';error.hidden=true;
+            if(!discount.value.trim()||!moneyValid(amount)||percent&&amount>100||!percent&&amount>item.quantity*item.sellingPrice){error.textContent='Enter a valid discount within the line amount (maximum 100%).';error.hidden=false;discount.setAttribute('aria-invalid','true');status.textContent='Pending changes have not been applied.';return false;}
+            discount.setAttribute('aria-invalid','false');
+            if(!billingPolicy.canDiscount&&(amount!==(item.discountPercent??item.discountAmount)||percent!==(item.discountPercent!=null))){error.textContent='You do not have permission to change this discount.';error.hidden=false;return false;}
+            status.hidden=!dirty();status.textContent='Checking pending changes…';
+            const payload=request();payload.items[index]={...payload.items[index],discountPercent:percent?amount:null,discountAmount:percent?Math.round(item.quantity*item.sellingPrice*amount)/100:amount,adjustmentReason:reason.value.trim()||null,priceAdjustmentReason:priceReason.value.trim()||null};payload.payments=[];
+            try{const quote=await Sales.api('/api/sales/quote',{method:'POST',body:JSON.stringify(payload)});
+                if(version!==sequence||activeLineEditor?.row!==row)return false;
+                required=quote.adjustmentReview?.lineReasons?.[index]||{discount:amount>0,price:lineAdjustments(item).price};
+                reason.parentElement.hidden=!required.discount;reason.required=!!required.discount;
+                priceReason.parentElement.hidden=!required.price||!!(item.priceAdjustmentReason?.trim()||lineReason(item));priceReason.required=!!required.price;
+                const total=quote.items[index]?.lineTotal;status.textContent=(Number.isFinite(total)?'After apply: ₹'+formatMoney(total)+'. ':'')+'Apply to update the bill.';
+                return true;
+            }catch(failure){if(version===sequence&&activeLineEditor?.row===row){error.textContent=failure.message;error.hidden=false;status.textContent='Pending changes have not been applied.';}return false;}
+        }
+        for(const eventName of ['input','change'])panel.addEventListener(eventName,event=>{event.stopPropagation();if(!applying){clearTimeout(timer);timer=setTimeout(preview,220);}});
+        panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeLineEditor();}else if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();event.stopPropagation();apply.click();}});
+        const controls=new Map();for(const node of document.querySelectorAll('#sale-scan,#customer-search,#customer-clear,#save-draft,#hold-bill,#show-held,#clear-bill-items,#quick-add-item,.billing-scan-row .sf-camera-trigger,#complete-sale')){controls.set(node,node.disabled);node.disabled=true;}
+        for(const existing of getElement('sale-cart').querySelectorAll('[data-bill-line]'))existing.inert=true;
+        line.after(row);activeLineEditor={row,controls,trigger,dispose:()=>{clearTimeout(timer);sequence++;}};updateAvailability();trigger.setAttribute('aria-expanded','true');trigger.setAttribute('aria-controls',row.id);discount.focus();preview();
+    }
     function updateCartScrollHint(){const region=workspace.querySelector('.billing-cart-scroll'),hint=getElement('billing-cart-scroll-hint');if(region&&hint)hint.hidden=!cart.length||region.scrollWidth<=region.clientWidth+1;}
     new ResizeObserver(updateCartScrollHint).observe(getElement('billing-cart-card'));
     function renderCart() {
@@ -663,9 +754,9 @@
         getElement('sale-cart').closest('.table-responsive').hidden=!cart.length;
         updateItemCount();
         cart.forEach((item, index) => {
-            const tr = document.createElement('tr');
+            const tr = document.createElement('tr');tr.dataset.billLine=String(index);
             const name = document.createElement('strong');
-            name.textContent = item.productDisplayName||item.productName;name.title=item.productName;
+            name.textContent = compactProductName(item);name.title=item.productName;
             const info = document.createElement('span');
             info.id = 'line-info-' + index;
             info.className = 'billing-item-detail';
@@ -712,10 +803,10 @@
                 }
             );
             discount.max=item.discountPercent!=null?'100':'9999999999.99';
-            discount.dataset.discountEditor = 'true';
+            discount.dataset.discountEditor = 'true';discount.hidden=true;discount.readOnly=true;
             Sales.cell(tr, discount).className = 'billing-extra-column';
-            const taxDisplay=document.createElement('input');taxDisplay.id='line-tax-'+index;taxDisplay.className='form-control';taxDisplay.readOnly=true;taxDisplay.tabIndex=-1;taxDisplay.value=item.taxPercentage??'';taxDisplay.placeholder='Pending';taxDisplay.dataset.taxDisplay='true';taxDisplay.setAttribute('aria-label','Applicable tax percentage for '+item.productName);
-            const tax=Sales.cell(tr,taxDisplay);tax.className='billing-extra-column';
+            const taxDisplay=document.createElement('input');taxDisplay.id='line-tax-'+index;taxDisplay.className='form-control';taxDisplay.readOnly=true;taxDisplay.tabIndex=-1;taxDisplay.value=item.taxPercentage==null?'':item.taxPercentage===0?'No GST':item.taxPercentage+'%';taxDisplay.placeholder='Pending';taxDisplay.dataset.taxDisplay='true';taxDisplay.setAttribute('aria-label','Configured GST for '+item.productName);
+            const taxControls=document.createElement('div');taxControls.className='billing-gst-control';taxControls.append(taxDisplay);const tax=Sales.cell(tr,taxControls);tax.className='billing-extra-column';
             const taxEditor=input(item.taxOverride??item.taxPercentage??'','Correction tax percentage for '+item.productName,value=>item.taxOverride=value,'100');
             taxEditor.id='line-tax-override-'+index;taxEditor.dataset.taxEditor='true';
             Sales.cell(tr,Number.isFinite(item.lastLineTotal)?formatMoney(item.lastLineTotal):'Pending').id = 'line-total-' + index;
@@ -756,15 +847,17 @@
             taxInput.addEventListener('input',()=>{item.taxAdjustmentReason=taxInput.value;changed();});
             reasonPanel.addEventListener('close',()=>{delete reasonPanel.dataset.taxCorrection;if(cart.length&&!numericInputsInvalid())changed();});
             warning.onclick=()=>{updateLineWarnings();reasonPanel.showModal();};
-            const correctTax=button('Correct',()=>{reasonPanel.dataset.taxCorrection='true';updateLineWarnings();reasonPanel.showModal();taxEditor.focus();});correctTax.dataset.taxCorrection='';correctTax.classList.add('billing-tax-correction');correctTax.title='Authorized ordinary-bill tax correction';correctTax.setAttribute('aria-label','Correct tax for '+item.productName);correctTax.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5ZM14 5l5 5"/></svg>';tax.append(correctTax);
+            const correctTax=button('Correct',()=>{reasonPanel.dataset.taxCorrection='true';updateLineWarnings();reasonPanel.showModal();taxEditor.focus();});correctTax.dataset.taxCorrection='';correctTax.classList.add('billing-tax-correction');correctTax.title='Authorized ordinary-bill tax correction';correctTax.setAttribute('aria-label','Correct tax for '+item.productName);correctTax.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5ZM14 5l5 5"/></svg>';reasonPanel.append(correctTax);
+            productCell.append(stockValue);skuCell.hidden=stockCell.hidden=mrpCell.hidden=true;
+            const editItem=button('Edit Item',()=>openLineEditor(index,tr,editItem));editItem.id='line-edit-'+index;editItem.dataset.editItem='';editItem.title='Edit Item';editItem.setAttribute('aria-label','Edit Item '+item.productName);editItem.setAttribute('aria-expanded','false');editItem.innerHTML='<svg width=16 height=16 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=1.8 aria-hidden=true><path d="m16 3 5 5-13 13H3v-5ZM14 5l5 5"/></svg>';removeCell.prepend(editItem);
             stockCell.className='billing-stock-cell';qtyCell.className='billing-qty-cell';priceCell.className='billing-item-price';discountCell.className='billing-item-discount';taxCell.className='billing-item-tax';totalCell.className='billing-item-total';removeCell.className='billing-item-actions';
             price.title=pricesIncludeTax?'Unit selling price including tax':'Unit selling price before tax';
             discount.title=item.discountPercent != null ? 'Percentage discount for this line' : 'Saved fixed-amount discount (₹)';
-            if(item.discountPercent == null){const fixed=document.createElement('small');fixed.textContent='Fixed ₹ (saved bill)';discountCell.append(fixed);}
+            const committed=document.createElement('output');committed.id='line-discount-committed-'+index;committed.className='billing-committed-discount';committed.setAttribute('aria-label','Committed discount for '+item.productName);committed.textContent=item.discountPercent!=null?item.discountPercent+'%':'₹'+formatMoney(item.discountAmount);discount.after(committed);
             mrpCell.className='billing-item-mrp';
-            if(item.manualItem){const editManual=button('Edit',()=>openManualItem(index));editManual.classList.add('billing-manual-edit');title.append(editManual);}
-            removeCell.querySelector('button').title='Remove Item';
-            ['Product / Variant','SKU','Available Stock','Qty','MRP (₹)','Selling Price','Discount (%)','Tax (%)','Line Total','Actions'].forEach((label,i)=>tr.cells[i].dataset.label=label);
+
+            removeCell.querySelector('button:last-child').title='Remove Item';
+            ['Product / Variant','SKU','Available Stock','Qty','MRP (₹)','Selling Price','Discount','GST','Total','Actions'].forEach((label,i)=>tr.cells[i].dataset.label=label);
             getElement('sale-cart').append(tr);
             updateLineIdentity(item,index);
             updateLineStock(item,index);
@@ -774,7 +867,7 @@
         changed();
     }
     getElement('clear-bill-items').addEventListener('click', () => Sales.run(async () => {
-        if (isSavingSale || pendingSale || isPreparingSale || !cart.length) return;
+        if (activeLineEditor || isSavingSale || pendingSale || isPreparingSale || !cart.length) return;
         if(activeLookups)throw new Error('Wait for item and customer lookups to finish.');
         if(!await StockFlowDialog.confirm('Clear this draft bill, its items and entered payment details? This does not affect completed invoices.',{kind:'discard',title:'Clear this bill?',cancelText:'Continue Editing',confirmText:'Clear Bill'}))return;
         if(isSavingSale||pendingSale||isPreparingSale||activeLookups)return;
@@ -851,6 +944,7 @@
         balance();
     }
     function addLine(product, unit) {
+        if(activeLineEditor)throw Error('Apply or cancel the item edit before adding another product.');
         if (isSavingSale || pendingSale || isPreparingSale) {
             throw new Error('Finish the current sale before changing items.');
         }
@@ -871,7 +965,7 @@
         const existing =
             !unit &&
             cart.find((unit2) => {
-                return unit2.variantId === product.variantId && !unit2.productUnitId && unit2.sellingPrice===product.sellingPrice && unit2.discountAmount===0;
+                return unit2.variantId === product.variantId && !unit2.productUnitId && unit2.sellingPrice===product.sellingPrice && unit2.discountAmount===0 && (unit2.discountPercent==null||unit2.discountPercent===0) && unit2.taxOverride==null && !unit2.serialNumber && !unit2.batchNumber && !unit2.expiryDate && !unit2.itemNote;
             });
         const quantity = cart.filter(i=>i.variantId===product.variantId).reduce((sum,i)=>sum+i.quantity,0) + 1;
         if (
@@ -889,7 +983,7 @@
                 productId: product.productId,
                 variantId: product.variantId,
                 productName: product.productName,
-                productDisplayName: product.variantName&&product.variantName!=='DEFAULT'&&product.productName.endsWith(' / '+product.variantName)?product.productName.slice(0,-(' / '+product.variantName).length):product.productName,
+                productDisplayName: product.variantName&&product.productName.endsWith(' / '+product.variantName)?product.productName.slice(0,-(' / '+product.variantName).length):product.productName,
                 sku: product.sku,
                 variantDetails: StockFlowVariantIdentity.summary(product),
                 hasProductImage: product.hasProductImage,
@@ -1232,15 +1326,23 @@
             renderPayments();
         });
     });
+    function updateAvailability(){
+        const reason=billingInitialization==='failed'?'Billing permissions could not be loaded. Refresh when the service is available; billing remains locked.':billingInitialization==='loading'?'Loading billing permissions. Editing is temporarily locked.':pendingSale?'This bill has a pending sale request. Resolve or retry it before editing.':isSavingSale?'Saving the sale. Editing is temporarily locked.':isPreparingSale?'Checking the bill before checkout. Editing is temporarily locked.':recoveryBlocked?'Bill recovery or session protection is blocking editing. Review the recovery message or recover interrupted bills.':window.StockFlowLocation<=0?'Select an authorized shop location before billing.':activeLineEditor?'Apply or cancel the item edit before changing the bill.':'';
+        const note=getElement('billing-availability');if(note){note.textContent=reason;note.hidden=!reason;}
+        getElement('sale-editor').title=reason;
+        getElement('clear-bill-items').title=reason||(!cart.length?'Add items before clearing the bill.':'Clear all items from this bill');
+    }
     function pendingState() {
         getElement('complete-sale').setAttribute('aria-busy',String(isSavingSale||isPreparingSale));
         getElement('sale-form').dataset.saving=String(!!pendingSale||isSavingSale||isPreparingSale);
         getElement('sale-editor').disabled =
+            billingInitialization!=='ready' ||
             !!pendingSale ||
             isSavingSale ||
             isPreparingSale ||
             recoveryBlocked ||
             window.StockFlowLocation <= 0;
+        updateAvailability();
         getElement('pending-sale').hidden = !pendingSale;
         getElement('retry-sale').disabled = isSavingSale;
         getElement('confirm-payment').disabled = isSavingSale || isPreparingSale;
@@ -1383,12 +1485,13 @@
     getElement('sale-form').addEventListener('submit', (event) => {
         event.preventDefault();
         Sales.run(async () => {
-            if (pendingSale || isSavingSale || isPreparingSale || recoveryBlocked) {
+            if (activeLineEditor || pendingSale || isSavingSale || isPreparingSale || recoveryBlocked) {
                 return;
             }
             if (activeLookups) {
                 throw new Error('Wait for item and customer lookups to finish.');
             }
+            if(!requireBillItem())return;
             validateItems(false);
             if(!getElement('sale-customer').value){getElement('customer-search-status').textContent='Select or add a registered customer before completing the sale.';getElement('customer-search')?.focus();throw new Error('Select or add a registered customer before completing the sale.');}
             isPreparingSale = true;
@@ -1537,7 +1640,7 @@
         }
         updateAdjustmentUI();
     }
-    window.addEventListener('focus',()=>{if(cart.length&&!isSavingSale&&!pendingSale&&!isPreparingSale&&!numericInputsInvalid())Sales.run(recalculate);});
+    window.addEventListener('focus',()=>{if(cart.length&&!activeLineEditor&&!isSavingSale&&!pendingSale&&!isPreparingSale&&!numericInputsInvalid())Sales.run(recalculate);});
     let approvalDialog;
     function collectExceptionReasons(){
         if(!approvalDialog){approvalDialog=document.createElement('dialog');approvalDialog.className='billing-adjustment-dialog';approvalDialog.dataset.sfDialog='medium';approvalDialog.id='billing-approval-dialog';workspace.append(approvalDialog);}
@@ -1567,7 +1670,7 @@
     }
     getElement('request-discount-approval').addEventListener('click', () => {
         return Sales.run(async () => {
-            if (pendingSale || isSavingSale || isPreparingSale || activeLookups) {
+            if (activeLineEditor || pendingSale || isSavingSale || isPreparingSale || activeLookups) {
                 throw new Error('Wait for current operations to finish.');
             }
             if(priceQuote?.adjustmentReview?.approvalStatus==='PENDING'){await recalculate();return;}
@@ -1819,8 +1922,9 @@
             'Bill restored. Stock, current prices and warranty are being checked.';
     }
     const savedDrawer=getElement('saved-bills-drawer'), savedList=getElement('saved-bills-list');
+    window.StockFlowLoading?.region(savedList,{kind:'card',retry:()=>loadSavedBills()});
     const resumeDialog=getElement('resume-bill-confirm');
-    let savedPage=1,savedSearch='',savedRequest=0,savedBusy=false,savedSearchTimer,recoveryView=false,pendingSwitch=null;
+    let savedPage=1,savedSearch='',savedFilter='ALL',savedRequest=0,savedBusy=false,savedSearchTimer,recoveryView=false,pendingSwitch=null;
     const drawerFeedback=(message)=>{getElement('saved-bills-feedback').textContent=message;};
     function closeSavedBills(scan=false){savedDrawer.dataset.scanFocus=String(scan);savedDrawer.close();}
     getElement('saved-bills-close').onclick=()=>closeSavedBills();
@@ -1834,7 +1938,42 @@
         else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
     });
     savedDrawer.addEventListener('click',event=>{if(event.target===savedDrawer){const b=savedDrawer.getBoundingClientRect();if(event.clientX<b.left&&!savedBusy)closeSavedBills();}});
-    savedDrawer.addEventListener('close',()=>{requestAnimationFrame(()=>{(savedDrawer.dataset.scanFocus==='true'?getElement('sale-scan'):getElement('show-held'))?.focus();savedDrawer.dataset.scanFocus='false';});});
+    savedDrawer.addEventListener('close',()=>{for(const target of savedList.querySelectorAll('[data-saved-discard-tooltip]'))window.bootstrap?.Tooltip?.getInstance(target)?.hide();requestAnimationFrame(()=>{(savedDrawer.dataset.scanFocus==='true'?getElement('sale-scan'):getElement('show-held'))?.focus();savedDrawer.dataset.scanFocus='false';});});
+    function clearSavedBillTooltips(){for(const target of savedList.querySelectorAll('[data-saved-discard-tooltip]'))window.bootstrap?.Tooltip?.getInstance(target)?.dispose();}
+    function discardHint(discard){
+        const wrapper=document.createElement('span');wrapper.className='billing-saved-discard';wrapper.append(discard);
+        const target=discard.disabled?wrapper:discard;
+        if(discard.disabled){target.tabIndex=0;target.setAttribute('role','group');target.setAttribute('aria-label','Discard Bill unavailable. Resume this active draft before discarding it.');}
+        target.title='Discard Bill';target.dataset.savedDiscardTooltip='';
+        window.bootstrap?.Tooltip?.getOrCreateInstance(target,{title:'Discard Bill',trigger:'hover focus',placement:'top',container:savedDrawer,animation:false});
+        return wrapper;
+    }
+    const pendingDiscards=new Map();
+    async function discardSavedBill(bill){
+        if(!pendingDiscards.has(bill.draftId)){
+            const displayNumber=bill.draftNumber||'This bill';
+            if(!await StockFlowDialog.confirm(displayNumber+': This unfinished bill will be permanently removed. Completed invoices and stock records will not be affected.',{kind:'discard',title:'Discard saved bill?',confirmText:'Discard Bill'}))return;
+            clearTimeout(draftSaveTimer);await draftSaveQueue.catch(()=>{});
+            // Claim only the selected expired bill; preserve the current editor and bill.
+            const recover=['ACTIVE','LEGACY'].includes(bill.draftStatus)&&(bill.draftId!==draftId||recoveryBlocked);
+            pendingDiscards.set(bill.draftId,{editorId:recover?createRequestId():editorId,revision:bill.draftId===draftId?draftRevision:bill.revision,recover,operationId:createRequestId(),recoverOperationId:createRequestId()});
+        }
+        const request=pendingDiscards.get(bill.draftId);
+        try{
+            if(request.recover){
+                const lease=await Sales.api('/api/sales/billing/drafts/'+bill.draftId+'/resume',{method:'POST',body:JSON.stringify({editorId:request.editorId,revision:request.revision,operationId:request.recoverOperationId,recover:true})});
+                request.revision=lease.revision;request.recover=false;
+            }
+            await Sales.api('/api/sales/billing/drafts/'+bill.draftId,{method:'DELETE',body:JSON.stringify({editorId:request.editorId,revision:request.revision,operationId:request.operationId})});
+        }catch(error){
+            if([400,403,404,409].includes(error.status))pendingDiscards.delete(bill.draftId);
+            else {drawerFeedback('Discard could not be confirmed. Retry to safely check the same request.');getElement('saved-bills-feedback').append(button('Retry Discard',()=>savedAction(()=>discardSavedBill(bill))));return;}
+            throw error;
+        }
+        pendingDiscards.delete(bill.draftId);
+        if(bill.draftId===draftId){localStorage.removeItem(draftKey);window.StockFlowUnsaved?.markSaved(getElement('sale-form'));location.reload();return;}
+        await loadSavedBills();drawerFeedback('Saved bill discarded.');
+    }
     function savedTime(value){
         const date=new Date(value);if(!Number.isFinite(date.getTime()))return 'Saved time unavailable';
         // Match the configured shop timezone used by sales reports.
@@ -1856,19 +1995,30 @@
         icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('width','16');icon.setAttribute('height','16');icon.setAttribute('fill','none');icon.setAttribute('stroke','currentColor');icon.setAttribute('stroke-width','1.7');icon.setAttribute('aria-hidden','true');
         const paths={resume:'<path d="m9 5 10 7-10 7Z"/>',discard:'<path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/>',items:'<path d="m12 3 9 5v8l-9 5-9-5V8Zm-9 5 9 5 9-5m-9 5v8"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',receipt:'<path d="M5 3h14v19l-3-2-4 2-4-2-3 2ZM8 7h8M8 11h8M8 15h5"/>'};icon.innerHTML=paths[kind];return icon;
     }
+    function showSavedBillCount(count){
+        if(!Number.isSafeInteger(count)||count<0)return;
+        const control=getElement('show-held'),label=control.querySelector('.billing-action-label');if(!label)return;
+        let badge=label.querySelector('.billing-saved-button-count');if(!badge){badge=document.createElement('span');badge.className='billing-saved-button-count';label.append(badge);}badge.textContent=' ('+count+')';
+        control.setAttribute('aria-label','Saved Bills ('+count+')');control.title='Saved Bills ('+count+')';
+    }
+    async function refreshSavedBillCount(){
+        try{const response=await Sales.api('/api/sales/billing/drafts?paged=true&includeActive=true&editorId='+encodeURIComponent(editorId)+'&status=ALL&page=1');showSavedBillCount(response.counts?.all??response.total);}catch{/* The drawer has its existing explicit retry and error handling. */}
+    }
     async function loadSavedBills(){
         const revision=++savedRequest;drawerFeedback('Loading saved bills...');
         try{
-            const response=await Sales.api('/api/sales/billing/drafts?paged=true&includeActive=true&editorId='+encodeURIComponent(editorId)+'&recovery='+recoveryView+'&page='+savedPage+'&search='+encodeURIComponent(savedSearch));
+            const response=await Sales.api('/api/sales/billing/drafts?paged=true&includeActive=true&editorId='+encodeURIComponent(editorId)+'&recovery='+recoveryView+'&status='+savedFilter+'&page='+savedPage+'&search='+encodeURIComponent(savedSearch));
             if(revision!==savedRequest)return;
             const list=Array.isArray(response)?response:response.items,total=Array.isArray(response)?response.length:response.total;
             if(!Array.isArray(list))throw Error('Saved bills could not be loaded.');
             if(!list.length&&savedPage>1){savedPage=Math.max(1,Math.ceil(total/25));return loadSavedBills();}
-            getElement('saved-bills-count').textContent=total+' '+(total===1?'Draft':'Drafts');
+            const all=response.counts?.all??total;if(!recoveryView)showSavedBillCount(all);
+            getElement('saved-bills-count').textContent=all+' '+(all===1?'Bill':'Bills');
+            for(const tab of savedDrawer.querySelectorAll('[data-saved-filter]')){const label={ALL:'All',DRAFTS:'Drafts',HELD:'On Hold'}[tab.dataset.savedFilter],count=response.counts?.[{ALL:'all',DRAFTS:'drafts',HELD:'onHold'}[tab.dataset.savedFilter]];tab.textContent=label+(count===undefined?'':' ('+count+')');tab.setAttribute('aria-pressed',String(tab.dataset.savedFilter===savedFilter));}
             getElement('saved-bills-prev').closest('.billing-saved-pagination').hidden=!StockFlowPagination.shouldShow(total);
             getElement('saved-bills-page').textContent='Page '+savedPage+' of '+Math.max(1,Math.ceil(total/25));
             getElement('saved-bills-prev').disabled=savedPage<=1;getElement('saved-bills-next').disabled=savedPage*25>=total;
-            savedList.replaceChildren();savedList.scrollTop=0;drawerFeedback('');
+            clearSavedBillTooltips();savedList.replaceChildren();savedList.scrollTop=0;drawerFeedback('');
             if(!list.length)savedEmpty(savedSearch?'No matching bills':'No saved bills',savedSearch?'Try another customer name, mobile number or draft reference.':recoveryView?'No interrupted or legacy bills are available. Live sessions remain protected.':'Automatically saved active drafts and bills you hold will appear here.',!!savedSearch);
             for(const bill of list){
                 const card=document.createElement('article');card.className='billing-saved-card';
@@ -1878,29 +2028,19 @@
                 const identity=document.createElement('div');identity.className='billing-saved-customer';const strong=document.createElement('strong');strong.textContent=name;
                 const displayNumber=bill.draftNumber||'Reference unavailable';
                 const needsRecovery=bill.draftStatus==='ACTIVE'||bill.draftStatus==='LEGACY';
-                const ref=document.createElement('div');ref.className='billing-saved-reference';ref.textContent=displayNumber+' \u00b7 '+(bill.draftStatus==='ACTIVE'?'Active Draft':bill.draftStatus==='LEGACY'?'Interrupted Bill':'On Hold');
+                const ref=document.createElement('div');ref.className='billing-saved-reference';ref.append(document.createTextNode(displayNumber+' · '));const badge=document.createElement('span');badge.className='billing-saved-status'+(bill.draftStatus==='HELD'?' is-held':'');badge.textContent=bill.draftStatus==='ACTIVE'?'Draft':bill.draftStatus==='LEGACY'?'Interrupted':'On Hold';ref.append(badge);
                 if(bill.creationTimeSource==='UNKNOWN'){const flag=document.createElement('div');flag.className='billing-saved-reference';flag.textContent='Original creation time unknown';identity.append(strong,ref,flag);}else identity.append(strong,ref);
                 const amount=document.createElement('span');amount.className='billing-saved-total';amount.textContent=Number.isFinite(bill.estimatedTotal)?new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(bill.estimatedTotal):'\u2014';amount.title=Number.isFinite(bill.estimatedTotal)?'Provisional estimate; checked again before checkout':'Estimate unavailable for this older draft; resume to calculate';top.append(avatar,identity,amount);
                 const meta=document.createElement('div');meta.className='billing-saved-meta';const count=document.createElement('div');count.textContent=(bill.itemCount??'\u2014')+' '+(bill.itemCount===1?'item':'items')+' \u00b7 '+(bill.units??'\u2014')+' '+(bill.units===1?'unit':'units');const time=document.createElement('div');time.textContent=savedTime(bill.updatedAt);count.prepend(savedIcon('items'));time.prepend(savedIcon('clock'));meta.append(count,time);
                 const actions=document.createElement('div');actions.className='billing-saved-actions';
-                const discard=button('Discard',()=>savedAction(async()=>{
-                    if(!await StockFlowDialog.confirm(displayNumber+': This unfinished bill will be permanently removed. Completed invoices and stock records will not be affected.',{kind:'discard',title:'Discard saved bill?',confirmText:'Discard Bill'}))return;
-                    clearTimeout(draftSaveTimer);await draftSaveQueue.catch(()=>{});
-                    await draftCommand('discard',bill.draftId,bill.revision);
-                    if(bill.draftId===draftId){localStorage.removeItem(draftKey);window.StockFlowUnsaved?.markSaved(getElement('sale-form'));location.reload();return;}
-                    await loadSavedBills();drawerFeedback('Saved bill discarded.');
-                }));discard.className='btn btn-outline-secondary';
-                // An expired Active bill must first acquire ownership through
-                // the existing recovery flow before it can be discarded.
-                if(bill.draftStatus==='ACTIVE'&&(bill.draftId!==draftId||recoveryBlocked)){
-                    discard.dataset.requiresResume='true';discard.disabled=true;discard.title='Resume this active draft before discarding it.';
-                }
-                const resume=button(recoveryView?'Recover Bill':'Resume Bill',()=>savedAction(()=>resumeSavedBill(bill.draftId,displayNumber,needsRecovery)));resume.className='btn billing-saved-resume';
+                const discard=button('Discard',()=>savedAction(()=>discardSavedBill(bill)));discard.className='btn btn-outline-secondary';
+                discard.textContent='';
+                const resume=button(recoveryView?'Recover':'Resume',()=>savedAction(()=>resumeSavedBill(bill.draftId,displayNumber,needsRecovery)));resume.className='btn billing-saved-resume';
                 discard.prepend(savedIcon('discard'));resume.prepend(savedIcon('resume'));
                 discard.setAttribute('aria-label','Discard draft '+displayNumber);resume.setAttribute('aria-label',(recoveryView?'Recover Bill ':'Resume Bill ')+displayNumber);
-                actions.append(discard,resume);card.append(top,meta,actions);savedList.append(card);
+                actions.append(discardHint(discard),resume);card.append(top,meta,actions);savedList.append(card);
             }
-        }catch(error){if(revision!==savedRequest)return;savedList.replaceChildren();drawerFeedback(error.message);savedList.append(button('Retry',loadSavedBills));}
+        }catch(error){if(revision!==savedRequest)return;clearSavedBillTooltips();savedList.replaceChildren();drawerFeedback(error.message);savedList.append(button('Retry',loadSavedBills));}
     }
     async function savedAction(action){
         if(savedBusy||pendingSale||isSavingSale||isPreparingSale||activeLookups){drawerFeedback('Wait for current operations to finish, or recover the interrupted editing session.');return;}
@@ -1909,14 +2049,14 @@
         getElement('saved-bills-search').disabled=true;
         savedList.querySelectorAll('button').forEach(b=>b.disabled=true);
         try{await action();}catch(error){drawerFeedback(error.message);if(pendingSwitch)getElement('saved-bills-feedback').append(button('Retry Resume',()=>savedAction(()=>resumeSavedBill(pendingSwitch.id,pendingSwitch.source.draftNumber))));}
-        finally{savedBusy=false;isPreparingSale=false;pendingState();getElement('saved-bills-close').disabled=false;getElement('saved-bills-search').disabled=false;savedList.querySelectorAll('button').forEach(b=>b.disabled=b.dataset.requiresResume==='true');if(savedDrawer.open&&trigger?.isConnected)trigger.focus();}
+        finally{savedBusy=false;isPreparingSale=false;pendingState();getElement('saved-bills-close').disabled=false;getElement('saved-bills-search').disabled=false;savedList.querySelectorAll('button').forEach(b=>b.disabled=false);if(savedDrawer.open&&trigger?.isConnected)trigger.focus();}
     }
     function chooseResume(displayNumber){
         return new Promise(resolve=>{
             getElement('resume-bill-message').textContent='Your current unfinished bill contains items or entered details. Choose what to do before opening '+displayNumber+'.';
             const finish=value=>{resumeDialog.close();resolve(value);};
             getElement('resume-bill-cancel').onclick=()=>finish('cancel');getElement('resume-bill-close').onclick=()=>finish('cancel');
-            getElement('resume-bill-keep').onclick=()=>finish('keep');getElement('resume-bill-hold').disabled=!cart.length;
+            getElement('resume-bill-keep').onclick=()=>finish('keep');getElement('resume-bill-hold').disabled=!hasValidBillItem();
             getElement('resume-bill-hold').onclick=()=>finish('hold');getElement('resume-bill-discard').onclick=()=>finish('discard');
             resumeDialog.oncancel=event=>{event.preventDefault();finish('cancel');};resumeDialog.showModal();getElement('resume-bill-cancel').focus();
         });
@@ -1933,7 +2073,7 @@
             // Validate the target BEFORE changing either server lifecycle or the current editor.
             const saved=await Sales.api('/api/sales/billing/drafts/'+id);validateSavedBill(saved);
             if(saved.draftId!==id)throw Error('The saved bill identity changed. Refresh and try again.');
-            if(!same&&billHasContent())await persistDraft(true);
+            if(!same&&billHasContent()){if(hasValidBillItem())await persistDraft();else localStorage.setItem(draftKey+'.recovery.'+draftId,JSON.stringify(getBillSnapshot()));}
             const local=same?structuredClone(getBillSnapshot()):null;
             let source=saved;
             if(local&&!draftContentsEqual(local,saved)){
@@ -1956,6 +2096,7 @@
         getElement('saved-bills-description').textContent=recoveryView?'Recover legacy bills or sessions whose editing lease has expired. Live sessions remain protected.':'Active drafts and held bills. Bills open in another session remain protected.';
         loadSavedBills();
     };
+    for(const tab of savedDrawer.querySelectorAll('[data-saved-filter]'))tab.addEventListener('click',()=>{if(savedBusy)return;clearTimeout(savedSearchTimer);savedSearch=getElement('saved-bills-search').value.trim();savedFilter=tab.dataset.savedFilter;savedPage=1;loadSavedBills();});
     getElement('saved-bills-search').addEventListener('input',()=>{clearTimeout(savedSearchTimer);savedRequest++;savedSearchTimer=setTimeout(()=>{savedSearch=getElement('saved-bills-search').value.trim();savedPage=1;loadSavedBills();},250);});
     getElement('saved-bills-prev').onclick=()=>{if(!savedBusy){savedPage--;loadSavedBills();}};
     getElement('saved-bills-next').onclick=()=>{if(!savedBusy){savedPage++;loadSavedBills();}};
@@ -1967,14 +2108,17 @@
         if(!recoveryBlocked&&!pendingSale&&(billHasContent()||draftRevision>0))try{await persistDraft();}catch(error){Sales.error(error);}
         if(savedDrawer.open)await loadSavedBills();
     }));
+    getElement('save-draft').addEventListener('click',()=>Sales.run(async()=>{
+        if(activeLineEditor||pendingSale||isSavingSale||isPreparingSale||activeLookups)return;
+        if(!requireBillItem())return;
+        saveDraftOnThisDevice();await persistDraft();
+    }));
     getElement('hold-bill').addEventListener('click', () => {
         return Sales.run(async () => {
             if (pendingSale || isSavingSale || isPreparingSale || activeLookups) {
                 throw new Error('Wait for current operations to finish.');
             }
-            if (!cart.length) {
-                throw new Error('Add an item before holding this bill.');
-            }
+            if(!requireBillItem(true))return;
             if(numericInputsInvalid())throw new Error('Finish or cancel your current numeric or invoice-discount edit before holding this bill.');
             isPreparingSale = true;
             pendingState();
@@ -2017,9 +2161,9 @@
             getElement('hold-bill').click();
         }
     });
-    getElement('sale-editor').disabled=true;
+    getElement('sale-editor').disabled=true;updateAvailability();
     Sales.run(async () => {
-        await loadPolicy();
+        try{await loadPolicy();billingInitialization='ready';}catch(error){billingInitialization='failed';updateAvailability();throw error;}
         try {
             let saved = sessionStorage.getItem(storageKey);
             if (!saved && sessionStorage.getItem('stockflow-pending-sale')) {
@@ -2126,7 +2270,7 @@
             }
         }
         if(crmEnquiryId){const info=document.createElement('p');info.id='sale-crm-context';info.setAttribute('role','status');info.textContent='Enquiry ENQ-'+crmEnquiryId+' will link only after successful checkout. Search and add the requested items using current stock and prices.';getElement('sale-form').prepend(info);}
-        syncCustomer();updateSummary();mode();
+        syncCustomer();updateSummary();mode();refreshSavedBillCount();
         if (!pendingSale) {
             getElement('sale-scan')?.focus();
         }

@@ -97,6 +97,7 @@
                         storeId
                     });
                     window.StockFlowUnsaved?.allowNavigation();
+                    window.StockFlowLoading?.scopeChange();
                     location.reload();
                 } catch (error) {
                     select.value=originalSelection;

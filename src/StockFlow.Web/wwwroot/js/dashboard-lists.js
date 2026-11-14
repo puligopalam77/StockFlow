@@ -7,6 +7,7 @@
     const incoming = route === '/stockinflow';
     let offset = 0;let dashboardPager;
     let generation = 0;
+    window.StockFlowLoading?.region(getElement('dashboard-results'),{kind:'table',retry:()=>load()});
     function link(url, title) {
         const a = document.createElement('a');
         a.href = url;
@@ -43,7 +44,8 @@
             td.textContent = 'No records found.';
         }
         wrapper.append(table);
-        getElement('dashboard-results').replaceChildren(wrapper);
+        const host = getElement('dashboard-results');
+        if(window.StockFlowLoading)StockFlowLoading.updateTable(host,wrapper);else host.replaceChildren(wrapper);
     }
     async function load(pagingRequest) {
         const current = ++generation;

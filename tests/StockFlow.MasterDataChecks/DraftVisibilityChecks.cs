@@ -16,9 +16,10 @@ internal static class DraftVisibilityChecks
 {
     public static async Task Run()
     {
-        const string host="Host=127.0.0.1;Port=55443;Username=postgres;Database=";
+        const string host="Host=127.0.0.1;Port=55447;Username=postgres;Database=";
         var name="draft_visibility_"+Guid.NewGuid().ToString("N");
         await using var admin=new NpgsqlConnection(host+"postgres");await admin.OpenAsync();
+        if(!await admin.ExecuteScalarAsync<bool>("SELECT inet_server_addr()='127.0.0.1'::inet AND inet_server_port()=55447 AND current_database()='postgres' AND current_setting('cluster_name')='stockflow_bank_review_1743b72ab490475980598a6e845cc04c'"))throw new Exception("Approved disposable local test cluster required");
         await admin.ExecuteAsync("CREATE DATABASE "+name);
         try
         {
@@ -47,14 +48,17 @@ internal static class DraftVisibilityChecks
             var cfg=new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?>{{"ConnectionStrings:DefaultConnection",host+name}}).Build();
             var factory=new DbConnectionFactory(cfg,new BusinessScope{TenantId=1,UserId=1,LocationId=1,StoreId=1});
             var controller=new BillingController(factory,new PermissionContext());
-            async Task<JsonObject> List(bool include=false,Guid? owner=null,bool recovery=false,string? search=null,int page=1)
+            async Task<JsonObject> List(bool include=false,Guid? owner=null,bool recovery=false,string? search=null,int page=1,string status="ALL")
             {
-                var result=(OkObjectResult)await controller.Drafts(search,page,true,recovery,include,owner);
+                var result=(OkObjectResult)await controller.Drafts(search,page,true,recovery,include,owner,status);
                 return JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(result.Value))!.AsObject();
             }
             void Check(bool ok,string message){if(!ok)throw new Exception(message);Console.WriteLine("PASS: "+message);}
             Check((await List())["total"]!.GetValue<int>()==1,"Default list remains held-only and scoped");
             var all=await List(true,editor);Check(all["total"]!.GetValue<int>()==4,"Unified list includes own Active, Held, released and expired Active only; terminal, legacy, live other editor and foreign scopes excluded");
+            Check((await List(true,editor,status:"DRAFTS"))["total"]!.GetValue<int>()==3&&(await List(true,editor,status:"HELD"))["total"]!.GetValue<int>()==1,"Backend Draft and Hold filters preserve lease and scope restrictions");
+            Check(all["counts"]!["all"]!.GetValue<int>()==4&&all["counts"]!["onHold"]!.GetValue<int>()==1,"Filter counts use the same authorized search snapshot");
+            Check((await List(true,editor,search:"9876543210",status:"DRAFTS"))["total"]!.GetValue<int>()==3,"Mobile search and Draft status compose on the backend");
             var row=all["items"]!.AsArray().Single(r=>r!["DraftId"]!.GetValue<Guid>()==active)!;
             Check(row["itemCount"]!.GetValue<int>()==0&&row["estimatedTotal"]!.GetValue<decimal>()==0&&row["customerName"]!.GetValue<string>().Contains("Synthetic customer"),"Customer-only Active record retains customer, zero items and zero amount");
             Check((await List(true,null))["total"]!.GetValue<int>()==3,"Missing editor does not reveal another editor's live lease");
@@ -64,7 +68,10 @@ internal static class DraftVisibilityChecks
             Check((await List(true,editor))["total"]!.GetValue<int>()==3,"Completed request IDs are excluded even if a historical status is stale");
             for(var i=0;i<27;i++)await Add(Guid.NewGuid(),"HELD",elsewhere,null);
             var second=await List(true,editor,page:2);Check(second["total"]!.GetValue<int>()==30&&second["items"]!.AsArray().Count==5,"Unified list count and pagination share the same eligibility query");
-            Console.WriteLine("Draft visibility controller/PostgreSQL checks passed; disposable synthetic read schema only.");
+            Check((await List(true,editor,page:2,status:"HELD"))["items"]!.AsArray().Count==3,"Hold filter is applied before pagination");
+            try{await List(true,editor,status:"COMPLETED");throw new Exception("Invalid status accepted");}catch(System.ComponentModel.DataAnnotations.ValidationException){Console.WriteLine("PASS: unsupported status is rejected without changing history");}
+            await SavedBillLifecycleFixture.Run(seed,host+name);
+            Console.WriteLine("Draft visibility and lifecycle checks passed; disposable synthetic schema only.");
         }
         finally{NpgsqlConnection.ClearAllPools();await admin.ExecuteAsync("DROP DATABASE "+name+" WITH(FORCE)");}
     }
