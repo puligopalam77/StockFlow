@@ -10,7 +10,7 @@
     <input id="service-scan" class="form-control" maxlength="200" autofocus />
     <button class="btn btn-secondary">Find item</button>
 </form>
-<div id="scan-context" class="alert alert-info" aria-live="polite">Scan an item with a serial number, or choose a product without serial numbers below.</div>
+<div id="scan-context" class="alert alert-info" aria-live="polite" data-i18n>Scan an item with a serial number, or choose a product without serial numbers below.</div>
 <button id="clear-scan" class="btn btn-outline-secondary mb-3" type="button">Clear selection</button>
 <form id="service-create">
     <fieldset id="create-fields" disabled>
@@ -23,7 +23,7 @@
                 </div>
                 <label for="product" class="form-label">Product</label>
                 <select id="product" class="form-select" required>
-                    <option value="">Select product</option>
+                    <option value="" data-i18n>Select product</option>
                 </select>
             </div>
             <div class="col-md-6">
@@ -34,7 +34,7 @@
                 </div>
                 <label for="customer" class="form-label">Customer</label>
                 <select id="customer" class="form-select" required>
-                    <option value="">Select customer</option>
+                    <option value="" data-i18n>Select customer</option>
                 </select>
                 <small>For a new customer, add their name and mobile in Customers first.</small>
             </div>
@@ -43,7 +43,7 @@
             <div class="col-md-6">
                 <label for="technician" class="form-label">Who will repair it?</label>
                 <select id="technician" class="form-select">
-                    <option value="">Unassigned</option>
+                    <option value="" data-i18n>Unassigned</option>
                 </select>
             </div>
             <div class="col-md-6">

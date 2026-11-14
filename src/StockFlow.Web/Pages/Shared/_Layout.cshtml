@@ -22,6 +22,7 @@
         <meta name="stockflow-location" content="@(User.FindFirst("LocationId")?.Value ?? "0")" />
     <script src="~/js/common/display-text.js" asp-append-version="true"></script>
     <script src="~/js/common/form-validation.js" asp-append-version="true"></script>
+    <link rel="stylesheet" href="~/css/form-controls.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/select.css" asp-append-version="true" />
     <script src="~/js/common/select.js" asp-append-version="true"></script>
     <script src="~/js/common/select-migrations.js" asp-append-version="true"></script>
@@ -58,8 +59,8 @@
         <link rel="stylesheet" href="~/css/list-pagination.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/css/dialog-standard.css" asp-append-version="true" />
 </head>
-    <body class="sf-app sf-retail-ui @(new[]{"/Products/Index","/Categories/Index","/Brands/Index","/Suppliers/Index","/Customers/Index"}.Contains(currentPage) && ViewContext.RouteData.Values["mode"] is not null ? "master-form-page" : "")" data-shop-type="@(BusinessScope.BusinessProfileCode == "ELECTRICAL" ? "battery-geyser" : BusinessScope.BusinessProfileCode.ToLowerInvariant())" data-business-profile="@BusinessScope.BusinessProfileCode" data-catalog-registration-enhancements="@BusinessScope.CatalogRegistrationEnhancementsAvailable.ToString().ToLowerInvariant()" data-product-image-gallery="@BusinessScope.ProductImageGalleryAvailable.ToString().ToLowerInvariant()">
-        <a href="#main-content" class="sf-skip-link">Skip to main content</a>
+    <body data-stockbot-screen="@StockFlow.Web.Help.StockBotGuidance.Resolve(currentPage,Context.Request.Query["mode"].ToString())" class="sf-app sf-retail-ui @(new[]{"/Products/Index","/Categories/Index","/Brands/Index","/Suppliers/Index","/Customers/Index"}.Contains(currentPage) && ViewContext.RouteData.Values["mode"] is not null ? "master-form-page" : "")" data-shop-type="@(BusinessScope.BusinessProfileCode == "ELECTRICAL" ? "battery-geyser" : BusinessScope.BusinessProfileCode.ToLowerInvariant())" data-business-profile="@BusinessScope.BusinessProfileCode" data-catalog-registration-enhancements="@BusinessScope.CatalogRegistrationEnhancementsAvailable.ToString().ToLowerInvariant()" data-product-image-gallery="@BusinessScope.ProductImageGalleryAvailable.ToString().ToLowerInvariant()">
+        <a href="#main-content" class="sf-skip-link" data-i18n>Skip to main content</a>
         <button class="sf-sidebar-backdrop" id="sidebar-backdrop" aria-label="Close navigation" tabindex="-1" hidden>
         </button>
         <aside class="sf-sidebar" id="app-sidebar" aria-label="Main navigation">
@@ -90,7 +91,7 @@
                     <div class="sf-language-control" data-no-translate>
                         <select id="language-choice" class="form-select form-select-sm sf-language" aria-label="Language"
                                 data-can-save="@((BusinessScope.CanReviewStores && Access.Can("COMPANY_SETTINGS", "EDIT")).ToString().ToLowerInvariant())">
-                            <option value="en">English</option>
+                            <option value="en" data-i18n>English</option>
                         </select>
                         <span id="language-message" class="small text-danger" role="alert" hidden></span>
                     </div>
@@ -114,34 +115,34 @@
                     </summary>
                     <section class="sf-profile-panel" aria-label="Personal profile">
                         <div class="sf-profile-heading">
-                            <strong>My profile</strong>
+                            <strong data-i18n>My profile</strong>
                         </div>
-                        <a href="/Account/Sessions" class="sf-profile-password sf-profile-logout">Devices signed in</a>
+                        <a href="/Account/Sessions" class="sf-profile-password sf-profile-logout" data-i18n>Devices signed in</a>
                         <button type="button" id="open-profile-details" class="sf-profile-password sf-profile-logout">
                             <svg class="sf-icon" aria-hidden="true">
                                 <use href="/images/icons.svg#users" />
                             </svg>
-                            <span>Profile Details</span>
+                            <span data-i18n>Profile Details</span>
                             <span aria-hidden="true">›</span>
                         </button>
                         <button type="button" id="open-change-password" class="sf-profile-password sf-profile-logout">
                             <svg class="sf-icon" aria-hidden="true">
                                 <use href="/images/icons.svg#settings" />
                             </svg>
-                            <span>Change password</span>
+                            <span data-i18n>Change password</span>
                             <span aria-hidden="true">›</span>
-                        </button>                            <a href="/Account/TwoFactor" class="sf-profile-password sf-profile-logout">Phone sign-in verification</a>
+                        </button>                            <a href="/Account/TwoFactor" class="sf-profile-password sf-profile-logout" data-i18n>Phone sign-in verification</a>
                         <button type="button" id="profile-logout" class="sf-profile-password sf-profile-logout">
                             <svg class="sf-icon" aria-hidden="true">
                                 <use href="/images/icons.svg#out" />
                             </svg>
-                            <span>Logout</span>
+                            <span data-i18n>Logout</span>
                             <span aria-hidden="true">›</span>
                         </button>
                     </section>
                 </details>
                 }
-                else { <a class="sf-logout" asp-page="/Account/Login">Sign in</a> }
+                else { <a class="sf-logout" asp-page="/Account/Login" data-i18n>Sign in</a> }
             </div>
         </header>
         <main id="main-content" class="sf-main @(currentPage == "/Index" ? "sf-dashboard-main" : "sf-module-main") @(!isConfiguration ? "sf-operational-main" : "") @(IsSectionDefined("PageHeader") ? "sf-caption-first" : "") @(isListScreen ? "sf-list-screen" : "")">
@@ -167,7 +168,7 @@
             }
             @if (!isListScreen && currentPage is not ("/Index" or "/Sales/Create") && !(currentPage=="/Settings/Company" && ViewData["CompanySection"]?.ToString()=="business")) { <partial name="_RetailScreenGuide" /> }
         </main>
-        <footer class="sf-app-footer">© @DateTime.Now.Year StockFlow <span>Smart inventory. Better business.</span>
+        <footer class="sf-app-footer">© @DateTime.Now.Year StockFlow <span data-i18n>Smart inventory. Better business.</span>
         </footer>
     </div>
     @if (User.Identity?.IsAuthenticated == true) { <partial name="_HelpPanel" /> }
@@ -248,6 +249,7 @@
     <script src="~/js/language-selector.js" asp-append-version="true"></script>
     @if (User.Identity?.IsAuthenticated == true) { <script src="~/js/notifications.js" asp-append-version="true"></script> }
     <script src="~/js/help-panel.js" asp-append-version="true"></script>
+    <script src="~/js/stockbot-guidance.js" asp-append-version="true"></script>
     <script src="~/js/help-voice.js" asp-append-version="true"></script>
 <partial name="_IdleSession" />
     <script src="~/js/common/camera-scanner.js" asp-append-version="true"></script>

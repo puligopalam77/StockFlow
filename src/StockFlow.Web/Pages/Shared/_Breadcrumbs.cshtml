@@ -65,19 +65,19 @@
     }
     <ol>
         @if(page == "/Index") { <li>
-        <span id="breadcrumb-current" aria-current="page">Home</span>
+        <span id="breadcrumb-current" aria-current="page" data-i18n>Home</span>
     </li> }
         else
         {
     <li>
-        <a href="@home">Home</a>
+        <a href="@home" data-i18n>Home</a>
     </li>
             @foreach (var parent in parents)
             {
     <li>@if(parent.Url is not null){<a href="@parent.Url">@parent.Label</a>}else{<span>@parent.Label</span>}</li>
             }
             @if(page == "/Admin/Users") { <li id="breadcrumb-user-list" hidden>
-    <a href="/Admin/Users">User list</a>
+    <a href="/Admin/Users" data-i18n>User list</a>
 </li> }
 <li>
     <span id="breadcrumb-current" aria-current="page">@title</span>

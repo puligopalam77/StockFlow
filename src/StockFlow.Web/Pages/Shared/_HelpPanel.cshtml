@@ -1,22 +1,57 @@
 @using System.Text.Json
 @using StockFlow.Web.Help
+@inject RetailAssistantService RetailAssistant
+@inject StockBotGuidance Guidance
 @{
-    var articles = HelpCatalog.Articles.Select(article => article with
-    {
-        Links = article.Links.Where(link => Access.CanVisit(link.Url)).ToArray()
-    });
+    var articles = HelpCatalog.ForUser(Access);
 }
 <dialog id="help-panel" class="sf-help-panel" aria-labelledby="help-title" data-no-translate>
     <header class="sf-help-header">
         <span class="sf-assistant-logo" aria-hidden="true"><svg class="sf-icon"><use href="/images/icons.svg#box" /></svg></span>
-        <div><h2 id="help-title">StockFlow <span>Assistant</span></h2><p>Product assist</p></div>
+        <div><h2 id="help-title">StockBot <span>AI</span></h2><p>Your retail assistant</p></div>
+        <div class="sf-chat-header-actions">
+        <button id="help-expand" type="button" aria-label="Expand StockBot" title="Expand StockBot" aria-pressed="false"><span aria-hidden="true">&#x26F6;</span></button>
+        <button id="help-menu-toggle" type="button" aria-label="More help" title="More help" aria-expanded="false" aria-controls="help-options"><span aria-hidden="true">&#8942;</span></button>
         <button id="help-close" type="button" aria-label="Close help"><span aria-hidden="true">×</span></button>
+        </div>
     </header>
+    <div class="sf-assistant-context" aria-live="polite">
+        <span id="help-runtime-status">Checking AI status</span>
+        <span id="help-shop-scope">@RetailAssistant.ScopeName</span>
+        <small id="help-runtime-detail" hidden></small>
+    </div>
     <div class="sf-assistant-body">
-    <section class="sf-assistant-intro">
-        <span class="sf-assistant-bot" aria-hidden="true"><span>●</span><b>⌒‿⌒</b></span>
-        <div><h3>Hi, how can I help you today?</h3><p>Get instant answers about StockFlow, or browse help articles.</p></div>
+    <section id="help-options" class="sf-chat-options" aria-label="More help" hidden>
+        <nav class="sf-assistant-actions" aria-label="More help"><button id="help-browse" type="button">Browse help articles</button><button id="help-ai-support" type="button">Contact Super Admin</button></nav>
+        <details id="help-guidance-menu"><summary>Getting started &amp; Find a Feature</summary>
+            <div id="help-onboarding" hidden></div>
+            <div id="help-workflows" aria-label="Permitted walkthroughs"></div>
+            <label for="help-feature-search">Find a Feature</label>
+            <input id="help-feature-search" type="search" maxlength="100" placeholder="Try expenses, staff or barcode" />
+            <div id="help-feature-links"></div>
+            <button id="help-onboarding-reset" type="button">Show introduction again</button>
+        </details>
+        <div class="sf-chat-voice-options">
+            <label><input id="help-voice-auto" type="checkbox" /> Speak replies</label>
+            <button id="help-voice-read" type="button">Read reply</button>
+
+        </div>
     </section>
+    <section class="sf-assistant-intro">
+        <span class="sf-assistant-bot" aria-hidden="true"><img src="~/images/assistant-robot-cyan.png" asp-append-version="true" width="30" height="30" alt="" /></span>
+        <div><h3>Welcome to StockBot!</h3><p>Ask about your permitted sales, inventory, payments or StockFlow features.</p></div>
+    </section>
+    <section class="sf-stockbot-guide-tools" aria-label="StockBot guidance">
+        <h4 class="sf-chat-section-title" data-i18n-source="Quick help">Quick help</h4>
+        <button id="help-explain-screen" type="button">Explain This Screen</button>
+        <button id="help-start-guide" type="button">Guide Me Step by Step</button>
+        <button id="help-explain-fields" type="button">Explain a Field</button>
+        <button id="help-check-form" type="button">Check This Form</button>
+
+    </section>
+    <section id="help-guidance-result" class="sf-stockbot-guidance" tabindex="-1" aria-label="Approved guidance" hidden></section>
+    <button id="help-explain-error" type="button" hidden>Explain the last application error</button>
+
     <section class="sf-help-suggestions" aria-label="Suggested questions">
         <h4>Suggested questions</h4>
         <div id="help-suggested"></div>
@@ -67,14 +102,13 @@
     <footer class="sf-assistant-footer">
         <p id="help-question-error" class="sf-help-question-error" role="alert" hidden></p>
         <form id="help-ai-form" class="sf-assistant-composer" novalidate>
-            <button id="help-voice-start" type="button" aria-label="Record question" title="Record question" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg></button>
+
             <label class="visually-hidden" for="help-ai-question">What do you need help with?</label>
             <textarea id="help-ai-question" minlength="3" maxlength="500" rows="1" required placeholder="Ask a question..."></textarea>
+            <button id="help-voice-start" type="button" aria-label="Record question" title="Record question" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg></button>
             <button id="help-ai-submit" type="submit" aria-label="Send question"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#send" /></svg></button>
         </form>
         <div class="sf-help-voice-controls">
-            <label><input id="help-voice-auto" type="checkbox" /> Speak replies</label>
-            <button id="help-voice-read" type="button">Read reply</button>
             <button id="help-voice-stop" type="button" hidden>Stop voice</button>
             <button id="help-voice-cancel" type="button" hidden>Cancel recording</button>
         </div>
@@ -83,8 +117,10 @@
             <p>On-device recognition is unavailable for this language. Your browser's speech service may process microphone audio online. Audio is not stored by StockFlow.</p>
             <button id="help-voice-allow" type="button">Use browser speech service</button>
         </div>
-        <nav class="sf-assistant-actions" aria-label="More help"><button id="help-browse" type="button">Browse help articles</button><button id="help-ai-support" type="button">Contact Super Admin</button></nav>
-        <p class="sf-assistant-privacy">Keep passwords and customer details out of your question.</p>
+
+        <p class="sf-assistant-privacy">Verify important financial information against the source. Keep passwords and customer details out of your question.</p>
     </footer>
 </dialog>
 <script id="help-data" type="application/json">@Html.Raw(JsonSerializer.Serialize(articles, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }))</script>
+<script id="help-assistant-data" type="application/json">@Html.Raw(JsonSerializer.Serialize(new { scope = RetailAssistant.ScopeName, suggestions = RetailAssistant.Suggestions(Context.Request.Path) }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }))</script>
+<script id="help-guidance-data" type="application/json">@Html.Raw(JsonSerializer.Serialize(Guidance.Metadata(StockBotGuidance.Resolve(ViewContext.RouteData.Values["page"]?.ToString() ?? "", Context.Request.Query["mode"].ToString())), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }))</script>

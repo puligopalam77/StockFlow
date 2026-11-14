@@ -2,7 +2,7 @@
 @model StockFlow.Web.Pages.Warranty.DetailsModel
 @{ ViewData["Title"] = "Warranty details"; }
 <h1>Warranty details</h1>
-<a asp-page="Lookup">Back to warranty search</a>
+<a asp-page="Lookup" data-i18n>Back to warranty search</a>
 <div id="warranty-message" class="alert alert-danger" role="alert" hidden>
 </div>
 <div id="warranty-results" class="mt-3" aria-live="polite">
@@ -18,18 +18,18 @@
     <form id="coverage-form">
         <label for="coverage-type" class="form-label">Type</label>
         <select id="coverage-type" class="form-select">
-            <option value="">Unspecified</option>
-            <option value="FULL_REPLACEMENT">Full replacement</option>
-            <option value="PRO_RATA">Partial replacement credit</option>
-            <option value="REPAIR">Repair</option>
-            <option value="SERVICE_ONLY">Service only</option>
+            <option value="" data-i18n>Unspecified</option>
+            <option value="FULL_REPLACEMENT" data-i18n>Full replacement</option>
+            <option value="PRO_RATA" data-i18n>Partial replacement credit</option>
+            <option value="REPAIR" data-i18n>Repair</option>
+            <option value="SERVICE_ONLY" data-i18n>Service only</option>
         </select>
         <label for="coverage-provider" class="form-label">Provider</label>
         <select id="coverage-provider" class="form-select">
-            <option value="">Unspecified</option>
-            <option value="MANUFACTURER">Manufacturer</option>
-            <option value="DEALER">Shop / dealer</option>
-            <option value="BOTH">Manufacturer and shop</option>
+            <option value="" data-i18n>Unspecified</option>
+            <option value="MANUFACTURER" data-i18n>Manufacturer</option>
+            <option value="DEALER" data-i18n>Shop / dealer</option>
+            <option value="BOTH" data-i18n>Manufacturer and shop</option>
         </select>
         <label for="coverage-reason" class="form-label">Reason</label>
         <input id="coverage-reason" class="form-control mb-2" maxlength="1000" required />
@@ -43,10 +43,10 @@
     </select>
     <label for="resolution-type" class="form-label">How was the problem handled?</label>
     <select id="resolution-type" class="form-select">
-        <option value="">Choose when closing</option>
-        <option value="REPAIR">Repair</option>
-        <option value="NO_FAULT_FOUND">No fault found</option>
-        <option value="MANUFACTURER_REFERRED">Sent to manufacturer</option>
+        <option value="" data-i18n>Choose when closing</option>
+        <option value="REPAIR" data-i18n>Repair</option>
+        <option value="NO_FAULT_FOUND" data-i18n>No fault found</option>
+        <option value="MANUFACTURER_REFERRED" data-i18n>Sent to manufacturer</option>
     </select>
     <div id="replacement-fields" hidden>
         <label for="unit-search" class="form-label">Replacement serial search</label>
@@ -57,10 +57,10 @@
         </select>
         <label for="replacement-rule" class="form-label">Warranty agreed for the replacement</label>
         <select id="replacement-rule" class="form-select">
-            <option value="">Choose a rule</option>
-            <option value="CONTINUE_ORIGINAL">Continue original dates</option>
-            <option value="NEW_FULL_WARRANTY">New full warranty</option>
-            <option value="CUSTOM">Custom end date</option>
+            <option value="" data-i18n>Choose a rule</option>
+            <option value="CONTINUE_ORIGINAL" data-i18n>Continue original dates</option>
+            <option value="NEW_FULL_WARRANTY" data-i18n>New full warranty</option>
+            <option value="CUSTOM" data-i18n>Custom end date</option>
         </select>
         <label for="custom-end" class="form-label">Custom end date (custom rule only)</label>
         <input id="custom-end" type="date" class="form-control" />
@@ -88,13 +88,13 @@
     <div class="col-md-3">
         <label class="form-label">Status</label>
         <select id="warranty-rma-status" class="form-select">
-            <option value="READY_TO_SEND">Ready to send</option>
-            <option value="SENT_TO_PROVIDER">Sent for repair</option>
-            <option value="PROVIDER_RECEIVED">Received by repair provider</option>
-            <option value="REPAIRED">Repaired</option>
-            <option value="REPLACED">Replaced</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="RETURNED_TO_CUSTOMER">Returned to customer</option>
+            <option value="READY_TO_SEND" data-i18n>Ready to send</option>
+            <option value="SENT_TO_PROVIDER" data-i18n>Sent for repair</option>
+            <option value="PROVIDER_RECEIVED" data-i18n>Received by repair provider</option>
+            <option value="REPAIRED" data-i18n>Repaired</option>
+            <option value="REPLACED" data-i18n>Replaced</option>
+            <option value="REJECTED" data-i18n>Rejected</option>
+            <option value="RETURNED_TO_CUSTOMER" data-i18n>Returned to customer</option>
         </select>
     </div>
     <div class="col-md-2">

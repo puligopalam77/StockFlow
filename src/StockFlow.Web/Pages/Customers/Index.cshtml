@@ -2,7 +2,7 @@
 @model StockFlow.Web.Pages.Customers.IndexModel
 @{ ViewData["Title"] = "Customers"; }
 <div id="master-data" data-module="customers" data-can-sales="@((Access.Can("SALES")).ToString().ToLowerInvariant())" data-can-edit="@(( Access.Can("CUSTOMERS","EDIT") ).ToString().ToLowerInvariant())" data-can-disable="@Access.Can("CUSTOMERS","DELETE").ToString().ToLowerInvariant()">
-    @if(Access.Can("CRM")){<p><a href="/Crm" id="customer-crm-link">Customer profiles &amp; follow-ups</a></p>}
+    @if(Access.Can("CRM")){<p><a href="/Crm" id="customer-crm-link" data-i18n>Customer profiles &amp; follow-ups</a></p>}
     <header class="sf-page-heading">
         <div>
             <h1>Customers</h1>
@@ -32,8 +32,8 @@
         <div class="col-md-4">
             <label for="status-filter" class="form-label">Status</label>
             <select id="status-filter" class="form-select">
-                <option value="false">All records</option>
-                <option value="true">Active only</option>
+                <option value="false" data-i18n>All records</option>
+                <option value="true" data-i18n>Active only</option>
             </select>
         </div>
     </div>

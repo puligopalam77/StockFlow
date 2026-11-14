@@ -111,13 +111,17 @@ internal static class HelpAiChecks
         }) if (invalid.ValidPeriod() is not null) throw new Exception("Invalid model sales filters accepted.");
         await SetUser(2000);
         fake.ForcedIds = ["invented-source"];
-        var invented = await admin.PostAsJsonAsync("/api/help/questions", new { question = "How do I make a bill?" });
-        if ((await invented.Content.ReadFromJsonAsync<HelpAnswer>())!.Status != "unsupported") throw new Exception("Invented citations accepted.");
+        fake.LastSections = [];
+        // Ask outside the deterministic walkthrough shortcuts so this still
+        // exercises the model's citation validator rather than approved local help.
+        var invented = await admin.PostAsJsonAsync("/api/help/questions", new { question = "Which billing instructions are approved?" });
+        if ((await invented.Content.ReadFromJsonAsync<HelpAnswer>())!.Status != "unsupported" || fake.LastSections.Length==0) throw new Exception("Invented citations accepted or the provider check was bypassed.");
         await SetUser(2001);
         admin.DefaultRequestHeaders.Add("Test-Deny-Action", "SALES:RETURN");
         fake.ForcedIds = ["returns:1"];
+        fake.LastSections = [];
         var denied = await admin.PostAsJsonAsync("/api/help/questions", new { question = "How do I return an item?" });
-        if ((await denied.Content.ReadFromJsonAsync<HelpAnswer>())!.Status != "unsupported" || fake.LastSections.Any(section => section.ArticleId == "returns"))
+        if ((await denied.Content.ReadFromJsonAsync<HelpAnswer>())!.Status != "restricted" || fake.LastSections.Length != 0)
             throw new Exception("Restricted return guide was supplied to the model.");
         if ((int)(await admin.PostAsJsonAsync("/api/help/questions", new { question = "another question" })).StatusCode != 429) throw new Exception("Question cooldown missing.");
         await SetUser(2002);

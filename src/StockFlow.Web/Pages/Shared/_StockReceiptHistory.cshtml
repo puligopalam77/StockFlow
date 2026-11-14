@@ -10,11 +10,11 @@
             <div>
                 <label for="receipt-type" class="form-label">Movement type</label>
                 <select id="receipt-type" class="form-select">
-                    <option value="">All</option>
-                    <option value="PURCHASE">Purchase receipt</option>
-                    <option value="CUSTOMER_RETURN">Customer return</option>
-                    <option value="ADJUSTMENT_IN">Adjustment in</option>
-                    <option value="OPENING_STOCK">Opening stock</option>
+                    <option value="" data-i18n>All</option>
+                    <option value="PURCHASE" data-i18n>Purchase receipt</option>
+                    <option value="CUSTOMER_RETURN" data-i18n>Customer return</option>
+                    <option value="ADJUSTMENT_IN" data-i18n>Adjustment in</option>
+                    <option value="OPENING_STOCK" data-i18n>Opening stock</option>
                 </select>
             </div>
             <div>
@@ -28,7 +28,7 @@
             <div>
                 <label for="receipt-supplier" class="form-label">Supplier</label>
                 <select id="receipt-supplier" class="form-select">
-                    <option value="">All suppliers</option>
+                    <option value="" data-i18n>All suppliers</option>
                 </select>
             </div>
             <div class="receipt-filter-actions">
@@ -40,10 +40,10 @@
         <section class="receipt-summary" aria-label="Receipt summary">
             <h2 class="visually-hidden">Summary</h2>
             <div>
-                <article class="receipt-metric pink"><span class="receipt-metric-icon" aria-hidden="true">&#9636;</span><div><span>Receipts</span><strong id="summary-receipts">0</strong></div></article>
-                <article class="receipt-metric blue"><span class="receipt-metric-icon" aria-hidden="true">&#11041;</span><div><span>Units received</span><strong id="summary-units">0</strong></div></article>
-                <article class="receipt-metric green"><span class="receipt-metric-icon" aria-hidden="true">&#8377;</span><div><span>Purchase value</span><strong id="summary-value">&#8377;0.00</strong></div></article>
-                <article class="receipt-metric orange"><span class="receipt-metric-icon" aria-hidden="true">&#8644;</span><div><span>Adjustments</span><strong id="summary-adjustments">0</strong></div></article>
+                <article class="receipt-metric pink"><span class="receipt-metric-icon" aria-hidden="true">&#9636;</span><div><span data-i18n>Receipts</span><strong id="summary-receipts">0</strong></div></article>
+                <article class="receipt-metric blue"><span class="receipt-metric-icon" aria-hidden="true">&#11041;</span><div><span data-i18n>Units received</span><strong id="summary-units">0</strong></div></article>
+                <article class="receipt-metric green"><span class="receipt-metric-icon" aria-hidden="true">&#8377;</span><div><span data-i18n>Purchase value</span><strong id="summary-value">&#8377;0.00</strong></div></article>
+                <article class="receipt-metric orange"><span class="receipt-metric-icon" aria-hidden="true">&#8644;</span><div><span data-i18n>Adjustments</span><strong id="summary-adjustments">0</strong></div></article>
             </div>
         </section>
         <div class="receipt-list-card">

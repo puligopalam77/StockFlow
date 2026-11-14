@@ -7,6 +7,39 @@ public record HelpArticle(string Id, string Title, string Question, string[] Scr
 // Embed the reviewed staff guides so development and published builds use the same content.
 public static class HelpCatalog
 {
+    // Use the same approved passages for the browser, local search and model.
+    // Removing navigation links alone would still expose the full unauthorized guide.
+    public static HelpArticle[] ForUser(StockFlow.Web.Security.PermissionContext access)
+    {
+        var sections = HelpAiService.Sections(access);
+        var visibleArticles = new List<HelpArticle>();
+
+        foreach (var article in Articles)
+        {
+            var permitted = sections.Where(section => section.ArticleId == article.Id).ToArray();
+            if (permitted.Length == 0) continue;
+
+            // Section zero is the article introduction. Without it, use the
+            // first permitted heading so a viewer is not offered a create guide.
+            var introductionId = article.Id + ":0";
+            var hasIntroduction = permitted.Any(section => section.Id == introductionId);
+            var title = hasIntroduction ? article.Title : permitted[0].Title;
+            var paragraphs = permitted.Select(section => section.Id == introductionId
+                ? section.Content
+                : "## " + section.Title + "\n\n" + section.Content);
+
+            visibleArticles.Add(article with
+            {
+                Title = title,
+                Question = hasIntroduction ? article.Question : permitted[0].Title,
+                Content = "# " + title + "\n\n" + string.Join("\n\n", paragraphs),
+                Links = article.Links.Where(link => access.CanVisit(link.Url)).ToArray()
+            });
+        }
+
+        return visibleArticles.ToArray();
+    }
+
     public static readonly HelpArticle[] Articles =
     [
         Article("application-features", "More StockFlow features", "How do I use other StockFlow features?", ["/Reports", "/Admin", "/Transfers", "/CashClosing", "/Inventory", "/Settings/Company"],

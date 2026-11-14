@@ -30,7 +30,7 @@ public class SalesController : ControllerBase
         await using var c=factory.CreateConnection();
         if(!await Dapper.SqlMapper.ExecuteScalarAsync<bool>(c,"SELECT to_regprocedure('public.sf_gst_sale_context()') IS NOT NULL")) return Ok(new{mapped=false});
         try{return Content((await Dapper.SqlMapper.ExecuteScalarAsync<string>(c,"SELECT public.sf_gst_sale_context()::text"))!,"application/json");}
-        catch(Npgsql.PostgresException ex)when(ex.SqlState==Npgsql.PostgresErrorCodes.CheckViolation){return BadRequest(new{message=ex.MessageText});}
+        catch(Npgsql.PostgresException ex)when(ex.SqlState==Npgsql.PostgresErrorCodes.CheckViolation){Response.Headers["X-StockFlow-Error-Code"]="GST_SETUP_INCOMPLETE";return BadRequest(new{message=ex.MessageText,code="GST_SETUP_INCOMPLETE"});}
     }
 
     [HttpGet("manual-tax-rules")]

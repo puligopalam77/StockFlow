@@ -22,6 +22,8 @@ public sealed class ErrorLogController : Controller
         var unavailable = DatabaseUnavailable(error.Error);
         var status = unavailable ? StatusCodes.Status503ServiceUnavailable : StatusCodes.Status500InternalServerError;
         Response.StatusCode = status;
+        var code = unavailable ? "DATABASE_UNAVAILABLE" : "SERVICE_UNAVAILABLE";
+        Response.Headers["X-StockFlow-Error-Code"] = code;
         var message = unavailable
             ? "StockFlow cannot reach its database. Please check that the database server and its network connection are available, then try again."
             : "An error occurred while processing your request. Please try again or contact your administrator with the request ID.";
@@ -29,7 +31,7 @@ public sealed class ErrorLogController : Controller
         {
             return new ObjectResult(new
             {
-                message,
+                message, code,
                 requestId = HttpContext.TraceIdentifier
             })
             {

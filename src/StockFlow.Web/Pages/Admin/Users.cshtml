@@ -26,10 +26,10 @@
                 <button id="toggle-user-filters" type="button" class="btn btn-outline-secondary" aria-expanded="false" aria-controls="user-filter-panel">Filters<span id="user-filter-count" hidden></span></button>
                 <button id="clear-users" type="button" class="staff-filter-reset" hidden>Reset</button>
                 <div id="user-filter-panel" class="staff-filter-grid" hidden>
-                    <div><label for="filter-shop">Shop</label><select id="filter-shop" class="form-select" aria-label="Filter by shop"><option value="">All authorized shops</option></select></div>
-                    <div><label for="filter-account-type">Account type</label><select id="filter-account-type" class="form-select" aria-label="Filter by account type"><option value="">All account types</option><option value="SHOP_ADMIN">Shop Admin</option><option value="EMPLOYEE">Employee</option></select></div>
-                    <div><label for="filter-role">Role</label><select id="filter-role" class="form-select" aria-label="Filter by role"><option value="">All roles</option></select></div>
-                    <div><label for="filter-status">Status</label><select id="filter-status" class="form-select" aria-label="Filter by status"><option value="">All statuses</option><option value="true">Active</option><option value="false">Inactive</option></select></div>
+                    <div><label for="filter-shop">Shop</label><select id="filter-shop" class="form-select" aria-label="Filter by shop"><option value="" data-i18n>All authorized shops</option></select></div>
+                    <div><label for="filter-account-type">Account type</label><select id="filter-account-type" class="form-select" aria-label="Filter by account type"><option value="" data-i18n>All account types</option><option value="SHOP_ADMIN" data-i18n>Shop Admin</option><option value="EMPLOYEE" data-i18n>Employee</option></select></div>
+                    <div><label for="filter-role">Role</label><select id="filter-role" class="form-select" aria-label="Filter by role"><option value="" data-i18n>All roles</option></select></div>
+                    <div><label for="filter-status">Status</label><select id="filter-status" class="form-select" aria-label="Filter by status"><option value="" data-i18n>All statuses</option><option value="true" data-i18n>Active</option><option value="false" data-i18n>Inactive</option></select></div>
                 </div>
             </form>
             <p id="user-count" class="admin-record-count" aria-live="polite">Loading users...</p>
@@ -59,7 +59,7 @@
         </div></fieldset>
         <fieldset class="staff-section"><legend>2. Shop &amp; Role Assignment</legend><div class="staff-fields">
             <div><label for="business-name">Business name</label><input id="business-name" class="form-control" readonly /></div>
-            <div><label for="account-type">Account type *</label><select id="account-type" class="form-select" required><option value="EMPLOYEE">Employee</option><option value="SHOP_ADMIN">Shop Admin</option></select></div>
+            <div><label for="account-type">Account type *</label><select id="account-type" class="form-select" required><option value="EMPLOYEE" data-i18n>Employee</option><option value="SHOP_ADMIN" data-i18n>Shop Admin</option></select></div>
             <div><label for="primary-store">Assigned Shop *</label><select id="primary-store" class="form-select" required></select></div>
             <div><label for="role">Role *</label><select id="role" class="form-select" required></select><p id="selected-role-help" class="small mt-2"></p></div>
         </div><p id="store-assignment-help"></p><div class="staff-access-summary" aria-labelledby="access-summary-heading"><h3 id="access-summary-heading">Access Preview</h3><p id="staff-access-summary" role="status">Choose a shop and role to preview access.</p><div id="staff-permission-highlights" class="staff-permission-highlights"></div><details><summary>Effective permissions</summary><div id="staff-permission-summary"></div></details></div></fieldset>
@@ -69,7 +69,7 @@
             <div><label for="confirm-password">Confirm password *</label><input id="confirm-password" type="password" autocomplete="new-password" class="form-control" minlength="8" maxlength="128" /></div>
         </div></div><label class="staff-password-change"><input id="must-change" type="checkbox" checked /> Require password change at next login</label></section>
         <div class="staff-settings-panel">
-        <fieldset class="staff-section"><legend>4. Account Settings</legend><label class="staff-status-switch"><span>Account status</span><input id="active" type="checkbox" role="switch" checked aria-describedby="staff-status-label"/><strong id="staff-status-label">Active</strong></label></fieldset>
+        <fieldset class="staff-section"><legend>4. Account Settings</legend><label class="staff-status-switch"><span data-i18n>Account status</span><input id="active" type="checkbox" role="switch" checked aria-describedby="staff-status-label"/><strong id="staff-status-label" data-i18n>Active</strong></label></fieldset>
         <details id="advanced-store-access" class="staff-section"><summary>Advanced Access - additional shops and warehouses</summary>
             <div id="assigned-stores" class="row g-2 mt-2"></div>
             <div id="multi-store-default" hidden><label for="default-store">Default shop for multi-shop staff login</label><select id="default-store" class="form-select"></select></div>

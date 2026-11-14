@@ -28,7 +28,7 @@
         </p>
         <div class="d-flex flex-wrap gap-2">
             <button id="purchase-retry" type="button" class="btn btn-outline-primary">Retry saved receipt</button>
-            <a href="/Purchases" class="btn btn-outline-secondary">Check purchase history</a>
+            <a href="/Purchases" class="btn btn-outline-secondary" data-i18n>Check purchase history</a>
             <button id="purchase-checked" type="button" class="btn btn-outline-secondary" hidden>I checked history; start a new order</button>
         </div>
     </div>
@@ -136,7 +136,7 @@
             <section class="purchase-summary card card-body">
                 <div id="purchase-totals" class="purchase-totals-grid" aria-live="polite"></div>
                 <div class="purchase-summary-actions d-flex flex-wrap gap-2">
-                    <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+                    <a asp-page="Index" class="btn btn-outline-secondary" data-i18n>Cancel</a>
                     <button id="purchase-draft" type="submit" class="btn btn-outline-secondary" value="draft" hidden="@(directReceipt || !canComplete)">Save as draft</button>
                     <button id="purchase-save" type="submit" class="btn btn-primary" value="@(directReceipt || canComplete ? "complete" : "draft")" disabled="@(directReceipt && !canComplete)">@(directReceipt ? "Confirm Receipt" : canComplete ? "Save stock receipt" : "Save purchase order")</button>
                 </div>
@@ -145,7 +145,7 @@
     </form>
     <section id="receipt-success" class="card card-body" hidden role="status">
         <h2>Stock received successfully</h2><p id="receipt-success-number"></p><p id="receipt-success-summary"></p>
-        <div class="d-flex gap-2"><a id="receipt-view" class="btn btn-primary">View Receipt</a><a href="/Purchases/Create" class="btn btn-outline-primary">Receive More Stock</a></div>
+        <div class="d-flex gap-2"><a id="receipt-view" class="btn btn-primary" data-i18n>View Receipt</a><a href="/Purchases/Create" class="btn btn-outline-primary" data-i18n>Receive More Stock</a></div>
     </section>
     <dialog data-sf-dialog="workflow" id="receipt-confirm" aria-labelledby="receipt-confirm-title">
         <h2 id="receipt-confirm-title" class="h5">Confirm Stock Receipt</h2><dl id="receipt-confirm-summary"></dl>

@@ -21,7 +21,7 @@
 }
 <details class="sf-nav-group" open="@reportContext" data-nav-group="Reports">
     <summary class="sf-nav-link @(reportContext ? "sf-nav-group-active" : "")">
-        <svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#chart" /></svg><span>Reports</span><span class="sf-nav-chevron" aria-hidden="true">&#8250;</span>
+        <svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#chart" /></svg><span data-i18n>Reports</span><span class="sf-nav-chevron" aria-hidden="true">&#8250;</span>
     </summary>
     <div class="sf-nav-children">
         @foreach(var report in reportLinks.Where(r => r.Item4)) {

@@ -5,10 +5,10 @@
 @{ ViewData["Title"] = "Customer bill"; }
 <div class="sale-detail-screen">
 <h1 id="sale-title" class="h3">Customer bill</h1>
-<p permission-module="EWAY_BILLS"><a asp-page="/EWayBills/Prepare" asp-route-saleId="@RouteData.Values["id"]" class="btn btn-sm btn-outline-secondary">Prepare / find E-Way Bill</a></p>
+<p permission-module="EWAY_BILLS"><a asp-page="/EWayBills/Prepare" asp-route-saleId="@RouteData.Values["id"]" class="btn btn-sm btn-outline-secondary" data-i18n>Prepare / find E-Way Bill</a></p>
 <p class="small text-muted">Finalized invoice snapshots are read-only. Collections and returns remain linked to this invoice.</p>
-@if(Access.Can("GST_REPORTS")){<p><a href="/Reports/Gst" class="btn btn-sm btn-outline-secondary">GST working records &amp; linked tax notes</a></p>}
-<a id="view-invoice" class="btn btn-primary mb-3" hidden>View / print invoice</a>
+@if(Access.Can("GST_REPORTS")){<p><a href="/Reports/Gst" class="btn btn-sm btn-outline-secondary" data-i18n>GST working records &amp; linked tax notes</a></p>}
+<a id="view-invoice" class="btn btn-primary mb-3" hidden data-i18n>View / print invoice</a>
 <div id="sale-message" class="alert alert-danger" role="status" hidden>
 </div>
 <dl id="sale-header" class="row">
@@ -68,13 +68,13 @@
                 <div class="col-md-3">
                     <label class="form-label">Method</label>
                     <select id="customer-payment-mode" class="form-select">
-                        <option value="CASH">Cash</option>
-                        <option value="CARD">Card</option>
-                        <option value="CARD:DEBIT">Debit Card</option>
-                        <option value="CARD:CREDIT">Credit Card</option>
-                        <option value="UPI">UPI</option>
-                        <option value="BANK">Bank payment</option>
-                        <option value="CHEQUE">Cheque</option>
+                        <option value="CASH" data-i18n>Cash</option>
+                        <option value="CARD" data-i18n>Card</option>
+                        <option value="CARD:DEBIT" data-i18n>Debit Card</option>
+                        <option value="CARD:CREDIT" data-i18n>Credit Card</option>
+                        <option value="UPI" data-i18n>UPI</option>
+                        <option value="BANK" data-i18n>Bank payment</option>
+                        <option value="CHEQUE" data-i18n>Cheque</option>
                     </select>
                 </div>
                 <div class="col-md-12"><label><input id="customer-payment-confirmed" type="checkbox" required /> I confirm this payment has been received. A transaction reference alone is not proof of payment.</label><p class="small">Payment date is recorded by the server when saved; the invoice date remains unchanged.</p></div>
@@ -106,22 +106,22 @@
             <div class="col-md-3">
                 <label class="form-label">Stock condition</label>
                 <select id="sale-return-disposition" class="form-select">
-                    <option value="RESTOCK">Resellable</option>
-                    <option value="DAMAGED">Damaged</option>
-                    <option value="SUPPLIER_RETURN">Return to supplier</option>
-                    <option value="SERVICE_HOLD">Hold for service</option>
+                    <option value="RESTOCK" data-i18n>Resellable</option>
+                    <option value="DAMAGED" data-i18n>Damaged</option>
+                    <option value="SUPPLIER_RETURN" data-i18n>Return to supplier</option>
+                    <option value="SERVICE_HOLD" data-i18n>Hold for service</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Settlement</label>
                 <select id="sale-return-refund-mode" class="form-select">
-                    <option value="CREDIT_ADJUSTMENT">Credit adjustment</option>
-                    <option value="EXCHANGE">Exchange</option>
-                    <option value="CASH">Cash</option>
-                    <option value="CARD">Card</option>
-                    <option value="UPI">UPI</option>
-                    <option value="BANK">Bank payment</option>
-                    <option value="NONE">None</option>
+                    <option value="CREDIT_ADJUSTMENT" data-i18n>Credit adjustment</option>
+                    <option value="EXCHANGE" data-i18n>Exchange</option>
+                    <option value="CASH" data-i18n>Cash</option>
+                    <option value="CARD" data-i18n>Card</option>
+                    <option value="UPI" data-i18n>UPI</option>
+                    <option value="BANK" data-i18n>Bank payment</option>
+                    <option value="NONE" data-i18n>None</option>
                 </select>
             </div>
             <div class="col-md-3">
@@ -149,18 +149,18 @@
             <div class="col-md-3">
                 <label class="form-label">Work</label>
                 <select id="fulfilment-type" class="form-select">
-                    <option value="DELIVERY">Delivery</option>
-                    <option value="INSTALLATION">Installation</option>
-                    <option value="DELIVERY_INSTALLATION">Delivery installation</option>
+                    <option value="DELIVERY" data-i18n>Delivery</option>
+                    <option value="INSTALLATION" data-i18n>Installation</option>
+                    <option value="DELIVERY_INSTALLATION" data-i18n>Delivery installation</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Status</label>
                 <select id="fulfilment-status" class="form-select">
-                    <option value="SCHEDULED">Scheduled</option>
-                    <option value="IN_PROGRESS">In progress</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="CANCELLED">Cancelled</option>
+                    <option value="SCHEDULED" data-i18n>Scheduled</option>
+                    <option value="IN_PROGRESS" data-i18n>In progress</option>
+                    <option value="COMPLETED" data-i18n>Completed</option>
+                    <option value="CANCELLED" data-i18n>Cancelled</option>
                 </select>
             </div>
             <div class="col-md-3">
@@ -202,11 +202,11 @@
             <div class="col-md-2">
                 <label class="form-label">Status</label>
                 <select id="trade-in-status" class="form-select">
-                    <option value="RECEIVED">Received</option>
-                    <option value="VALUED">Valued</option>
-                    <option value="RESOLD">Resold</option>
-                    <option value="RECYCLED">Recycled</option>
-                    <option value="DISPOSED">Disposed</option>
+                    <option value="RECEIVED" data-i18n>Received</option>
+                    <option value="VALUED" data-i18n>Valued</option>
+                    <option value="RESOLD" data-i18n>Resold</option>
+                    <option value="RECYCLED" data-i18n>Recycled</option>
+                    <option value="DISPOSED" data-i18n>Disposed</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -222,7 +222,7 @@
 </section>}
 </div>
 </div>
-<a asp-page="Index">Back to Customer Bills</a>
+<a asp-page="Index" data-i18n>Back to Customer Bills</a>
 </div>
 @section Styles { <link rel="stylesheet" href="~/css/sales-details.css" asp-append-version="true" /> }
 @section Scripts { <script src="~/js/sales-common.js" asp-append-version="true"></script><script src="~/js/sales-details.js" asp-append-version="true"></script><script src="~/js/shop-operations.js" asp-append-version="true"></script> }

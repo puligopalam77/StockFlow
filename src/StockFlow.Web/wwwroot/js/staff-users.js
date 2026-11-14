@@ -21,6 +21,7 @@
         try { await work(); } catch (e) { message(e.message, true); } finally { busy = false; root.inert = false; root.removeAttribute('aria-busy'); }
     }
     function show(mode) {
+        document.body.dataset.stockbotScreen = mode === 'editor' ? (current ? (readOnly ? 'settings.users' : 'settings.users.edit') : 'settings.users.create') : 'settings.users';
         el('user-list-view').hidden = mode !== 'list'; el('admin-list-actions').hidden = mode !== 'list';
         el('user-editor').hidden = mode !== 'editor'; el('reset-form').hidden = mode !== 'reset';
         el('admin-page-title').textContent = mode === 'list' ? 'Staff accounts & access' : mode === 'reset' ? 'Reset Password' : current ? (readOnly ? 'User Details' : 'Edit User') : 'New User';

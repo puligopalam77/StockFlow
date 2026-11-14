@@ -259,7 +259,7 @@ public static class SaleRules
         CheckMoney(quote.TotalAmount, "Sale total");
         if (completing && request.Payments.Sum(p => p.Amount) != quote.TotalAmount)
         {
-            throw new ValidationException("Payment allocations must equal the sale total.");
+            throw new GuidedValidationException("INVALID_PAYMENT_AMOUNT", "Payment allocations must equal the sale total.");
         }
 
         return quote;

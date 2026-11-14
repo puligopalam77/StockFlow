@@ -14,13 +14,14 @@ namespace StockFlow.Web.Controllers;
 [ServiceFilter(typeof(HelpTelemetryFilter))]
 public class HelpAiController(HelpAiService help, PermissionContext access, IMemoryCache cache,
     ISalesEnquiryRepository sales, BusinessScope scope, IDashboardService dashboard, IInventoryRepository inventory,
-    IHelpBusinessRepository business, HelpTelemetry telemetry) : ControllerBase
+    IHelpBusinessRepository business, HelpTelemetry telemetry, RetailAssistantService assistant, StockBotGuidance guidance) : ControllerBase
 {
     public class QuestionInput
     {
         [Required, StringLength(500, MinimumLength = 3)]
         public string Question { get; set; } = "";
         [RegularExpression("^[a-fA-F0-9-]{36}$")] public string? ConversationId {get;set;}
+        [StringLength(100), RegularExpression("^[a-z0-9.-]+$")] public string? ScreenId {get;set;}
     }
     public class FeedbackInput
     {
@@ -37,7 +38,7 @@ public class HelpAiController(HelpAiService help, PermissionContext access, IMem
         var question = input.Question.Trim();
         if (question.Length < 3) return BadRequest(new { message = "Enter a question with 3–500 characters." });
         // One in-flight question per account per server, with a short cooldown.
-        var key = $"help-question:{scope.TenantId}:{scope.UserId}:{scope.StoreId}:{scope.LocationId}:{scope.Consolidated}:" +
+        var key = $"help-question:{scope.TenantId}:{scope.UserId}:" +
             User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         QuestionGate gate;
         lock (cache) gate = cache.GetOrCreate(key, entry => { entry.SlidingExpiration = TimeSpan.FromMinutes(10); return new QuestionGate(); })!;
@@ -48,10 +49,35 @@ public class HelpAiController(HelpAiService help, PermissionContext access, IMem
             gate.Busy = true;
         }
         QuestionContext conversation;
-        lock(cache) conversation=cache.GetOrCreate(key+":context:"+scope.BusinessProfileCode+":"+scope.BusinessProfileVersion+":"+input.ConversationId,entry=> {entry.SlidingExpiration=TimeSpan.FromMinutes(10);return new QuestionContext();})!;
+        var permissionStamp = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(
+            System.Text.Json.JsonSerializer.Serialize(access.User?.Permissions))));
+        var contextKey = $"{key}:context:{scope.StoreId}:{scope.LocationId}:{scope.Consolidated}:{scope.IsOwner}:{scope.CanReviewStores}:" +
+            $"{scope.BusinessProfileCode}:{scope.BusinessProfileVersion}:{access.User?.SecurityVersion}:" +
+            User.FindFirst("SecurityVersion")?.Value + ":" + permissionStamp + ":" + input.ConversationId;
+        lock(cache) conversation=cache.GetOrCreate(contextKey,entry=> {entry.SlidingExpiration=TimeSpan.FromMinutes(10);return new QuestionContext();})!;
         try
         {
             Response.Headers.CacheControl = "no-store";
+            if (guidance.Answer(question, input.ScreenId) is {} instruction)
+            {
+                conversation.LastEnquiry=null;conversation.LastMetric=null;conversation.LastRetail=null;
+                return Ok(instruction);
+            }
+            var retailQuestion = RetailAssistantService.Parse(question);
+            if (retailQuestion is null && conversation.LastRetail is not null && SalesQuestion.IsDateOnly(question))
+            {
+                var followUpPeriod = SalesQuestion.Parse("sales amount " + Regex.Replace(question, @"^(and |what about |how about )", "", RegexOptions.IgnoreCase))?.ValidPeriod();
+                if (followUpPeriod is not null) retailQuestion = conversation.LastRetail with { Period = followUpPeriod };
+            }
+            if (retailQuestion is not null)
+            {
+                conversation.LastEnquiry = null;
+                conversation.LastMetric = null;
+                conversation.LastRetail = retailQuestion.Metric.StartsWith("shop-") ? retailQuestion : null;
+                HttpContext.Items["help.metric"] = retailQuestion.Metric;
+                return Ok(await assistant.ExecuteAsync(retailQuestion, cancellation));
+            }
+            conversation.LastRetail = null;
             if(BusinessQuestions.IsClearlyOutside(question))
             {
                 conversation.LastEnquiry=null;conversation.LastMetric=null;
@@ -119,7 +145,10 @@ public class HelpAiController(HelpAiService help, PermissionContext access, IMem
                 };
                 conversation.LastMetric = enquiry.Metric;
                 conversation.LastEnquiry=enquiry;
-                return Ok(new HelpAnswer("answered", value, [], []));
+                return Ok(new HelpAnswer("answered", value, [], []) {
+                    Context = assistant.Describe(enquiry.Metric, period),
+                    Facts = enquiry.Metric == "amount" ? [new("Completed bills", result.InvoiceCount.ToString("N0"))] : []
+                });
             }
             if (BusinessQuestions.IsFact(question))
                 return Ok(new HelpAnswer("clarify", "Please specify the figure, date and any exact product or account name. I can check sales, collections, returns, customer dues and supplier balances.", [], []));
@@ -164,7 +193,7 @@ public class HelpAiController(HelpAiService help, PermissionContext access, IMem
         HttpContext.Items["help.metric"]=enquiry.Metric;
         var result=await business.GetAsync(new(enquiry.Metric,period,enquiry.Term),cancellation);
         if(result.Status=="answered") {gate.LastEnquiry=enquiry;gate.LastMetric=null;}
-        return Ok(new HelpAnswer(result.Status,result.Value,[],[]));
+        return Ok(new HelpAnswer(result.Status,result.Value,[],[]) { Context = result.Status == "answered" ? assistant.Describe(enquiry.Metric, period) : null });
     }
     private async Task<IActionResult> ProductStock(string term)
     {
@@ -180,7 +209,7 @@ public class HelpAiController(HelpAiService help, PermissionContext access, IMem
             return Ok(new HelpAnswer("clarify", "The stock balance and available serial units disagree for this product. I cannot give a reliable single stock value.", [], []));
         var value = rows.Length == 1 ? (rows[0].IsSerialTracked ? rows[0].AvailableUnits : rows[0].CurrentStock).ToString("N0") :
             string.Join("; ", rows.Select(row=>$"{row.ProductName} ({row.Sku}): {(row.IsSerialTracked ? row.AvailableUnits : row.CurrentStock):N0}"));
-        return Ok(new HelpAnswer("answered", value, [], []));
+        return Ok(new HelpAnswer("answered", value, [], []) { Context = assistant.Describe("product-stock", new("current")) });
     }
     private async Task<IActionResult?> BusinessSummary(string question, string? metric = null)
     {
@@ -213,7 +242,7 @@ public class HelpAiController(HelpAiService help, PermissionContext access, IMem
         if (enquiry is "stock" or "products" or "suppliers" or "customers") {
             var inventory = await dashboard.GetInventorySummaryAsync(enquiry == "suppliers");
             var count = enquiry switch { "products" => inventory.TotalProducts, "suppliers" => inventory.TotalSuppliers, "customers" => inventory.TotalCustomers, _ => inventory.CurrentStock };
-            return Ok(new HelpAnswer(count is null ? "unavailable" : "answered", count?.ToString("N0") ?? "This total is temporarily unavailable. Please try again.", [], []));
+            return Ok(new HelpAnswer(count is null ? "unavailable" : "answered", count?.ToString("N0") ?? "This total is temporarily unavailable. Please try again.", [], []) { Context = count is null ? null : assistant.Describe(enquiry, new("current")) });
         }
         var data = await dashboard.GetBusinessSummaryAsync(module == "SALES");
         var amount = enquiry == "today-sales" ? data.TodaySalesAmount : data.MonthSalesAmount;
@@ -225,8 +254,8 @@ public class HelpAiController(HelpAiService help, PermissionContext access, IMem
             "ready-repairs" => $"{data.ReadyServiceCount:N0}",
             _ => $"{data.ExpiringWarrantyCount:N0}"
         };
-        return Ok(new HelpAnswer("answered", message, [], []));
+        return Ok(new HelpAnswer("answered", message, [], []) { Context = assistant.Describe(enquiry, new("current")) });
     }
     private class QuestionGate { public bool Busy; public DateTimeOffset Next; }
-    private class QuestionContext { public string? LastMetric; public SalesQuestion? LastEnquiry; }
+    private class QuestionContext { public string? LastMetric; public SalesQuestion? LastEnquiry; public RetailQuestion? LastRetail; }
 }

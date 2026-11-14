@@ -52,9 +52,10 @@ public record SalesQuestion(string Metric, string Period, string? From = null, s
         Regex.IsMatch(Normalize(question), @"^(and |what about |how about )?(today|yesterday|day before yesterday|two days ago|2 days ago|this week|last week|this month|last month|\d{4}-\d{2}-\d{2})$");
 
     public static bool HasUnsupportedFilters(string question) =>
+        Regex.IsMatch(question, @"\b(compare|highest|lowest|which|each|per|by|across)\b.*\b(shops?|stores?|branches?|tenants?|locations?)\b", RegexOptions.IgnoreCase) ||
         Regex.IsMatch(question, @"\b(profit|margin|cashier|employee|staff|credit|net|cancelled|canceled)\b", RegexOptions.IgnoreCase) ||
         (Regex.IsMatch(question,@"\b(service|repairs?)\b",RegexOptions.IgnoreCase) && Regex.IsMatch(question,@"\b(payments?|money|cash|card|upi|amount)\b",RegexOptions.IgnoreCase)) ||
-        Regex.IsMatch(question, @"\b(for|by|at|in|from)\s+(store|branch|warehouse|business|tenant|location)\b", RegexOptions.IgnoreCase);
+        Regex.IsMatch(question, @"\b(for|by|at|in|from|across)\s+(?:(?:all|my|our|the|authorized)\s+)*(shops?|stores?|branches?|warehouses?|business(?:es)?|tenants?|locations?)\b", RegexOptions.IgnoreCase);
 
     public bool MatchesStatedPeriod(string question)
     {

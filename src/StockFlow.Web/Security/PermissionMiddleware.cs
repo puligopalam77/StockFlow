@@ -104,7 +104,7 @@ public class PermissionMiddleware
             return;
         }
 
-        if (path is "/notifications" or "/api/notifications" or "/api/notifications/read" || path.StartsWith("/account/") || path == "/error" || path == "/api/antiforgery" || path == "/api/branches/context" || path == "/api/help/questions" || path == "/api/help/questions/feedback" || path == "/api/help/voice" || (path == "/api/screenlanguages" && HttpMethods.IsGet(context.Request.Method)) || context.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is not null)
+        if (path is "/notifications" or "/api/notifications" or "/api/notifications/read" || path.StartsWith("/account/") || path == "/error" || path == "/api/antiforgery" || path == "/api/branches/context" || path == "/api/help/questions" || path == "/api/help/questions/feedback" || path == "/api/help/voice" || (HttpMethods.IsGet(context.Request.Method) && path is "/api/help/assistant" or "/api/help/assistant/health" or "/api/help/assistant/guidance") || (path == "/api/screenlanguages" && HttpMethods.IsGet(context.Request.Method)) || context.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is not null)
         {
             await next(context);
             return;

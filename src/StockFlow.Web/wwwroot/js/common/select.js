@@ -17,7 +17,7 @@ window.StockFlowSelect = window.StockFlowSelect || (() => {
         const labels = [...(source.labels || [])];
         const label = settings.label || source.getAttribute('aria-label') || labels.map(l => {
             const copy = l.cloneNode(true); copy.querySelectorAll('input,select,textarea,button,.sf-select').forEach(n => n.remove());
-            return copy.textContent.trim();
+            return (window.StockFlowLanguage?.originalText(l) || copy.textContent).trim();
         }).join(' ') || source.name || 'Selection';
         const fieldName = label.replace(/\s*\(Optional\)\s*/ig, '').replace(/\s*\*\s*$/, '').trim();
         const emptyOption = source instanceof HTMLSelectElement ? [...source.options].find(o => o.value === '')?.textContent?.trim() : '';
@@ -237,6 +237,10 @@ window.StockFlowSelect = window.StockFlowSelect || (() => {
         observer.observe(source, { subtree: true, attributes: true, childList: true, characterData: true });
         // Native reset also resets the unnamed search inputs after dispatching reset.
         source.form?.addEventListener('reset', () => setTimeout(() => { if (!destroyed) { close(); refresh(); } }, 0), { signal: lifecycle.signal });
+        document.addEventListener('stockflow:language-ready', () => {
+            refresh();
+            if (!panel.hidden) { render(lastQuery); position(); }
+        }, { signal: lifecycle.signal });
         source.focus = options => input.focus(options);
         const api = { source, input, search, wrapper: host, panel, list, refresh, open, close,
             destroy() {

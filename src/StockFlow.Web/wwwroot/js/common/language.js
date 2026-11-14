@@ -322,6 +322,8 @@ window.StockFlowLanguage = (() => {
     // Short retail navigation names reuse existing localized terminology when a
     // language pack has not yet supplied the newer caption. Stored keys stay valid.
     const captionAliases={
+        'ai ready':['ready'], 'expand stockbot':['expand all'], 'compact view':['collapse all'],
+        'how many low stock products?':['low stock products'],
         'sales':['sales & billing','sell / billing'], 'expenses':['operating expenses'],
         'stock overview':['inventory overview','stock on hand'], 'stock history':['inventory history','search records'],
         'business details':['business information'], 'invoice settings':['billing & invoice settings'],
@@ -374,31 +376,60 @@ window.StockFlowLanguage = (() => {
         return value;
     }
     function refresh() {
+        // Explicit caption ownership also works inside components that protect
+        // their business results or help article bodies from automatic translation.
+        for (const element of document.querySelectorAll('[data-i18n-source]')) {
+            const value = text(element.dataset.i18nSource);
+            if (element.textContent !== value) element.textContent = value;
+        }
+        for (const element of document.querySelectorAll('[data-i18n-attributes]')) {
+            const attributes = element.dataset.i18nAttributes.split(/\s+/);
+            for (const attribute of ['placeholder', 'aria-label', 'title'])
+                if (attributes.includes(attribute)) applyValue(element, attribute);
+        }
         const selectors =
-            'h1,h2,h3,h4,label,legend,summary,button,a.btn,th,dt,p,small,[data-i18n],.sf-nav a,.sf-nav summary,.configuration-menu a,.sf-breadcrumb a,.sf-breadcrumb span,.sf-topbar-actions > a,.sf-profile-panel a';
+            'h1,h2,h3,h4,h5,h6,label,legend,summary,button,a.btn,th,dt,p,small,[data-i18n],.badge,.admin-status,.form-text,.alert,[role="status"],.card-header,.card-title,td[colspan]:only-child,.sf-nav a,.sf-nav summary,.configuration-menu a,.sf-breadcrumb a,.sf-breadcrumb span,.sf-topbar-actions > a,.sf-profile-panel a';
         for (const element of document.querySelectorAll(selectors)) {
-            if (element.closest('[data-no-translate]'))
+            if (element.closest('[data-no-translate],[data-i18n-source]'))
                 continue;
+            // Empty-table messages are captions; ordinary record cells are data.
+            if (element.tagName === 'TD' && !element.hasAttribute('data-i18n') &&
+                !/^(?:No (?:matching|records|results|products|invoices)|Loading\b)/i.test(originalText(element).trim())) continue;
             // Captions often sit inside a span next to an icon.
             const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
             while (walker.nextNode()) {
                 const node = walker.currentNode;
-                if (!node.parentElement.closest('[data-no-translate],svg,script,style'))
+                if (!node.parentElement.closest('[data-no-translate],svg,script,style,option,input,textarea,[contenteditable="true"],.sf-select-option,.sf-select-trigger'))
                     applyValue(node);
             }
         }
         for (const element of document.querySelectorAll(
-            'input[placeholder],button[aria-label],select[aria-label]'
+            '[placeholder],[aria-label],[title]'
         )) {
-            if (element.closest('[data-no-translate]')) continue;
-            for (const attribute of ['placeholder', 'aria-label']) applyValue(element, attribute);
+            if (element.closest('[data-no-translate],.sf-select-option')) continue;
+            for (const attribute of ['placeholder', 'aria-label', 'title']) applyValue(element, attribute);
         }
         // Translate fixed payment choices only, never product/customer selection options.
         for (const option of document.querySelectorAll(
             '#payment-mode option,#refund-mode option,#main-content option[value=""],#sale-customer option[value="0"],option[data-i18n]'
         )) {
+            if (option.closest('[data-no-translate]')) continue;
+            // Without an explicit value, HTML derives the submitted value from
+            // the caption. Freeze it before changing the displayed wording.
+            if (!option.hasAttribute('value')) option.setAttribute('value', option.value);
             for (const node of option.childNodes)
                 if (node.nodeType === Node.TEXT_NODE) applyValue(node);
+        }
+        // Stacked mobile tables repeat header captions through CSS data-label.
+        // Copy only from a simple header, never from the saved record contents.
+        for (const table of document.querySelectorAll('table')) {
+            if (table.closest('[data-no-translate]') || table.tHead?.rows.length !== 1) continue;
+            const headers = [...table.tHead.rows[0].cells];
+            if (headers.some(header=>header.colSpan !== 1 || header.rowSpan !== 1)) continue;
+            for (const cell of table.querySelectorAll('tbody td[data-label]')) {
+                const caption = headers[cell.cellIndex]?.textContent.trim();
+                if (caption && cell.dataset.label !== caption) cell.dataset.label = caption;
+            }
         }
     }
     function fieldError(template, parameters, code = language, useOverrides = true, englishMessage = null) {
@@ -518,7 +549,8 @@ window.StockFlowLanguage = (() => {
                 queued = false;
                 refresh();
             });
-        }).observe(document.body, { childList: true, characterData: true, subtree: true });
+        }).observe(document.body, { childList: true, characterData: true, subtree: true,
+            attributes: true, attributeFilter: ['placeholder', 'aria-label', 'title', 'data-label', 'data-i18n-source', 'data-i18n-attributes', 'data-i18n'] });
         loadLanguage();
         window.addEventListener('focus', loadLanguage);
         window.addEventListener('storage', (event) => {

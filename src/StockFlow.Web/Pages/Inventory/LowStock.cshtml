@@ -5,13 +5,13 @@
 @section PageHeader {
 <header class="sf-page-heading low-stock-heading"><div><div class="low-stock-title"><h1>Low Stock</h1><button type="button" id="low-stock-help-button" class="low-stock-help-button" popovertarget="low-stock-help" aria-label="How Low Stock Works">?</button></div><p>Monitor stock shortages and identify items that need replenishment.</p><p class="low-stock-location">Location: @Scope.LocationName</p></div><div class="low-stock-header-actions">
 @if(Access.Can("PURCHASES","CREATE")){<a href="/Purchases/Create" class="btn btn-primary">+ Receive Stock</a>}
-@if(Access.Can("STOCK_TRANSFER","VIEW")){<a href="/Transfers" class="btn btn-outline-secondary">Review Transfers</a>}
+@if(Access.Can("STOCK_TRANSFER","VIEW")){<a href="/Transfers" class="btn btn-outline-secondary" data-i18n>Review Transfers</a>}
 </div></header>
 }
 <div id="low-stock-workspace" data-sf-pagination-remote="true" data-can-receive="@Access.Can("PURCHASES","CREATE").ToString().ToLowerInvariant()" data-can-transfer="@Access.Can("STOCK_TRANSFER","VIEW").ToString().ToLowerInvariant()">
 <aside id="low-stock-help" class="low-stock-help" popover="auto" aria-labelledby="low-stock-help-title" tabindex="-1">
 <h2 id="low-stock-help-title">How Low Stock Works</h2>
-<ul><li>Active variants at or below the effective location minimum are included.</li><li>Quantity needed reaches the minimum: maximum of zero and minimum minus ledger stock. Items exactly at minimum need zero; zero stock with zero minimum is included.</li><li>Figures belong to the selected authorized shop and location. Search and status filters update the summary across all pages.</li><li>Ledger quantity follows recorded stock movements; available serialized units can differ. Review marked discrepancies.</li><li>Barcode and serial search uses existing authorized records where supported.</li><li>An empty list does not confirm that every product has a configured minimum.</li></ul>
+<ul><li data-i18n>Active variants at or below the effective location minimum are included.</li><li data-i18n>Quantity needed reaches the minimum: maximum of zero and minimum minus ledger stock. Items exactly at minimum need zero; zero stock with zero minimum is included.</li><li data-i18n>Figures belong to the selected authorized shop and location. Search and status filters update the summary across all pages.</li><li data-i18n>Ledger quantity follows recorded stock movements; available serialized units can differ. Review marked discrepancies.</li><li data-i18n>Barcode and serial search uses existing authorized records where supported.</li><li data-i18n>An empty list does not confirm that every product has a configured minimum.</li></ul>
 <button type="button" class="btn btn-outline-secondary" popovertarget="low-stock-help" popovertargetaction="hide">Close help</button></aside>
 <div class="low-stock-metrics" aria-label="Filtered shortage summary">
 <section class="card"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#report-warning" /></svg><h2>Low Stock Variants</h2><strong id="low-stock-total">—</strong><p>At or below minimum</p></section>
@@ -20,7 +20,7 @@
 </div>
 <form id="low-stock-search" class="low-stock-filters sf-filter-bar" novalidate>
 <label for="low-stock-term">Search<input id="low-stock-term" class="form-control" type="search" maxlength="150" placeholder="Search product, variant, SKU or barcode" /></label>
-<label for="low-stock-status">Stock Status<select id="low-stock-status" class="form-select"><option value="">All Shortages</option><option value="OUT">Out of Stock</option><option value="LOW">At / Below Minimum</option></select></label><button type="button" id="low-stock-reset" class="btn btn-outline-secondary">Reset Filters</button>
+<label for="low-stock-status">Stock Status<select id="low-stock-status" class="form-select"><option value="" data-i18n>All Shortages</option><option value="OUT" data-i18n>Out of Stock</option><option value="LOW" data-i18n>At / Below Minimum</option></select></label><button type="button" id="low-stock-reset" class="btn btn-outline-secondary">Reset Filters</button>
 </form>
 <section class="card low-stock-card">
 <p id="low-stock-summary" role="status" aria-live="polite">Loading low-stock information…</p>

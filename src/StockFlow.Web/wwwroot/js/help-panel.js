@@ -2,7 +2,7 @@
 (() => {
     const panel = document.getElementById('help-panel');
     if (!panel) return;
-    const articles = JSON.parse(document.getElementById('help-data').textContent);
+    let articles = JSON.parse(document.getElementById('help-data').textContent);
     const search = document.getElementById('help-search');
     const results = document.getElementById('help-results');
     const questions = document.getElementById('help-questions');
@@ -18,6 +18,27 @@
     let lastQuestion = '';
     let feedbackId = null;
     let retryAllowed = false;
+    const assistantData = document.getElementById('help-assistant-data');
+    let retailSettings = assistantData ? JSON.parse(assistantData.textContent) : null;
+    let contextStamp = null;
+    let runtimeRevision = 0;
+    let accessRevision = 0;
+    // Every pending request remembers this number. An access change makes its
+    // answer stale, even if the server response arrives after the refresh.
+    function clearAccessResults() {
+        accessRevision++;
+        aiAnswer = null;
+        stockAnswer = null;
+        lastQuestion = '';
+        feedbackId = null;
+        retryAllowed = false;
+        for (const id of ['help-ai-answer', 'help-user-question', 'help-answer-tools', 'help-stock-result']) {
+            const element = document.getElementById(id);
+            if (!element) continue;
+            element.replaceChildren();
+            element.hidden = true;
+        }
+    }
     const conversationId = crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
         const value = Math.floor(Math.random() * 16);
         return (character === 'x' ? value : (value & 3) | 8).toString(16);
@@ -28,7 +49,7 @@
         return Math.max(0, ...article.screens.filter(screen => currentPath === screen.toLowerCase() ||
             currentPath.startsWith(screen.toLowerCase() + '/')).map(screen => screen.length));
     }
-    const related = articles.filter(article => screenMatch(article) > 0).sort((left, right) => screenMatch(right) - screenMatch(left));
+    let related = [];
     const screenQuestions = {
         billing: ['How much quantity sold today?', 'How much amount collected today?'],
         products: ['How many products?', 'What is the difference between a barcode and a serial?'],
@@ -64,6 +85,46 @@
         const translated = translation(text);
         return translated && translated !== text ? text + ' (' + translated + ')' : (window.StockFlowLanguage?.text(text) || text);
     }
+
+    const optionsPanel = document.getElementById('help-options');
+    const menuToggle = document.getElementById('help-menu-toggle');
+    const expandToggle = document.getElementById('help-expand');
+    function showOptions(open, focus = false) {
+        if (!optionsPanel || !menuToggle) return;
+        optionsPanel.hidden = !open;
+        menuToggle.setAttribute('aria-expanded', String(open));
+        if (open) {
+            optionsPanel.scrollIntoView({block:'nearest'});
+            if (focus) optionsPanel.querySelector('button')?.focus();
+        }
+    }
+    menuToggle?.addEventListener('click', () => showOptions(optionsPanel.hidden, true));
+    for (const id of ['help-explain-screen','help-start-guide','help-explain-fields','help-check-form'])
+        document.getElementById(id)?.addEventListener('click', () => showOptions(false));
+    expandToggle?.addEventListener('click', () => {
+        const expanded = panel.classList.toggle('is-expanded');
+        expandToggle.setAttribute('aria-pressed', String(expanded));
+        expandToggle.setAttribute('aria-label', expanded ? 'Compact view' : 'Expand StockBot');
+        expandToggle.title = expanded ? 'Compact view' : 'Expand StockBot';
+    });
+    panel.addEventListener('cancel', event => {
+        if (optionsPanel && !optionsPanel.hidden) {
+            event.preventDefault(); showOptions(false); menuToggle.focus();
+        }
+    });
+    panel.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !event.defaultPrevented && optionsPanel && !optionsPanel.hidden) {
+            event.preventDefault(); event.stopPropagation(); showOptions(false); menuToggle.focus();
+        }
+    });
+    panel.addEventListener('close', () => showOptions(false));
+    document.getElementById('help-ai-question').addEventListener('keydown', event => {
+        if (event.key === 'Enter' && !event.shiftKey && !event.isComposing && !event.ctrlKey && !event.altKey && !event.metaKey) {
+            event.preventDefault();
+            if (!event.currentTarget.readOnly && !document.getElementById('help-ai-submit').disabled)
+                document.getElementById('help-ai-form').requestSubmit();
+        }
+    });
 
     function button(label, action, className = 'btn btn-outline-secondary btn-sm', translate = true) {
         const element = document.createElement('button');
@@ -205,8 +266,6 @@
             bilingual('No matching articles. Try another word or ask your administrator.');
     }
 
-    const suggestions = [...related, articles.find(article => article.id === 'common-problems')];
-    if (!related.length) suggestions.unshift(articles.find(article => article.id === 'billing'), articles.find(article => article.id === 'receiving-stock'));
     const fixedCaptions = new Map();
     for (const id of ['help-back', 'help-ai-support', 'help-ai-support-note', 'help-stock-check', 'help-browse']) {
         const element = document.getElementById(id);
@@ -216,12 +275,30 @@
     fixedCaptions.set(searchLabel, searchLabel.textContent);
     const accessNote = articleSection.querySelector('p.small');
     fixedCaptions.set(accessNote, accessNote.textContent);
+    // Capture only literal interface leaves before result cards are rendered.
+    // Scope labels, article bodies and answer data keep their own renderers.
+    for (const element of panel.querySelectorAll('h2,h3,h4,label,summary,button,p,span')) {
+        if (element.children.length || !element.textContent.trim() ||
+            element.closest('#help-article,#help-guidance-result') ||
+            ['help-shop-scope','help-runtime-status','help-language-status'].includes(element.id) ||
+            element.closest('.sf-stockbot-guide-tools')) continue;
+        fixedCaptions.set(element, element.textContent);
+    }
+    for (const element of panel.querySelectorAll('[placeholder],[aria-label],[title]')) {
+        element.dataset.i18nAttributes = ['placeholder','aria-label','title']
+            .filter(attribute=>element.hasAttribute(attribute)).join(' ');
+    }
     function refreshHelp() {
         // Session expiry removes the business screen while translations may still finish.
         if (!panel.isConnected) return;
+        related = articles.filter(article => screenMatch(article) > 0).sort((left, right) => screenMatch(right) - screenMatch(left));
+        const suggestions = [...new Set([...related, articles.find(article => article.id === 'common-problems')])].filter(Boolean);
+        for (const shortcut of panel.querySelectorAll('[data-help-article]')) {
+            const article = articles.find(item => item.id === shortcut.dataset.helpArticle);
+            const requiredHeading = {billing:'## Create a bill', 'receiving-stock':'## Receive a delivery', warranty:'## Find a warranty'}[article?.id];
+            shortcut.hidden = !article || !requiredHeading || !article.content.includes(requiredHeading);
+        }
         for (const [element, english] of fixedCaptions) element.textContent = bilingual(english);
-        search.placeholder = bilingual('Try barcode, payment or warranty');
-        document.getElementById('help-close').setAttribute('aria-label', bilingual('Close help'));
         questions.replaceChildren(...suggestions.map(article => button(article.question, () => openArticle(article))));
         const primary = related[0];
         if (workflowQuestions) {
@@ -236,6 +313,10 @@
             document.getElementById('help-suggested').replaceChildren(...starters.map(article =>
                 button(article.question, () => answerSuggested(article), 'sf-help-suggestion')));
         }
+        if (retailSettings?.suggestions?.length) {
+            document.getElementById('help-suggested').replaceChildren(...retailSettings.suggestions.map(question =>
+                button(question, () => askSuggested(question), 'sf-help-suggestion')));
+        }
         document.getElementById('help-context').textContent = bilingual(related.length ? 'Questions for this screen' : 'Common shop questions');
         const scroll = panel.scrollTop;
         if (selectedArticle) openArticle(selectedArticle, false);
@@ -249,11 +330,61 @@
         const destination = document.getElementById('help-ai-answer');
         destination.hidden = false;
         destination.replaceChildren();
+        const context = aiAnswer.context;
+        if (context) {
+            const title = document.createElement('h4');
+            title.className = 'sf-stockbot-answer-title';
+            title.textContent = bilingual(context.title);
+            const scope = document.createElement('p');
+            scope.className = 'sf-stockbot-answer-scope';
+            scope.textContent = context.scope + ' | ' + (context.from === context.to ? context.from : context.from + ' to ' + context.to);
+            destination.append(title, scope);
+        }
         const message = document.createElement('p');
         message.textContent = bilingual(aiAnswer.message);
         message.style.whiteSpace = "pre-line";
         destination.append(message);
-        for (const section of aiAnswer.sections || []) {
+        if (aiAnswer.facts?.length) {
+            const facts = document.createElement('div');
+            facts.className = 'sf-stockbot-facts';
+            for (const fact of aiAnswer.facts) {
+                const card = document.createElement('section');
+                const label = document.createElement('h5');
+                label.textContent = bilingual(fact.label);
+                const value = document.createElement('p');
+                value.textContent = fact.value;
+                if (fact.value.length > 160 || fact.value.includes('\n')) {
+                    const details = document.createElement('details');
+                    const summary = document.createElement('summary');
+                    summary.textContent = bilingual('Show records');
+                    details.append(summary, value);
+                    card.append(label, details);
+                } else card.append(label, value);
+                if (fact.note) {
+                    const details = document.createElement('details');
+                    details.className = 'sf-chat-fact-note';
+                    const summary = document.createElement('summary'); summary.textContent = bilingual('Details');
+                    const note = document.createElement('small'); note.textContent = bilingual(fact.note);
+                    details.append(summary, note); card.append(details);
+                }
+                facts.append(card);
+            }
+            destination.append(facts);
+        }
+        if (context) {
+            const details = document.createElement('details');
+            details.className = 'sf-stockbot-basis';
+            const summary = document.createElement('summary');
+            summary.textContent = bilingual('Source and calculation details');
+            const basis = document.createElement('p');
+            basis.textContent = bilingual(context.basis);
+            const checked = document.createElement('small');
+            checked.textContent = 'Checked ' + new Date(context.checkedAt).toLocaleString() + ' | Shop timezone: ' + context.timeZone;
+            details.append(summary, basis, checked);
+            destination.append(details);
+        }
+        if (aiAnswer.guide) document.dispatchEvent(new CustomEvent('stockflow:guide-received', {detail:aiAnswer.guide}));
+        for (const section of aiAnswer.guide ? [] : aiAnswer.sections || []) {
             const heading = document.createElement('h4');
             heading.textContent = bilingual(section.title);
             const body = document.createElement('div');
@@ -263,8 +394,8 @@
             if (article) destination.append(button('Source: ' + bilingual(article.title), () => openArticle(article), 'sf-assistant-source', false));
         }
         // The only clickable sources are local guide buttons and server-approved screen links.
-        for (const link of aiAnswer.links || []) {
-            if (!articles.some(article => article.links.some(item => item.url === link.url.split('?')[0]))) continue;
+        for (const link of [...(aiAnswer.links || []), ...(context?.sources || [])]) {
+            if (!articles.some(article => article.links.some(item => item.url === link.url.split('?')[0])) && !window.StockFlowGuide?.allowsLink(link.url)) continue;
             const anchor = document.createElement('a');
             anchor.href = link.url;
             anchor.className = 'btn btn-outline-primary btn-sm';
@@ -274,6 +405,10 @@
         const tools = document.getElementById('help-answer-tools');
         tools.replaceChildren();
         tools.hidden = true;
+        if (context?.followUps?.length) {
+            tools.append(...context.followUps.map(question => button(question, () => askSuggested(question), 'sf-help-followup')));
+            tools.hidden = false;
+        }
         if (retryAllowed && lastQuestion) {
             const retry = button('Retry', () => askSuggested(lastQuestion), 'sf-help-retry');
             retry.disabled = true;
@@ -322,7 +457,9 @@
         document.dispatchEvent(new Event('stockflow:help-answer'));
     }
     document.getElementById('help-ai-support').addEventListener('click', () => {
+        showOptions(false);
         document.getElementById('help-ai-support-note').hidden = false;
+        document.getElementById('help-ai-support-note').scrollIntoView({block:'nearest'});
     });
     document.getElementById('help-ai-form').addEventListener('submit', async event => {
         event.preventDefault();
@@ -362,6 +499,7 @@
         answer.setAttribute('aria-busy', 'true');
         answer.scrollIntoView({block:'nearest'});
         submit.disabled = true;
+        const requestAccess = accessRevision;
         panel.querySelectorAll('#help-suggested button').forEach(button => button.disabled = true);
         document.getElementById('help-ai-support-note').hidden = true;
         try {
@@ -373,10 +511,11 @@
                 method: 'POST',
                 signal:controller.signal,
                 headers: {'Content-Type':'application/json', 'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},
-                body: JSON.stringify({question, conversationId})
+                body: JSON.stringify({question, conversationId, screenId:document.body.dataset.stockbotScreen})
             });
             } finally {clearTimeout(timeout);}
             const result = await response.json().catch(() => null);
+            if (requestAccess !== accessRevision) return;
             if (!response.ok) {
                 retryAllowed = response.status === 429 || response.status >= 500;
                 aiAnswer = {status:'unavailable',message:result?.message || 'The question could not be answered. Please retry.',sections:[],links:[],answerId:result?.answerId};
@@ -387,13 +526,14 @@
             retryAllowed = result.status === 'unavailable';
             }
         } catch (error) {
+            if (requestAccess !== accessRevision) return;
             retryAllowed = true;
             aiAnswer = {status:'unavailable', message:error.name === 'AbortError' ? 'The request took too long. Please retry.' : 'The connection failed. Please retry; no total was calculated.', sections:[], links:[]};
         } finally {
             submit.disabled = false;
             panel.querySelectorAll('#help-suggested button').forEach(button => button.disabled = false);
             answer.removeAttribute('aria-busy');
-            showAiAnswer();
+            if (requestAccess === accessRevision) showAiAnswer();
             document.dispatchEvent(new Event('stockflow:help-answer'));
         }
     });
@@ -456,14 +596,20 @@
             return;
         }
         button.disabled = true;
+        const requestAccess = accessRevision;
         try {
             const query = new URLSearchParams({term, lowStockOnly:low});
             const response = await fetch('/api/help/stock?' + query, {cache:'no-store'});
             const body = await response.json().catch(() => null);
+            if (requestAccess !== accessRevision) return;
             if (!response.ok) throw new Error(body?.message || 'Stock could not be checked. Your access may have changed. Try again or contact your administrator.');
             stockAnswer = body;
-        } catch (error) { stockAnswer = {error:error.message}; }
-        finally { button.disabled = false; showStockAnswer(); }
+        } catch (error) {
+            if (requestAccess === accessRevision) stockAnswer = {error:error.message};
+        } finally {
+            button.disabled = false;
+            if (requestAccess === accessRevision) showStockAnswer();
+        }
     });
     async function loadHelpLanguage(code) {
         const requestRevision = ++revision;
@@ -492,8 +638,74 @@
     }
     document.addEventListener('stockflow:language-ready', event => loadHelpLanguage(event.detail.language));
     refreshHelp();
-    opener.addEventListener('click', () => { panel.showModal(); showResults(); document.getElementById('help-ai-question').focus(); });
+    async function refreshRuntime() {
+        if (!assistantData) return;
+        const generation = ++runtimeRevision;
+        const caption = document.getElementById('help-runtime-status');
+        const detail = document.getElementById('help-runtime-detail');
+        const scopeLabel = document.getElementById('help-shop-scope');
+        caption.dataset.i18nSource = 'Checking AI status';
+        caption.textContent = bilingual('Checking AI status');
+        // Context and capability checks do not fetch financial or stock records.
+        const contextRequest = fetch('/api/help/assistant?screen=' + encodeURIComponent(location.pathname), {cache:'no-store'})
+            .then(async response => {
+                if (!response.ok) throw new Error('Shop access could not be refreshed.');
+                const next = await response.json();
+                if (generation !== runtimeRevision) return;
+                // A successful HTTP response is not enough: missing access data
+                // must clear old instructions instead of retaining them.
+                if (!next || typeof next.contextStamp !== 'string' || !next.contextStamp ||
+                    !Array.isArray(next.suggestions) || !Array.isArray(next.articles))
+                    throw new Error('STOCKBOT_ACCESS_INCOMPLETE');
+                const accessChanged = Boolean(contextStamp && contextStamp !== next.contextStamp);
+                articles = next.articles;
+                document.getElementById('help-data').textContent = JSON.stringify(articles);
+                selectedArticle = null;
+                content.replaceChildren();
+                if (accessChanged) clearAccessResults();
+                contextStamp = next.contextStamp;
+                document.dispatchEvent(new CustomEvent('stockflow:assistant-context', {detail:{changed:accessChanged}}));
+                retailSettings = next;
+                scopeLabel.textContent = next.scope;
+                refreshHelp();
+            }).catch(() => {
+                if (generation !== runtimeRevision) return;
+                scopeLabel.textContent = bilingual('Shop access could not be refreshed. Retry before relying on an earlier answer.');
+                clearAccessResults();
+                retailSettings = null;
+                articles = []; selectedArticle = null; content.replaceChildren();
+                document.getElementById('help-data').textContent = '[]';
+                document.dispatchEvent(new CustomEvent('stockflow:assistant-context', {detail:{changed:true, unavailable:true}}));
+                refreshHelp();
+                document.getElementById('help-suggested').replaceChildren();
+            });
+        const healthRequest = fetch('/api/help/assistant/health', {cache:'no-store'}).then(async response => {
+            if (!response.ok) throw new Error('Health unavailable');
+            const health = await response.json();
+            if (generation !== runtimeRevision) return;
+            const ready = health.modelStatus === 'available';
+            caption.dataset.i18nSource = ready ? 'AI Ready' : 'Built-in assistance available';
+            caption.textContent = bilingual(caption.dataset.i18nSource);
+            caption.dataset.state = ready ? 'ready' : 'fallback';
+            detail.textContent = ready
+                ? health.model + ' | Connectivity ' + health.latencyMilliseconds + ' ms. Model response time may vary.'
+                : health.modelStatus === 'model-missing' ? 'Configured model is not installed. Approved help and supported queries remain available.'
+                : 'AI ' + (health.modelStatus === 'disabled' ? 'disabled' : 'unavailable') + '. Approved help and supported queries remain available.';
+            const browserVoice = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+            const browserRead = !!window.speechSynthesis;
+            detail.textContent += ' Voice: ' + (health.voiceStatus === 'available' ? 'local service available' : browserVoice ? 'browser support detected; availability depends on language and consent' : 'local service unavailable')
+                + (browserRead ? '; read replies supported.' : '; read replies unavailable.');
+        }).catch(() => {
+            if (generation !== runtimeRevision) return;
+            caption.dataset.i18nSource = 'Health status unavailable';
+            caption.textContent = bilingual('Health status unavailable');
+            detail.textContent = bilingual('You can still try approved help and supported business questions.');
+        });
+        await Promise.allSettled([contextRequest, healthRequest]);
+    }
+    opener.addEventListener('click', () => { panel.showModal(); showResults(); refreshRuntime(); document.getElementById('help-ai-question').focus(); });
     document.getElementById('help-browse').addEventListener('click', () => {
+        showOptions(false);
         panel.querySelector('.sf-assistant-shortcuts').hidden = false;
         document.getElementById('help-library').hidden = false;
         document.getElementById('help-library').open = true;

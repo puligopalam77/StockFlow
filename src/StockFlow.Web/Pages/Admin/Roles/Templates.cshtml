@@ -1,8 +1,8 @@
 @page "/Admin/Roles/Templates"
 @{ViewData["Title"]="Role Templates";}
 <div id="role-templates-workspace" class="roles-screen" data-edit="@Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS").ToString().ToLowerInvariant()" data-grants="@System.Text.Json.JsonSerializer.Serialize(Access.User!.Permissions.ToDictionary(p=>p.ModuleCode,p=>p.SupportedActions.Where(p.Allows).ToArray()))">
- <header class="roles-heading"><div><h1>Role Templates</h1><p>Configure reusable starting permissions for staff roles.</p></div><div class="role-heading-actions"><a class="btn btn-outline-secondary" href="/Admin/Roles">Back to Roles &amp; Permissions</a>@if(Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS")){<button id="template-new" type="button" class="btn btn-primary">+ Add Template</button>}</div></header>
- <nav class="role-tabs" aria-label="Role configuration"><a href="/Admin/Roles">Roles</a><a href="/Admin/Roles/Templates" aria-current="page">Role Templates</a></nav>
+ <header class="roles-heading"><div><h1>Role Templates</h1><p>Configure reusable starting permissions for staff roles.</p></div><div class="role-heading-actions"><a class="btn btn-outline-secondary" href="/Admin/Roles" data-i18n>Back to Roles &amp; Permissions</a>@if(Access.Can("ROLE_MANAGEMENT","MANAGE_PERMISSIONS")){<button id="template-new" type="button" class="btn btn-primary">+ Add Template</button>}</div></header>
+ <nav class="role-tabs" aria-label="Role configuration"><a href="/Admin/Roles" data-i18n>Roles</a><a href="/Admin/Roles/Templates" aria-current="page" data-i18n>Role Templates</a></nav>
  <div id="template-message" class="alert" role="alert" hidden></div>
  <p class="roles-help">System recommendations can be customized for your business. Saving a template affects future roles; existing roles and users keep their permissions.</p>
  <div id="template-list" class="role-template-directory" aria-label="Available role templates"></div>

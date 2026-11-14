@@ -21,7 +21,7 @@
     var donut = categories.Count == 0 ? "#e9edf4" : $"conic-gradient({string.Join(", ", segments)})";
 }
 @if (Model.DataUnavailable) {
-<div class="alert alert-warning" role="status">Dashboard data is temporarily unavailable. Refresh to try again.</div>
+<div class="alert alert-warning" role="status" data-i18n>Dashboard data is temporarily unavailable. Refresh to try again.</div>
 }
 @section DashboardWelcome {
 <section class="sf-hero">
@@ -44,7 +44,7 @@
                 </span>
                 <span>
                     <small>Stock received today</small>
-                    <strong>@Model.Count(data.TodayInflow) <span>Units</span>
+                    <strong>@Model.Count(data.TodayInflow) <span data-i18n>Units</span>
                     </strong>
                 </span>
             </div>
@@ -56,7 +56,7 @@
                 </span>
                 <span>
                     <small>Items that left today</small>
-                    <strong>@Model.Count(data.TodayOutflow) <span>Units</span>
+                    <strong>@Model.Count(data.TodayOutflow) <span data-i18n>Units</span>
                     </strong>
                 </span>
             </div>
@@ -68,7 +68,7 @@
                 </span>
                 <span>
                     <small>Current Stock</small>
-                    <strong>@Model.Count(data.CurrentStock) <span>Units</span>
+                    <strong>@Model.Count(data.CurrentStock) <span data-i18n>Units</span>
                     </strong>
                 </span>
             </div>
@@ -162,10 +162,10 @@
             <h2>Stock Inflow vs Outflow</h2>
             <label class="visually-hidden" for="chart-period">Chart period</label>
             <select id="chart-period" class="sf-period">
-                <option value="7days">Last 7 Days</option>
-                <option value="30days">Last 30 Days</option>
-                <option value="6months" selected>Last 6 Months</option>
-                <option value="12months">Last 12 Months</option>
+                <option value="7days" data-i18n>Last 7 Days</option>
+                <option value="30days" data-i18n>Last 30 Days</option>
+                <option value="6months" selected data-i18n>Last 6 Months</option>
+                <option value="12months" data-i18n>Last 12 Months</option>
             </select>
         </div>
         <p id="trend-message" class="sf-chart-empty" role="status" hidden>
@@ -207,7 +207,7 @@
             <div class="sf-donut" style="background: @donut" role="img" aria-label="@categoryTotal.ToString("N0") units across @categories.Count category groups">
                 <div>
                     <strong>@(Model.DataUnavailable ? "—" : categoryTotal.ToString("N0"))</strong>
-                    <span>Total units</span>
+                    <span data-i18n>Total units</span>
                 </div>
             </div>
             <ul class="sf-category-legend">
@@ -219,7 +219,7 @@
                     </strong>
                 </li>
                 }
-                @if (categories.Count == 0) { <li class="sf-category-empty">No stock recorded yet.</li> }
+                @if (categories.Count == 0) { <li class="sf-category-empty" data-i18n>No stock recorded yet.</li> }
             </ul>
         </div>
         @if (data.Categories.Any(c => c.Quantity < 0)) { <p class="sf-chart-empty">Some categories have negative balances. The chart shows positive balances only.</p> }

@@ -138,8 +138,9 @@ const fixtures = path.join(root, 'tests/bin/screen-language-fixtures');
         await page.waitForFunction(() => document.querySelector('#language-choice').value === 'mr' && !document.querySelector('#language-choice').disabled);
         assert.equal(settings.get('application').language, 'mr');
         // Every selectable non-English language must have real captions and templates.
-        const languages = await page.locator('#language-choice option').evaluateAll((options) =>
-            options.map((option) => option.value).filter((code) => code !== 'en'));
+        const requested = process.argv.find(value=>value.startsWith('--languages='))?.slice(12).split(',');
+        const languages = (await page.locator('#language-choice option').evaluateAll((options) =>
+            options.map((option) => option.value).filter((code) => code !== 'en'))).filter(code=>!requested||requested.includes(code));
         const englishPack = JSON.parse(fs.readFileSync(path.join(root,
             'src/StockFlow.Web/wwwroot/languages/en.json'), 'utf8'));
         for (const code of languages) {
@@ -219,7 +220,7 @@ const fixtures = path.join(root, 'tests/bin/screen-language-fixtures');
         assert.equal(await report.locator('#report-location option').count(), 3);
         assert.equal(await report.locator('#report-location').inputValue(), '1:1');
         await report.close();
-        console.log('PASS: all 22 Indian languages, complete bundled caption/template coverage, English (translation), automatic updates, validation, English reset, multiple screens and responsive layout.');
+        console.log(`PASS: ${languages.length} Indian languages, complete bundled caption/template coverage, English (translation), automatic updates, validation, English reset, multiple screens and responsive layout.`);
     } finally {
         await browser.close();
     }
