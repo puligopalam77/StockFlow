@@ -33,9 +33,15 @@ public class MasterDataExceptionFilter : IExceptionFilter
         }
 
         logs.Record(context.HttpContext, context.Exception, status);
+        var code = context.Exception switch {
+            StockFlow.Application.Common.GuidedValidationException guided => guided.Code,
+            PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } => "DUPLICATE_RECORD",
+            _ => StockFlow.Web.Help.StockBotErrorCodes.ForStatus(status)
+        };
+        context.HttpContext.Response.Headers["X-StockFlow-Error-Code"] = code;
         context.Result = new ObjectResult(new
         {
-            message
+            message, code
         })
         {
             StatusCode = status

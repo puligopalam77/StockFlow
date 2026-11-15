@@ -29,6 +29,10 @@ internal static class HelpPanelChecks
         var denied = Articles(await restricted.GetStringAsync("/Purchases/Create"));
         Check(!denied.SelectMany(article => article!["links"]!.AsArray())
             .Any(link => link!["url"]!.GetValue<string>() == "/Sales/Create"), "Create-sale link is omitted when permission is denied");
+        Check(!denied.Single(article=>article!["id"]!.GetValue<string>()=="billing")!["content"]!.GetValue<string>().Contains("## Create a bill"),"Denied sale creation instructions are absent from rendered HTML data");
+        var refreshed=await restricted.GetStringAsync("/api/help/assistant");
+        var refreshedArticles=JsonNode.Parse(refreshed)!["articles"]!.AsArray();
+        Check(!refreshedArticles.Single(article=>article!["id"]!.GetValue<string>()=="billing")!["content"]!.GetValue<string>().Contains("## Create a bill"),"Assistant refresh returns the same permission-filtered catalog");
         using var anonymous = factory.CreateClient();
         Check(!(await anonymous.GetStringAsync("/Account/Login")).Contains("id=\"help-data\""), "Anonymous login does not expose staff help panel");
         var access = new StockFlow.Web.Security.PermissionContext { User = new StockFlow.Application.DTOs.Security.UserAccess {
@@ -41,7 +45,7 @@ internal static class HelpPanelChecks
             ("How do I view Product sales & profit?","Reports"),
             ("How do I find More reports?","Reports"),
             ("How do I export sales invoices?","Search and export sales invoices"),
-            ("How do I search sales invoices?","Search and export sales invoices"),
+            ("How do I search sales invoices?","Search sales invoices"),
             ("How do I correct stock quantity?","Correct stock quantity and count stock"),
             ("How do I count stock in the shop?","Correct stock quantity and count stock"),
             ("How do I find stock receipt history?","Find purchase orders and stock receipt history"),
@@ -65,7 +69,18 @@ internal static class HelpPanelChecks
             IsActive=true,Permissions=[new() {ModuleCode="INVENTORY",Actions=["VIEW"]},new() {ModuleCode="SALES",Actions=["VIEW"]}]
         }};
         Check(service.QuickAnswer("How do I correct stock quantity?",viewOnly)?.Status=="restricted","Stock adjustment guidance requires adjustment permission");
-        Check(service.QuickAnswer("How do I export sales invoices?",viewOnly)?.Status=="answered","Sales list guidance works for permitted viewers without sale creation access");
+        Check(service.QuickAnswer("How do I export sales invoices?",viewOnly)?.Status=="restricted","Export guidance requires export permission");
+        Check(service.QuickAnswer("How do I search sales invoices?",viewOnly)?.Status=="answered","Sales search guidance remains available to viewers");
+        Check((await service.AskAsync("Tell me about staff accounts",viewOnly,CancellationToken.None)).Status=="restricted","Denied module questions do not reach the model even with local answer preference disabled");
+        Check(service.QuickAnswer("How do I make a bill?",viewOnly)?.Status=="restricted","View access does not expose bill creation instructions");
+        var scoped=StockFlow.Web.Help.HelpCatalog.ForUser(viewOnly);
+        var exposed=string.Join("\n",scoped.Select(article=>article.Content));
+        Check(!exposed.Contains("## Staff accounts") && !exposed.Contains("## Receive a delivery") && !exposed.Contains("## Create a bill") && !exposed.Contains("## Search and export"),"Browser article bodies omit unauthorized modules and actions");
+        Check(exposed.Contains("## Inventory and low stock") && exposed.Contains("## Search sales invoices") && exposed.Contains("## Ask using the microphone"),"Permitted and shared help remain available");
+        var customerOnly=new StockFlow.Web.Security.PermissionContext {User=new StockFlow.Application.DTOs.Security.UserAccess {
+            IsActive=true,Permissions=[new() {ModuleCode="CUSTOMERS",Actions=["VIEW"]}]
+        }};
+        Check(StockFlow.Web.Help.HelpAiService.Sections(customerOnly).Any(section=>section.Title=="Customers") && !StockFlow.Web.Help.HelpAiService.Sections(customerOnly).Any(section=>section.Title=="Suppliers"),"Customer access does not expose supplier guidance");
         Check(service.QuickAnswer("How much profit today?",access) is null,"Profit figure is not replaced with report guidance");
         foreach (var code in new[] { "as", "bn", "brx", "doi", "gu", "hi", "kn", "ks", "kok", "mai", "ml", "mni", "mr", "ne", "or", "pa", "sa", "sat", "sd", "ta", "te", "ur" })
         {
@@ -76,6 +91,8 @@ internal static class HelpPanelChecks
         while (root is not null && !File.Exists(Path.Combine(root.FullName, "StockFlow.sln"))) root = root.Parent;
         var output = Path.Combine(root!.FullName, "tests/bin/help-panel-fixtures");
         Directory.CreateDirectory(output);
+        await File.WriteAllTextAsync(Path.Combine(output,"scoped.json"),System.Text.Json.JsonSerializer.Serialize(scoped,
+            new System.Text.Json.JsonSerializerOptions {PropertyNamingPolicy=System.Text.Json.JsonNamingPolicy.CamelCase}));
         await File.WriteAllTextAsync(Path.Combine(output, "purchase.html"), purchase);
         await File.WriteAllTextAsync(Path.Combine(output, "billing.html"), await admin.GetStringAsync("/Sales/Create"));
         await File.WriteAllTextAsync(Path.Combine(output, "restricted.html"), await restricted.GetStringAsync("/Purchases/Create"));

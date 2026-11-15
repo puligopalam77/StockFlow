@@ -16,9 +16,9 @@
     <form id="receiving-form">
         <fieldset id="receiving-fields" disabled>
             <ol class="receiving-steps" aria-label="Receiving steps">
-                <li data-step-label="1" aria-current="step">1. Receipt details</li>
-                <li data-step-label="2">2. Add items</li>
-                <li data-step-label="3">3. Review &amp; save</li>
+                <li data-step-label="1" aria-current="step" data-i18n>1. Receipt details</li>
+                <li data-step-label="2" data-i18n>2. Add items</li>
+                <li data-step-label="3" data-i18n>3. Review &amp; save</li>
             </ol>
             <section id="receiving-step-1" class="card card-body mb-3">
                 <h2>Receipt details</h2>
@@ -26,8 +26,8 @@
                     <div class="col-md-6">
                         <label for="intake-kind" class="form-label">What are you recording?</label>
                         <select id="intake-kind" class="form-select">
-@if(Access.Can("STOCK_INFLOW","RECEIVE")){<option value="RECEIPT">Goods received from supplier</option>}
-@if(Access.Can("STOCK_ADJUSTMENT","ADJUST")){<option value="OPENING_STOCK">Opening stock already in the shop</option>}
+@if(Access.Can("STOCK_INFLOW","RECEIVE")){<option value="RECEIPT" data-i18n>Goods received from supplier</option>}
+@if(Access.Can("STOCK_ADJUSTMENT","ADJUST")){<option value="OPENING_STOCK" data-i18n>Opening stock already in the shop</option>}
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -37,7 +37,7 @@
                     <div id="intake-supplier-fields" class="col-md-6">
                         <label for="intake-supplier" class="form-label">Supplier</label>
                         <select id="intake-supplier" class="form-select">
-                            <option value="">Choose supplier</option>
+                            <option value="" data-i18n>Choose supplier</option>
                         </select>
                         @if (Access.Can("SUPPLIERS") && Access.Can("SUPPLIERS", "CREATE")) {
                         <button id="add-record" type="button" class="btn btn-outline-primary btn-sm mt-2" disabled>+ Add Supplier</button>
@@ -74,7 +74,7 @@
                     </div>
                     <label for="intake-product" class="form-label mt-3">Product / size / model</label>
                     <select id="intake-product" class="form-select">
-                        <option value="">Find or scan a product</option>
+                        <option value="" data-i18n>Find or scan a product</option>
                     </select>
                     <div id="intake-variant-filters" class="row g-3 mt-1" hidden>
                         <div class="col-md-6">
@@ -133,13 +133,13 @@
         </p>
         <p class="small">Use existing labels immediately. Print new labels only if needed.</p>
         <div class="d-flex flex-wrap gap-2">
-            <button id="intake-another" type="button" class="btn btn-primary">Receive more stock</button>@if(Access.Can("BARCODES")){<a id="intake-label-link" class="btn btn-outline-secondary" hidden>Barcode labels (optional)</a>}<a id="intake-purchase-link" class="btn btn-outline-secondary" hidden>View purchase receipt</a>@if(Access.Can("INVENTORY")){<a href="/Inventory" class="btn btn-outline-secondary">View inventory</a>}</div>
+            <button id="intake-another" type="button" class="btn btn-primary">Receive more stock</button>@if(Access.Can("BARCODES")){<a id="intake-label-link" class="btn btn-outline-secondary" hidden data-i18n>Barcode labels (optional)</a>}<a id="intake-purchase-link" class="btn btn-outline-secondary" hidden data-i18n>View purchase receipt</a>@if(Access.Can("INVENTORY")){<a href="/Inventory" class="btn btn-outline-secondary" data-i18n>View inventory</a>}</div>
     </section>
 @if(Access.Can("PURCHASES")){<details class="mt-4">
     <summary>Advanced: orders and partial deliveries</summary>
     <p class="mt-2">Keep a purchase order open and record each delivery separately.</p>
     <div class="d-flex gap-2">
-        <a href="/Purchases" class="btn btn-outline-secondary">Purchase orders &amp; deliveries</a>@if(Access.Can("PURCHASES","CREATE")){<a href="/Purchases/Create?mode=order" class="btn btn-outline-secondary">Create purchase order</a>}</div>
+        <a href="/Purchases" class="btn btn-outline-secondary" data-i18n>Purchase orders &amp; deliveries</a>@if(Access.Can("PURCHASES","CREATE")){<a href="/Purchases/Create?mode=order" class="btn btn-outline-secondary" data-i18n>Create purchase order</a>}</div>
 </details>}
 </div>
 <dialog data-sf-dialog="workflow" id="intake-registration" class="receiving-dialog" aria-labelledby="intake-registration-title">
@@ -171,15 +171,15 @@
                 <div class="col-md-6">
                     <label for="intake-tracking" class="form-label">How do you count this stock?</label>
                     <select id="intake-tracking" class="form-select">
-                        <option value="QUANTITY">Quantity (clothes and other goods)</option>
-                        <option value="SERIAL">Individual serial numbers (batteries)</option>
+                        <option value="QUANTITY" data-i18n>Quantity (clothes and other goods)</option>
+                        <option value="SERIAL" data-i18n>Individual serial numbers (batteries)</option>
                     </select>
                 </div>
                 <div class="col-md-6">
                     <label for="intake-code-type" class="form-label">What does this barcode identify?</label>
                     <select id="intake-code-type" class="form-select">
-                        <option value="MODEL">Product / model (same code on every item)</option>
-                        <option value="SERIAL">One physical item's serial number</option>
+                        <option value="MODEL" data-i18n>Product / model (same code on every item)</option>
+                        <option value="SERIAL" data-i18n>One physical item's serial number</option>
                     </select>
                 </div>
                 <div class="col-12">

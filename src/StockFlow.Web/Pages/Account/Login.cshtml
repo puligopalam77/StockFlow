@@ -45,9 +45,9 @@
                 </span>
                 <div class="sf-login-options">
                     <label class="sf-remember">
-                        <input asp-for="Input.RememberMe" /> <span>Remember Me</span>
+                        <input asp-for="Input.RememberMe" /> <span data-i18n>Remember Me</span>
                     </label>
-                    <a asp-page="/Account/ForgotPassword" class="sf-text-button" id="forgot-password-link">Forgot Password?</a>
+                    <a asp-page="/Account/ForgotPassword" class="sf-text-button" id="forgot-password-link" data-i18n>Forgot Password?</a>
                 </div>
                 <template id="login-feedback"><div asp-validation-summary="ModelOnly"></div></template>
                 <noscript><div asp-validation-summary="ModelOnly" class="sf-login-errors" role="alert"></div></noscript>
@@ -62,9 +62,9 @@
         </div>
         <footer class="sf-login-footer">
             <div class="sf-trust">
-                <span>Secure</span><i></i>
-                <span>Smart</span><i></i>
-                <span>Reliable</span>
+                <span data-i18n>Secure</span><i></i>
+                <span data-i18n>Smart</span><i></i>
+                <span data-i18n>Reliable</span>
             </div>
             <p>© @DateTime.Now.Year StockFlow. All rights reserved.</p>
         </footer>
@@ -74,9 +74,9 @@
         <div class="sf-visual-tint">
         </div>
         <p class="sf-handwritten">Track<br />
-            <span>Today.</span>
+            <span data-i18n>Today.</span>
             <br />Stock a<br />
-            <span>Brighter</span>
+            <span data-i18n>Brighter</span>
             <br />Tomorrow.</p>
         <div class="sf-feature-grid">
             <article class="sf-feature">

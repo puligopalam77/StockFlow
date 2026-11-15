@@ -226,7 +226,8 @@
     async function speakReply() {
         if (!synthesis || !panel.open) return;
         if (starting || recorder || upload) cancelRecording();
-        const reply = document.getElementById('help-ai-answer');
+        const guidance = document.getElementById('help-guidance-result');
+        const reply = guidance && !guidance.hidden ? guidance : document.getElementById('help-ai-answer');
         if (reply.hidden || reply.getAttribute('aria-busy') === 'true') { message('Ask a question first, then read its reply.'); return; }
         cancelListening(); stopSpeaking();
         const speaking = speechGeneration;
@@ -263,6 +264,14 @@
     stop.addEventListener('click', () => { if (recorder?.state === 'recording') { recorder.stop(); return; } cancelListening(); stopSpeaking(); message('Voice stopped.'); });
     document.addEventListener('stockflow:help-sending', () => { cancelRecording(); cancelListening(); stopSpeaking(); mic.disabled = true; });
     document.addEventListener('stockflow:help-answer', () => { mic.disabled = false; message(''); if (auto.checked) speakReply(); });
+    document.addEventListener('stockflow:guidance-answer', () => { if (auto.checked && !input.readOnly) speakReply(); });
+    document.addEventListener('stockflow:assistant-context', event => {
+        if (!event.detail.changed) return;
+        cancelRecording();
+        cancelListening();
+        stopSpeaking();
+        message('');
+    });
     document.addEventListener('stockflow:language-ready', event => {
         language = event.detail.language;
         cancelRecording(); cancelListening(); stopSpeaking(); consent.hidden = true; message('');

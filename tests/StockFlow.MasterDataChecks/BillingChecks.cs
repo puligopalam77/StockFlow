@@ -76,7 +76,15 @@ static class BillingChecks
         Check((int)(await client.GetAsync("/api/settings/billing-policy")).StatusCode==403,"policy settings endpoint requires Administration access");
         client.DefaultRequestHeaders.Remove("Test-Deny");
         Check(invoiceHtml.Contains("invoice-print-layout") && invoiceHtml.Contains("80 mm receipt") && invoiceHtml.Contains("New bill"),"invoice exposes receipt format and next-bill action");
-        client.DefaultRequestHeaders.Add("Test-Deny","CUSTOMERS,PRODUCT_VARIANTS,INVENTORY,INVOICES,SCAN");var limited=await client.GetStringAsync("/Sales/Create");Check(!limited.Contains("id=\"customer-search\"")&&!limited.Contains("id=\"create-customer\"")&&!limited.Contains("id=\"product-search\"")&&!limited.Contains("id=\"sale-unit\"")&&!limited.Contains("id=\"sale-scan\"")&&limited.Contains("<option value=\"\">Select customer</option>"),"lookup, scanner, unit and customer controls follow module permissions; no walk-in checkout inferred from embedded help text");await File.WriteAllTextAsync(Path.Combine(output,"BillingLimited.html"),limited);client.DefaultRequestHeaders.Remove("Test-Deny");
+        client.DefaultRequestHeaders.Add("Test-Deny", "CUSTOMERS,PRODUCT_VARIANTS,INVENTORY,INVOICES,SCAN");
+        var limited = await client.GetStringAsync("/Sales/Create");
+        var deniedControls = new[] { "customer-search", "create-customer", "product-search", "sale-unit", "sale-scan" };
+        var hasCustomerPrompt = System.Text.RegularExpressions.Regex.IsMatch(limited,
+            "<option\\b[^>]*value=\"\"[^>]*>Select customer</option>");
+        Check(deniedControls.All(id => !limited.Contains($"id=\"{id}\"")) && hasCustomerPrompt,
+            "lookup, scanner, unit and customer controls follow module permissions; no walk-in checkout inferred from embedded help text");
+        await File.WriteAllTextAsync(Path.Combine(output, "BillingLimited.html"), limited);
+        client.DefaultRequestHeaders.Remove("Test-Deny");
         client.DefaultRequestHeaders.Add("Test-Deny-Action","CUSTOMERS:CREATE");limited=await client.GetStringAsync("/Sales/Create");Check(limited.Contains("id=\"customer-search\"")&&!limited.Contains("id=\"create-customer\""),"customer lookup works independently of quick creation permission");client.DefaultRequestHeaders.Remove("Test-Deny-Action");
         var request=new CreateSaleRequest{RequestId=Guid.NewGuid(),Items=[new(){ProductId=1,Quantity=1,SellingPrice=10}],Payments=[new(){PaymentMode="CASH",Amount=11.8m}]};
         Check(!html.Contains("id=\"payment-due-date\"")&&!html.Contains("id=\"credit-limit-options\"")&&!html.Contains("value=\"CREDIT\""),"New Sale removes receivable controls and credit mode without removing historical APIs");

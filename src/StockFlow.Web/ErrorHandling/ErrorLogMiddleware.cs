@@ -16,6 +16,12 @@ public sealed class ErrorLogMiddleware
     private const int BodyLimit = 16 * 1024;
     public async Task InvokeAsync(HttpContext context, ErrorLogService logs)
     {
+        context.Response.OnStarting(() => {
+            if (context.Request.Path.StartsWithSegments("/api") && !context.Response.Headers.ContainsKey("X-StockFlow-Error-Code") &&
+                StockFlow.Web.Help.StockBotErrorCodes.ForStatus(context.Response.StatusCode) is {} code)
+                context.Response.Headers["X-StockFlow-Error-Code"] = code;
+            return Task.CompletedTask;
+        });
         try
         {
             if (!context.Items.ContainsKey(ErrorLogService.DataKey))

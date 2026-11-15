@@ -9,11 +9,11 @@
     <p id="quick-catalog-source" class="alert alert-info" hidden></p>
     <form id="purchase-registration-form" novalidate data-inline-validation data-validation-owner="product-registration">
         <nav class="registration-tabs" role="tablist" aria-label="Product registration sections">
-            <button type="button" id="registration-tab-basic" role="tab" aria-controls="registration-panel-basic" aria-selected="true" tabindex="0" data-registration-tab="basic"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#document" /></svg><span class="registration-tab-label">Basic Details</span><span class="registration-tab-status" aria-hidden="true"></span></button>
-            <button type="button" id="registration-tab-variants" role="tab" aria-controls="registration-panel-variants" aria-selected="false" tabindex="-1" data-registration-tab="variants"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#grid" /></svg><span class="registration-tab-label">Variants & Attributes</span><span class="registration-tab-status" aria-hidden="true"></span></button>
-            <button type="button" id="registration-tab-compatibility" hidden role="tab" aria-controls="registration-panel-compatibility" aria-selected="false" tabindex="-1" data-registration-tab="compatibility"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#tools" /></svg><span class="registration-tab-label">Compatibility</span><span class="registration-tab-status" aria-hidden="true"></span></button>
-            <button type="button" id="registration-tab-pricing" role="tab" aria-controls="registration-panel-pricing" aria-selected="false" tabindex="-1" data-registration-tab="pricing"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#tag" /></svg><span class="registration-tab-label">Pricing & Stock</span><span class="registration-tab-status" aria-hidden="true"></span></button>
-            <button type="button" id="registration-tab-media" role="tab" aria-controls="registration-panel-media" aria-selected="false" tabindex="-1" data-registration-tab="media"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#eye" /></svg><span class="registration-tab-label">Product Details &amp; Review</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+            <button type="button" id="registration-tab-basic" role="tab" aria-controls="registration-panel-basic" aria-selected="true" tabindex="0" data-registration-tab="basic"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#document" /></svg><span class="registration-tab-label" data-i18n>Basic Details</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+            <button type="button" id="registration-tab-variants" role="tab" aria-controls="registration-panel-variants" aria-selected="false" tabindex="-1" data-registration-tab="variants"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#grid" /></svg><span class="registration-tab-label" data-i18n>Variants & Attributes</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+            <button type="button" id="registration-tab-compatibility" hidden role="tab" aria-controls="registration-panel-compatibility" aria-selected="false" tabindex="-1" data-registration-tab="compatibility"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#tools" /></svg><span class="registration-tab-label" data-i18n>Compatibility</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+            <button type="button" id="registration-tab-pricing" role="tab" aria-controls="registration-panel-pricing" aria-selected="false" tabindex="-1" data-registration-tab="pricing"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#tag" /></svg><span class="registration-tab-label" data-i18n>Pricing & Stock</span><span class="registration-tab-status" aria-hidden="true"></span></button>
+            <button type="button" id="registration-tab-media" role="tab" aria-controls="registration-panel-media" aria-selected="false" tabindex="-1" data-registration-tab="media"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#eye" /></svg><span class="registration-tab-label" data-i18n>Product Details &amp; Review</span><span class="registration-tab-status" aria-hidden="true"></span></button>
         </nav>
         <div class="registration-content">
         <div id="purchase-registration-message" class="alert registration-alert" hidden></div>
@@ -51,17 +51,17 @@
 <div class="col-md-6 col-lg-4">
                     <label for="quick-unit" class="form-label">@(enhanced ? "Stock unit *" : "Unit *")</label>
                     <select id="quick-unit" class="form-select" required>
-                        <option value="PIECE">Piece</option>
-                        <option value="BOX">Box</option>
-                        <option value="PAIR">Pair</option>
-                        <option value="SET">Set</option>
+                        <option value="PIECE" data-i18n>Piece</option>
+                        <option value="BOX" data-i18n>Box</option>
+                        <option value="PAIR" data-i18n>Pair</option>
+                        <option value="SET" data-i18n>Set</option>
                     </select>
                 </div>
 <div class="col-md-6 col-lg-4">
                     <label for="quick-tracking" class="form-label">Tracking method *</label>
                     <select id="quick-tracking" class="form-select" required>
-                        <option value="SERIAL">Serial Tracking</option>
-                        <option value="QUANTITY">Standard (quantity tracking)</option>
+                        <option value="SERIAL" data-i18n>Serial Tracking</option>
+                        <option value="QUANTITY" data-i18n>Standard (quantity tracking)</option>
                     </select>
                 </div>
                 </div>
@@ -69,8 +69,8 @@
             </div><section class="registration-additional" aria-labelledby="registration-additional-title"><h3 id="registration-additional-title" class="h6 registration-section-title"><svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#box" /></svg>Additional Details</h3><div class="row g-3">@if(enhanced){<div class="col-md-6 col-lg-4"><label for="quick-part-number" class="form-label">Manufacturer part number</label><input id="quick-part-number" class="form-control" maxlength="100" placeholder="e.g. VG-FF-01" /></div>}<div class="col-md-6 col-lg-4">
                     <label for="quick-hsn" class="form-label">HSN code</label>
                     <input id="quick-hsn" class="form-control" maxlength="20" placeholder="e.g. 6506" />
-                    @if(Access.Can("GST_SETTINGS")){<small class="text-muted">GST-mapped shops use the reviewed, effective-dated classification in <a href="/Admin/Gst" target="_blank" rel="noopener">GST Settings</a>.</small>}
-                </div><div class="col-md-6 col-lg-4"><label for="quick-new-status" class="form-label">Product status</label><select id="quick-new-status" class="form-select" ><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive (draft)</option></select></div><div class="col-12">
+                    @if(Access.Can("GST_SETTINGS")){<small class="text-muted">GST-mapped shops use the reviewed, effective-dated classification in <a href="/Admin/Gst" target="_blank" rel="noopener" data-i18n>GST Settings</a>.</small>}
+                </div><div class="col-md-6 col-lg-4"><label for="quick-new-status" class="form-label">Product status</label><select id="quick-new-status" class="form-select" ><option value="ACTIVE" data-i18n>Active</option><option value="INACTIVE" data-i18n>Inactive (draft)</option></select></div><div class="col-12">
                     <label for="quick-description" class="form-label">Product Description</label><textarea id="quick-description" class="form-control" maxlength="2000" rows="2"></textarea></div></div></section></section>
 
             <section id="registration-panel-variants" role="tabpanel" aria-labelledby="registration-tab-variants" tabindex="0" hidden>
@@ -121,7 +121,7 @@
                         <div id="registration-gst-rule" hidden class="mt-2">
                             <label for="quick-gst-rule-search" class="form-label">Find reviewed tax rule (optional)</label>
                             <input id="quick-gst-rule-search" type="search" class="form-control" maxlength="150" placeholder="Rule name or HSN..." />
-                            <select id="quick-gst-rule" class="form-select mt-1" aria-label="Reviewed tax rule"><option value="">No reviewed rule selected</option></select>
+                            <select id="quick-gst-rule" class="form-select mt-1" aria-label="Reviewed tax rule"><option value="" data-i18n>No reviewed rule selected</option></select>
                             <small id="quick-gst-rule-info" class="text-muted">Without a saved GST mapping, this product requires classification review before mapped GST billing.</small>
                         </div>
                     }
@@ -149,9 +149,9 @@
 <div class="col-md-6 col-lg-4">
                     <label for="quick-provider" class="form-label">Warranty provider</label>
                     <select id="quick-provider" class="form-select">
-                        <option value="MANUFACTURER">Manufacturer</option>
-                        <option value="DEALER">Dealer</option>
-                        <option value="BOTH">Both</option>
+                        <option value="MANUFACTURER" data-i18n>Manufacturer</option>
+                        <option value="DEALER" data-i18n>Dealer</option>
+                        <option value="BOTH" data-i18n>Both</option>
                     </select>
                 </div>
 </div></details>

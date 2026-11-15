@@ -73,7 +73,7 @@
     {
         @if(ShopScope.CanReviewStores && Access.Can("REPORTS")) {
         <a href="/CashInHand" class="sf-nav-link @(path.Equals("/CashInHand",StringComparison.OrdinalIgnoreCase)?"active":"")" aria-current="@(path.Equals("/CashInHand",StringComparison.OrdinalIgnoreCase)?"page":null)">
-            <svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#cash" /></svg><span class="sf-nav-label">Cash in Hand</span>
+            <svg class="sf-icon" aria-hidden="true"><use href="/images/icons.svg#cash" /></svg><span class="sf-nav-label" data-i18n>Cash in Hand</span>
         </a>
         }
         if (Allowed(root)) { <partial name="_ReportsNavigation" /> }
@@ -159,11 +159,11 @@
             @if(showIntegrations) { <partial name="_IntegrationsNavigation" /> }
             @if(showNotificationCenter) {
             @if(ShopScope.CanReviewStores && !showBusinessSetup) {
-            <a class="sf-nav-child @(activeUrl == "/Settings/BusinessProfile" ? "active" : "")" href="/Settings/BusinessProfile" aria-current="@(activeUrl == "/Settings/BusinessProfile" ? "page" : null)">Shop Business Profile</a>
+            <a class="sf-nav-child @(activeUrl == "/Settings/BusinessProfile" ? "active" : "")" href="/Settings/BusinessProfile" aria-current="@(activeUrl == "/Settings/BusinessProfile" ? "page" : null)" data-i18n>Shop Business Profile</a>
             }
-            <a class="sf-nav-child @(activeUrl == "/Configuration/Notifications" ? "active" : "")" href="/Configuration/Notifications" aria-current="@(activeUrl == "/Configuration/Notifications" ? "page" : null)">Notifications</a>
+            <a class="sf-nav-child @(activeUrl == "/Configuration/Notifications" ? "active" : "")" href="/Configuration/Notifications" aria-current="@(activeUrl == "/Configuration/Notifications" ? "page" : null)" data-i18n>Notifications</a>
             @if(ShopScope.IsOwner && Access.Can("COMPANY_SETTINGS", "EDIT")) {
-            <a class="sf-nav-child @(activeUrl == "/Configuration/Notifications/WhatsApp" ? "active" : "")" href="/Configuration/Notifications/WhatsApp" aria-current="@(activeUrl == "/Configuration/Notifications/WhatsApp" ? "page" : null)">WhatsApp Settings</a>
+            <a class="sf-nav-child @(activeUrl == "/Configuration/Notifications/WhatsApp" ? "active" : "")" href="/Configuration/Notifications/WhatsApp" aria-current="@(activeUrl == "/Configuration/Notifications/WhatsApp" ? "page" : null)" data-i18n>WhatsApp Settings</a>
             }
             }
         </div>

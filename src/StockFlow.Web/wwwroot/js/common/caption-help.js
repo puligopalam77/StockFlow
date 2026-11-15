@@ -53,6 +53,7 @@ window.StockFlowCaptionHelp = (() => {
         position(state);
     }
     function enhance(label) {
+        if (label.dataset.stockbotInfo) return;
         if (label.closest('[data-no-translate], .sf-caption-help, .visually-hidden, svg')) return;
         const control = label.control;
         const text = originalText(label);

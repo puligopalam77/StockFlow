@@ -24,13 +24,13 @@
         <dd class="col-sm-8" id="@field.Item1">
         </dd> }
     </dl>
-    <a id="scan-invoice" class="btn btn-outline-primary mt-3" hidden>View sale invoice / warranty</a>
+    <a id="scan-invoice" class="btn btn-outline-primary mt-3" hidden data-i18n>View sale invoice / warranty</a>
     <p id="scan-warranty-status" class="mt-3" role="status">
     </p>
-    <a id="scan-warranty" class="btn btn-outline-primary" hidden>View warranty / claims</a>
+    <a id="scan-warranty" class="btn btn-outline-primary" hidden data-i18n>View warranty / claims</a>
     @if (Access.Can("SERVICE","CREATE"))
     {
-    <a id="scan-service" class="btn btn-outline-primary mt-2" hidden>Create repair request</a>
+    <a id="scan-service" class="btn btn-outline-primary mt-2" hidden data-i18n>Create repair request</a>
     }
 </section>
 @section Scripts {

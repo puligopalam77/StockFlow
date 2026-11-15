@@ -1,0 +1,61 @@
+/* Load before page styles. Important dimensions in this first layer keep legacy
+   page rules and the shared dropdown presentation at one field size. */
+@layer stockflow-field-dimensions {
+    @media screen {
+        .sf-app {
+            --sf-field-height:34px;
+            --sf-field-font-size:13px;
+            --sf-field-line-height:20px;
+            --sf-field-padding-block:6px;
+        }
+
+        .sf-app :is(
+            input:not([type]),
+            input:is([type="text"],[type="search"],[type="email"],[type="tel"],[type="url"],[type="password"],[type="number"],[type="date"],[type="datetime-local"],[type="month"],[type="week"],[type="time"]),
+            select:not([multiple]):not([size]),
+            select[size="1"]:not([multiple]),
+            .sf-select-trigger,
+            .product-category-select-toggle,
+            .variant-option-picker>summary
+        ):not(.sf-topbar *) {
+            box-sizing:border-box!important;
+            height:var(--sf-field-height)!important;
+            min-height:var(--sf-field-height)!important;
+            max-height:var(--sf-field-height)!important;
+            min-width:0;
+            max-width:100%;
+            padding-block:var(--sf-field-padding-block)!important;
+            border-radius:6px!important;
+            font-size:var(--sf-field-font-size)!important;
+            line-height:var(--sf-field-line-height)!important;
+        }
+
+        /* Notes retain their rows and resizing; only their text and spacing match. */
+        .sf-app textarea:not(#help-ai-question) {
+            box-sizing:border-box;
+            min-height:calc(var(--sf-field-height) * 2)!important;
+            padding-block:var(--sf-field-padding-block)!important;
+            border-radius:6px!important;
+            font-size:var(--sf-field-font-size)!important;
+            line-height:var(--sf-field-line-height)!important;
+        }
+
+        .sf-app .input-group>:is(.input-group-text,.btn) {
+            box-sizing:border-box!important;
+            height:var(--sf-field-height)!important;
+            min-height:var(--sf-field-height)!important;
+            padding-block:var(--sf-field-padding-block)!important;
+            font-size:var(--sf-field-font-size)!important;
+            line-height:var(--sf-field-line-height)!important;
+        }
+
+        /* Readable type avoids automatic input zoom on mobile browsers. */
+        @media (pointer:coarse) {
+            .sf-app {
+                --sf-field-height:44px;
+                --sf-field-font-size:16px;
+                --sf-field-padding-block:11px;
+            }
+        }
+    }
+}

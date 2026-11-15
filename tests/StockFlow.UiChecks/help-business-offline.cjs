@@ -1,6 +1,7 @@
 const fs=require('fs'),path=require('path'),assert=require('assert');
 const {chromium}=require('./bin/Debug/net10.0/.playwright/package');
 const root=path.resolve(__dirname,'../..');
+const helpArticles=JSON.parse(fs.readFileSync(path.join(root,'tests/bin/help-panel-fixtures/billing.html'),'utf8').match(/<script id="help-data" type="application\/json">(.*?)<\/script>/s)[1]);
 (async()=>{
  const browser=await chromium.launch({channel:'msedge',headless:true});
  try {
@@ -9,6 +10,7 @@ const root=path.resolve(__dirname,'../..');
   page.on('pageerror',error=>errors.push(error.message));
   await page.route('**/*',route=>{
    const url=new URL(route.request().url());
+   if(url.pathname==='/api/help/assistant')return route.fulfill({json:{scope:'Test shop',contextStamp:'same-access',suggestions:['How much sales today?'],articles:helpArticles}});
    if(url.pathname==='/api/help/questions'){
     questions.push(route.request().postDataJSON());
     assert(route.request().headers()['x-csrf-token']);
@@ -27,7 +29,7 @@ const root=path.resolve(__dirname,'../..');
   });
   await page.goto('http://stockflow.test/Sales/Create');await page.locator('#help-open').click();
   assert.equal(questions.length,0,'Opening does not fetch business data');
-  assert((await page.locator('#help-suggested').textContent()).includes('quantity sold today'));
+  assert((await page.locator('#help-suggested').textContent()).includes('sales today'));
   await page.locator('#help-ai-question').fill('Quantity sold yesterday');await page.locator('#help-ai-submit').click();
   await page.getByRole('button',{name:'Retry',exact:true}).waitFor();
   assert((await page.locator('#help-ai-answer').textContent()).includes('no total was calculated'));

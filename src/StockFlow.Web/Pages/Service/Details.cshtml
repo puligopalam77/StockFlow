@@ -3,7 +3,7 @@
 @{ ViewData["Title"] = "Repair details"; }
 <h1 id="service-title">Repair details</h1>
 <p>
-    <a asp-page="Pending">Pending repairs</a> · <a asp-page="Index">Repair history</a> · <button id="reload" type="button" class="btn btn-sm btn-outline-secondary">Refresh repair details</button>
+    <a asp-page="Pending" data-i18n>Pending repairs</a> · <a asp-page="Index" data-i18n>Repair history</a> · <button id="reload" type="button" class="btn btn-sm btn-outline-secondary">Refresh repair details</button>
 </p>
 <div id="service-message" class="alert alert-danger" role="alert" hidden>
 </div>
@@ -56,7 +56,7 @@
         </div>
         <label for="part-product" class="form-label">Part</label>
         <select id="part-product" class="form-select" required>
-            <option value="">Select part</option>
+            <option value="" data-i18n>Select part</option>
         </select>
         <div id="part-unit-fields" hidden>
             <label for="unit-search" class="form-label">Available part serial</label>
@@ -101,11 +101,11 @@
         <div class="col-md-3">
             <label class="form-label">Method</label>
             <select id="service-payment-mode" class="form-select">
-                <option value="CASH">Cash</option>
-                <option value="CARD">Card</option>
-                <option value="UPI">UPI</option>
-                <option value="BANK">Bank payment</option>
-                <option value="CREDIT">Pay later (credit)</option>
+                <option value="CASH" data-i18n>Cash</option>
+                <option value="CARD" data-i18n>Card</option>
+                <option value="UPI" data-i18n>UPI</option>
+                <option value="BANK" data-i18n>Bank payment</option>
+                <option value="CREDIT" data-i18n>Pay later (credit)</option>
             </select>
         </div>
         <div class="col-md-4">

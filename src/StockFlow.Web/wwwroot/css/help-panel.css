@@ -169,3 +169,150 @@ body.sf-nav-open :is(.sf-help-open,.sf-stockbot-tooltip),body:has(dialog[open],.
 }
 
 @media(pointer:coarse){.sf-help-open{flex-basis:44px;min-width:44px;width:44px;height:44px}}
+
+/* Retail assistant: compact drawer, with provenance kept beside each result. */
+@media screen {
+ .sf-help-panel{width:min(420px,calc(100dvw - 24px));height:min(680px,calc(100dvh - 24px));max-height:calc(100dvh - 24px)}
+ .sf-help-header{background:#111925;color:#fff;padding:12px 14px}
+ .sf-help-header h2{font-size:19px;color:#fff}.sf-help-header h2 span{color:#ff4fa6}
+ .sf-help-header p{color:#d7deeb;font-size:12px}
+ .sf-assistant-context{flex:none;display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:9px 12px;border-bottom:1px solid #e3e7ef;background:#f9fafc;font-size:12px}
+ #help-runtime-status{color:#465570;font-weight:600}#help-runtime-status[data-state=ready]{color:#08734c}
+ #help-shop-scope{min-width:0;overflow-wrap:anywhere;color:#172235}
+ #help-runtime-detail{width:100%;color:#596b82;font-size:11px;line-height:1.4}
+ .sf-stockbot-answer-title{margin:0 0 5px;font-size:15px;font-weight:700}
+ .sf-stockbot-answer-scope{font-size:11px;color:#536580;overflow-wrap:anywhere;margin:0 0 10px}
+ .sf-stockbot-facts{display:grid;gap:8px;margin:10px 0}
+ .sf-stockbot-facts>section{min-width:0;border:1px solid #f1d6e3;background:#fff8fc;border-radius:8px;padding:10px}
+ .sf-stockbot-facts h5{font-size:12px;font-weight:600;margin:0 0 5px}
+ .sf-stockbot-facts p{font-size:14px;line-height:1.5;margin:0;white-space:pre-line;overflow-wrap:anywhere}
+ .sf-stockbot-facts small{display:block;font-size:11px;color:#586983;margin-top:5px}
+ .sf-stockbot-basis{margin:10px 0;font-size:12px}.sf-stockbot-basis summary{font-weight:600}
+ .sf-stockbot-basis p{margin:6px 0;line-height:1.5}.sf-stockbot-basis small{color:#536580;overflow-wrap:anywhere}
+ #help-answer-tools{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+ #help-answer-tools>span{display:flex;flex-wrap:wrap;gap:6px;width:100%}
+ .sf-help-followup{border:1px solid #ecc4d8;background:#fff2f8;color:#9b004b;border-radius:16px;padding:6px 10px;font-size:12px}
+ .sf-help-followup:hover{background:#ffe0ef}
+ .sf-help-panel :is(.sf-stockbot-facts,.sf-stockbot-basis) summary{cursor:pointer;min-height:32px}
+ @media(max-width:575px){.sf-help-panel{width:calc(100dvw - 16px);height:min(680px,calc(100dvh - 16px));margin:auto 8px 8px}}
+ @media(pointer:coarse){.sf-help-followup,.sf-help-panel :is(.sf-stockbot-facts,.sf-stockbot-basis) summary{min-height:44px}}
+}
+
+@media screen {
+ .sf-stockbot-guide-tools{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+ .sf-stockbot-guide-tools button,.sf-stockbot-guidance button,#help-explain-error{border:1px solid #e8bed3;border-radius:7px;background:#fff5fa;color:#940047;font-size:12px;padding:7px 9px;line-height:1.4}
+ .sf-stockbot-guide-tools button:hover,.sf-stockbot-guidance button:hover{background:#ffe2f0}
+ .sf-stockbot-guide-tools button:disabled,.sf-stockbot-guidance button:disabled{opacity:.55;cursor:default}
+ #help-guidance-menu{width:100%;font-size:12px;padding:7px 0}
+ #help-guidance-menu summary{font-weight:600;cursor:pointer}
+ #help-workflows,#help-feature-links{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+ #help-feature-links a,.sf-stockbot-step-actions a{display:inline-block;padding:7px;border:1px solid #dce2ed;border-radius:6px;color:#a30050;text-decoration:none;font-size:12px}
+ #help-guidance-menu label{display:block;margin-top:8px}
+ #help-feature-search{width:100%;min-width:0;border:1px solid #dce2ed;border-radius:6px;padding-inline:8px}
+ #help-onboarding{border:1px solid #e6d3dd;background:#fff9fc;border-radius:6px;margin-top:8px;padding:8px}
+ .sf-stockbot-guidance{border:1px solid #eec9dc;border-left:3px solid #ff007f;border-radius:8px;padding:12px;margin:8px 0 12px;background:#fffafd;overflow-wrap:anywhere}
+ .sf-stockbot-guidance h4{font-size:15px;margin:0 0 7px}.sf-stockbot-guidance h5{font-size:13px;margin:9px 0 6px}
+ .sf-stockbot-guidance p{font-size:13px;line-height:1.55;margin:7px 0}.sf-stockbot-guidance small{display:block;font-size:11px;color:#596b83;line-height:1.5}
+ .sf-stockbot-step-actions{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+ .sf-stockbot-guidance>button{margin:4px}.sf-stockbot-guidance ul{padding-left:20px}.sf-stockbot-guidance li{font-size:12px;margin:7px 0}
+ .sf-stockbot-guidance li button{margin-left:6px}
+ .sf-stockbot-label{display:flex;gap:6px;align-items:center;margin-bottom:6px}.sf-stockbot-label>label{margin-bottom:0!important}
+ .sf-stockbot-field-help{flex:none;display:inline-grid;place-items:center;width:22px;height:22px;padding:0;border:1px solid #d39ab7;border-radius:50%;background:#fff5fa;color:#970049;font-size:12px}
+ .sf-stockbot-target{outline:3px solid #ef0077!important;outline-offset:3px!important;scroll-margin-block:100px}
+ .sf-stockbot-guide-banner{position:fixed;z-index:2000;bottom:max(12px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100dvw - 24px);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:12px;border:1px solid #ef8aba;border-radius:9px;background:#151d2c;color:#fff;box-shadow:0 6px 24px #0003;font-size:13px}
+ .sf-stockbot-guide-banner button{border:1px solid #ff76b8;border-radius:5px;background:#fff0f8;color:#970049;padding:7px;font-size:12px}
+ @media(pointer:coarse){.sf-stockbot-guide-tools button,.sf-stockbot-guidance button,#help-guidance-menu summary,.sf-stockbot-guide-banner button,.sf-stockbot-field-help{min-height:44px}.sf-stockbot-field-help{min-width:44px}}
+}
+@media print{.sf-stockbot-guide-banner,.sf-stockbot-field-help{display:none!important}.sf-stockbot-target{outline:0!important}}
+
+/* StockBot chat: one scrolling conversation, with a stable header and composer. */
+@media screen {
+ #help-panel.sf-help-panel{--chat-pink:#ed006f;inset:calc(var(--sf-help-viewport-top,0px) + 12px) 12px auto auto;width:min(420px,calc(100dvw - 24px));height:min(650px,calc(var(--sf-help-viewport-height,100dvh) - 24px));max-height:calc(var(--sf-help-viewport-height,100dvh) - 24px);margin:0;padding:0;border:1px solid #dce1eb;border-radius:18px;overflow:hidden;box-shadow:0 16px 56px #14213730;font-size:13px;color:#17233a;background:#fff}
+ #help-panel.sf-help-panel{max-width:calc(100% - 24px)}
+ #help-panel.is-expanded{width:min(820px,calc(100dvw - 24px));height:min(800px,calc(var(--sf-help-viewport-height,100dvh) - 24px))}
+ #help-panel .sf-help-header{padding:12px 14px;gap:10px;background:#19212d;border:0}
+ #help-panel .sf-assistant-logo{width:36px;height:36px;border-radius:11px}
+ #help-panel .sf-assistant-logo .sf-icon{width:24px;height:24px}
+ #help-panel .sf-help-header h2{font-size:20px;line-height:1.2;letter-spacing:-.4px}
+ #help-panel .sf-help-header p{font-size:11px;line-height:1.4;margin:3px 0 0;color:#c8d2e2}
+ #help-panel .sf-chat-header-actions{display:flex;align-items:center;gap:3px;flex:0 0 auto;min-width:0}
+ #help-panel .sf-chat-header-actions button{display:grid;place-items:center;flex:none;width:32px;height:32px;min-width:32px;min-height:32px;padding:0;margin:0;border:0;border-radius:8px;background:transparent;color:#edf2fa;font-size:24px;line-height:1}
+ #help-panel .sf-chat-header-actions button:hover,#help-panel .sf-chat-header-actions button[aria-pressed=true],#help-panel .sf-chat-header-actions button[aria-expanded=true]{background:#ffffff1c}
+ #help-panel .sf-assistant-context{padding:8px 14px;gap:6px 12px;background:#fafbfd;font-size:11px;line-height:1.5;border-bottom:1px solid #e7eaf0}
+ #help-panel #help-runtime-status{display:inline-flex;align-items:center;gap:6px;color:#61708a}
+ #help-panel #help-runtime-status::before{content:'';width:7px;height:7px;flex:none;border-radius:50%;background:#bd850b}
+ #help-panel #help-runtime-status[data-state=ready]{color:#167543}
+ #help-panel #help-runtime-status[data-state=ready]::before{background:#18a452}
+ #help-panel #help-shop-scope{flex:1;min-width:0;border-left:1px solid #dce1eb;padding-left:12px}
+ #help-panel .sf-assistant-body{padding:14px;min-height:0;flex:1 1 0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scroll-padding:12px;background:linear-gradient(180deg,#fffafd 0,#fff 180px)}
+ #help-panel .sf-assistant-intro{gap:9px;margin:0 0 16px;align-items:flex-start}
+ #help-panel .sf-assistant-bot{width:30px;height:30px;min-width:30px;background:#ffe9f3;border-radius:50%;margin-top:2px}
+ #help-panel .sf-assistant-bot img{width:30px;height:30px;object-fit:contain}
+ #help-panel .sf-assistant-bot>span{font-size:9px;line-height:6px}
+ #help-panel .sf-assistant-bot b{font-size:9px;line-height:10px;border-width:1px;border-radius:4px;padding:1px 2px;box-shadow:none}
+ #help-panel .sf-assistant-intro>div{border:1px solid #f3dce7;border-radius:4px 13px 13px;padding:10px 12px;background:#fff4f9}
+ #help-panel .sf-assistant-intro h3{font-size:14px;margin:0 0 4px;line-height:1.4}
+ #help-panel .sf-assistant-intro p{font-size:12px;line-height:1.5;margin:0;color:#64718a}
+ #help-panel:has(#help-user-question:not([hidden])) .sf-assistant-intro{display:none}
+ #help-panel .sf-stockbot-guide-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 16px}
+ #help-panel .sf-chat-section-title{grid-column:1/-1;font-size:12px;line-height:1.5;font-weight:700;margin:0 0 1px;color:#28344a}
+ #help-panel .sf-stockbot-guide-tools>button{font:inherit;font-size:12px;line-height:1.4;min-height:36px;margin:0;padding:8px 10px;text-align:left;border-radius:9px;background:#fff;border:1px solid #eacbdb;color:#6f2448;box-shadow:0 1px 2px #29354704}
+ #help-panel .sf-stockbot-guide-tools>button:hover{background:#fff0f7;border-color:#ed8bb9}
+ #help-panel .sf-help-suggestions{margin:0 0 16px}
+ #help-panel .sf-help-suggestions h4{font-size:12px;font-weight:700;margin:0 0 8px;line-height:1.4}
+ #help-panel #help-suggested{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+ #help-panel #help-suggested button{margin:0;max-width:100%;padding:6px 10px;min-height:30px;border-radius:16px;border:1px solid #f6d6e6;background:#ffedf5;font-size:12px;line-height:1.4;color:#9e124f;text-align:left}
+ #help-panel .sf-assistant-question{width:fit-content;max-width:90%;margin:10px 0 12px auto;padding:10px 13px;border-radius:13px 4px 13px 13px;background:#ffe1ef;color:#642442;font-size:13px;line-height:1.6}
+ #help-panel .sf-assistant-answer{padding:13px;margin:0 0 12px;border:1px solid #e9d7e3;background:#fff;border-radius:4px 13px 13px;font-size:13px;line-height:1.65;box-shadow:0 2px 8px #17233a03}
+ #help-panel .sf-stockbot-answer-title{font-size:15px;margin:0 0 5px;color:#26334b}
+ #help-panel .sf-stockbot-answer-scope{font-size:11px;line-height:1.5;color:#6c7890}
+ #help-panel .sf-stockbot-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #help-panel .sf-stockbot-facts>section{padding:10px;border-radius:9px;background:#fafbfe;border:1px solid #e8ebf1;overflow-wrap:anywhere}
+ #help-panel .sf-stockbot-facts>section:first-child{grid-column:1/-1;background:#fff5fa;border-color:#f1d5e3}
+ #help-panel .sf-stockbot-facts>section:first-child>p{font-size:25px;font-weight:750;line-height:1.4;color:#db0067}
+ #help-panel .sf-stockbot-facts h5{font-size:11px;line-height:1.5;font-weight:600;color:#58667e;margin:0 0 4px}
+ #help-panel .sf-stockbot-facts p{font-size:15px;font-weight:600}
+ #help-panel .sf-chat-fact-note{font-size:11px;color:#69768b;margin-top:5px}
+ #help-panel .sf-chat-fact-note summary{min-height:24px;font-weight:400}
+ #help-panel .sf-stockbot-basis{font-size:11px;padding-top:8px;border-top:1px solid #eff0f5}
+ #help-panel .sf-assistant-answer>.btn{font-size:12px;border-radius:8px;margin:4px 4px 0 0}
+ #help-panel #help-answer-tools{margin:0 0 14px;gap:6px}
+ #help-panel .sf-help-followup{font-size:12px;padding:6px 10px;background:#fff;border-radius:16px}
+ #help-panel .sf-assistant-footer{flex:0 0 auto;padding:10px 12px 9px;border-top:1px solid #e7eaf0;background:#fff;max-height:55%;overflow:auto}
+ #help-panel .sf-assistant-composer{display:grid;grid-template-columns:minmax(0,1fr) 38px 38px;align-items:end;gap:6px;margin:0}
+ #help-panel #help-ai-question{font-size:13px;line-height:1.5;min-height:40px;height:40px;max-height:100px;padding:9px 11px;resize:none;border-radius:11px;border:1px solid #e7bad0;background:#fff;outline-offset:1px}
+ #help-panel #help-ai-question:focus{border-color:#ed006f;box-shadow:0 0 0 2px #ed006f0b}
+ #help-panel #help-ai-submit,#help-panel #help-voice-start{display:grid;place-items:center;box-sizing:border-box;min-width:38px;width:38px;min-height:40px;height:40px;padding:9px;border:1px solid #f0cadd;border-radius:10px;background:#fff2f8;color:#e0006c}
+ #help-panel #help-ai-submit{border-color:#ec0074;background:#ed006f;color:#fff}
+ #help-panel #help-ai-submit .sf-icon,#help-panel #help-voice-start svg{width:20px;height:20px}
+ #help-panel .sf-assistant-privacy{margin:7px 0 0;font-size:10px;line-height:1.5;text-align:left;color:#7b8596}
+ #help-panel .sf-help-voice-controls{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}
+ #help-panel .sf-help-voice-controls:not(:has(button:not([hidden]))){display:none}
+ #help-panel .sf-chat-options{margin:0 0 14px;padding:12px;border:1px solid #e3e6ee;border-radius:11px;background:#fafbfe}
+ #help-panel .sf-assistant-actions{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 8px;justify-content:flex-start}
+ #help-panel .sf-assistant-actions button,#help-panel .sf-chat-voice-options button{font:inherit;font-size:12px;line-height:1.5;padding:7px 9px;min-height:34px;border:1px solid #dfe4ed;border-radius:7px;background:#fff;color:#3d4d69}
+ #help-panel .sf-chat-voice-options{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding-top:10px;border-top:1px solid #e4e8ef;font-size:12px}
+ #help-panel .sf-chat-voice-options label{display:flex;align-items:center;gap:6px;margin:0}
+ #help-panel #help-guidance-menu{margin:0;padding:8px 0;font-size:12px}
+ #help-panel #help-guidance-menu summary{padding:3px 0;cursor:pointer}
+ #help-panel.is-expanded .sf-assistant-body{padding:20px 24px}
+ #help-panel.is-expanded .sf-assistant-footer{padding:14px 24px}
+ #help-panel.is-expanded .sf-stockbot-facts{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #help-panel.is-expanded .sf-stockbot-guide-tools{grid-template-columns:repeat(4,minmax(0,1fr))}
+ @media(max-width:575px){
+  #help-panel.sf-help-panel,#help-panel.is-expanded{inset:calc(var(--sf-help-viewport-top,0px) + 8px) 8px auto auto;width:calc(100dvw - 16px);max-width:calc(100% - 16px);height:calc(var(--sf-help-viewport-height,100dvh) - 16px);max-height:calc(var(--sf-help-viewport-height,100dvh) - 16px);border-radius:14px}
+  #help-panel .sf-help-header{padding:10px;gap:7px}#help-panel .sf-assistant-logo{display:none}
+  #help-panel .sf-help-header h2{font-size:18px}
+  #help-panel .sf-assistant-body,#help-panel.is-expanded .sf-assistant-body{padding:12px}
+  #help-panel .sf-assistant-footer,#help-panel.is-expanded .sf-assistant-footer{padding:10px}
+  #help-panel #help-ai-question{font-size:16px;min-height:44px;height:44px}
+  #help-panel.is-expanded .sf-stockbot-guide-tools,#help-panel.is-expanded .sf-stockbot-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+ }
+ @media(pointer:coarse){
+  #help-panel .sf-chat-header-actions button,#help-panel .sf-stockbot-guide-tools>button,#help-panel #help-suggested button,#help-panel #help-ai-submit,#help-panel #help-voice-start,#help-panel .sf-chat-voice-options button,#help-panel .sf-assistant-actions button{min-height:44px}
+  #help-panel .sf-chat-header-actions button{min-width:44px;width:44px}
+  #help-panel .sf-assistant-composer{grid-template-columns:minmax(0,1fr) 44px 44px}
+  #help-panel #help-ai-submit,#help-panel #help-voice-start{min-width:44px;width:44px;height:44px}
+ }
+ @media(max-height:460px){#help-panel .sf-help-header{padding-block:7px}#help-panel .sf-help-header p{display:none}#help-panel .sf-assistant-context{padding-block:5px}#help-panel .sf-assistant-privacy{display:none}}
+}

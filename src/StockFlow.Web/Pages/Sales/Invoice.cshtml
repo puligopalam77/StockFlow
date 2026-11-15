@@ -12,18 +12,18 @@
 @section Styles { <link rel="stylesheet" href="~/css/invoice.css" asp-append-version="true" /> }
 <div class="invoice-actions no-print">
     <div class="invoice-action-group">
-    @if (Access.Can("SALES")) { <a asp-page="/Sales/Index" class="btn btn-secondary">Back to sales</a>
-    <a asp-page="/Sales/Details" asp-route-id="@invoice.SaleId" class="btn btn-secondary">Sale details</a> }
-    else { <a asp-page="/Scan/Index" class="btn btn-secondary">Back to scan</a> }
+    @if (Access.Can("SALES")) { <a asp-page="/Sales/Index" class="btn btn-secondary" data-i18n>Back to sales</a>
+    <a asp-page="/Sales/Details" asp-route-id="@invoice.SaleId" class="btn btn-secondary" data-i18n>Sale details</a> }
+    else { <a asp-page="/Scan/Index" class="btn btn-secondary" data-i18n>Back to scan</a> }
     <label for="invoice-print-layout" class="align-self-center">Print format</label>
     <select id="invoice-print-layout" class="form-select w-auto">
-        <option value="a4">A4 invoice</option>
-        <option value="thermal">80 mm receipt</option>
+        <option value="a4" data-i18n>A4 invoice</option>
+        <option value="thermal" data-i18n>80 mm receipt</option>
     </select>
     </div><div class="invoice-action-group">
     <button permission-module="INVOICES" permission-action="EXPORT" id="print-invoice" class="btn btn-primary" type="button">Print invoice</button>
     <button permission-module="INVOICES" permission-action="EXPORT" id="save-invoice-pdf" class="btn btn-outline-primary" type="button">Save as PDF</button>
-    <a asp-page="/Sales/Create" permission-module="SALES" permission-action="CREATE" class="btn btn-primary">New bill</a>
+    <a asp-page="/Sales/Create" permission-module="SALES" permission-action="CREATE" class="btn btn-primary" data-i18n>New bill</a>
     </div>
 </div>
 <details class="no-print invoice-print-help"><summary>Print and PDF help</summary><p>Select “Save as PDF” in the browser print dialog to save a copy. Turn off browser headers and footers. For receipts, select 80 mm paper and 100% scale; paper length is controlled by your printer driver.</p></details>
@@ -71,11 +71,11 @@
         <h2 id="bill-to">Bill to</h2>
         <strong>@(invoice.CustomerName ?? (invoice.HasHistoricalDetails ? "Walk-in customer" : "Customer not captured"))</strong>
         @if (!string.IsNullOrWhiteSpace(invoice.CustomerMobile)) { <div>
-        <span>Mobile:</span> @invoice.CustomerMobile</div> }
+        <span data-i18n>Mobile:</span> @invoice.CustomerMobile</div> }
         @if (!string.IsNullOrWhiteSpace(invoice.CustomerAddress)) { <div class="invoice-multiline">
-    <span>Address:</span> @invoice.CustomerAddress</div> }
+    <span data-i18n>Address:</span> @invoice.CustomerAddress</div> }
         @if (!string.IsNullOrWhiteSpace(invoice.CustomerGstNumber)) { <div>
-<span>GSTIN:</span> @invoice.CustomerGstNumber</div> }
+<span data-i18n>GSTIN:</span> @invoice.CustomerGstNumber</div> }
         @if(string.IsNullOrWhiteSpace(invoice.CustomerName)){<p class="no-print invoice-customer-hint">Select or add a customer during billing to include their contact details.</p>}
 </div>
 </section>
@@ -115,7 +115,7 @@
                         @if(gstLine.Cess>0){<div>Cess: @Money(gstLine.Cess)</div>}
                     }
                         @if (!string.IsNullOrWhiteSpace(item.AttributeSummary)) { <div>@item.AttributeSummary</div> }
-                        @if(item.IsManual){<div>Manual Item</div>}
+                        @if(item.IsManual){<div data-i18n>Manual Item</div>}
                         @if(invoice.Gst is null && item.IsManual && !string.IsNullOrWhiteSpace(item.HsnSac)){<div>HSN/SAC: @item.HsnSac · @item.GstTreatment</div>}
                         @if(item.Mrp is {} mrp){<div>MRP: ₹ @Money(mrp)</div>}
                         @if(!string.IsNullOrWhiteSpace(item.Description)){<div>@item.Description</div>}
@@ -127,9 +127,9 @@
                 @if(hasSerials){<td class="invoice-serial @(string.IsNullOrWhiteSpace(item.SerialNumber) ? "invoice-empty" : "")">@item.SerialNumber@if(!string.IsNullOrWhiteSpace(item.SerialNumber)){<small class="d-block">@(item.SerialSource == "MANUFACTURER" ? "Manufacturer Serial" : item.SerialSource == "INTERNAL" ? "Internal Unit ID" : "Source unverified")</small>}</td>}
                 <td class="quantity invoice-quantity">@item.Quantity</td>
                 <td class="amount invoice-rate">@Money(rate)</td>
-                <td class="amount invoice-discount @(discount == 0 ? "invoice-empty" : "")"><span class="thermal-only">Discount: </span>@Money(discount)@if(item.DiscountType=="PERCENTAGE" && item.DiscountPercent.HasValue && (item.EnteredDiscount.HasValue || (invoice.InvoiceDiscountAmount.GetValueOrDefault()==0 && !invoice.PricesIncludeTax))){<small class="d-block">@item.DiscountPercent.Value.ToString("0.##")%</small>}</td>
-                <td class="amount invoice-tax @(item.TaxPercentage == 0 ? "invoice-empty" : "")"><span class="thermal-only">Tax: </span>@item.TaxPercentage.ToString("0.##", CultureInfo.InvariantCulture)%<small class="d-block">@Money(item.LineTotal - (item.Quantity * item.SellingPrice - item.DiscountAmount))</small></td>
-                <td class="amount invoice-line-total"><span class="thermal-only">Line total: </span>@Money(item.LineTotal)</td>
+                <td class="amount invoice-discount @(discount == 0 ? "invoice-empty" : "")"><span class="thermal-only" data-i18n>Discount: </span>@Money(discount)@if(item.DiscountType=="PERCENTAGE" && item.DiscountPercent.HasValue && (item.EnteredDiscount.HasValue || (invoice.InvoiceDiscountAmount.GetValueOrDefault()==0 && !invoice.PricesIncludeTax))){<small class="d-block">@item.DiscountPercent.Value.ToString("0.##")%</small>}</td>
+                <td class="amount invoice-tax @(item.TaxPercentage == 0 ? "invoice-empty" : "")"><span class="thermal-only" data-i18n>Tax: </span>@item.TaxPercentage.ToString("0.##", CultureInfo.InvariantCulture)%<small class="d-block">@Money(item.LineTotal - (item.Quantity * item.SellingPrice - item.DiscountAmount))</small></td>
+                <td class="amount invoice-line-total"><span class="thermal-only" data-i18n>Line total: </span>@Money(item.LineTotal)</td>
             </tr>
                 }
         </tbody>
@@ -219,7 +219,7 @@
 }
         @if(invoice.CashTendered.HasValue){<p>Cash tendered: ₹ @Money(invoice.CashTendered.Value) · Change returned: ₹ @Money(invoice.CashChange ?? 0)</p>}
         @if (invoice.Status == "CANCELLED") { <p>
-<strong>This invoice is cancelled. Payment entries show the original sale records, not refund confirmation.</strong>
+<strong data-i18n>This invoice is cancelled. Payment entries show the original sale records, not refund confirmation.</strong>
 </p> }
 </section>
 @if(invoice.Items.Any(i=>i.WarrantyMonths>0 || i.WarrantyEndDate.HasValue)){
@@ -235,21 +235,21 @@
         <strong>@item.ProductName</strong> @(item.SerialNumber is null ? "" : " / " + item.SerialNumber)
                 @if (item.WarrantyMonths > 0) { <span> — @item.WarrantyMonths months</span> }
                 @if (item.WarrantyStartDate.HasValue && item.WarrantyEndDate.HasValue) { <div>@item.WarrantyStartDate.Value.ToString("dd MMM yyyy", CultureInfo.InvariantCulture) to @item.WarrantyEndDate.Value.ToString("dd MMM yyyy", CultureInfo.InvariantCulture) · @item.WarrantyStatus</div> }
-                else { <div>No unit warranty registration recorded.</div> }
+                else { <div data-i18n>No unit warranty registration recorded.</div> }
     </div>
         }
 </section>
 }
 @* Sale notes have no customer-visible classification. Keep them in authorized sale details. *@
     @if (!string.IsNullOrWhiteSpace(invoice.Company.InvoiceFooter)) { <div class="invoice-footer invoice-multiline">@invoice.Company.InvoiceFooter</div> }
-    @if (!string.IsNullOrWhiteSpace(invoice.Company.TermsAndConditions)) { <div class="invoice-footer invoice-multiline"><strong>Terms &amp; conditions</strong><br />@invoice.Company.TermsAndConditions</div> }
+    @if (!string.IsNullOrWhiteSpace(invoice.Company.TermsAndConditions)) { <div class="invoice-footer invoice-multiline"><strong data-i18n>Terms &amp; conditions</strong><br />@invoice.Company.TermsAndConditions</div> }
 <footer class="invoice-brand-footer">
     @if (!string.IsNullOrWhiteSpace(invoice.Company.LogoDataUrl))
     {
         <img class="invoice-footer-logo" src="@invoice.Company.LogoDataUrl" alt="@invoice.Company.CompanyName logo" />
     }
     else { <partial name="_InvoiceBrand" model="invoice.Company.CompanyName" /> }
-    <span>Simplifying inventory. Powering your business.</span>
+    <span data-i18n>Simplifying inventory. Powering your business.</span>
 </footer>
 @if(invoice.Gst is not null){<p class="invoice-gst-signature">For @(invoice.Company.LegalBusinessName ?? invoice.Company.CompanyName)<br /><br />Authorized signatory: ____________________</p>}
 </article>

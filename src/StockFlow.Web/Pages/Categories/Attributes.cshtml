@@ -1,7 +1,7 @@
 @page
 @{ ViewData["Title"] = "Category Fields & Variants"; }
 <header class="sf-page-heading"><div><h1>Category Fields &amp; Variants</h1><p>Configure reusable fields for the current shop profile. With category inheritance enabled, product registration combines parent fields with the selected category's own fields.</p></div></header>
-<p><a href="/Categories">Back to Categories</a></p>
+<p><a href="/Categories" data-i18n>Back to Categories</a></p>
 <div id="attribute-error" class="alert alert-danger" role="alert" hidden></div>
 <p id="attribute-status" role="status">Loading category settings…</p>
 <form id="attribute-form" data-can-edit="@Access.Can("CATEGORIES","EDIT").ToString().ToLowerInvariant()">

@@ -14,14 +14,14 @@ public class HelpTelemetry(IConfiguration config, ILogger<HelpTelemetry> logger)
     { public int Voted; }
     private readonly ConcurrentDictionary<string,Receipt> receipts=new();
     private readonly object fileGate=new();
-    public string Record(string owner,string status,long elapsed,string? metric)
+    public string Record(string owner,string status,long elapsed,string? metric, object? scope = null)
     {
         var id=Guid.NewGuid().ToString("N");
         var now=DateTimeOffset.UtcNow;
         foreach(var item in receipts.Where(item=>item.Value.Expires<now).ToArray()) receipts.TryRemove(item.Key,out _);
         if(receipts.Count>=2000) foreach(var item in receipts.OrderBy(item=>item.Value.Expires).Take(100).ToArray()) receipts.TryRemove(item.Key,out _);
         receipts[id]=new(owner,status,elapsed,now.AddMinutes(15));
-        Write(new {time=now,eventType="answer",answerId=id,status,milliseconds=elapsed,metric});
+        Write(new {time=now,eventType="answer",answerId=id,status,milliseconds=elapsed,metric,scope});
         return id;
     }
     public bool Feedback(string owner,string id,bool helpful)
@@ -65,7 +65,8 @@ public class HelpTelemetryFilter(HelpTelemetry telemetry,BusinessScope scope) : 
         var answer=(result.Result as ObjectResult)?.Value as HelpAnswer;
         var status=answer?.Status ?? (result.Exception is not null ? "failure" : $"http-{(result.Result as ObjectResult)?.StatusCode ?? 400}");
         var metric=context.HttpContext.Items["help.metric"] as string ?? (answer?.Sections.FirstOrDefault() is {} section ? "guide:"+section.ArticleId : null);
-        var id=telemetry.Record(HelpTelemetry.Owner(scope,context.HttpContext.User),status,watch.ElapsedMilliseconds,metric);
+        var id=telemetry.Record(HelpTelemetry.Owner(scope,context.HttpContext.User),status,watch.ElapsedMilliseconds,metric,
+            new { scope.TenantId, scope.UserId, scope.StoreId, scope.LocationId, scope.Consolidated });
         if(answer is not null && result.Result is ObjectResult objectResult) objectResult.Value=answer with {AnswerId=id};
     }
 }

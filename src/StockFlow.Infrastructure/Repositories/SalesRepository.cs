@@ -402,7 +402,7 @@ transaction))
             }, transaction);
             if (stock < request.Items.Where(i => i.ProductId == productId).Sum(i => (long)i.Quantity))
             {
-                throw new ValidationException("Insufficient stock for " + product.ProductName + ".");
+                throw new StockFlow.Application.Common.GuidedValidationException("INSUFFICIENT_STOCK", "Insufficient stock for " + product.ProductName + ".");
             }
         }
 
@@ -426,7 +426,7 @@ transaction))
             }, transaction);
             if (stock < group.Sum(i => (long)i.Quantity))
             {
-                throw new ValidationException("Insufficient stock for the selected variant.");
+                throw new StockFlow.Application.Common.GuidedValidationException("INSUFFICIENT_STOCK", "Insufficient stock for the selected variant.");
             }
 
             if (variants[group.First()].IsSerialTracked && stock != await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM product_units WHERE variant_id=@id AND unit_status='IN_STOCK'",

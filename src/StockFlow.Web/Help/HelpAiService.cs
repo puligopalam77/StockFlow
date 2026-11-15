@@ -15,7 +15,12 @@ public class HelpAiOptions
     public bool PreferLocalAnswers { get; set; } = true;
 }
 public record HelpSection(string Id, string ArticleId, string Title, string Content);
-public record HelpAnswer(string Status, string Message, HelpSection[] Sections, HelpLink[] Links, string? AnswerId = null);
+public record HelpAnswer(string Status, string Message, HelpSection[] Sections, HelpLink[] Links, string? AnswerId = null)
+{
+    public HelpAnswerContext? Context { get; init; }
+    public HelpFact[] Facts { get; init; } = [];
+    public StockBotGuide? Guide { get; init; }
+}
 public interface IHelpAiProvider
 {
     Task<string[]> SelectAsync(string question, HelpSection[] sections, CancellationToken cancellation);
@@ -172,10 +177,14 @@ public class HelpAiService(IHelpAiProvider provider, IOptions<HelpAiOptions> opt
             "Inventory and low stock" => access.Can("INVENTORY"),
             "Correct stock quantity and count stock" => access.Can("INVENTORY") && access.Can("STOCK_ADJUSTMENT", "ADJUST"),
             "Reports" => access.Can("REPORTS"),
+            "GST settings and reports" => access.Can("GST_SETTINGS") && access.Can("GST_REPORTS"),
+            "Quotations" => access.Can("QUOTATIONS") && access.Can("SALES", "CREATE"),
+            "Operating expenses" => access.Can("EXPENSES"),
             "Repairs" => access.Can("SERVICE", "CREATE"),
             "Stock transfers" => access.Can("STOCK_TRANSFER", "CREATE"),
             "Cash closing" => access.Can("REPORTS"),
-            "Suppliers and customers" => access.Can("SUPPLIERS") || access.Can("CUSTOMERS"),
+            "Suppliers" => access.Can("SUPPLIERS"),
+            "Customers" => access.Can("CUSTOMERS"),
             "Staff accounts" => access.Can("USER_MANAGEMENT"),
             "Roles and permissions" => access.Can("ROLE_MANAGEMENT"),
             "Stores and locations" => access.Can("STORES"),
@@ -183,19 +192,25 @@ public class HelpAiService(IHelpAiProvider provider, IOptions<HelpAiOptions> opt
             "Language selection" or "Password and account security" => true,
             _ => false
         },
+        "products" when title == "Add a product while receiving stock" => access.Can("PRODUCTS", "CREATE") && access.Can("PRODUCT_VARIANTS", "CREATE") && access.Can("PRODUCT_VARIANTS") && access.Can("CATEGORIES") && access.Can("PURCHASES", "CREATE") && access.Can("STOCK_INFLOW", "RECEIVE"),
         "products" => access.Can("PRODUCTS", "CREATE") && access.Can("PRODUCT_VARIANTS", "CREATE") && access.Can("PRODUCT_VARIANTS") && access.Can("CATEGORIES"),
         "receiving-stock" when title == "Find purchase orders and stock receipt history" => access.Can("STOCK_INFLOW") && access.Can("PURCHASES"),
         "receiving-stock" => access.Can("PURCHASES", "CREATE") && access.Can("PURCHASES", "APPROVE") && access.Can("STOCK_INFLOW", "RECEIVE"),
         "billing" when title == "Open and print an invoice" => access.Can("SALES") && access.Can("INVOICES", "PRINT"),
         "billing" when title == "Check today's completed sales" => access.Can("SALES"),
-        "billing" when title == "Search and export sales invoices" => access.Can("SALES"),
+        "billing" when title == "Search sales invoices" => access.Can("SALES"),
+        "billing" when title == "Search and export sales invoices" => access.Can("SALES") && access.Can("SALES", "EXPORT"),
         "billing" when title == "Add a customer" => access.Can("SALES", "CREATE") && access.Can("CUSTOMERS", "CREATE"),
         "billing" => access.Can("SALES", "CREATE"),
+        "returns" when title == "Record an exchange" => access.Can("SALES", "RETURN") && access.Can("SALES", "APPROVE") && access.Can("SALES", "CREATE"),
         "returns" => access.Can("SALES", "RETURN") && access.Can("SALES", "APPROVE"),
         "warranty" when title == "Record a problem" => access.Can("WARRANTY_LOOKUP") && access.Can("WARRANTY_CLAIMS", "CREATE") && access.Can("WARRANTY_CLAIMS", "EDIT"),
         "warranty" when title == "Handle a replacement" => access.Can("WARRANTY_LOOKUP") && access.Can("WARRANTY_CLAIMS", "EDIT") && access.Can("WARRANTY_CLAIMS", "APPROVE"),
         "warranty" when title == "Missing warranty or coverage details" => access.Can("WARRANTY_LOOKUP", "CREATE") && access.Can("WARRANTY_LOOKUP", "EDIT"),
         "warranty" => access.Can("WARRANTY_LOOKUP"),
+        "common-problems" when title == "Common problems" => access.Can("SALES", "CREATE") && access.Can("SALES", "RETURN") && access.Can("STOCK_INFLOW", "RECEIVE") && access.Can("PRODUCTS", "CREATE"),
+        "common-problems" when title == "A receipt save has an uncertain result" => access.Can("STOCK_INFLOW", "RECEIVE"),
+        "common-problems" when title == "A sale save has an uncertain result" => access.Can("SALES", "CREATE"),
         "common-problems" or "mobile-and-devices" => true,
         _ => false
     };
@@ -209,6 +224,7 @@ public class HelpAiService(IHelpAiProvider provider, IOptions<HelpAiOptions> opt
         var available = Sections(access);
         // Keep the local model's prompt small when the approved matcher identifies the topic.
         var local = LocalHelpSearch.Answer(question, access);
+        if (local.Status == "restricted") return local;
         if (local.Status == "answered" && local.Sections.Length > 0)
             available = available.Where(section => section.ArticleId == local.Sections[0].ArticleId).ToArray();
         if (available.Length == 0) return Fallback("unsupported", "No permitted help instructions are available for this question. Contact your StockFlow administrator.");

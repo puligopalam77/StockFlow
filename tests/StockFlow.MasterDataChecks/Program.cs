@@ -133,6 +133,8 @@ public static class Checks
         if (args.Contains("--help-stock-checks")) { await HelpStockChecks.Run(factory); return; }
         if (args.Contains("--help-sales-checks")) { await HelpSalesChecks.Run(factory); return; }
         if (args.Contains("--help-business-checks")) { await HelpBusinessChecks.Run(factory); return; }
+        if (args.Contains("--help-retail-checks")) { await HelpRetailChecks.Run(factory); return; }
+        if (args.Contains("--stockbot-guidance-checks")) { await StockBotGuidanceChecks.Run(factory); return; }
         if (args.Contains("--help-ai-checks") || args.Contains("--help-ai-live")) { await HelpAiChecks.Run(factory, args.Contains("--help-ai-live")); return; }
         if (args.Contains("--help-panel-checks")) { await HelpPanelChecks.Run(factory); return; }
         if (args.Contains("--login-validation-checks")) { await ForgotPasswordChecks.Run(factory); await LoginValidationChecks.Run(factory); return; }

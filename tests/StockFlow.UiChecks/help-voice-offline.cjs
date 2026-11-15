@@ -3,6 +3,7 @@ const path = require('path');
 const assert = require('assert');
 const {chromium} = require('./bin/Debug/net10.0/.playwright/package');
 const root = path.resolve(__dirname, '../..');
+const helpArticles=JSON.parse(fs.readFileSync(path.join(root,'tests/bin/help-panel-fixtures/purchase.html'),'utf8').match(/<script id="help-data" type="application\/json">(.*?)<\/script>/s)[1]);
 (async () => {
     const browser = await chromium.launch({channel:'msedge', headless:true});
     try {
@@ -31,6 +32,7 @@ const root = path.resolve(__dirname, '../..');
         });
         await page.route('**/*',route=> {
             const url=new URL(route.request().url());
+            if(url.pathname==='/api/help/assistant')return route.fulfill({json:{scope:'Test shop',contextStamp:'same-access',suggestions:[],articles:helpArticles}});
             if(url.pathname==='/api/help/questions') {
                 requests.push(route.request().postDataJSON().question);
                 assert(route.request().headers()['x-csrf-token']);
@@ -43,7 +45,10 @@ const root = path.resolve(__dirname, '../..');
         });
         await page.goto('http://stockflow.test/Purchases/Create');
         await page.locator('#help-open').click();
+        const openOptions=async()=>{if(await page.locator('#help-options').isHidden())await page.locator('#help-menu-toggle').click();};
+        await openOptions();
         await page.locator('#help-voice-auto').check();
+        await page.locator('#help-menu-toggle').click();
         await page.locator('#help-voice-start').click();
         await page.waitForFunction(()=>window.voiceStarts===1);
         assert(await page.evaluate(()=>recognition.processLocally));
@@ -74,12 +79,12 @@ const root = path.resolve(__dirname, '../..');
         await page.evaluate(()=>{recognition.emit('This late speech must not submit');recognition.stop();});
         assert.equal(requests.length,1,'Closing the panel cancels pending speech');
         await page.locator('#help-open').click();
-        await page.evaluate(()=>document.dispatchEvent(new CustomEvent('stockflow:language-ready',{detail:{language:'hi'}})));
+        await page.evaluate(()=>window.StockFlowLanguage.setLanguage('hi'));
         await page.locator('#help-voice-start').click();
         await page.waitForFunction(()=>window.voiceStarts===4);
         assert.equal(await page.evaluate(()=>recognition.lang),'hi-IN');
         await page.locator('#help-voice-stop').click();
-        await page.locator('#help-voice-read').click();
+        await openOptions();await page.locator('#help-voice-read').click();
         assert.equal(await page.evaluate(()=>spoken.at(-1).lang),'hi-IN');
         const spokenBefore=await page.evaluate(()=>spoken.length);
         await page.evaluate(()=>{
@@ -88,7 +93,7 @@ const root = path.resolve(__dirname, '../..');
             speechSynthesis.addEventListener=voiceEvents.addEventListener.bind(voiceEvents);
             speechSynthesis.removeEventListener=voiceEvents.removeEventListener.bind(voiceEvents);
         });
-        await page.locator('#help-voice-read').click();
+        await openOptions();await page.locator('#help-voice-read').click();
         assert((await page.locator('#help-voice-status').textContent()).includes('Loading'));
         await page.evaluate(()=>{speechSynthesis.getVoices=()=>installedVoices;voiceEvents.dispatchEvent(new Event('voiceschanged'));});
         await page.waitForFunction(before=>spoken.length===before+1,spokenBefore);

@@ -43,6 +43,11 @@ builder.Services.AddOptions<StockFlow.Web.Help.HelpAiOptions>().Bind(builder.Con
 builder.Services.AddHttpClient<StockFlow.Web.Help.IHelpAiProvider, StockFlow.Web.Help.OllamaHelpProvider>(client => client.Timeout = Timeout.InfiniteTimeSpan)
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddScoped<StockFlow.Web.Help.HelpAiService>();
+builder.Services.AddScoped<StockFlow.Web.Help.RetailAssistantService>();
+builder.Services.AddScoped<StockFlow.Web.Help.StockBotGuidance>();
+builder.Services.AddSingleton<StockFlow.Web.Help.HelpHealthService>();
+builder.Services.AddHttpClient("StockBotHealth", client => client.Timeout = TimeSpan.FromSeconds(2))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddSingleton<StockFlow.Web.Help.HelpTelemetry>();
 builder.Services.AddScoped<StockFlow.Web.Help.HelpTelemetryFilter>();
 builder.Services.AddSingleton<StockFlow.Web.Help.HelpModelGate>();
@@ -147,6 +152,7 @@ builder.Services.AddScoped<IStockReceiptHistoryRepository, StockReceiptHistoryRe
 builder.Services.AddScoped<ISalesRepository, SalesRepository>();
 builder.Services.AddScoped<ISalesEnquiryRepository, SalesEnquiryRepository>();
 builder.Services.AddScoped<IHelpBusinessRepository, HelpBusinessRepository>();
+builder.Services.AddScoped<IHelpRetailRepository, HelpRetailRepository>();
 builder.Services.AddScoped<ISalesService, SalesService>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
@@ -339,6 +345,27 @@ if (app.Environment.IsDevelopment())
             var address = app.Urls.FirstOrDefault(url => url.StartsWith("http://localhost:"));
             if (address is null)
             {
+                return;
+            }
+
+            if (OperatingSystem.IsWindows() && string.Equals(builder.Configuration["StockFlow:Browser"], "Edge", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    // Launch both URLs together so Edge opens them in the same window.
+                    var edgePath = new[] { Environment.SpecialFolder.ProgramFilesX86, Environment.SpecialFolder.ProgramFiles }
+                        .Select(folder => Path.Combine(Environment.GetFolderPath(folder), "Microsoft", "Edge", "Application", "msedge.exe"))
+                        .FirstOrDefault(File.Exists) ?? "msedge.exe";
+                    var startInfo = new System.Diagnostics.ProcessStartInfo(edgePath) { UseShellExecute = true };
+                    startInfo.ArgumentList.Add("--new-window");
+                    startInfo.ArgumentList.Add(address + "/");
+                    startInfo.ArgumentList.Add(address + "/swagger/index.html");
+                    System.Diagnostics.Process.Start(startInfo);
+                }
+                catch (Exception ex)
+                {
+                    app.Logger.LogWarning(ex, "Could not open Microsoft Edge for the application and Swagger");
+                }
                 return;
             }
 

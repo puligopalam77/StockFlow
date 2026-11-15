@@ -1,12 +1,12 @@
 @page
 @{ViewData["Title"]="Expense Report";}
 <div id="expenses" data-mode="report" class="expense-reports">
-<header class="expense-heading"><div><h1>Expense Reports</h1><p>Review recorded expenses and balances due.</p></div><a href="/Expenses">Back to Expenses</a></header><div id="expense-message" role="alert" hidden></div>
-<form id="expense-filters" class="card card-body expense-filters"><label for="expense-from">From<input id="expense-from" class="form-control" type="date" required /></label><label for="expense-to">To<input id="expense-to" class="form-control" type="date" required /></label><button class="btn btn-primary" type="submit">Apply</button><a id="expense-export" class="btn btn-outline-secondary" permission-module="EXPENSES" permission-action="EXPORT">Export CSV</a></form>
+<header class="expense-heading"><div><h1>Expense Reports</h1><p>Review recorded expenses and balances due.</p></div><a href="/Expenses" data-i18n>Back to Expenses</a></header><div id="expense-message" role="alert" hidden></div>
+<form id="expense-filters" class="card card-body expense-filters"><label for="expense-from">From<input id="expense-from" class="form-control" type="date" required /></label><label for="expense-to">To<input id="expense-to" class="form-control" type="date" required /></label><button class="btn btn-primary" type="submit">Apply</button><a id="expense-export" class="btn btn-outline-secondary" permission-module="EXPENSES" permission-action="EXPORT" data-i18n>Export CSV</a></form>
 <section class="expense-report-totals" aria-label="Recorded expense totals for selected period" aria-live="polite">
- <div class="card"><span>Total Expenses</span><strong id="expense-total-amount">&mdash;</strong></div>
- <div class="card"><span>Amount Paid</span><strong id="expense-total-paid">&mdash;</strong></div>
- <div class="card"><span>Outstanding</span><strong id="expense-total-outstanding">&mdash;</strong></div>
+ <div class="card"><span data-i18n>Total Expenses</span><strong id="expense-total-amount">&mdash;</strong></div>
+ <div class="card"><span data-i18n>Amount Paid</span><strong id="expense-total-paid">&mdash;</strong></div>
+ <div class="card"><span data-i18n>Outstanding</span><strong id="expense-total-outstanding">&mdash;</strong></div>
 </section>
 <p class="expense-muted expense-report-totals-note">Recorded expenses dated within the selected period, including subsequent payments.</p>
 <section class="card card-body"><p id="expense-summary" role="status"></p><details class="expense-report-definition"><summary>How totals are calculated</summary><p id="expense-definition" class="expense-muted"></p></details></section>

@@ -7,7 +7,7 @@
 }
 <header class="sf-page-heading">
     <div class="billing-title-row">
-        <h1>New Sale</h1><span id="billing-draft-reference" class="billing-draft-reference" role="status" aria-live="polite">New Draft</span>
+        <h1>New Sale</h1><span id="billing-draft-reference" class="billing-draft-reference" role="status" aria-live="polite" data-i18n>New Draft</span>
     </div>
 </header>
 <div id="billing-workspace" data-can-gst-edit="@Access.Can("GST_SETTINGS","EDIT").ToString().ToLowerInvariant()" data-can-scan="@Access.Can("SCAN","SCAN").ToString().ToLowerInvariant()" data-can-search="@Access.Can("PRODUCT_VARIANTS").ToString().ToLowerInvariant()" data-tax-inclusive="@((Model.Company.DefaultTaxMode == "INCLUSIVE").ToString().ToLowerInvariant())" data-payment-terms="@Model.Company.DefaultPaymentTermsDays" data-storage-key="stockflow.sale.@BusinessScope.TenantId.@BusinessScope.UserId.@BusinessScope.LocationId@BusinessScope.DraftProfileSuffix" data-can-invoice="@Access.Can("INVOICES","PRINT").ToString().ToLowerInvariant()" data-can-units="@Access.Can("INVENTORY").ToString().ToLowerInvariant()">
@@ -33,7 +33,7 @@
             <label class="visually-hidden" for="saved-bills-search">Search saved bills</label>
             <div class="billing-saved-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="saved-bills-search" class="form-control" type="search" maxlength="150" placeholder="Search customer, mobile or bill number..." /></div>
             <div class="billing-saved-filters" role="group" aria-label="Saved bill status"><button type="button" data-saved-filter="ALL" aria-pressed="true">All</button><button type="button" data-saved-filter="DRAFTS" aria-pressed="false">Drafts</button><button type="button" data-saved-filter="HELD" aria-pressed="false">On Hold</button></div>
-            <div class="billing-saved-tools"><span class="billing-saved-sort">Recently saved first</span><button id="saved-bills-recovery" type="button" class="billing-saved-recovery">Recover interrupted bills</button></div>
+            <div class="billing-saved-tools"><span class="billing-saved-sort" data-i18n>Recently saved first</span><button id="saved-bills-recovery" type="button" class="billing-saved-recovery">Recover interrupted bills</button></div>
         </header>
         <div id="saved-bills-feedback" role="status"></div>
         <div id="saved-bills-list" class="billing-saved-list" aria-label="Saved bills"></div>
@@ -51,7 +51,7 @@
         <fieldset id="sale-editor">
             <div id="sale-gst-context" class="alert alert-info" hidden>
                 <label for="sale-gst-pos" class="form-label">Place of supply for this bill</label>
-                <select id="sale-gst-pos" class="form-select"><option value="">Choose actual delivery / collection state…</option>
+                <select id="sale-gst-pos" class="form-select"><option value="" data-i18n>Choose actual delivery / collection state…</option>
                 @foreach(var state in StockFlow.Application.Common.GstRules.States.Where(s=>s.Key!="28")){<option value="@state.Key">@state.Key — @state.Value</option>}
                 </select>
                 <label for="sale-gst-delivery" class="form-label mt-2">Delivery address (required for registered recipients and applicable full-detail invoices)</label>
@@ -106,7 +106,7 @@
                         <button id="clear-bill-items" class="btn btn-outline-primary billing-clear" type="button" title="Clear Bill" hidden disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></svg>Clear Bill</button>
                         <div id="sale-empty" class="text-muted">
                             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m12 3 9 5v9l-9 5-9-5V8zM3 8l9 5 9-5M12 13v9"/></svg>
-                            <strong>Your bill is empty</strong><span>Scan a barcode or search for a product to start billing.</span>
+                            <strong data-i18n>Your bill is empty</strong><span data-i18n>Scan a barcode or search for a product to start billing.</span>
                         </div>
                         <p class="small text-muted">@(Model.Company.DefaultTaxMode == "INCLUSIVE" ? "Item prices include tax." : "Price per item is before tax. Each item total includes tax.")</p>
                         <p id="billing-cart-scroll-hint" class="small text-muted" hidden>Scroll horizontally for all columns, line totals and actions.</p>
@@ -120,7 +120,7 @@
                                         <th>Qty</th>
                                         <th hidden>MRP (&#8377;)</th><th>Selling Price (₹)</th>
                                         <th>Discount</th>
-                                        <th><span>GST</span> <button type="button" class="billing-gst-info" aria-label="About configured GST" data-bs-toggle="tooltip" title="GST follows the product configuration. No GST means no GST is charged; its recorded classification is preserved.">&#9432;</button></th>
+                                        <th><span data-i18n>GST</span> <button type="button" class="billing-gst-info" aria-label="About configured GST" data-bs-toggle="tooltip" title="GST follows the product configuration. No GST means no GST is charged; its recorded classification is preserved.">&#9432;</button></th>
                                         <th title="After item and allocated invoice discounts, including applicable tax">Line Total (₹)</th>
                                         <th>Actions</th>
                                     </tr>
@@ -145,7 +145,7 @@
                             <input id="customer-search" placeholder="Search customer by name or mobile..." class="form-control" maxlength="150" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="customer-results" aria-describedby="customer-search-status" />
 }
                             <label for="sale-customer" class="visually-hidden">Select customer</label>
-                            <select id="sale-customer" hidden tabindex="-1" aria-hidden="true"><option value="">Select customer</option></select>
+                            <select id="sale-customer" hidden tabindex="-1" aria-hidden="true"><option value="" data-i18n>Select customer</option></select>
                             <div id="customer-results" role="listbox" aria-label="Customers" hidden></div>
                         </div>
                         <p id="customer-search-status" class="small mt-2 mb-0" role="status"></p>
@@ -165,17 +165,17 @@
                     <section id="billing-payment-card" class="card card-body mb-3 billing-stage-card">
                         <h2 class="h5">Payment Method</h2>
                         <div class="billing-total">
-                            <span>Total to pay</span>
+                            <span data-i18n>Total to pay</span>
                             <strong id="sale-total-amount">0.00</strong>
                         </div>
                         <p id="sale-totals" class="small" role="status">Add items to calculate totals.</p>
                         <div id="billing-simple-payment">
                             <label for="payment-mode" class="form-label">Payment method</label>
                             <select id="payment-mode" class="form-select">
-                                <option value="CASH">Cash</option>
-                                <option value="UPI">UPI</option>
-                                <option value="CARD">Card</option>
-                                <option value="BANK_TRANSFER">Bank transfer</option>
+                                <option value="CASH" data-i18n>Cash</option>
+                                <option value="UPI" data-i18n>UPI</option>
+                                <option value="CARD" data-i18n>Card</option>
+                                <option value="BANK_TRANSFER" data-i18n>Bank transfer</option>
                             </select>
                             <input id="payment-card-type" type="hidden" value="" />
                             
@@ -273,7 +273,7 @@
     <h2 class="h5">Bill saved</h2>
     <p id="billing-result">
     </p>
-    <a id="billing-invoice" class="btn btn-primary" hidden>Open invoice</a>
+    <a id="billing-invoice" class="btn btn-primary" hidden data-i18n>Open invoice</a>
     <button id="billing-another" class="btn btn-outline-primary" type="button">Start next sale</button>
 </section>
 </div>

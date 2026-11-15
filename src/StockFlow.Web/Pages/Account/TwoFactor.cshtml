@@ -9,7 +9,7 @@
 @if(Model.RecoveryCodes.Length>0){
         <h2>Save your recovery codes</h2>
         <p>Each code works once. Store these privately; they are displayed only now.</p>
- <pre>@string.Join("\n",Model.RecoveryCodes)</pre><a class="btn btn-primary" href="/Account/Home">I saved my codes — continue</a>
+ <pre>@string.Join("\n",Model.RecoveryCodes)</pre><a class="btn btn-primary" href="/Account/Home" data-i18n>I saved my codes — continue</a>
 }else{
  @if(!Model.Enabled){
         <p>Set up an authenticator app on your phone. It creates a code you enter when signing in.</p>

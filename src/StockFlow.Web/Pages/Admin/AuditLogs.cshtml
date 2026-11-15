@@ -43,4 +43,4 @@
     <button id="previous-audit" type="button" class="btn btn-outline-secondary">Previous</button> <button id="next-audit" type="button" class="btn btn-outline-secondary">Next</button>
 </div>
 @section Scripts {<script src="~/js/admin-security.js" asp-append-version="true"></script>}
-@if(Access.Can("AUDIT_LOGS","EXPORT")){<a class="btn btn-outline-secondary mt-3" href="/api/admin/auditlogs/export">Export latest 1,000 audit events (JSON)</a>}
+@if(Access.Can("AUDIT_LOGS","EXPORT")){<a class="btn btn-outline-secondary mt-3" href="/api/admin/auditlogs/export" data-i18n>Export latest 1,000 audit events (JSON)</a>}

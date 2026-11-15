@@ -3,8 +3,8 @@
 @{ ViewData["Title"] = "Repair history"; }
 <h1>Repair history</h1>
 <p>
-    <a asp-page="Pending">Pending repairs</a> · <a asp-page="Index" asp-route-status="DELIVERED">Completed repairs</a>
-@if (Access.Can("SERVICE","CREATE")) { <span> · <a asp-page="Create">New repair request</a>
+    <a asp-page="Pending" data-i18n>Pending repairs</a> · <a asp-page="Index" asp-route-status="DELIVERED" data-i18n>Completed repairs</a>
+@if (Access.Can("SERVICE","CREATE")) { <span> · <a asp-page="Create" data-i18n>New repair request</a>
 </span> }
 </p>
 <partial name="_ServiceList" />

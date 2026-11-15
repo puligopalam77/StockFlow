@@ -5,7 +5,7 @@
 <header class="sf-page-heading">
     <div>
         <h1>Stock transfers</h1>
-        <a href="/EWayBills/Prepare?sourceType=TRANSFER" permission-module="EWAY_BILLS" class="btn btn-sm btn-outline-secondary">Prepare outward E-Way movement</a>
+        <a href="/EWayBills/Prepare?sourceType=TRANSFER" permission-module="EWAY_BILLS" class="btn btn-sm btn-outline-secondary" data-i18n>Prepare outward E-Way movement</a>
     </div>
 </header>
 }
@@ -22,8 +22,8 @@
                 <div class="col-12">
                     <label for="transfer-direction" class="form-label">Send or request goods?</label>
                     <select id="transfer-direction" class="form-select">
-                        <option value="send">Send from this location</option>
-                        <option value="request">Request goods for this location</option>
+                        <option value="send" data-i18n>Send from this location</option>
+                        <option value="request" data-i18n>Request goods for this location</option>
                     </select>
                 </div>
                 <div class="col-md-6">
@@ -68,10 +68,10 @@
             <h2 class="h5">Transfers for this location</h2>
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <select id="transfer-filter" class="form-select" style="max-width:220px" aria-label="Filter transfers">
-                    <option value="active">Active transfers</option>
-                    <option value="incoming">Coming to this location</option>
-                    <option value="outgoing">Leaving this location</option>
-                    <option value="all">All recent transfers</option>
+                    <option value="active" data-i18n>Active transfers</option>
+                    <option value="incoming" data-i18n>Coming to this location</option>
+                    <option value="outgoing" data-i18n>Leaving this location</option>
+                    <option value="all" data-i18n>All recent transfers</option>
                 </select>
                 <button id="transfer-refresh" type="button" class="btn btn-outline-primary">Refresh</button>
             </div>

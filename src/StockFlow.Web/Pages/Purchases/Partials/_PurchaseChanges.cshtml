@@ -1,4 +1,4 @@
-<section id="purchase-change-history" class="pd-card" style="margin-top:14px"><div class="pd-card-heading"><h2>Edit History</h2><button id="purchase-history-refresh" class="btn btn-outline-secondary" type="button">Refresh</button></div><div id="purchase-change-rows" class="table-responsive" role="status">Loading history...</div></section>
+<section id="purchase-change-history" class="pd-card" style="margin-top:14px"><div class="pd-card-heading"><h2>Edit History</h2><button id="purchase-history-refresh" class="btn btn-outline-secondary" type="button">Refresh</button></div><div id="purchase-change-rows" class="table-responsive" role="status" data-i18n>Loading history...</div></section>
 @if(Access.CanExplicit("PURCHASES","EDIT")){
 <dialog data-sf-dialog="workflow" id="purchase-change-dialog" class="pd-dialog pd-dialog-wide" aria-label="Edit purchase"><div class="pd-dialog-heading"><h2 id="pc-title">Edit Purchase</h2><button type="button" class="pd-dialog-close" data-pd-close="purchase-change-dialog" aria-label="Close edit">&times;</button></div>
 <div id="pc-message" class="alert alert-danger" role="alert" hidden></div><p id="pc-help" class="text-muted"></p>
